@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#fbfbfa">
+<title>FIELD ARCHIVE / COORDINATE RECORDS</title>
+<link rel="stylesheet" href="../../engine/fonts.css">
+<style>
+  :root { color-scheme:light; --paper:#fbfbfa; --ink:#10100f; --dim:#9a9a97; --signal:#c65d22; --green:#536e5b; --pad:max(16px,1.875vw); --columns:4.06vw 16.4vw 16.4vw minmax(84px,1fr); --row:20px; }
+  * { box-sizing:border-box; }
+  html, body { min-height:100%; margin:0; background:var(--paper); }
+  body { overflow-x:hidden; color:var(--ink); font-family:Arial, Helvetica, "Noto Sans KR", sans-serif; font-size:clamp(13px,1.17vw,18px); line-height:1.333; -webkit-font-smoothing:antialiased; }
+  button, a { color:inherit; font:inherit; }
+  button { border:0; }
+  .site-header { position:fixed; z-index:20; inset:0 0 auto; height:56px; display:grid; grid-template-columns:var(--columns); align-items:start; padding:16px var(--pad) 0; background:rgba(251,251,250,.96); }
+  .monogram { grid-column:1 / 3; display:grid; grid-template-columns:4.06vw 1fr; margin:0; font-size:inherit; font-weight:400; line-height:20px; }
+  .filters { grid-column:3 / 5; display:flex; gap:0; min-width:0; white-space:nowrap; }
+  .filter { position:relative; padding:0 12px 4px 0; background:transparent; color:var(--dim); line-height:20px; cursor:pointer; }
+  .filter:hover, .filter:focus-visible, .filter[aria-pressed="true"] { color:var(--ink); outline:none; }
+  .filter[aria-pressed="true"]::after { content:""; position:absolute; right:12px; bottom:0; left:0; height:1px; background:var(--signal); }
+  .back { position:absolute; top:16px; right:var(--pad); color:var(--dim); line-height:20px; text-decoration:none; }
+  .back:hover, .back:focus-visible { color:var(--ink); outline:none; }
+  .archive { min-height:100dvh; padding-top:64px; }
+  .ledger-head, .record { display:grid; grid-template-columns:var(--columns); align-items:center; padding-inline:var(--pad); }
+  .ledger-head { height:40px; align-items:start; color:var(--ink); }
+  #fa-ledger { position:relative; min-height:calc(100dvh - 150px); }
+  .record { position:relative; z-index:4; width:100%; height:var(--row); margin:0; padding-block:0; overflow:visible; background:transparent; color:var(--dim); line-height:var(--row); text-align:left; white-space:nowrap; cursor:pointer; }
+  .record:hover, .record:focus-visible, .record[aria-pressed="true"] { color:#fff; outline:none; mix-blend-mode:difference; }
+  .record[data-role="evidence"] { color:var(--ink); }
+  .record[data-role="potential"] { opacity:.36; }
+  .record[data-role="potential"]:hover, .record[data-role="potential"]:focus-visible, .record[data-role="potential"][aria-pressed="true"] { opacity:1; }
+  .record > span { min-width:0; overflow:hidden; text-overflow:ellipsis; }
+  .record-number { grid-column:1; }
+  .record-planet { grid-column:2; }
+  .record-label { grid-column:3; }
+  .status { grid-column:4; }
+  .status.evidence { color:var(--signal); }
+  .status.potential { color:var(--green); }
+  .empty-ledger { margin:0; padding:0 var(--pad); color:var(--dim); line-height:var(--row); }
+  .selection-line { position:fixed; z-index:8; left:12px; right:12px; top:0; height:var(--row); border:1px solid var(--signal); opacity:0; pointer-events:none; }
+  .selection-line.on { opacity:1; }
+  .preview { --preview-top:124px; --capture-aspect:2.392; position:fixed; z-index:2; top:var(--preview-top); left:26.4vw; width:47.5vw; opacity:0; visibility:hidden; pointer-events:none; }
+  .preview.on { opacity:1; visibility:visible; }
+  .frame { position:relative; display:grid; place-items:center; width:100%; aspect-ratio:var(--capture-aspect); overflow:hidden; background:#0b0b0a; }
+  .frame.empty { border:1px solid #c9c9c5; background:#f3f3f0; }
+  #fa-image { position:absolute; inset:0; display:none; width:100%; height:100%; min-width:0; min-height:0; object-fit:cover; }
+  #fa-image.on { display:block; }
+  .no-image { display:grid; gap:5px; justify-items:center; color:#8e8e8b; text-align:center; }
+  .no-image i { display:block; width:26px; height:1px; background:var(--signal); }
+  .no-image b, .no-image span { font-size:9px; font-weight:400; letter-spacing:.08em; }
+  .footer { position:fixed; z-index:1; right:var(--pad); bottom:16px; left:var(--pad); display:flex; justify-content:space-between; gap:14px; color:var(--dim); font-size:9px; line-height:1.4; pointer-events:none; }
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+  @media (max-width:700px) {
+    :root { --columns:42px 72px minmax(0,1fr) 62px; --row:42px; }
+    body { font-size:12px; }
+    .site-header { height:82px; grid-template-columns:42px 72px minmax(0,1fr); padding-top:max(14px,env(safe-area-inset-top)); }
+    .monogram { grid-column:1 / 3; grid-template-columns:42px 1fr; line-height:20px; }
+    .filters { position:absolute; top:46px; left:var(--pad); right:var(--pad); display:flex; overflow-x:auto; scrollbar-width:none; }
+    .filters::-webkit-scrollbar { display:none; }
+    .filter { padding-right:10px; }
+    .back { top:max(14px,env(safe-area-inset-top)); }
+    .archive { padding-top:92px; }
+    .ledger-head { height:34px; font-size:11px; }
+    #fa-ledger { min-height:calc(100dvh - 158px); }
+    .record { font-size:11px; line-height:var(--row); }
+    .selection-line { left:7px; right:7px; }
+    .preview { top:auto; right:auto; bottom:42px; left:50%; width:calc(100vw - var(--pad) * 2); max-height:calc(100dvh - 142px); overflow:hidden; transform:translateX(-50%); z-index:7; }
+    .preview.on { box-shadow:0 0 0 5px var(--paper); }
+    .footer { bottom:12px; font-size:8px; }
+    #fa-footer { display:none; }
+    .footer { justify-content:flex-end; }
+  }
+  @media (prefers-reduced-motion:reduce) { .preview, .selection-line { transition:none; } }
+</style>
+</head>
+<body>
+<main>
+  <header class="site-header">
+    <h1 class="monogram" aria-label="Field Archive / Coordinate Records"><span>F.</span><span>A.</span><span class="sr-only">Field Archive / Coordinate Records</span></h1>
+    <nav class="filters" aria-label="행성별 기록 필터">
+      <button class="filter" type="button" data-filter="all" aria-pressed="true">All</button>
+      <button class="filter" type="button" data-filter="terra" aria-pressed="false">Planet 01</button>
+      <button class="filter" type="button" data-filter="desert" aria-pressed="false">Planet 02</button>
+      <button class="filter" type="button" data-filter="granite" aria-pressed="false">Planet 03</button>
+    </nav>
+    <span id="fa-count" class="sr-only" aria-live="polite">00 / 00 signals acquired</span>
+    <a class="back" href="index.html" data-return>Return to Mission</a>
+  </header>
+  <section class="archive" aria-label="좌표 관측 기록">
+    <div class="ledger-head" aria-hidden="true"><span>No.</span><span>Planet</span><span>Field</span><span>Status</span></div>
+    <section class="ledger" aria-label="좌표 목록"><div id="fa-ledger"></div></section>
+    <section id="fa-preview" class="preview" aria-live="polite">
+      <div class="frame empty">
+        <img id="fa-image" alt="로버가 수집한 좌표 관측 이미지">
+        <div id="fa-empty" class="no-image"><i></i><b>NO IMAGE</b><span>SIGNAL NOT ACQUIRED</span></div>
+      </div>
+    </section>
+    <div id="fa-selection" class="selection-line" aria-hidden="true"></div>
+  </section>
+  <footer class="footer"><span>©2026 KIM GUNWOO. ALL RIGHTS RESERVED.</span><span id="fa-footer">No field observations in this session.</span></footer>
+</main>
+<script>
+(() => {
+  const KEY = "terra-incognita:field-archive:v4";
+  const CAPTURE_PROFILES = Object.freeze({
+    fisheye: Object.freeze({
+      lens:"FISHEYE 8MM", viewpoint:"MAST / FORWARD", aspect:1,
+      zoom:1.04, focusX:.5, focusY:.52, projection:"fisheye"
+    }),
+    wide: Object.freeze({
+      lens:"ULTRAWIDE 18MM", viewpoint:"LOW FRONT", aspect:16 / 9,
+      zoom:1.08, focusX:.5, focusY:.56, projection:"rectilinear"
+    }),
+    rear: Object.freeze({
+      lens:"STANDARD 35MM", viewpoint:"REAR FOLLOW", aspect:3 / 2,
+      zoom:1.28, focusX:.5, focusY:.53, projection:"rectilinear"
+    }),
+    tele: Object.freeze({
+      lens:"TELEPHOTO 120MM", viewpoint:"MATERIAL FACE", aspect:4 / 3,
+      zoom:2.24, focusX:.53, focusY:.5, projection:"rectilinear"
+    }),
+    macro: Object.freeze({
+      lens:"MACRO 90MM", viewpoint:"GROUND CLOSE", aspect:4 / 5,
+      zoom:2.82, focusX:.5, focusY:.68, projection:"rectilinear"
+    }),
+    portrait: Object.freeze({
+      lens:"WIDE 24MM", viewpoint:"LATERAL RISE", aspect:3 / 4,
+      zoom:1.6, focusX:.64, focusY:.5, projection:"rectilinear"
+    }),
+    panorama: Object.freeze({
+      lens:"PANORAMA 24MM", viewpoint:"HORIZON SWEEP", aspect:2.39,
+      zoom:1.04, focusX:.46, focusY:.5, projection:"rectilinear"
+    })
+  });
+  const CAPTURE_SCHEDULE = Object.freeze({
+    terra: Object.freeze(["fisheye", "wide", "tele", "macro", "rear", "panorama"]),
+    desert: Object.freeze(["wide", "tele", "fisheye", "portrait", "rear", "macro", "panorama"]),
+    granite: Object.freeze(["panorama", "macro", "portrait", "tele", "fisheye"])
+  });
+  const orderOf = (source = {}) => {
+    const explicit = Number(source.order);
+    if (Number.isFinite(explicit)) return Math.max(0, Math.floor(explicit));
+    const match = String(source.id ?? "").match(/-(\d+)$/);
+    return match ? Math.max(0, Number(match[1]) - 1) : 0;
+  };
+  const captureFor = (source = {}) => {
+    const schedule = CAPTURE_SCHEDULE[source.body] ?? CAPTURE_SCHEDULE.terra;
+    const requested = String(source.capture?.profile ?? schedule[orderOf(source) % schedule.length]);
+    const base = CAPTURE_PROFILES[requested] ?? CAPTURE_PROFILES.wide;
+    const capture = source.capture ?? {};
+    const finite = (value, fallback) => Number.isFinite(Number(value)) ? Number(value) : fallback;
+    return {
+      profile: CAPTURE_PROFILES[requested] ? requested : "wide",
+      lens: String(capture.lens ?? base.lens),
+      viewpoint: String(capture.viewpoint ?? base.viewpoint),
+      aspect: Math.max(.5, Math.min(2.5, finite(capture.aspect, base.aspect))),
+      zoom: Math.max(1, Math.min(3.2, finite(capture.zoom, base.zoom))),
+      focusX: Math.max(0, Math.min(1, finite(capture.focusX, base.focusX))),
+      focusY: Math.max(0, Math.min(1, finite(capture.focusY, base.focusY))),
+      projection: capture.projection === "fisheye" ? "fisheye" : "rectilinear"
+    };
+  };
+  const FALLBACK = [
+    ["P01-001", "terra", "PLANET 01", "SHEAR WORLD", "철-니켈 합금 시료 · 조사 지점 1", 231.6, 543.4, 0],
+    ["P01-002", "terra", "PLANET 01", "SHEAR WORLD", "철-니켈 합금 시료 · 조사 지점 2", 247, 519, 1],
+    ["P01-003", "terra", "PLANET 01", "SHEAR WORLD", "규산염 세라믹 시료 · 조사 지점 1", 199.1, 516.1, 2],
+    ["P01-004", "terra", "PLANET 01", "SHEAR WORLD", "규산염 세라믹 시료 · 조사 지점 2", 185, 536, 3],
+    ["P01-005", "terra", "PLANET 01", "SHEAR WORLD", "탄소 복합재 시료 · 조사 지점 1", 209.9, 471.4, 4],
+    ["P01-006", "terra", "PLANET 01", "SHEAR WORLD", "탄소 복합재 시료 · 조사 지점 2", 190, 484, 5],
+    ["P01-007", "terra", "PLANET 01", "SHEAR WORLD", "전도성 격자 시료 · 조사 지점 1", 168.5, 445.3, 6],
+    ["P01-008", "terra", "PLANET 01", "SHEAR WORLD", "전도성 격자 시료 · 조사 지점 2", 151, 466, 7],
+    ["P01-009", "terra", "PLANET 01", "SHEAR WORLD", "분자 질소(N₂) 서리층 · 조사 지점 1", 173.9, 391.9, 8],
+    ["P01-010", "terra", "PLANET 01", "SHEAR WORLD", "분자 질소(N₂) 서리층 · 조사 지점 2", 153, 403, 9],
+    ["P01-011", "terra", "PLANET 01", "SHEAR WORLD", "에탄올 결정상 · 조사 지점 1", 127.7, 352.8, 10],
+    ["P01-012", "terra", "PLANET 01", "SHEAR WORLD", "에탄올 결정상 · 조사 지점 2", 111, 371, 11],
+    ["P02-001", "desert", "PLANET 02", "YARDANG FIELD", "LANDING DATUM", 96, 520, 0],
+    ["P02-002", "desert", "PLANET 02", "YARDANG FIELD", "YARDANG INGRESS", 88, 503, 1],
+    ["P02-003", "desert", "PLANET 02", "YARDANG FIELD", "SINTERED PASSAGE", 79, 486, 2],
+    ["P02-004", "desert", "PLANET 02", "YARDANG FIELD", "WIND-SHADOW CUT", 70, 468, 3],
+    ["P02-005", "desert", "PLANET 02", "YARDANG FIELD", "HYDRATION GRADIENT", 62, 450, 4],
+    ["P02-006", "desert", "PLANET 02", "YARDANG FIELD", "PORE-ICE APPROACH", 56, 438, 5],
+    ["P02-007", "desert", "PLANET 02", "YARDANG FIELD", "HYDRATION RETURN", 52, 428, 6],
+    ["P03-001", "granite", "PLANET 03", "JOINTED GRANITE", "LANDING DATUM", 120, 460, 0],
+    ["P03-002", "granite", "PLANET 03", "JOINTED GRANITE", "MATERIAL PHASE", 107, 431, 1],
+    ["P03-003", "granite", "PLANET 03", "JOINTED GRANITE", "MEMORY TRANSIT", 124, 402, 2],
+    ["P03-004", "granite", "PLANET 03", "JOINTED GRANITE", "HYDRATION PHASE", 150, 383, 3],
+    ["P03-005", "granite", "PLANET 03", "JOINTED GRANITE", "CONCORDANCE", 170, 345, 4]
+  ].map(([id, body, planet, world, label, x, z, order]) => ({
+    id, body, planet, world, label, x, z, order,
+    resourceItem: body === "terra" ? Math.floor(order / 2) : null,
+    resourceVariant: body === "terra" ? order % 2 : null,
+    archiveRole: "unresolved",
+    potentialCount: 0,
+    resolved: false,
+    capture: captureFor({ id, body, order })
+  }));
+  const byId = (items) => new Map(items.map((item) => [item.id, item]));
+  const escape = (value) => String(value ?? "").replace(/[&<>\"]/g, (char) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;" })[char]);
+  const read = () => {
+    try {
+      const current = JSON.parse(sessionStorage.getItem(KEY) || "null");
+      if (current && current.version === 4) return current;
+      for (const key of ["terra-incognita:field-archive:v3", "terra-incognita:field-archive:v2"]) {
+        const legacy = JSON.parse(sessionStorage.getItem(key) || "null");
+        if (legacy && [2, 3].includes(legacy.version)) return { ...legacy, version: 4 };
+      }
+      return { stations: [], records: [] };
+    } catch { return { stations: [], records: [] }; }
+  };
+  const source = read();
+  const bodyOrder = ["terra", "desert", "granite"];
+  const fallbackById = byId(FALLBACK);
+  const storedStations = (source.stations || []).map((station) => ({ ...fallbackById.get(station.id), ...station }));
+  const stations = [...byId([...FALLBACK, ...storedStations]).values()].sort((a, b) => bodyOrder.indexOf(a.body) - bodyOrder.indexOf(b.body) || a.order - b.order);
+  const stationsById = byId(stations);
+  const stationNumbers = new Map(stations.map((station, index) => [station.id, String(index).padStart(3, "0")]));
+  const records = (source.records || []).filter((record) => stationsById.has(record.id));
+  const recordsById = byId(records);
+  const ledger = document.getElementById("fa-ledger");
+  const image = document.getElementById("fa-image");
+  const empty = document.getElementById("fa-empty");
+  const emptyTitle = empty.querySelector("b");
+  const emptyStatus = empty.querySelector("span");
+  const count = document.getElementById("fa-count");
+  const preview = document.getElementById("fa-preview");
+  const frameSurface = preview.querySelector(".frame");
+  const selection = document.getElementById("fa-selection");
+  let filter = "all";
+  let selected = null;
+  let recordNodes = new Map();
+  const coord = (station) => `X ${Number(station.x).toFixed(1)}  /  Z ${Number(station.z).toFixed(1)}`;
+  function filtered() { return stations.filter((station) => filter === "all" || station.body === filter); }
+  function positionPreview(node = selected && recordNodes.get(selected.id)) {
+    if (!node) return;
+    const rect = node.getBoundingClientRect();
+    selection.style.top = `${rect.top}px`;
+    selection.style.height = `${rect.height}px`;
+    selection.classList.toggle("on", rect.bottom > 0 && rect.top < innerHeight);
+    if (innerWidth > 700) {
+      const available = Math.max(84, innerHeight - preview.offsetHeight - 24);
+      const top = Math.max(84, Math.min(rect.top - preview.offsetHeight * .36, available));
+      preview.style.setProperty("--preview-top", `${top}px`);
+    }
+  }
+  function sizePreview(capture) {
+    const aspect = capture?.aspect ?? 2.392;
+    const horizontalPad = Math.max(16, innerWidth * .01875);
+    const maxWidth = innerWidth > 700 ? innerWidth * .475 : innerWidth - horizontalPad * 2;
+    const maxHeight = innerWidth > 700 ? innerHeight - 150 : innerHeight - 142;
+    preview.style.setProperty("--capture-aspect", String(aspect));
+    preview.style.width = `${Math.max(72, Math.floor(Math.min(maxWidth, maxHeight * aspect)))}px`;
+  }
+  function select(station, node) {
+    selected = station;
+    const record = recordsById.get(station.id);
+    const capture = captureFor(record ?? station);
+    for (const [id, recordNode] of recordNodes) recordNode.setAttribute("aria-pressed", String(id === station.id));
+    sizePreview(capture);
+    frameSurface.dataset.capture = capture.profile;
+    if (record && typeof record.image === "string") {
+      image.alt = `${capture.lens} ${capture.viewpoint} field observation`;
+      image.src = record.image;
+      image.classList.add("on");
+      empty.hidden = true;
+      frameSurface.classList.remove("empty");
+    }
+    else {
+      image.removeAttribute("src");
+      image.classList.remove("on");
+      empty.hidden = false;
+      frameSurface.classList.add("empty");
+      const potential = station.archiveRole === "potential";
+      emptyTitle.textContent = potential ? "RESOLVED POTENTIAL" : "NO IMAGE";
+      emptyStatus.textContent = potential ? "FIELD SUBTRACTED" : "SIGNAL NOT ACQUIRED";
+    }
+    preview.classList.add("on");
+    positionPreview(node);
+  }
+  function clearPreview() {
+    selected = null;
+    for (const node of recordNodes.values()) node.setAttribute("aria-pressed", "false");
+    image.removeAttribute("src");
+    image.classList.remove("on");
+    preview.style.removeProperty("width");
+    preview.style.removeProperty("--capture-aspect");
+    delete frameSurface.dataset.capture;
+    empty.hidden = false;
+    preview.classList.remove("on");
+    selection.classList.remove("on");
+  }
+  function render() {
+    const visible = filtered();
+    if (!visible.some((station) => station.id === selected?.id)) selected = null;
+    ledger.innerHTML = visible.map((station) => {
+      const acquired = recordsById.has(station.id);
+      const role = station.archiveRole === "evidence" ? "evidence" : station.archiveRole === "potential" ? "potential" : "unresolved";
+      const number = stationNumbers.get(station.id);
+      const status = role === "evidence" ? "EVIDENCE" : role === "potential" ? "POTENTIAL" : acquired ? "ACQUIRED" : "—";
+      const spoken = role === "evidence" ? "selected evidence" : role === "potential" ? `resolved potential ${station.potentialCount || 0}` : acquired ? "acquired" : "signal not acquired";
+      return `<button class="record" type="button" data-id="${escape(station.id)}" data-role="${role}" aria-label="${escape(`${number} ${station.planet} ${station.label} ${coord(station)} ${spoken}`)}" aria-pressed="false"><span class="record-number">${number}</span><span class="record-planet">${escape(station.planet)}</span><span class="record-label">${escape(station.label)}</span><span class="status ${role}">${status}</span></button>`;
+    }).join("") || `<p class="empty-ledger">NO COORDINATE RECORDS</p>`;
+    recordNodes = new Map([...ledger.querySelectorAll(".record")].map((node) => [node.dataset.id, node]));
+    for (const [id, node] of recordNodes) {
+      const station = stationsById.get(id);
+      node.addEventListener("pointerenter", (event) => { if (event.pointerType === "mouse") select(station, node); });
+      node.addEventListener("focus", () => select(station, node));
+      node.addEventListener("click", () => select(station, node));
+    }
+    count.textContent = `${String(records.length).padStart(2, "0")} / ${String(stations.length).padStart(2, "0")} SIGNALS ACQUIRED`;
+    document.getElementById("fa-footer").textContent = records.length
+      ? `${records.length} camera return${records.length === 1 ? "" : "s"} retained for this session.`
+      : "No field observations in this session.";
+    if (selected) select(selected, recordNodes.get(selected.id));
+    else clearPreview();
+  }
+  ledger.addEventListener("pointerleave", (event) => {
+    if (event.pointerType === "mouse" && !document.activeElement?.classList.contains("record")) clearPreview();
+  });
+  document.querySelectorAll(".filter").forEach((node) => node.addEventListener("click", () => {
+    filter = node.dataset.filter;
+    selected = null;
+    document.querySelectorAll(".filter").forEach((button) => button.setAttribute("aria-pressed", String(button === node)));
+    render();
+  }));
+  addEventListener("resize", () => {
+    if (selected) sizePreview(captureFor(recordsById.get(selected.id) ?? selected));
+    positionPreview();
+  });
+  addEventListener("scroll", () => positionPreview(), { passive:true });
+  image.addEventListener("load", () => positionPreview());
+  image.addEventListener("error", () => { image.classList.remove("on"); empty.hidden = false; frameSurface.classList.add("empty"); });
+  document.querySelector("[data-return]")?.addEventListener("click", (event) => {
+    if (history.length <= 1 || !document.referrer) return;
+    event.preventDefault();
+    history.back();
+  });
+  render();
+})();
+</script>
+</body>
+</html>

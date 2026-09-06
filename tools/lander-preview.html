@@ -1,0 +1,10 @@
+<!doctype html><html><link rel="icon" href="data:,"><body style="margin:0;background:#101419"><script type="importmap">{"imports":{"three":"../vendor/three.webgpu.js","three/webgpu":"../vendor/three.webgpu.js","three/addons/":"../vendor/addons/","three/tsl":"../vendor/three.tsl.js"}}</script><script type="module">
+import * as THREE from 'three';
+import {configure} from '../engine/config.js';
+import {Lander} from '../engine/vehicle/lander.js';
+configure({tier:new URLSearchParams(location.search).get('quality')||'high',atmosphere:{fogDensity:0}});
+const renderer=new THREE.WebGPURenderer({antialias:true,forceWebGL:true});renderer.setSize(1400,1000);renderer.setPixelRatio(1);document.body.append(renderer.domElement);await renderer.init();
+const scene=new THREE.Scene();scene.background=new THREE.Color('#171b20');const camera=new THREE.PerspectiveCamera(37,1.4,.1,100);camera.position.set(15,11,-21);camera.lookAt(0,2.6,0);
+const lander=new Lander(()=>0);scene.add(lander.group);lander.group.visible=true;lander.setRestorationLevel(4);lander.setLegFold(0);lander.setRamp?.(1);
+window.preview={lander,renderer,scene,camera};window.draw=()=>renderer.render(scene,camera);await window.draw();window.ready=true;
+</script></body></html>

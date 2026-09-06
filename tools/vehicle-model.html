@@ -1,0 +1,59 @@
+<!doctype html><html><meta charset="utf-8"><link rel="icon" href="data:,"><style>body{margin:0;background:#171b20}</style><script type="importmap">{"imports":{"three":"../vendor/three.webgpu.js","three/webgpu":"../vendor/three.webgpu.js","three/tsl":"../vendor/three.tsl.js"}}</script><script type="module">
+import * as THREE from 'three';
+import { configure, cfg } from '../engine/config.js';
+import { Rover } from '../engine/vehicle/rover.js';
+import { Lander } from '../engine/vehicle/lander.js';
+import { solveSuspension } from '../engine/vehicle/mechanics.js';
+const tier=new URLSearchParams(location.search).get('quality')||'high';
+configure({tier,atmosphere:{fogDensity:0}});
+const renderer=new THREE.WebGPURenderer({antialias:true,forceWebGL:true});renderer.setSize(1400,1000);renderer.setPixelRatio(1);document.body.append(renderer.domElement);await renderer.init();
+const scene=new THREE.Scene();scene.background=new THREE.Color('#171b20');
+const camera=new THREE.PerspectiveCamera(37,1.4,.01,100);
+const lander=new Lander(()=>0);lander.place(0,0,0);lander.group.position.set(0,0,0);lander.group.rotation.y=0;lander.setRestorationLevel(4);lander.setRamp(1);scene.add(lander.group);
+const rover=new Rover(camera,renderer.domElement,()=>0);rover.cameraControl=false;rover.auto=false;rover.update(0);scene.add(rover.group);
+function frame(kind){
+ lander.group.visible=kind!=='rover';rover.group.visible=kind!=='lander'&&kind!=='fold';
+ lander.setLegFold(kind==='fold'?1:0);lander.setRamp(1);
+ if(kind==='rover'){rover.group.position.set(0,.57,0);camera.position.set(3.6,2.1,-4.9);camera.lookAt(0,.6,0);}
+ else {camera.position.set(15,11,-21);camera.lookAt(0,2.6,0);rover.group.position.set(0,lander.dock.floorY+.57,-.58);rover.group.rotation.y=Math.PI;lander.setHoldDown(1);}
+ renderer.render(scene,camera);
+}
+function check(){
+ const fail=(message)=>{throw Error(message)};const close=(a,b,label)=>{if(Math.abs(a-b)>1e-6)fail(label+': '+a+' != '+b)};
+ const c=cfg().vehicle.chassis;
+ for(let i=0;i<=48;i++)for(const w of rover.wheels){
+  const rig=w.userData.suspension;solveSuspension(rig,w.userData.restY-c.travel+i*c.travel/24);
+  close(rig.anchor.distanceTo(rig.elbow),rig.linkLength,'upper length');close(rig.hub.distanceTo(rig.elbow),rig.linkLength,'lower length');
+  const distance=rig.damperAnchor.distanceTo(rig.hub);if(distance>.68||distance<.34)fail('damper overlap');
+ }
+ for(const w of rover.wheels)solveSuspension(w.userData.suspension,w.userData.restY);
+ for(let i=0;i<=100;i++){
+  lander.setLegFold(i/100);
+  for(const leg of lander.legs){close(leg.a.distanceTo(leg.b),leg.upperLength,'lander upper');
+   close(leg.b.distanceTo(leg.c),leg.lowerExtension,'lander lower');if(leg.lowerExtension>3.85||leg.lowerExtension<1.3)fail('lander overlap');
+   if(!leg.b.toArray().every(Number.isFinite))fail('nonfinite knee');
+  }
+ }
+ lander.setLegFold(0);for(let i=0;i<=10;i++)lander.setLegCompression(i/10);lander.setLegCompression(0);
+ for(let level=0;level<=4;level++){lander.setRestorationLevel(level);for(const part of lander.parts)for(const object of part.objects)if(object.visible!==(part.assembly<level))fail('restoration visibility');}
+ lander.setHoldDown(0);for(const jaw of lander.holdDowns)if(Math.abs(jaw.position.x)-.04<c.track+c.wheelW/2)fail('open jaw wheel collision');
+ lander.setHoldDown(1);close(lander.holdProgress,1,'hold down');
+ lander.group.updateMatrixWorld(true);
+ const ray=new THREE.Raycaster();
+ const shells=[...lander.parts[0].objects,...lander.parts[3].objects];
+ for(const x of [-.8,0,.8])for(let z=-3;z<=.5;z+=.25){
+  ray.set(new THREE.Vector3(x,4.65,z),new THREE.Vector3(0,-1,0));
+  for(const hit of ray.intersectObjects(shells,false))if(hit.point.y>lander.dock.floorY+.05&&hit.point.y<3.9)fail('bay hull interference');
+ }
+ const savedHeight=lander.h;
+ for(const slope of [-.15,.15]){
+  lander.h=(x,z)=>slope*x+.08*z;lander.site=null;lander.place(0,0,0);
+  for(const leg of lander.legs)if(Math.acos(leg.normal.y)>.280001)fail('pad angle limit');
+  for(let p=0;p<=10;p++){lander.setLegFold(p/10);for(const leg of lander.legs){close(leg.a.distanceTo(leg.b),leg.upperLength,'slope link');if(leg.lowerExtension>3.85||leg.lowerExtension<1.3)fail('lander damper overlap '+leg.lowerExtension);}}
+ }
+ lander.h=savedHeight;lander.site=null;lander.place(0,0,0);lander.group.position.set(0,0,0);lander.group.rotation.y=0;lander.setRestorationLevel(4);
+ let triangles=0,meshes=0;scene.traverse(o=>{if(o.isMesh){meshes++;triangles+=(o.geometry.index?.count??o.geometry.attributes.position.count)/3;}});
+ return {tier,linkSweep:'pass',damperOverlap:'pass',legFold:'pass',restoration:'pass',jawClearance:'pass',bayVolume:'pass',slopedFeet:'pass',triangles,meshes};
+}
+window.preview={lander,rover,renderer,frame,check};frame('rover');window.ready=true;
+</script></html>

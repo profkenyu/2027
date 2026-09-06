@@ -1,0 +1,8 @@
+import {chromium} from 'playwright';
+import {createServer} from 'node:http';
+import {readFile} from 'node:fs/promises';
+const server=createServer(async(q,s)=>{try{s.setHeader('Content-Type',q.url.split('?')[0].endsWith('.html')?'text/html':'text/javascript');s.end(await readFile('.'+q.url.split('?')[0]));}catch{s.writeHead(404).end();}});
+await new Promise(r=>server.listen(0,'127.0.0.1',r));
+const browser=await chromium.launch({channel:'chrome',headless:true,args:['--enable-unsafe-swiftshader']});
+try{const page=await browser.newPage({viewport:{width:1400,height:1000}});page.on('console',m=>console.log(m.type(),m.text()));page.on('pageerror',e=>console.error(e));await page.goto(`http://127.0.0.1:${server.address().port}/tools/lander-preview.html?quality=${process.argv[2]||"high"}`);await page.waitForFunction(()=>window.ready);await page.screenshot({path:`dist/lander-${process.argv[2]||'after'}.png`});console.log(await page.evaluate(()=>{const l=preview.lander;let vertices=0;for(const t of [0,.5,1]){l.setLegFold(t);l.group.updateMatrixWorld(true);for(const p of l.parts)for(const o of p.objects){if(!o.matrixWorld.elements.every(Number.isFinite))throw Error('Invalid transform');const a=o.geometry.attributes.position.array;if(!a.every(Number.isFinite))throw Error('Invalid geometry');} }l.setLegFold(0);l.setLegCompression(.5);l.setLegCompression(0);l._rebuildWireframes();for(const n of [0,1,2,3,4]){l.setRestorationLevel(n);for(const p of l.parts)for(const o of p.objects)if(o.visible!==(p.assembly<n))throw Error('Restoration mismatch');}for(const p of l.parts)for(const o of p.objects)vertices+=o.geometry.attributes.position.count;return {vertices,restoration:'pass',fold:'pass',compression:'pass'};}));
+}finally{await browser.close();server.close();}
