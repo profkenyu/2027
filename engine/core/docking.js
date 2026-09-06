@@ -17,8 +17,6 @@ export class DockingSequence {
     this.started = false;
     this.docked = false;
     this._target = new THREE.Vector3();
-    this._camera = new THREE.Vector3();
-    this._aim = new THREE.Vector3();
     this._surface = (x, z, terrain) => this.lander.dockingSurface(x, z, terrain);
   }
   get active() {

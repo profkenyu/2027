@@ -81,7 +81,6 @@ export class Rover {
     this.roll = 0;
     this.deckY = 0;
     this.sus = new Float64Array(8);
-    this.susV = new Float64Array(8);
     this.slam = 0;
     this.stops = 0;
     this.speed = 0;
@@ -263,7 +262,6 @@ export class Rover {
       this.pitchV = 0;
       this.rollV = 0;
       this.sus.fill(0);
-      this.susV.fill(0);
       this.slam = 0;
       this.stops = 0;
       this.settled = true;
@@ -456,7 +454,6 @@ export class Rover {
     this.odometer = 0;
     this.settled = false;
     this.sus.fill(0);
-    this.susV.fill(0);
     this.slam = 0;
     this.stops = 0;
     this.deckV = 0;
@@ -486,7 +483,6 @@ export class Rover {
     this.speed = 0;
     this.settled = false;
     this.sus.fill(0);
-    this.susV.fill(0);
     this.deckV = 0;
     this.pitchV = 0;
     this.rollV = 0;

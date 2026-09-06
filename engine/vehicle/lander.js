@@ -21,6 +21,16 @@ import {
 import { fitLink, makeLink } from "./mechanics.js";
 import { cfg } from "../config.js";
 const Y = new THREE.Vector3(0, 1, 0);
+const LEVEL_PAD = new THREE.Quaternion();
+const LEG = Object.freeze({
+  sleeveLength: 1.3,
+  minimumLength: 1.65,
+  reachMargin: 0.015,
+  maximumPadTilt: 0.28,
+  foldedRadius: 4.15,
+  foldedFootY: 1.06,
+  forkOffset: 0.16
+});
 const RESTORATION_PARTS = Object.freeze([
   "FOUNDATION",
   "LOAD PATHS",
@@ -503,8 +513,8 @@ export class Lander {
       const foot = [Math.cos(a) * padRadius, 0.16, Math.sin(a) * padRadius];
       const upper = cylinderBetween(shoulder, elbow, 0.22, ceramic, 8);
       const lower = cylinderBetween(elbow, foot, 0.12, metal, radial);
-      const sleeve = makeLink(0.19, 1.3, graphite, radial);
-      const middle = makeLink(0.145, 1.3, metal, radial);
+      const sleeve = makeLink(0.19, LEG.sleeveLength, graphite, radial);
+      const middle = makeLink(0.145, LEG.sleeveLength, metal, radial);
       const brace = cylinderBetween(
         [shoulder[0] * 0.93, shoulder[1] - 0.3, shoulder[2] * 0.93],
         [foot[0], foot[1] + 0.18, foot[2]],
@@ -1012,8 +1022,8 @@ export class Lander {
       leg.normal.set(nx*cos-nz*sin, 1, nx*sin+nz*cos).normalize();
       const tilt = Math.acos(Math.max(-1,Math.min(1,leg.normal.y)));
       leg.padRotation.setFromUnitVectors(Y, leg.normal);
-      if (tilt > 0.28) {
-        leg.padRotation.identity().slerp(new THREE.Quaternion().setFromUnitVectors(Y, leg.normal), 0.28/tilt);
+      if (tilt > LEG.maximumPadTilt) {
+        leg.padRotation.identity().slerp(new THREE.Quaternion().setFromUnitVectors(Y, leg.normal), LEG.maximumPadTilt / tilt);
         leg.normal.copy(Y).applyQuaternion(leg.padRotation);
       }
       leg.deployedElbow = elbow.slice();
@@ -1054,34 +1064,37 @@ export class Lander {
     const cx = Math.cos(angle), cz = Math.sin(angle);
     const r0 = Math.hypot(leg.shoulder[0], leg.shoulder[2]);
     const r1 = Math.hypot(foot[0], foot[2]);
-    const dx = r1-r0, dy = foot[1]-leg.shoulder[1];
-    const distance = Math.max(1e-6, Math.hypot(dx,dy));
+    const dx = r1 - r0, dy = foot[1] - leg.shoulder[1];
+    const distance = Math.max(1e-6, Math.hypot(dx, dy));
     const upper = leg.upperLength;
-    const lower = Math.max(1.65, leg.lowerRest-compression, Math.abs(distance-upper)+0.015);
+    const lower = Math.max(LEG.minimumLength, leg.lowerRest - compression, Math.abs(distance - upper) + LEG.reachMargin);
     leg.lowerExtension = lower;
-    const along = (upper*upper-lower*lower+distance*distance)/(2*distance);
-    const height = Math.sqrt(Math.max(0, upper*upper-along*along));
-    const radius = r0 + dx/distance*along - dy/distance*height;
-    const y = leg.shoulder[1] + dy/distance*along + dx/distance*height;
+    const along = (upper * upper - lower * lower + distance * distance)/(2 * distance);
+    const height = Math.sqrt(Math.max(0, upper * upper - along * along));
+    const radius = r0 + dx / distance * along - dy / distance * height;
+    const y = leg.shoulder[1] + dy / distance * along + dx / distance * height;
     leg.a.set(...leg.shoulder);
-    leg.b.set(cx*radius, y, cz*radius);
+    leg.b.set(cx * radius, y, cz * radius);
     leg.c.set(...foot);
     fitLink(leg.upper, leg.a, leg.b);
-    leg.braceA.copy(leg.b).sub(leg.c).normalize().multiplyScalar(1.3).add(leg.c);
+    leg.braceA.copy(leg.b).sub(leg.c).normalize().multiplyScalar(LEG.sleeveLength).add(leg.c);
     fitLink(leg.lower, leg.braceA, leg.c);
-    leg.sleeveEnd.copy(leg.c).sub(leg.b).normalize().multiplyScalar(1.3).add(leg.b);
+    leg.sleeveEnd.copy(leg.c).sub(leg.b).normalize().multiplyScalar(LEG.sleeveLength).add(leg.b);
     fitLink(leg.sleeve, leg.b, leg.sleeveEnd);
     leg.braceA.copy(leg.c).sub(leg.b).normalize();
-    leg.braceB.copy(leg.b).addScaledVector(leg.braceA, (lower-1.3)*0.5);
-    leg.sleeveEnd.copy(leg.braceB).addScaledVector(leg.braceA, 1.3);
+    leg.braceB.copy(leg.b).addScaledVector(leg.braceA, (lower - LEG.sleeveLength) * 0.5);
+    leg.sleeveEnd.copy(leg.braceB).addScaledVector(leg.braceA, LEG.sleeveLength);
     fitLink(leg.middle, leg.braceB, leg.sleeveEnd);
     // A second upper member forms a fork instead of a stretching diagonal.
-    leg.braceA.copy(leg.a); leg.braceB.copy(leg.b);
-    leg.braceA.x -= cz*.16; leg.braceA.z += cx*.16;
-    leg.braceB.x -= cz*.16; leg.braceB.z += cx*.16;
+    leg.braceA.copy(leg.a);
+    leg.braceB.copy(leg.b);
+    leg.braceA.x -= cz * LEG.forkOffset;
+    leg.braceA.z += cx * LEG.forkOffset;
+    leg.braceB.x -= cz * LEG.forkOffset;
+    leg.braceB.z += cx * LEG.forkOffset;
     fitLink(leg.brace, leg.braceA, leg.braceB);
     leg.elbowJoint.position.copy(leg.b);
-    leg.pad.quaternion.copy(leg.padRotation).slerp(this._flatPad ??= new THREE.Quaternion(), fold);
+    leg.pad.quaternion.copy(leg.padRotation).slerp(LEVEL_PAD, fold);
     leg.padCore.quaternion.copy(leg.pad.quaternion);
     leg.braceA.copy(Y).applyQuaternion(leg.pad.quaternion);
     leg.pad.position.copy(leg.c).addScaledVector(leg.braceA, -0.08);
@@ -1090,13 +1103,13 @@ export class Lander {
   setLegFold(progress = 0) {
     const p = Math.max(0, Math.min(1, progress));
     for (const leg of this.legs) {
-      const staged = Math.max(0, Math.min(1, (p-leg.foldOffset*.3)/.7));
-      const t = staged*staged*(3-2*staged);
+      const staged = Math.max(0, Math.min(1, (p - leg.foldOffset * 0.3) / 0.7));
+      const t = staged * staged * (3 - 2 * staged);
       const angle = Math.atan2(leg.shoulder[2], leg.shoulder[0]);
       const foot = leg.poseFoot;
-      foot[0] = leg.deployedFoot[0] + (Math.cos(angle)*4.15-leg.deployedFoot[0])*t;
-      foot[1] = leg.deployedFoot[1] + (1.06-leg.deployedFoot[1])*t;
-      foot[2] = leg.deployedFoot[2] + (Math.sin(angle)*4.15-leg.deployedFoot[2])*t;
+      foot[0] = leg.deployedFoot[0] + (Math.cos(angle) * LEG.foldedRadius-leg.deployedFoot[0])*t;
+      foot[1] = leg.deployedFoot[1] + (LEG.foldedFootY - leg.deployedFoot[1])*t;
+      foot[2] = leg.deployedFoot[2] + (Math.sin(angle) * LEG.foldedRadius-leg.deployedFoot[2])*t;
       this._poseLeg(leg, foot, 0, t);
     }
     this.legFold = p;
@@ -1107,9 +1120,9 @@ export class Lander {
     for (const leg of this.legs) {
       const foot = leg.poseFoot;
       foot[0] = leg.deployedFoot[0];
-      foot[1] = leg.deployedFoot[1] + stroke*q;
+      foot[1] = leg.deployedFoot[1] + stroke * q;
       foot[2] = leg.deployedFoot[2];
-      this._poseLeg(leg, foot, stroke*q);
+      this._poseLeg(leg, foot, stroke * q);
     }
     this.legCompression = q;
   }

@@ -102,7 +102,7 @@ async function imports() {
   let issues = 0;
   for (const f of [...await walk(`${ROOT}/engine`), ...await walk(`${ROOT}/works`)]) {
     const src = stripComments(await readFile(f, "utf8"));
-    for (const m of src.matchAll(/import\s*\{([^}]*)\}\s*from\s*'([^']+)'/g)) {
+    for (const m of src.matchAll(/import\s*\{([^}]*)\}\s*from\s*["']([^"']+)["']/g)) {
       const names = m[1].split(",").map((x) => x.trim().split(" as ")[0].trim()).filter(Boolean);
       const spec = m[2];
       if (pools[spec]) {
@@ -193,16 +193,16 @@ async function ui() {
   const srcs = Object.fromEntries(await Promise.all(files.map(async (f) => [f, await readFile(f, "utf8")])));
   const all = Object.values(srcs).join("\n");
   const declared = new Set([
-    ...[...all.matchAll(/\['(\w+)',\s*'[^']*'\]/g)].map((m) => m[1]),
+    ...[...all.matchAll(/\[["'](\w+)["'],\s*["'][^"']*["']\]/g)].map((m) => m[1]),
     ...[...all.matchAll(/data-v="(\w+)"/g)].map((m) => m[1])
   ]);
-  const used = new Set([...all.matchAll(/hud\.set\('(\w+)'/g)].map((m) => m[1]));
+  const used = new Set([...all.matchAll(/hud\.set\(["'](\w+)["']/g)].map((m) => m[1]));
   const orphan = [...declared].filter((k) => !used.has(k) && used.size);
   const noop = [...used].filter((k) => !declared.has(k));
   noop.length ? bad("HUD wiring", `set but never declared: ${noop}`) : ok("HUD wiring", `${used.size} fields set, ${orphan.length} unused rows`);
   const binds = {};
   for (const [f, s] of Object.entries(srcs))
-    for (const m of s.matchAll(/e\.code\s*===\s*'(\w+)'/g)) (binds[m[1]] ??= new Set()).add(f.split("/").pop());
+    for (const m of s.matchAll(/e\.code\s*===\s*["'](\w+)["']/g)) (binds[m[1]] ??= new Set()).add(f.split("/").pop());
   const vehicles = new Set(["rover.js", "walker.js"]);
   const clash = Object.entries(binds).filter(([, v]) => [...v].filter((f) => !vehicles.has(f)).length + ([...v].some((f) => vehicles.has(f)) ? 1 : 0) > 1);
   clash.length ? bad("key bindings", clash.map(([k, v]) => `${k}: ${[...v]}`).join(" \xB7 ")) : ok("key bindings", `${Object.keys(binds).length} keys, no collisions`);

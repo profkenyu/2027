@@ -1,14 +1,6 @@
 import { chromium } from 'playwright';
-import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
-const server = createServer(async (request, response) => {
-  const path = request.url.split('?')[0];
-  try {
-    response.setHeader('Content-Type', path.endsWith('.html') ? 'text/html' : 'text/javascript');
-    response.end(await readFile('.' + path));
-  } catch { response.writeHead(404).end(); }
-});
-await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+import { startPreviewServer } from "./lib/preview-server.mjs";
+const server = await startPreviewServer();
 let browser;
 try {
   browser = await chromium.launch({channel: 'chrome', headless: true, args: ['--enable-unsafe-swiftshader']});
@@ -22,7 +14,7 @@ try {
     const errors = [];
     page.on('pageerror', error => errors.push(String(error)));
     await page.emulateMedia({reducedMotion: test.motion});
-    await page.goto(`http://127.0.0.1:${server.address().port}/tools/vehicle-model.html?quality=${test.tier}`);
+    await page.goto(`${server.url}/tools/vehicle-model.html?quality=${test.tier}`);
     await page.waitForFunction(() => window.ready);
     const report = await page.evaluate(async tier => {
       const THREE = await import('three');
@@ -74,4 +66,7 @@ try {
     console.log(test.name, JSON.stringify(report));
     await page.close();
   }
-} finally { await browser?.close();server.close(); }
+} finally {
+  await browser?.close();
+  await server.close();
+}

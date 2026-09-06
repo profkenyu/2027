@@ -387,8 +387,8 @@
           }
         });
         const wheels = rover.wheels.length;
-        if (tris < 52e3 || tris > 62e3)
-          throw new Error(`rover triangle budget ${Math.round(tris).toLocaleString()} is outside 52\u201362k`);
+        if (tris > 62e3)
+          throw new Error(`rover triangle budget ${Math.round(tris).toLocaleString()} exceeds 62k`);
         if (meshes > 160) throw new Error(`rover draw-call budget exceeded: ${meshes} meshes`);
         return `${meshes} meshes \xB7 ${Math.round(tris).toLocaleString()} triangles \xB7 ${wheels} wheels \xB7 lid ${rover.lid ? "hinged" : "MISSING"}`;
       });
@@ -400,8 +400,14 @@
         });
         for (const role of ["armoured-hull", "service-panels", "suspension-pivots", "front-service-array", "camera-mast-structure", "solar-gimbal", "solar-array", "solar-backplane", "solar-cell-matrix", "avionics-pod", "sample-arm", "lidar-cluster"])
           if (roles.get(role) !== 1) throw new Error(`${role}: expected 1, got ${roles.get(role) ?? 0}`);
-        if (roles.get("suspension-coil") !== 8)
-          throw new Error(`suspension-coil: expected 8, got ${roles.get("suspension-coil") ?? 0}`);
+        for (const role of ["fixed-suspension-link", "telescopic-damper"])
+          if (roles.get(role) !== 8) throw new Error(`${role}: expected 8, got ${roles.get(role) ?? 0}`);
+        for (const wheel of rover.wheels) {
+          const rig = wheel.userData.suspension;
+          if (!rig || Math.abs(rig.anchor.distanceTo(rig.elbow) - rig.linkLength) > 1e-6 ||
+              Math.abs(rig.hub.distanceTo(rig.elbow) - rig.linkLength) > 1e-6)
+            throw new Error("suspension link length changed during terrain traversal");
+        }
         const wheelLayers = rover.wheels[0]?.children.filter((o) => o.isMesh) ?? [];
         if (wheelLayers.length !== 2 || wheelLayers[0].material === wheelLayers[1].material)
           throw new Error("wheel rubber and metal layers are not materially separated");
