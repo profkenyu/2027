@@ -48,7 +48,7 @@ export class DockingSequence {
       this.effect.depart(p);
       if (p >= 1) {
         this.effect.finish();
-        const stage = this.lander.dockingPoint(this.lander.dock.toeZ - 10, 0);
+        const stage = this.lander.dockingPoint((this.lander.dock.entryZ ?? this.lander.dock.toeZ) - 10, 0);
         const target = this.lander.dockingPoint(this.lander.dock.hatchZ, 0);
         const heading = Math.atan2(-(target.x - stage.x), -(target.z - stage.z));
         this.rover.teleport(stage.x, stage.z, heading);
@@ -93,10 +93,17 @@ export class DockingSequence {
       const error = wrap(desired - this.rover.heading);
       const steer = Math.max(-0.38, Math.min(0.38, error * 1.65));
       const nearBay = local.z > this.lander.dock.hatchZ - 1.2;
-      const throttle = nearBay ? 0.24 : 0.47;
+      const remaining = Math.hypot(dx, dz);
+      const throttle = Math.min(nearBay ? 0.24 : 0.47, remaining * 0.16) * Math.max(0, Math.cos(error));
       this.rover.scriptedDrive = { throttle, steer };
-      if (local.z >= -0.72 || elapsed > 3e4) {
+      const aligned = Math.abs(local.x) < 0.06 && Math.abs(wrap(this.rover.heading - this.lander.group.rotation.y - Math.PI)) < 0.04;
+      const contained = this.rover.contacts().every(({x, z}) => {
+        const point = this.lander.dockingLocal(x, z);
+        return Math.abs(point.x) < this.lander.dock.halfWidth - 0.15 && point.z > this.lander.dock.hatchZ + 0.3 && point.z < this.lander.dock.backZ - 0.15;
+      });
+      if (remaining < 0.06 && aligned && contained && Math.abs(this.rover.speed) < 0.06) {
         this.rover.scriptedDrive = { throttle: 0, steer: 0 };
+        this.rover.stowedIn = this.lander;
         this.phase = "secure";
         this.t0 = now;
         this.onCue?.("secure", now);
@@ -138,6 +145,7 @@ export class DockingSequence {
     this.started = false;
     this.docked = false;
     this.rover.scriptedDrive = null;
+    this.rover.stowedIn = null;
     this.rover.surfaceOverride = null;
     this.rover.group.visible = true;
     this.lander.setRamp(0);

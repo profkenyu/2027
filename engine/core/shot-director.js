@@ -338,7 +338,7 @@ export class ShotDirector {
     if (aspect >= 1) return;
     const scale = Math.min(1.66, 0.88 / Math.max(0.42, aspect));
     this._camera.sub(this._aim).multiplyScalar(scale).add(this._aim);
-    if (shot !== "ascent" && shot !== "tele") {
+    if (shot !== "tele" && (shot !== "ascent" || this.voyage.phase !== "transit")) {
       this._camera.y = Math.max(
         this._camera.y,
         this.heightAt(this._camera.x, this._camera.z) + (shot === "macro" ? 0.3 : 0.42)
@@ -360,6 +360,14 @@ export class ShotDirector {
   }
   underside(now) {
     const transit = this.voyage.phase === "transit";
+    if (!transit) {
+      const altitude = Math.max(0, this.lander.group.position.y - (this.lander.site?.y ?? this.heightAt(this.lander.group.position.x, this.lander.group.position.z)));
+      this._camera.copy(this.lander.dockingPoint(-22, 18, 6));
+      this._camera.y = Math.max(this._camera.y, this.heightAt(this._camera.x, this._camera.z) + 1.2);
+      this._aim.copy(this.lander.dockingPoint(0.25, 0, 1 - Math.min(altitude * 0.3, 3)));
+      this.camera.fov = 48;
+      return;
+    }
     const drift = this.reducedMotion ? 0 : Math.sin(now * 75e-6) * 0.9;
     this._camera.copy(this.lander.dockingPoint(
       transit ? -16.5 : -11.5,

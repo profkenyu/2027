@@ -280,6 +280,8 @@ export class VoyageSequence {
       if (!this.swapped && !this.swapPending && elapsed >= 6400) {
         this.swapPending = true;
         await this.onSwap?.(this.destination);
+        this.rover.stowedIn = this.lander;
+        this.rover.surfaceOverride = this._surface;
         this.swapped = true;
         this.swapPending = false;
         this.baseY = this.lander.group.position.y;
@@ -349,8 +351,9 @@ export class VoyageSequence {
         this.lander.setRamp(1);
         this.rover.surfaceOverride = this._surface;
         const inside = this.lander.dockingPoint(-0.62, 0);
-        const outside = this.lander.dockingPoint(this.lander.dock.toeZ - 2, 0);
+        const outside = this.lander.dockingPoint((this.lander.dock.entryZ ?? this.lander.dock.toeZ) - 2, 0);
         const heading = Math.atan2(-(outside.x - inside.x), -(outside.z - inside.z));
+        this.rover.stowedIn = null;
         this.rover.teleport(inside.x, inside.z, heading);
         this.rover.update(0);
         this.rover.group.visible = true;
@@ -363,14 +366,14 @@ export class VoyageSequence {
     }
     if (this.phase === "egress") {
       const local = this.lander.dockingLocal(this.rover.pos.x, this.rover.pos.z);
-      this._target.copy(this.lander.dockingPoint(this.lander.dock.toeZ - 2, 0));
+      this._target.copy(this.lander.dockingPoint((this.lander.dock.entryZ ?? this.lander.dock.toeZ) - 2, 0));
       const dx = this._target.x - this.rover.pos.x, dz = this._target.z - this.rover.pos.z;
       const desired = Math.atan2(-dx, -dz), error = wrap(desired - this.rover.heading);
       this.rover.scriptedDrive = {
         throttle: local.z < this.lander.dock.hatchZ ? 0.34 : 0.23,
         steer: Math.max(-0.34, Math.min(0.34, error * 1.7))
       };
-      if (local.z <= this.lander.dock.toeZ - 1.2 || elapsed > 18e3) {
+      if (local.z <= (this.lander.dock.entryZ ?? this.lander.dock.toeZ) - 1.2 || elapsed > 18e3) {
         this.rover.scriptedDrive = { throttle: 0, steer: 0 };
         this.rover.surfaceOverride = null;
         this.phase = "close";
@@ -458,6 +461,7 @@ export class VoyageSequence {
     });
     this.rover.scriptedDrive = null;
     this.rover.surfaceOverride = null;
+    this.rover.stowedIn = null;
     this.lander.setBeaconOverride(null);
     this.lander.setLegFold(0);
     this.lander.setLegCompression?.(0);

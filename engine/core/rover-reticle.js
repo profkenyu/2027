@@ -46,8 +46,9 @@ export class RoverReticle {
       <div class="sensor-id">ROVER POV<br>WIDE / 8MM</div>
     </div>`;
     document.body.appendChild(this.element);
-    this.normal = new THREE.Vector3();
-    this.inverseCamera = new THREE.Quaternion();
+    this.forward = new THREE.Vector3();
+    this.right = new THREE.Vector3();
+    this.sample = new THREE.Vector3();
     this.ground = this.element.querySelector('.ground-plane');
     this.horizon = this.element.querySelector('.ground-horizon');
     this.horizonLabel = this.element.querySelector('.ground-horizon-label');
@@ -70,38 +71,53 @@ export class RoverReticle {
   }
   updateGround(camera, position, heightAt, distorted = false) {
     if (this.element.hidden || !this.width || !this.height) return;
-    // Central differences estimate the local terrain tangent over a 2 m span.
-    const { x, z } = position;
-    this.normal.set(-(heightAt(x + 1, z) - heightAt(x - 1, z)) / 2, 1,
-      -(heightAt(x, z + 1) - heightAt(x, z - 1)) / 2);
-    this.normal.applyQuaternion(this.inverseCamera.copy(camera.quaternion).invert());
-    const n = this.normal, tangent = Math.tan(camera.fov * Math.PI / 360);
-    // Intersect view rays with the tangent plane's horizon, including the mast
-    // post-process UV warp. No invented screen-space roll or pitch offsets.
-    const rayDot = (u, v) => {
-      const sx = (u - 0.5) * camera.aspect, sy = 0.5 - v;
-      const r2 = sx * sx + sy * sy;
-      const scale = distorted ? 1 / (1 + 0.18 * r2 + 0.02 * r2 * r2) : 1;
-      return 2 * tangent * scale * (n.x * sx + n.y * sy) - n.z;
-    };
-    let path = '', pen = false, labelY = null;
+    // Project a cross-section of the actual terrain 18 m ahead. A local tangent
+    // at the wheels cancels the mast's roll and misses the visible slopes ahead.
+    camera.updateMatrixWorld();
+    this.forward.set(0, 0, -1).applyQuaternion(camera.quaternion);
+    this.forward.y = 0;
+    if (this.forward.lengthSq() < 0.0001) return;
+    this.forward.normalize();
+    this.right.set(-this.forward.z, 0, this.forward.x);
+    const distance = 18, tangent = Math.tan(camera.fov * Math.PI / 360);
+    const halfWidth = distance * tangent * camera.aspect * 0.86;
+    let path = '', pen = false, labelY = null, labelX = null;
     for (let i = 0; i <= 32; i++) {
-      const u = 0.07 + i / 32 * 0.86;
-      let lo = 0, hi = 1, low = rayDot(u, lo);
-      if (low * rayDot(u, hi) > 0) { pen = false; continue; }
-      for (let j = 0; j < 18; j++) {
-        const mid = (lo + hi) / 2, value = rayDot(u, mid);
-        if (value * low > 0) { lo = mid; low = value; } else hi = mid;
+      const side = (i / 16 - 1) * halfWidth;
+      const x = position.x + this.forward.x * distance + this.right.x * side;
+      const z = position.z + this.forward.z * distance + this.right.z * side;
+      this.sample.set(x, heightAt(x, z) + 0.025, z).project(camera);
+      let sx = this.sample.x * camera.aspect / 2, sy = this.sample.y / 2;
+      if (this.sample.z > 1 || this.sample.z < -1) { pen = false; continue; }
+      if (distorted) {
+        // Invert the same radial UV lookup used by the mast lens.
+        const radius = Math.hypot(sx, sy);
+        let displayRadius = radius;
+        for (let j = 0; j < 8; j++) {
+          const r2 = displayRadius * displayRadius, denom = 1 + 0.18 * r2 + 0.02 * r2 * r2;
+          const derivative = (1 - 0.18 * r2 - 0.06 * r2 * r2) / (denom * denom);
+          if (derivative < 0.02) break;
+          displayRadius = Math.max(0, displayRadius - (displayRadius / denom - radius) / derivative);
+        }
+        const r2 = displayRadius * displayRadius;
+        if (Math.abs(displayRadius / (1 + 0.18 * r2 + 0.02 * r2 * r2) - radius) > 0.0001) {
+          pen = false;
+          continue;
+        }
+        const scale = radius > 0.000001 ? displayRadius / radius : 1;
+        sx *= scale;
+        sy *= scale;
       }
-      const y = (lo + hi) / 2 * this.height;
-      path += `${pen ? 'L' : 'M'}${(u * this.width).toFixed(2)},${y.toFixed(2)} `;
+      const px = (sx / camera.aspect + 0.5) * this.width;
+      const y = (0.5 - sy) * this.height;
+      path += `${pen ? 'L' : 'M'}${px.toFixed(2)},${y.toFixed(2)} `;
       pen = true;
-      if (i === 16) labelY = y;
+      if (i === 16) { labelY = y; labelX = px; }
     }
     this.horizon.setAttribute('d', path);
     this.horizonLabel.style.display = labelY === null ? 'none' : '';
     if (labelY !== null) {
-      this.horizonLabel.setAttribute('x', this.width / 2);
+      this.horizonLabel.setAttribute('x', labelX);
       this.horizonLabel.setAttribute('y', labelY - 10);
     }
   }

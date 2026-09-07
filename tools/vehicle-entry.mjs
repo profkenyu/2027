@@ -2,7 +2,10 @@ import { chromium } from 'playwright';
 import { startPreviewServer } from "./lib/preview-server.mjs";
 const server = await startPreviewServer({ routes: { "/external": '<link rel="icon" href="data:,"><a href="/index.html?test&quality=low">Enter</a>' } });
 async function requireArtwork(page) {
-  await page.waitForFunction(() => window.TI_READY === true, null, {timeout: 60000});
+  await page.waitForFunction(() => window.TI_READY === true && (
+    document.getElementById('fh-gate') || document.getElementById('fh-fatal') ||
+    (window.TI_WORLD && typeof window.TI_CAMERA === 'function' && window.TI_BLUEPRINT?.().models)
+  ), null, {timeout: 60000});
   const state = await page.evaluate(() => ({
     ready: window.TI_READY,
     gate: document.getElementById("fh-gate")?.textContent.trim() ?? null,

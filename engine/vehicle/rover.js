@@ -115,6 +115,7 @@ export class Rover {
     this.operatorHold = false;
     this.scriptedDrive = null;
     this.surfaceOverride = null;
+    this.stowedIn = null;
     this.arrayAuto = true;
     this.beaconLevel = 0;
     this.keys = new Set();
@@ -203,6 +204,15 @@ export class Rover {
     return out;
   }
   update(dt) {
+    if (this.stowedIn) {
+      const lander = this.stowedIn;
+      const point = lander.dockingPoint(-0.58, 0);
+      this.pos.set(point.x, 0, point.z);
+      this.heading = lander.group.rotation.y + Math.PI;
+      this.speed = 0;
+      this.settled = false;
+      dt = 0;
+    }
     const V = cfg().vehicle;
     const k = this.keys;
     let throttle = 0, steer = 0;
@@ -453,6 +463,7 @@ export class Rover {
     this.speed = 0;
     this.odometer = 0;
     this.settled = false;
+    this.stowedIn = null;
     this.sus.fill(0);
     this.slam = 0;
     this.stops = 0;

@@ -998,14 +998,22 @@ export class Lander {
     this.group.position.set(px, baseY, pz);
     this.group.rotation.y = yaw;
     const sin = Math.sin(yaw), cos = Math.cos(yaw);
-    const toeX = px + this.dock.toeZ * sin;
-    const toeZ = pz + this.dock.toeZ * cos;
-    this.dock.toeY = this.h(toeX, toeZ) - baseY + 0.08;
     const rampLength = this.dock.hatchZ - this.dock.toeZ;
-    this.dock.openAngle = Math.asin(Math.max(-0.82, Math.min(
-      0.05,
-      (this.dock.toeY - this.dock.floorY) / rampLength
-    )));
+    // Telescoping deck: solve the deployed span against the actual terrain.
+    // Sample both wheel lanes so the ramp lip cannot be buried by cross-slope.
+    let span = rampLength;
+    for (let i = 0; i < 80; i++, span += 0.25) {
+      const z = this.dock.hatchZ - span;
+      let toeY = -Infinity;
+      for (const x of [-this.dock.halfWidth, 0, this.dock.halfWidth]) {
+        toeY = Math.max(toeY, this.h(px + x*cos + z*sin, pz - x*sin + z*cos) - baseY + 0.04);
+      }
+      this.dock.entryZ = z;
+      this.dock.toeY = toeY;
+      this.dock.openAngle = Math.atan2(toeY - this.dock.floorY, span);
+      this.dock.extension = Math.hypot(span, toeY - this.dock.floorY) / rampLength;
+      if (Math.abs(this.dock.openAngle) <= 0.48) break;
+    }
     this.setRamp(0);
     this.setHoldDown(0);
     this.setDockLights(1);
@@ -1041,6 +1049,7 @@ export class Lander {
     if (!this.rampPivot) return;
     const eased = this.dock.progress * this.dock.progress * (3 - 2 * this.dock.progress);
     this.rampPivot.rotation.x = Math.PI * 0.5 + (this.dock.openAngle - Math.PI * 0.5) * eased;
+    this.rampPivot.scale.z = 1 + ((this.dock.extension ?? 1) - 1) * eased;
   }
   setDockLights(fraction = 1) {
     const remaining = Math.max(0, Math.min(1, fraction));
@@ -1147,17 +1156,19 @@ export class Lander {
     return { x: dx * cos - dz * sin, z: dx * sin + dz * cos };
   }
   hangarHeight(localZ) {
-    if (localZ <= this.dock.toeZ) return this.dock.toeY;
+    const toeZ = this.dock.entryZ ?? this.dock.toeZ;
+    if (localZ <= toeZ) return this.dock.toeY;
     if (localZ >= this.dock.hatchZ) return this.dock.floorY;
-    const p = (localZ - this.dock.toeZ) / (this.dock.hatchZ - this.dock.toeZ);
+    const p = (localZ - toeZ) / (this.dock.hatchZ - toeZ);
     return this.dock.toeY + (this.dock.floorY - this.dock.toeY) * p;
   }
   dockingSurface(x, z, terrain) {
     const local = this.dockingLocal(x, z);
     if (Math.abs(local.x) > this.dock.halfWidth || local.z > this.dock.backZ) return terrain;
     const insideBay = local.z >= this.dock.hatchZ;
-    if (!insideBay && (this.dock.progress < 0.98 || local.z < this.dock.toeZ - 0.35)) return terrain;
-    return Math.max(terrain, this.group.position.y + this.hangarHeight(local.z));
+    if (!insideBay && (this.dock.progress < 0.98 || local.z < (this.dock.entryZ ?? this.dock.toeZ))) return terrain;
+    const deck = this.group.position.y + this.hangarHeight(local.z);
+    return insideBay ? deck : Math.max(terrain, deck);
   }
   update(now, active = true) {
     this.group.visible = active;
