@@ -978,6 +978,16 @@
   #arrive {
     opacity: 1;
     transition: opacity .16s linear;
+    overflow: hidden;
+  }
+  #ti-boot-noise {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    opacity: .92;
+    image-rendering: pixelated;
   }
   #depart {
     opacity: 0;
@@ -1928,7 +1938,7 @@
   <p id="fh-watchdog-ko">시작 단계가 30초 동안 응답하지 않았습니다.</p>
 </div>
 
-<div id="arrive"></div>
+<div id="arrive"><canvas id="ti-boot-noise" aria-hidden="true"></canvas></div>
 <div id="depart"></div>
 <div id="ti-entry-veil" aria-hidden="true"></div>
 <section id="ti-prologue" aria-label="Terra Incognita prologue">
@@ -1972,17 +1982,39 @@
       return;
     }
     var a = document.getElementById("arrive"), d = document.getElementById("depart");
+    var bootNoise = document.getElementById("ti-boot-noise");
+    var bootNoiseFrame = 0, bootNoiseActive = true;
+    var bootNoiseCtx = bootNoise && bootNoise.getContext("2d", { alpha: false });
+    function drawBootNoise() {
+      if (!bootNoiseActive || !bootNoiseCtx) return;
+      var width = Math.max(128, Math.min(280, Math.ceil(innerWidth / 6)));
+      var height = Math.max(72, Math.min(180, Math.ceil(innerHeight / 6)));
+      if (bootNoise.width !== width || bootNoise.height !== height) {
+        bootNoise.width = width;
+        bootNoise.height = height;
+      }
+      var image = bootNoiseCtx.createImageData(width, height), pixels = image.data;
+      for (var i = 0; i < pixels.length; i += 4) {
+        var level = Math.floor(Math.random() * 88);
+        pixels[i] = level * .32;
+        pixels[i + 1] = level;
+        pixels[i + 2] = level * .46;
+        pixels[i + 3] = 255;
+      }
+      bootNoiseCtx.putImageData(image, 0, 0);
+      if (!matchMedia("(prefers-reduced-motion: reduce)").matches) bootNoiseFrame = requestAnimationFrame(drawBootNoise);
+    }
+    drawBootNoise();
     var revealed = false;
     window.TI_REVEAL_OPENING = function() {
       if (revealed) return;
       revealed = true;
+      bootNoiseActive = false;
+      cancelAnimationFrame(bootNoiseFrame);
       var blueprint = document.getElementById("ti-opening-blueprints");
       a.dataset.revealSource = document.body.classList.contains("ti-blueprints-active") && blueprint && blueprint.getAttribute("aria-hidden") === "false" ? "blueprint" : "unready";
-      requestAnimationFrame(function() {
-        requestAnimationFrame(function() {
-          a.style.opacity = "0";
-        });
-      });
+      a.style.transition = "none";
+      a.style.opacity = "0";
     };
     window.addEventListener("pageshow", function(e) {
       if (e.persisted) {

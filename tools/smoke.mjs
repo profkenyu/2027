@@ -532,7 +532,7 @@ if (SEQUENCE) {
           await page.keyboard.press("KeyC");
           await page.waitForTimeout(240);
           const camera = await page.evaluate(() => window.TI_CAMERA?.() ?? null);
-          sequenceShots.body02Rear = camera?.world === "desert" && camera?.shot === "rear" && camera?.source === "manual" && camera?.experience === "explorer" && !camera?.locked;
+          sequenceShots.body02Rear = camera?.world === "desert" && camera?.shot === "rear" && camera?.source === "manual" && camera?.experience === "observer" && !camera?.locked;
           await page.keyboard.press("Space");
           await page.waitForTimeout(2650);
           const returned = await page.evaluate(() => ({
@@ -560,7 +560,7 @@ if (SEQUENCE) {
           await page.keyboard.press("KeyC");
           await page.waitForTimeout(240);
           const camera = await page.evaluate(() => window.TI_CAMERA?.() ?? null);
-          sequenceShots.body03Rear = camera?.world === "granite" && camera?.shot === "rear" && camera?.source === "manual" && camera?.experience === "explorer" && !camera?.locked;
+          sequenceShots.body03Rear = camera?.world === "granite" && camera?.shot === "rear" && camera?.source === "manual" && camera?.experience === "observer" && !camera?.locked;
         }
         sequenceComplete = sequenceShots.body03Rear;
         break;
@@ -571,13 +571,16 @@ if (SEQUENCE) {
 } else {
   await page.waitForTimeout(2700);
   const before = await page.evaluate(() => window.TI_CAMERA?.() ?? null);
+  const driveBefore = await page.evaluate(() => window.TI_EXPERIENCE());
   await page.keyboard.press("KeyC");
   await page.waitForTimeout(250);
   const after = await page.evaluate(() => window.TI_CAMERA?.() ?? null);
-  cameraCycle = { before, after };
+  cameraCycle = { before, after, driveBefore };
   await page.keyboard.press("KeyC");
   await page.waitForTimeout(250);
   roverPOV = await page.evaluate(() => window.TI_CAMERA?.() ?? null);
+  await page.waitForTimeout(1200);
+  cameraCycle.driveAfter = await page.evaluate(() => window.TI_EXPERIENCE());
   await page.screenshot({ path: `${ROOT}/dist/rover-pov-smoke.png` });
   await page.keyboard.down("ShiftLeft");
   await page.keyboard.down("KeyW");
@@ -702,8 +705,11 @@ if (MOBILE && (!mobileIntro?.visible || mobileIntro?.label !== "START" || !mobil
 }
 if (!["wide", "rear", "mast", "macro", "tele", "return", "ascent"].includes(report.camera?.shot))
   fatal.push(`camera escaped authored/operator grammar: ${report.camera?.shot ?? "missing"}`);
-if (!SEQUENCE && (cameraCycle.before.shot === cameraCycle.after?.shot || cameraCycle.after?.source !== "manual" || cameraCycle.after?.experience !== "explorer")) {
+if (!SEQUENCE && (cameraCycle.before.shot === cameraCycle.after?.shot || cameraCycle.after?.source !== "manual" || cameraCycle.after?.experience !== cameraCycle.before.experience || cameraCycle.driveAfter.auto !== cameraCycle.driveBefore.auto)) {
   fatal.push(`C did not change an available authored shot: ${JSON.stringify(cameraCycle)}`);
+}
+if (!SEQUENCE && cameraCycle.driveBefore.auto && cameraCycle.driveBefore.speed > 0.1 && Math.hypot(cameraCycle.driveAfter.position.x - cameraCycle.driveBefore.position.x, cameraCycle.driveAfter.position.z - cameraCycle.driveBefore.position.z) < 0.05) {
+  fatal.push('Camera switching stopped a moving AUTO rover');
 }
 if (!SEQUENCE && (roverPOV?.shot !== "mast" || !roverPOV?.roverPOV || roverPOV?.lensProfile !== "mast" || roverPOV?.source !== "manual")) {
   fatal.push(`second C did not engage the 8 mm rover POV/lens profile: ${JSON.stringify(roverPOV)}`);

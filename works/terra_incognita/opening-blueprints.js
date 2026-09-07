@@ -28,7 +28,7 @@ body.ti-blueprints-active #ti-opening-blueprints {
   visibility: visible;
   opacity: 1;
   transition-delay: 0s;
-  transition-duration: .08s, 0s;
+  transition-duration: 0s, 0s;
   transition-timing-function: linear, linear;
 }
 body.ti-blueprints-out #ti-opening-blueprints {
@@ -101,7 +101,7 @@ body.ti-blueprints-active #ti-opening-blueprints::after {
   visibility: hidden;
   opacity: 0;
   background: #050506;
-  transition: opacity .12s linear, visibility 0s linear .12s;
+  transition: visibility 0s linear;
 }
 #ti-opening-blueprints .bp-noise canvas {
   display: block;
@@ -559,6 +559,8 @@ export class OpeningBlueprintSequence {
     this.draws = 0;
     this.lastDrawAt = -Infinity;
     this.frame = 0;
+    this.captureFrame = 0;
+    this.captured = false;
     this.onComplete = null;
     this.shown = new Set();
     this.models = null;
@@ -606,7 +608,6 @@ export class OpeningBlueprintSequence {
   }
   start(onComplete) {
     this.cancel({ preserve: false });
-    this._capture();
     this.active = true;
     this.suspended = false;
     this.seen = true;
@@ -622,13 +623,14 @@ export class OpeningBlueprintSequence {
     this.draws = 0;
     this.lastDrawAt = -Infinity;
     this.onComplete = onComplete;
+    this.captured = false;
     this.shown.clear();
     document.body.classList.remove("ti-blueprints-out");
     document.body.classList.add("ti-blueprints-active");
     this.el.setAttribute("aria-hidden", "false");
     this._size();
     this._apply(0, true);
-    this.frame = requestAnimationFrame((now) => this._tick(now));
+    this._deferCapture();
     return true;
   }
   finish({ preserve = true } = {}) {
@@ -636,7 +638,9 @@ export class OpeningBlueprintSequence {
   }
   cancel({ preserve = false } = {}) {
     if (this.frame) cancelAnimationFrame(this.frame);
+    if (this.captureFrame) cancelAnimationFrame(this.captureFrame);
     this.frame = 0;
+    this.captureFrame = 0;
     this.active = false;
     this.suspended = false;
     this.scan = 0;
@@ -654,13 +658,16 @@ export class OpeningBlueprintSequence {
     this.elapsed = Math.max(0, Math.min(this.total, performance.now() - this.startedAt));
     this.suspended = true;
     if (this.frame) cancelAnimationFrame(this.frame);
+    if (this.captureFrame) cancelAnimationFrame(this.captureFrame);
     this.frame = 0;
+    this.captureFrame = 0;
   }
   resume() {
     if (!this.active || !this.suspended) return;
     this.suspended = false;
     this.startedAt = performance.now() - this.elapsed;
-    this.frame = requestAnimationFrame((now) => this._tick(now));
+    if (!this.captured) this._deferCapture();
+    else this.frame = requestAnimationFrame((now) => this._tick(now));
   }
   snapshot() {
     const describe = (model) => model ? {
@@ -699,6 +706,17 @@ export class OpeningBlueprintSequence {
     rover.views = createViews(rover.coords, rover.segmentParts, rover.parts);
     lander.views = createViews(lander.coords, lander.segmentParts, lander.parts);
     this.models = { rover, lander };
+  }
+  _deferCapture() {
+    this.captureFrame = requestAnimationFrame(() => {
+      this.captureFrame = requestAnimationFrame(() => {
+        this.captureFrame = 0;
+        if (!this.active || this.suspended || this.captured) return;
+        this._capture();
+        this.captured = true;
+        this._tick(performance.now());
+      });
+    });
   }
   _tick(now) {
     if (!this.active || this.suspended) return;

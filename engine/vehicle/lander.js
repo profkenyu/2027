@@ -20,6 +20,7 @@ import {
 } from "three/tsl";
 import { fitLink, makeLink } from "./mechanics.js";
 import { cfg } from "../config.js";
+import { LanderExhaust, LANDER_NOZZLES } from "./lander-exhaust.js";
 const Y = new THREE.Vector3(0, 1, 0);
 const LEVEL_PAD = new THREE.Quaternion();
 const LEG = Object.freeze({
@@ -448,6 +449,8 @@ export class Lander {
     this._build();
     this.setLegFold(0);
     this._prepareRestoration();
+    this.exhaust = new LanderExhaust();
+    this.group.add(this.exhaust.mesh);
   }
   _track(part, ...objects) {
     this.parts[part].objects.push(...objects.filter(Boolean));
@@ -692,11 +695,7 @@ export class Lander {
     );
     this.purge = new CryogenicPurge([
       { position: [-3.78, 3.73, 0.15], direction: [-1, 0.04, 0.12] },
-      { position: [0.58, 6.89, 0.41], direction: [0.18, 0.94, 0.3] },
-      { position: [-1.7, 0.72, -0.72], direction: [-0.48, -0.78, -0.3] },
-      { position: [1.7, 0.72, -0.72], direction: [0.48, -0.78, -0.3] },
-      { position: [-1.35, 0.72, 1.08], direction: [-0.42, -0.8, 0.34] },
-      { position: [1.35, 0.72, 1.08], direction: [0.42, -0.8, 0.34] }
+      { position: [0.58, 6.89, 0.41], direction: [0.18, 0.94, 0.3] }
     ]);
     this.group.add(this.purge.points);
     this.crown.position.set(0, 5.55, 0);
@@ -794,7 +793,7 @@ export class Lander {
       for(const y of [2.45,4.4]) box(5,ceramic,[.19,.24,.14],[side*1.73,y,-3.88]);
     }
     // Three restrained underside bells; the open profile carries depth without glow.
-    for (const [x,z] of [[-1.45,.1],[1.45,.1],[0,1.65]]) {
+    for (const [x,z] of LANDER_NOZZLES) {
       const bell = new THREE.LatheGeometry([new THREE.Vector2(.19,.53),new THREE.Vector2(.22,.32),new THREE.Vector2(.32,.09),new THREE.Vector2(.47,-.13),new THREE.Vector2(.44,-.16),new THREE.Vector2(.29,.07),new THREE.Vector2(.17,.3)],tier==='high'?20:tier==='mid'?14:10);
       add(0,metal,bell,[x,.61,z]);
       add(0,dark,new THREE.CylinderGeometry(.18,.18,.04,10),[x,.92,z]);
@@ -1054,8 +1053,8 @@ export class Lander {
   setBeaconOverride(value = null) {
     this.beaconOverride = value == null ? null : Math.max(0, Math.min(1, value));
   }
-  forceFlightPurge(now = performance.now(), duration = 2200) {
-    this.purge?.forceBurst(now, 2, 4, duration);
+  setFlightThrust(intensity = 0, altitude = 0, groundY = this.site?.y ?? 0) {
+    this.exhaust.setPower(intensity, altitude, groundY);
   }
   // Inverse kinematics retains the upper link length. The three-stage lower
   // damper supplies terrain reach and compression; each sleeve stays rigid.
@@ -1162,6 +1161,7 @@ export class Lander {
   }
   update(now, active = true) {
     this.group.visible = active;
+    this.exhaust.update(now);
     this.purge?.update(now, active && this.restorationComplete, this.group.position.y);
     if (!active) return;
     this._updateRestoration(now);

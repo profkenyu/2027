@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { VoyageOrbits } from "./voyage-orbits.js";
 const clamp01 = (value) => Math.max(0, Math.min(1, value));
 const smooth = (value) => {
   const p = clamp01(value);
@@ -138,11 +139,10 @@ export class VoyageSequence {
     this.swapped = false;
     this.swapPending = false;
     this.egressPlaced = false;
-    this.takeoffPurge = false;
-    this.landingPurge = false;
     this.landingRegolith = false;
     this.liftReleased = false;
     this.foldCued = false;
+    this.nextExhaustDustAt = 0;
     this._camera = new THREE.Vector3();
     this._aim = new THREE.Vector3();
     this._target = new THREE.Vector3();
@@ -154,6 +154,8 @@ export class VoyageSequence {
       starLayer(38, 14731688, 0.86, 701)
     ];
     this.group.add(...this.layers.map((layer) => layer.group));
+    this.orbits = new VoyageOrbits();
+    this.group.add(this.orbits.lines);
     this.group.visible = false;
     const style = document.createElement("style");
     style.textContent = CSS;
@@ -179,11 +181,11 @@ export class VoyageSequence {
     this.swapped = false;
     this.swapPending = false;
     this.egressPlaced = false;
-    this.takeoffPurge = false;
-    this.landingPurge = false;
     this.landingRegolith = false;
     this.liftReleased = false;
     this.foldCued = false;
+    this.nextExhaustDustAt = 0;
+    this.lander.setFlightThrust?.(0);
     this.lander.group.scale.setScalar(1);
     this.rover.auto = false;
     this.rover.scriptedDrive = { throttle: 0, steer: 0 };
@@ -195,6 +197,7 @@ export class VoyageSequence {
   }
   async beforeRover(now) {
     if (!this.active) return;
+    this.lander.setFlightThrust?.(0);
     const elapsed = now - this.t0;
     this.rover.scriptedDrive = { throttle: 0, steer: 0 };
     if (this.phase === "hold") {
@@ -222,19 +225,19 @@ export class VoyageSequence {
         this.ambient?.transferCue("release");
       }
       const fold = smooth((elapsed - 920) / 3100);
+      const ignition = smooth(elapsed / buildMs);
+      const cutoff = 1 - smooth((elapsed - 4900) / 500);
+      this._engineThrust(ignition * cutoff, this.lander.group.position.y - this.baseY, now);
       this.lander.setLegFold(fold);
       if (!this.foldCued && elapsed >= 920) {
         this.foldCued = true;
         this.onCue?.("fold", now, this.destination);
       }
-      if (!this.takeoffPurge && elapsed >= 720) {
-        this.takeoffPurge = true;
-        this.lander.forceFlightPurge(now, 1050);
-      }
       if (elapsed >= buildMs + flightMs) {
         this.lander.group.position.y = this.baseY + 28;
         this.lander.setLegFold(1);
         this.phase = "transit";
+        this.lander.setFlightThrust?.(0);
         this.t0 = now;
         this.group.visible = true;
         document.body.classList.add("ti-voyage");
@@ -249,6 +252,7 @@ export class VoyageSequence {
       await this.passage?.update(now);
       const p = clamp01(elapsed / 15e3);
       const envelope = smooth(p / 0.12) * (1 - smooth((p - 0.84) / 0.16));
+      this.orbits.update(this.camera, envelope);
       this.layers.forEach((layer, i) => {
         const acceleration = p * p;
         layer.points.material.opacity = envelope * (0.46 + i * 0.18);
@@ -301,11 +305,9 @@ export class VoyageSequence {
       const p = smooth(elapsed / 5600);
       const altitude = (1 - p) * 32;
       this.lander.group.position.y = this.baseY + altitude;
+      const ignition = smooth(elapsed / 320);
+      this._engineThrust(ignition * (0.56 + 0.44 * (1 - altitude / 32)), altitude, now);
       this.lander.setLegFold(1 - smooth((p - 0.42) / 0.5));
-      if (!this.landingPurge && altitude <= 8) {
-        this.landingPurge = true;
-        this.lander.forceFlightPurge(now, 1100);
-      }
       if (!this.landingRegolith && altitude <= 2.7) {
         this.landingRegolith = true;
         this.onLandingDust?.({
@@ -318,6 +320,7 @@ export class VoyageSequence {
         this.lander.group.position.y = this.baseY;
         this.lander.setLegFold(0);
         this.phase = "settle";
+        this.lander.setFlightThrust?.(0);
         this.t0 = now;
         this.ambient?.transferCue("contact");
         this.onCue?.("touchdown", now, this.destination);
@@ -420,8 +423,19 @@ export class VoyageSequence {
     if (!this.active) return;
     this.group.position.copy(this.camera.position);
     this.group.quaternion.copy(this.camera.quaternion);
+    if (this.inSpace) this.orbits.update(this.camera, this.orbits.material.opacity / 0.2);
     if (!this.egressPlaced || ["hold", "fold", "lift", "transit", "descent", "settle", "deploy"].includes(this.phase))
       this.rover.group.visible = false;
+  }
+  _engineThrust(intensity, altitude, now) {
+    this.lander.setFlightThrust?.(intensity, altitude, this.baseY);
+    if (intensity < 0.05 || altitude > 7 || now < this.nextExhaustDustAt) return;
+    this.nextExhaustDustAt = now + 120;
+    this.onLandingDust?.({
+      x: this.lander.group.position.x,
+      y: this.baseY,
+      z: this.lander.group.position.z
+    }, now, this.destination, (1 - altitude / 7) * intensity * 0.16);
   }
   reset() {
     this.passage?.finish();
@@ -430,6 +444,8 @@ export class VoyageSequence {
     this.swapped = false;
     this.swapPending = false;
     this.group.visible = false;
+    this.lander.setFlightThrust?.(0);
+    this.nextExhaustDustAt = 0;
     document.body.classList.remove("ti-voyage", "ti-epilogue", "ti-epilogue-quiet");
     this.onSpace?.(false);
     this.ambient?.setVoyage(false);

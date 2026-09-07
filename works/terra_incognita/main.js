@@ -58,6 +58,7 @@ import {
 import { MiniMap, Optics, Survey } from "../../engine/core/survey.js";
 import { OpeningBlueprintSequence } from "./opening-blueprints.js";
 import { AnimeRituals } from "./anime-rituals.js";
+import { RoverReticle } from "../../engine/core/rover-reticle.js";
 const touchTerminal = typeof navigator !== "undefined" && navigator.maxTouchPoints > 0 && (matchMedia("(any-pointer: coarse)").matches || matchMedia("(hover: none)").matches);
 const tier = touchTerminal ? "low" : deviceTier();
 const pick = (o) => o[tier];
@@ -393,7 +394,7 @@ let docking, voyage, shotDirector, power, transferFx, matterPassage;
 
 // Interface and exhibition lifecycle.
 let hud, captions, ambient, kiosk, fieldArchive, minimap, optics, survey;
-let mobileControl, openingBlueprints, animeRituals;
+let mobileControl, openingBlueprints, animeRituals, roverReticle;
 
 let world = "terra";
 let landerPresent = true;
@@ -489,6 +490,7 @@ try {
   landmark.visible = false;
   rover = new Rover(camera, canvas, heightCPU);
   rover.cameraControl = false;
+  roverReticle = new RoverReticle();
   rover.externalDriveMode = true;
   rover.manualInputEnabled = false;
   rover.mobileInputEnabled = false;
@@ -569,7 +571,7 @@ try {
         en: `${planet.id} \xB7 SURFACE DATUM STABILISING`
       }, now, ARRIVAL_BREATH_MS - 350);
     },
-    onLandingDust: (source) => dust?.landingBurst(source)
+    onLandingDust: (source, now, destination, intensity = 1) => dust?.landingBurst(source, intensity)
   });
   shotDirector = new ShotDirector({
     camera,
@@ -793,7 +795,6 @@ function cycleCameraView(now = performance.now()) {
   if (!released || authoredExperienceLock()) return false;
   shotDirector.setOpening(false);
   if (!shotDirector.cycle(now)) return false;
-  enterExplorer(now, { rear: false });
   openingShot = null;
   kiosk.last = now;
   syncRoverUtilityControls();
@@ -821,7 +822,7 @@ function syncRoverUtilityControls() {
     lightControl.disabled = locked || rover.disabled || rover.transmitting;
   }
   if (cameraControl) {
-    cameraControl.dataset.cameraState = experienceMode === "explorer" ? "manual" : "auto";
+    cameraControl.dataset.cameraState = shotDirector.manualShot ? "manual" : "auto";
     cameraControl.setAttribute("aria-label", `카메라 시점 이동 · 현재 ${shotDirector.label}`);
     cameraControl.disabled = locked;
   }
@@ -908,6 +909,8 @@ window.TI_EXPERIENCE = () => ({
   mode: experienceMode,
   driveMode: experienceMode === "explorer" ? "manual" : "auto",
   auto: rover.auto,
+  position: { x: rover.pos.x, z: rover.pos.z },
+  speed: rover.speed,
   manualInput: rover.manualInputEnabled,
   idleFor: experienceMode === "explorer" ? performance.now() - lastExplorerIntent : 0,
   manualPersistent: true
@@ -1441,6 +1444,8 @@ async function frame() {
   docking.afterRover();
   updateCompletionTableau(now);
   shotDirector.update(now);
+  roverReticle.setVisible(shotDirector.rendered === "mast");
+  roverReticle.updateGround(camera, rover.pos, heightCPU, !!lens);
   voyage.afterRover(now);
   optics.update(now, v);
   minimap.update(v, now, power.charge, !voyage.active && !missionEnding);
