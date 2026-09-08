@@ -32,7 +32,10 @@ try {
       const fail = message => { throw Error(message); };
       const state = () => JSON.stringify(lander.parts.map(part => [part.state, ...part.objects.map(o => [o.visible,...o.scale.toArray()])]));
       const before = state();
-      bp.start(); bp.suspend();
+      bp.start();
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      if (!bp.models) fail('Deferred model capture did not complete');
+      bp.suspend();
       if (state() !== before) fail('Capture mutated restoration state');
       for (const [key, root, objects] of [
         ['rover', rover.group, (() => {const a=[];rover.group.traverse(o=>{if(o.isMesh && o!==rover.acquisitionGlow)a.push(o)});return a;})()],

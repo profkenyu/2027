@@ -19,9 +19,10 @@
     "observation": "node tools/observation.mjs",
     "terrain": "node tools/terrain.mjs",
     "verify": "node tools/verify.mjs",
-    "release": "npm run build && npm run verify && npm run terrain && npm run memory && npm run observation && npm run harness && npm run model && npm run docking && npm run blueprints && npm run smoke:entry && npm run smoke && npm run smoke:sequence && npm run smoke:completion && npm run smoke:mobile && npm run smoke:mobile:portrait && npm run smoke:mobile:narrow",
+    "release": "npm run build && npm run verify && npm run terrain && npm run memory && npm run observation && npm run harness && npm run model && npm run docking && npm run archive:return && npm run blueprints && npm run smoke:entry && npm run smoke && npm run smoke:sequence && npm run smoke:completion && npm run smoke:mobile && npm run smoke:mobile:portrait && npm run smoke:mobile:narrow",
     "model": "node tools/vehicle-model.mjs",
     "docking": "node tools/docking.mjs",
+    "archive:return": "node tools/archive-return.mjs",
     "smoke:entry": "node tools/vehicle-entry.mjs",
     "blueprints": "node tools/blueprints.mjs"
   },

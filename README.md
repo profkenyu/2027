@@ -42,6 +42,7 @@ npm run terrain    # 지형 기복·경사·로버 주행성 측정
 npm run observation # 세 차례 수분 관측·취소·최종 광물 정렬 검증
 npm run model      # 세 품질 등급의 관절·격납 공간 검증
 npm run docking    # 경사·방향 36조건의 램프 접촉·격납·비행 중 고정 검증
+npm run archive:return # 좌표 페이지 이전 화면 복귀·직접 진입·로컬 파일 검증
 npm run blueprints # 현재 메시·설계도 일치와 iPad 왕복 스캔 검증
 npm run smoke:entry # HTTP 첫 진입·외부 링크·재진입과 지원 불가 판정 검증
 npm run memory     # PLANET 01·02 기록에서 PLANET 03 임무를 합성하는 순수 데이터 검증
