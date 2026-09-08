@@ -949,7 +949,9 @@ export class OpeningBlueprintSequence {
 function extractRover(rover, limit) {
   const root = rover.group;
   root.updateMatrixWorld(true);
-  const rootInverse = root.matrixWorld.clone().invert();
+  // Draft in the chassis frame: terrain pitch/roll must not rotate the plate.
+  // Read the live articulated meshes without changing the vehicle's pose.
+  const rootInverse = rover.chassis.matrixWorld.clone().invert();
   const coords = [];
   const parts = [];
   const bounds = new THREE.Box3();

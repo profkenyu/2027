@@ -49,6 +49,19 @@ try {
         for(const axis of ['x','y','z'])if(Math.abs(bp.models[key].dimensions[axis]-size[axis])>1e-6)fail(key+' bounds mismatch');
         if(bp.models[key].meshes!==objects.length)fail(key+' mesh count mismatch');
       }
+      const roverCoords = bp.models.rover.coords.slice();
+      const chassisRotation = rover.chassis.rotation.clone();
+      const rootRotation = rover.group.rotation.clone();
+      for (const [pitch, roll, yaw] of [[.28,-.22,1.4],[-.32,.25,-2.1]]) {
+        rover.chassis.rotation.set(pitch,0,roll);
+        rover.group.rotation.y=yaw;
+        bp._capture();
+        if(bp.models.rover.coords.length!==roverCoords.length || roverCoords.some((n,i)=>Math.abs(n-bp.models.rover.coords[i])>1e-5)) fail('Terrain attitude rotated rover blueprint');
+        if(rover.chassis.rotation.x!==pitch || rover.chassis.rotation.z!==roll || rover.group.rotation.y!==yaw) fail('Blueprint capture changed live rover attitude');
+      }
+      rover.chassis.rotation.copy(chassisRotation);
+      rover.group.rotation.copy(rootRotation);
+      bp._capture();
       // Move a real leg and ramp without rebuilding the restoration wire cache.
       const original = bp.models.lander.coords.slice();
       lander.setLegFold(1);lander.setRamp(0);bp._capture();
@@ -60,7 +73,7 @@ try {
         if(!(samples[1].scan>samples[0].scan && samples[2].scan>samples[3].scan && samples[0].scanDirection===1 && samples[3].scanDirection===-1))fail('Scan does not reciprocate');
       }
       bp._apply(bp.timing.noise+bp.timing.rover*.8);
-      return {source: bp.snapshot().models, reduced: bp.reduced, scanBothWays: true, unchangedRestoration: true, followsPose: true};
+      return {source: bp.snapshot().models, reduced: bp.reduced, scanBothWays: true, unchangedRestoration: true, followsPose: true, terrainIndependentRoverAngle: true};
     }, test.tier);
     await page.screenshot({path: `dist/blueprint-${test.name}-rover.png`});
     await page.evaluate(() => bp._apply(bp.timing.noise+bp.timing.rover+bp.timing.roverHold+bp.timing.gap+bp.timing.lander*.8));
