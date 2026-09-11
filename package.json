@@ -14,6 +14,7 @@
     "smoke:mobile:narrow": "MOBILE=1 VIEWPORT=320x568 node tools/smoke.mjs",
     "smoke:completion": "node tools/completion.mjs",
     "smoke:sequence": "SEQUENCE=1 node tools/smoke.mjs",
+    "smoke:shortcut": "SEQUENCE=1 COMPLETE_SHORTCUT=1 node tools/smoke.mjs",
     "harness": "node tools/harness.mjs",
     "memory": "node tools/memory.mjs",
     "observation": "node tools/observation.mjs",

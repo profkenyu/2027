@@ -4,10 +4,11 @@ import { fileURLToPath } from "node:url";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const DWELL = Number(process.env.DWELL ?? 15e3);
 const SEQUENCE = process.env.SEQUENCE === "1";
+const COMPLETE_SHORTCUT = process.env.COMPLETE_SHORTCUT === "1";
 const MOBILE = process.env.MOBILE === "1";
 const AUTO_PROLOGUE = process.env.AUTO_PROLOGUE === "1";
 const CAPTURE_BLUEPRINT = process.env.CAPTURE_BLUEPRINT === "1";
-const TARGET = process.argv[2] ?? `file://${ROOT}/index.html?test${MOBILE ? "&quality=low" : ""}`;
+const TARGET = process.argv[2] ?? `file://${ROOT}/index.html?${COMPLETE_SHORTCUT ? "" : "test"}${MOBILE ? "&quality=low" : ""}`;
 const [viewportWidth, viewportHeight] = String(process.env.VIEWPORT ?? "1600x900").split("x").map(Number);
 const browser = await chromium.launch({
   headless: process.env.HEADED ? false : true,
@@ -563,6 +564,15 @@ if (SEQUENCE) {
           sequenceShots.body03Rear = camera?.world === "granite" && camera?.shot === "rear" && camera?.source === "manual" && camera?.experience === "observer" && !camera?.locked;
         }
         sequenceComplete = sequenceShots.body03Rear;
+        if (COMPLETE_SHORTCUT) {
+          await page.keyboard.press('Equal');
+          const completed = await page.evaluate(() => window.TI_MEMORY?.().geological);
+          if (!completed?.complete || completed.current !== completed.total || completed.records.length !== completed.total) throw Error('One = did not complete all BODY 03 observations');
+          await page.keyboard.press('Equal');
+          const repeated = await page.evaluate(() => window.TI_MEMORY?.().geological);
+          if (repeated.records.length !== completed.records.length) throw Error('Repeated = duplicated observations');
+          console.log('  ✓ production = shortcut: all three planets complete; final tableau reached');
+        }
         break;
       }
     }

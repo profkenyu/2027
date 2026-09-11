@@ -643,7 +643,7 @@ addEventListener("keydown", (e) => {
   }
   if (!e.repeat && (e.code === "Equal" || e.code === "NumpadEqual" || e.key === "=")) {
     e.preventDefault();
-    if (!released) return;
+    if (!released || voyage.active || docking.started || pendingArrival || finalTableau) return;
     if (world === "terra" && !docking.started && !voyage.active && !restoration.complete) {
       const now2 = performance.now();
       openingShot = null;
@@ -665,7 +665,6 @@ addEventListener("keydown", (e) => {
         kiosk.last = now2;
       }
     }
-    if (!TEST) return;
     if (world === "desert" && waterMission.active && !docking.started) {
       const now2 = performance.now();
       if (waterMission.forceAcquire(now2)) {
@@ -675,7 +674,9 @@ addEventListener("keydown", (e) => {
     }
     if (world === "granite" && geologicalMemory.active && !docking.started) {
       const now2 = performance.now();
-      if (geologicalMemory.forceAcquire(now2)) {
+      let acquired = false;
+      while (geologicalMemory.active && geologicalMemory.forceAcquire(now2)) acquired = true;
+      if (acquired) {
         rover.flashAcquisition(now2);
         kiosk.last = now2;
       }
