@@ -572,20 +572,22 @@ if (SEQUENCE) {
           const repeated = await page.evaluate(() => window.TI_MEMORY?.().geological);
           if (repeated.records.length !== completed.records.length) throw Error('Repeated = duplicated observations');
           console.log('  ✓ production = shortcut: all three planets complete; final tableau reached');
-          if (process.env.FINALE === '1') {
-            await page.waitForFunction(()=>window.TI_FINALE?.().seconds>=12,null,{timeout:20000});
-            const beforePause=await page.evaluate(()=>{dispatchEvent(new PageTransitionEvent('pagehide'));return TI_FINALE().seconds;});
+          if (COMPLETE_SHORTCUT) {
+            await page.waitForURL('**/ending.html',{timeout:15000});
+            await page.waitForFunction(()=>window.FIRST_DAWN?.snapshot().total===5,null,{timeout:30000});
+            const beforePause=await page.evaluate(()=>{dispatchEvent(new PageTransitionEvent('pagehide'));return FIRST_DAWN.snapshot().seconds;});
             await page.waitForTimeout(350);
-            const paused=await page.evaluate(()=>TI_FINALE().seconds);
+            const paused=await page.evaluate(()=>FIRST_DAWN.snapshot().seconds);
             if(Math.abs(paused-beforePause)>.05) throw Error('Ending advanced while paused');
             await page.evaluate(()=>dispatchEvent(new PageTransitionEvent('pageshow')));
-            for(const seconds of [14,28,39]) {
-              await page.waitForFunction(s=>TI_FINALE().seconds>=s,seconds,{timeout:22000});
-              await page.screenshot({path:`${ROOT}/dist/first-dawn-production-${seconds}.png`});
-            }
-            const ending=await page.evaluate(()=>({state:TI_FINALE(),title:document.getElementById('ti-dawn-title').textContent,titleOpacity:Number(getComputedStyle(document.getElementById('ti-dawn-title')).opacity),archive:!document.getElementById('ti-ending-archive').hidden}));
-            if(ending.state.ships!==5 || ending.state.wave<.99 || ending.titleOpacity<.99 || !ending.archive) throw Error('Ending incomplete: '+JSON.stringify(ending));
-            console.log('  ✓ first dawn: five arks, three wave sources, title, archive and pause/resume');
+            await page.waitForFunction(()=>FIRST_DAWN.snapshot().seconds>5,null,{timeout:12000});
+            const ending=await page.evaluate(()=>FIRST_DAWN.snapshot());
+            if(!ending.independent || ending.animation!=='anime.js')throw Error('Ending is not independent');
+            await page.locator('#return').click();
+            await page.waitForFunction(()=>window.TI_WORLD && window.TI_CAMERA && window.TI_BLUEPRINT,null,{timeout:45000});
+            if(errors.length)throw Error(errors.join('\n'));
+            console.log('  ✓ PASS: all planets → independent ending → mission; five arks / anime.js / pause-resume');
+            await browser.close();process.exit(0);
           }
         }
         break;

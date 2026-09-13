@@ -3,6 +3,7 @@ import { mkdir, readFile, writeFile, rm, cp } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildEnding } from './build-ending.mjs';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const WORK = process.argv[2] ?? "terra_incognita";
 async function main() {
@@ -43,6 +44,7 @@ async function main() {
   const inlineFonts = (source) => source.replace('<link rel="stylesheet" href="../../engine/fonts.css">', `<style>\n${fontCss}\n</style>`);
   let shell = await readFile(`${ROOT}/works/${WORK}/dev.html`, "utf8");
   if (WORK === "terra_incognita") {
+    await buildEnding();
     for (const asset of ["camera-icon.png", "light-icon.png"]) {
       const data = await readFile(`${ROOT}/works/${WORK}/assets/${asset}`);
       shell = shell.replaceAll(`./assets/${asset}`, `data:image/png;base64,${data.toString("base64")}`);

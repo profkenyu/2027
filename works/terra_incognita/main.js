@@ -60,7 +60,6 @@ import { MiniMap, Optics, Survey } from "../../engine/core/survey.js";
 import { OpeningBlueprintSequence } from "./opening-blueprints.js";
 import { AnimeRituals } from "./anime-rituals.js";
 import { RoverReticle } from "../../engine/core/rover-reticle.js";
-import { FirstDawn } from './first-dawn.js';
 const touchTerminal = typeof navigator !== "undefined" && navigator.maxTouchPoints > 0 && (matchMedia("(any-pointer: coarse)").matches || matchMedia("(hover: none)").matches);
 const tier = touchTerminal ? "low" : deviceTier();
 const pick = (o) => o[tier];
@@ -292,7 +291,6 @@ const BLUEPRINT_BREATH_MS = 1200;
 const DOCKED_BREATH_MS = 2800;
 const ARRIVAL_BREATH_MS = 3e3;
 const WATER_CONFIRM_BREATH_MS = 4800;
-const FINAL_RETURN_MS = 45e3;
 const DRIVE_KEYS = new Set([
   "KeyW",
   "KeyA",
@@ -405,7 +403,6 @@ let failureResetAt = 0;
 let nextAutoPauseAt = 0, autoPauseUntil = 0;
 let driveReleaseAt = 0, dockedHoldUntil = 0;
 let pendingArrival = null, finalTableau = null;
-let firstDawn = null;
 let experienceMode = "observer", lastExplorerIntent = -Infinity;
 let released = false;
 let prologuePhase = "blueprints";
@@ -717,10 +714,6 @@ function beginFinalTableau(_memory, now) {
   rover.missionHold = true;
   rover.operatorHold = true;
   finalTableau = { t0: now, requested: false };
-  firstDawn ??= new FirstDawn({scene,camera,heightAt:heightCPU,tier});
-  firstDawn.start({rover,sites:geologicalMemory.model.sites,now});
-  ambient.beginFinale();
-  document.getElementById('ti-dawn-title').hidden=false;
   document.body.classList.add("ti-memory-tableau");
   captions.rearm();
   kiosk.last = now;
@@ -729,16 +722,9 @@ function beginFinalTableau(_memory, now) {
 function updateFinalTableau(now) {
   if (!finalTableau) return;
 
-  const elapsed = now - finalTableau.t0;
-  geologicalMemory.setFinale(orbitEase(Math.min(1,elapsed/12000)));
-  uFirstDawn.value=orbitEase(Math.max(0,Math.min(1,(elapsed-17000)/18000)));
-  ambient.updateFinale(elapsed/1000);
-  document.getElementById('ti-dawn-title').style.opacity=String(orbitEase(Math.max(0,Math.min(1,(elapsed-34000)/4000))));
-  document.getElementById("ti-ending-archive").hidden = elapsed < 38000;
-
-  if (elapsed >= FINAL_RETURN_MS && !finalTableau.requested) {
+  if (now-finalTableau.t0 >= 1500 && !finalTableau.requested) {
     finalTableau.requested = true;
-    kiosk.requestReturn(now);
+    location.assign(new URL('ending.html',location.href).href);
   }
 }
 
@@ -950,7 +936,7 @@ window.TI_MEMORY = () => ({
   ledger: missionMemory.snapshot(),
   geological: geologicalMemory.snapshot()
 });
-window.TI_FINALE = () => firstDawn?.snapshot() ?? {active:false};
+window.TI_FINALE = () => ({active:!!finalTableau,standalone:true});
 window.TI_FIELD_ARCHIVE = () => fieldArchive.snapshot();
 window.TI_RESTORATION = TEST ? (level) => {
   if (level == null) return restoration.snapshot();
@@ -1198,7 +1184,7 @@ const resume = () => {
   const now = performance.now();
   if(finalTableau?.pausedAt != null) {
     const paused=now-finalTableau.pausedAt;
-    finalTableau.t0+=paused; firstDawn.t0+=paused; finalTableau.pausedAt=null;
+    finalTableau.t0+=paused; finalTableau.pausedAt=null;
   }
   if (completionTableau?.pausedAt != null) {
     completionTableau.t0 += now - completionTableau.pausedAt;
@@ -1456,7 +1442,6 @@ async function frame() {
   docking.afterRover();
   updateCompletionTableau(now);
   shotDirector.update(now);
-  firstDawn?.update(now);
   roverReticle.setVisible(!finalTableau && shotDirector.rendered === "mast");
   roverReticle.updateGround(camera, rover.pos, heightCPU, !!lens);
   voyage.afterRover(now);
@@ -1900,7 +1885,6 @@ async function returnToStart() {
   docking.reset();
   completionTableau = null;
   finalTableau = null;
-  firstDawn?.reset();
   ambient.endFinale();
   uFirstDawn.value=0;
   document.getElementById('ti-dawn-title').hidden=true;

@@ -99,6 +99,7 @@ async function imports() {
     return;
   }
   pools["three/webgpu"] = pools["three"];
+  const webglSymbols=new Set(Object.keys(await import('three')));
   let issues = 0;
   for (const f of [...await walk(`${ROOT}/engine`), ...await walk(`${ROOT}/works`)]) {
     const src = stripComments(await readFile(f, "utf8"));
@@ -129,7 +130,8 @@ async function imports() {
       }
     }
     for (const n of new Set([...src.matchAll(/THREE\.([\w$]+)/g)].map((m) => m[1]))) {
-      if (n !== "TimestampQuery" && !pools["three"].has(n)) {
+      const symbols=f.includes('/works/first_dawn/')?webglSymbols:pools['three'];
+      if (n !== "TimestampQuery" && !symbols.has(n)) {
         bad("THREE symbol", `${f.split("/").pop()}: THREE.${n}`);
         issues++;
       }
@@ -230,7 +232,8 @@ async function build() {
   const css = await readFile(`${ROOT}/engine/fonts.css`, "utf8").catch(() => "");
   const subset = new Set((css.match(/SUBSET: (.+)/)?.[1] ?? "").split(""));
   const used = new Set();
-  for (const f of [...await walk(`${ROOT}/engine`), ...await walk(`${ROOT}/works`)])
+  // The independent ending uses system fonts, not the mission's subset.
+  for (const f of [...await walk(`${ROOT}/engine`), ...await walk(`${ROOT}/works/terra_incognita`)])
     for (const ch of await readFile(f, "utf8")) if (ch >= "\uAC00" && ch <= "\uD7A3") used.add(ch);
   const missing = [...used].filter((c) => !subset.has(c));
   missing.length ? bad("Korean subset is stale", `${missing.length} glyphs missing: ${missing.join("")} \u2014 run npm run fonts`) : ok("Korean subset covers every glyph drawn", `${used.size} syllables`);

@@ -6,7 +6,9 @@
 
 ## 전시용 파일
 
-[dist/TERRA_INCOGNITA.html](dist/TERRA_INCOGNITA.html)을 사용한다. 외부 파일이나 네트워크 연결이 필요 없는 단일 파일이며, 파일을 직접 열어 실행할 수 있다.
+[dist/TERRA_INCOGNITA.html](dist/TERRA_INCOGNITA.html)을 사용한다. 임무 화면은 리소스가 내장된 HTML이며 직접 열어 실행할 수 있다. 전체 전시 흐름에는 같은 폴더의 `ending.html`과 `FIELD_ARCHIVE.html`도 함께 둔다.
+
+엔딩은 [ending.html](ending.html)을 직접 열어 별도로 감상할 수 있다. 임무 엔진을 불러오지 않는 독립 WebGL 페이지이며 Three.js와 anime.js, 모델·재질이 모두 내장되어 네트워크 없이 재생된다. 약 3분 동안 다섯 이주선이 공통 소실점에서 서로 다른 속도로 접근하고, 방열판이 천천히 펼쳐진다. 150초부터 마지막 문구와 기록 링크, 175초부터 REPLAY가 표시된다. SOUND 버튼으로 소리를 켜고 RETURN으로 임무 시작 화면에 돌아간다.
 
 WebGPU를 지원하는 최신 브라우저와 GPU가 필요하다. 전시 전에는 실제 맥북 또는 프로젝터 연결 환경에서 화면 비율, 절전 해제, 브라우저 전체 화면을 확인한다.
 
@@ -39,6 +41,9 @@ npm run dev
 ```bash
 npm run build      # index.html 및 dist/TERRA_INCOGNITA.html 생성
 npm run verify     # 모듈, HUD, 폰트, 단일 파일 검증
+npm run build:ending # 독립 엔딩만 빌드
+npm run finale     # 엔딩 세 품질 단계·원근 경로·anime.js 전개·사운드·재시작 검증
+npm run smoke:finale # 임무 완료 → 독립 엔딩 → 임무 복귀 검증
 npm run terrain    # 지형 기복·경사·로버 주행성 측정
 npm run observation # 세 차례 수분 관측·취소·최종 광물 정렬 검증
 npm run model      # 세 품질 등급의 관절·격납 공간 검증
