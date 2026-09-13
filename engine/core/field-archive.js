@@ -5,6 +5,25 @@ export const FIELD_ARCHIVE_CAPACITY = 24;
 const finite = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const RESOURCE_LABEL_SUFFIX = /\s*\xB7\s*(?:FIELD\s*\d+|EVIDENCE|RESOLVED POTENTIAL.*|조사 지점\s*\d+|관측 증거|후보 지점.*)$/i;
+const ARCHIVE_TRANSLATIONS = Object.freeze([
+  ["철-니켈 합금 시료", "IRON–NICKEL ALLOY SAMPLE"],
+  ["규산염 세라믹 시료", "SILICATE CERAMIC SAMPLE"],
+  ["탄소 복합재 시료", "CARBON COMPOSITE SAMPLE"],
+  ["전도성 격자 시료", "CONDUCTIVE LATTICE SAMPLE"],
+  ["분자 질소(N₂) 서리층", "MOLECULAR NITROGEN (N₂) FROST"],
+  ["에탄올 결정상", "ETHANOL CRYSTALLINE PHASE"],
+  ["조사 지점", "FIELD"], ["관측 증거", "EVIDENCE"], ["후보 지점", "RESOLVED POTENTIAL"]
+]);
+export function archiveEnglish(value, fallback = "UNRESOLVED DATUM") {
+  let text = String(value ?? fallback);
+  for (const [ko, en] of ARCHIVE_TRANSLATIONS) text = text.replaceAll(ko, en);
+  return /[\uac00-\ud7a3]/.test(text) ? fallback : text;
+}
+// Only locally captured raster images are accepted; archived strings cannot fetch URLs.
+export function archiveImage(value) {
+  return typeof value === 'string' && value.length <= 900000 &&
+    /^data:image\/(?:png|jpeg|webp);base64,[a-z0-9+/=\s]+$/i.test(value) ? value : null;
+}
 const CAPTURE_SCHEDULE = Object.freeze({
   terra: Object.freeze(["fisheye", "wide", "tele", "macro", "rear", "panorama"]),
   desert: Object.freeze(["wide", "tele", "fisheye", "portrait", "rear", "macro", "panorama"]),
@@ -56,13 +75,13 @@ export function archiveCaptureProfile(source = {}) {
   const capture = source?.capture ?? {};
   return {
     profile: ARCHIVE_CAPTURE_PROFILES[requested] ? requested : "wide",
-    lens: String(capture.lens ?? base.lens),
-    viewpoint: String(capture.viewpoint ?? base.viewpoint),
+    lens: archiveEnglish(capture.lens, base.lens),
+    viewpoint: archiveEnglish(capture.viewpoint, base.viewpoint),
     aspect: clamp(finite(capture.aspect, base.aspect), .5, 2.5),
     zoom: clamp(finite(capture.zoom, base.zoom), 1, 3.2),
     focusX: clamp(finite(capture.focusX, base.focusX), 0, 1),
     focusY: clamp(finite(capture.focusY, base.focusY), 0, 1),
-    projection: capture.projection === "fisheye" ? "fisheye" : "rectilinear"
+    projection: ["fisheye", "rectilinear"].includes(capture.projection) ? capture.projection : base.projection
   };
 }
 
@@ -81,7 +100,7 @@ function cleanStation(source) {
     body: String(source?.body ?? "terra"),
     planet: String(source?.planet ?? "PLANET 01"),
     world: String(source?.world ?? "UNRESOLVED SURFACE"),
-    label: String(source?.label ?? "UNRESOLVED DATUM"),
+    label: archiveEnglish(source?.label),
     x: finite(source?.x),
     z: finite(source?.z),
     radius: clamp(finite(source?.radius, 10), 1, 120),
@@ -96,10 +115,7 @@ function cleanStation(source) {
 }
 
 function cleanRecord(source) {
-  const image = typeof source?.image === "string" && source.image.startsWith("data:image/")
-    && source.image.length <= 900_000
-    ? source.image
-    : null;
+  const image = archiveImage(source?.image);
   const capture = archiveCaptureProfile(source);
   const imageWidth = Math.max(0, Math.floor(finite(source?.imageWidth)));
   const imageHeight = Math.max(0, Math.floor(finite(source?.imageHeight)));
@@ -108,7 +124,7 @@ function cleanRecord(source) {
     body: String(source?.body ?? "terra"),
     planet: String(source?.planet ?? "PLANET 01"),
     world: String(source?.world ?? "UNRESOLVED SURFACE"),
-    label: String(source?.label ?? "UNRESOLVED DATUM"),
+    label: archiveEnglish(source?.label),
     x: finite(source?.x),
     z: finite(source?.z),
     heading: finite(source?.heading),
@@ -136,6 +152,21 @@ function capturePayload(image, capture, station) {
   return { image: result, capture };
 }
 
+export function readFieldArchive(storage, key = DEFAULT_FIELD_ARCHIVE_KEY) {
+  const empty = { version: FIELD_ARCHIVE_VERSION, stations: [], records: [] };
+  const keys = key === DEFAULT_FIELD_ARCHIVE_KEY ? [key, "terra-incognita:field-archive:v3", "terra-incognita:field-archive:v2"] : [key];
+  const cleanList = (items, clean) => [...new Map(items.filter(item => item && typeof item.id === 'string').map(item => [item.id, clean(item)])).values()].slice(0, FIELD_ARCHIVE_CAPACITY);
+  for (const candidate of keys) {
+    try {
+      const source = JSON.parse(storage?.getItem(candidate) ?? 'null');
+      if (![2, 3, FIELD_ARCHIVE_VERSION].includes(source?.version)) continue;
+      if (!Array.isArray(source.stations) || !Array.isArray(source.records)) continue;
+      return {version: FIELD_ARCHIVE_VERSION, stations: cleanList(source.stations, cleanStation), records: cleanList(source.records, cleanRecord)};
+    } catch { /* Try the next valid legacy snapshot independently. */ }
+  }
+  return empty;
+}
+
 export class FieldArchive {
   constructor(options = {}) {
     this.key = options.key ?? DEFAULT_FIELD_ARCHIVE_KEY;
@@ -145,20 +176,8 @@ export class FieldArchive {
   }
   load() {
     if (!this.storage) return this.snapshot();
-    try {
-      let stored = JSON.parse(this.storage.getItem(this.key) ?? "null");
-      if (!stored && this.key === DEFAULT_FIELD_ARCHIVE_KEY) {
-        for (const key of ["terra-incognita:field-archive:v3", "terra-incognita:field-archive:v2"]) {
-          stored = JSON.parse(this.storage.getItem(key) ?? "null");
-          if (stored) break;
-        }
-      }
-      if (![2, 3, FIELD_ARCHIVE_VERSION].includes(stored?.version)) return this.snapshot();
-      this.data.stations = (stored.stations ?? []).map(cleanStation).slice(0, FIELD_ARCHIVE_CAPACITY);
-      this.data.records = (stored.records ?? []).map(cleanRecord).slice(0, FIELD_ARCHIVE_CAPACITY);
-      if (stored.version !== FIELD_ARCHIVE_VERSION) this.persist();
-    } catch {
-    }
+    this.data = readFieldArchive(this.storage, this.key);
+    if (this.data.stations.length || this.data.records.length) this.persist();
     return this.snapshot();
   }
   persist() {
@@ -237,7 +256,7 @@ export class FieldArchive {
       ...evidenceSlot,
       x: finite(site.x),
       z: finite(site.z),
-      label: `${baseLabel} \xB7 관측 증거`,
+      label: `${baseLabel} \xB7 EVIDENCE`,
       resourceVariant: Math.max(0, Math.floor(finite(site.variant))),
       archiveRole: "evidence",
       potentialCount: 0,
@@ -247,7 +266,7 @@ export class FieldArchive {
       ...potentialSlot,
       x: potentialCount ? centroid.x / potentialCount : potentialSlot.x,
       z: potentialCount ? centroid.z / potentialCount : potentialSlot.z,
-      label: `${baseLabel} \xB7 후보 지점 \xD7${potentialCount}`,
+      label: `${baseLabel} \xB7 RESOLVED POTENTIAL \xD7${potentialCount}`,
       archiveRole: "potential",
       potentialCount,
       resolved: true
@@ -274,15 +293,15 @@ export class FieldArchive {
   snapshot() {
     return {
       version: this.data.version,
-      stations: this.data.stations.map((station) => ({ ...station })),
-      records: this.data.records.map((record) => ({ ...record })),
+      stations: this.data.stations.map((station) => ({ ...station, capture: { ...station.capture } })),
+      records: this.data.records.map((record) => ({ ...record, capture: { ...record.capture } })),
       captured: this.data.records.length
     };
   }
   clear() {
     this.data = { version: FIELD_ARCHIVE_VERSION, stations: [], records: [] };
     try {
-      this.storage?.removeItem(this.key);
+      for (const key of this.key === DEFAULT_FIELD_ARCHIVE_KEY ? [this.key, "terra-incognita:field-archive:v3", "terra-incognita:field-archive:v2"] : [this.key]) this.storage?.removeItem(key);
     } catch {
     }
   }

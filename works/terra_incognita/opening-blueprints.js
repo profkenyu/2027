@@ -533,16 +533,27 @@ const LANDER_CALLOUTS = Object.freeze([
   { name: "SERVICE / PRESSURE", detail: "THERMAL + PRESSURE SHELL" },
   { name: "VISOR / BRIDGE / SIGNAL", detail: "CLEAR BAY + 4 WHEEL HOLD-DOWNS" }
 ]);
+const SHIP_CALLOUTS=Object.freeze([
+  {name:'SHIELD HULL',detail:'FACETED MIGRATION CARRIER'},
+  {name:'PRESSURE MODULES',detail:'LONG-DURATION HABITATION'},
+  {name:'THERMAL WINGS',detail:'DEPLOYABLE RADIATORS'},
+  {name:'PROPULSION',detail:'THREE AFT NOZZLES'},
+  {name:'SERVICE STRUCTURE',detail:'KEEL + OBSERVATION BRIDGE'}
+]);
 const ROVER_PARTS = ROVER_CALLOUTS.map((part) => part.name);
 const LANDER_PARTS = LANDER_CALLOUTS.map((part) => part.name);
 export class OpeningBlueprintSequence {
-  constructor({ rover, lander, tier = "mid" }) {
+  constructor({ rover, lander, ship = null, preparedModels = null, tier = "mid" }) {
     installDotMatrixStyles();
     this.rover = rover;
     this.lander = lander;
+    this.ship = ship;
+    this.preparedModels = preparedModels;
+    this.hasShip = !!(ship || preparedModels?.ship);
     this.tier = tier;
     this.reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     this.timing = this.reduced ? { noise: 3500, rover: 4e3, roverHold: 3e3, gap: 260, lander: 4200, landerHold: 3e3 } : { noise: 3500, rover: 4e3, roverHold: 3e3, gap: 500, lander: 4200, landerHold: 3e3 };
+    if (this.hasShip) Object.assign(this.timing,{shipGap:500,ship:4200,shipHold:3000});
     this.total = Object.values(this.timing).reduce((sum, ms) => sum + ms, 0);
     this.active = false;
     this.suspended = false;
@@ -572,7 +583,7 @@ export class OpeningBlueprintSequence {
     }
     this.el = document.createElement("section");
     this.el.id = "ti-opening-blueprints";
-    this.el.setAttribute("aria-label", "Rover and lander production blueprints");
+    this.el.setAttribute("aria-label", "Vehicle production blueprints");
     this.el.setAttribute("aria-hidden", "true");
     this.el.innerHTML = `
       <div class="bp-frame">
@@ -671,7 +682,7 @@ export class OpeningBlueprintSequence {
   }
   snapshot() {
     const describe = (model) => model ? {
-      source: "live-mesh-geometry",
+      source: this.preparedModels ? "production-mesh-snapshot" : "live-mesh-geometry",
       meshes: model.meshes,
       segments: model.segments,
       sourceSegments: model.sourceSegments,
@@ -695,17 +706,28 @@ export class OpeningBlueprintSequence {
       duration: this.total,
       models: this.models ? {
         rover: describe(this.models.rover),
-        lander: describe(this.models.lander)
+        lander: describe(this.models.lander),
+        ...(this.models.ship ? {ship:describe(this.models.ship)} : {})
       } : null
     };
   }
   _capture() {
     const limit = this.tier === "low" ? 2700 : this.tier === "high" ? 6200 : 4600;
+    if(this.preparedModels){
+      this.models={};
+      for(const [key,source] of Object.entries(this.preparedModels)){
+        const count=Math.min(limit,source.segmentParts.length),coords=new Float32Array(count*6),parts=new Uint8Array(count);
+        for(let i=0;i<count;i++){const j=Math.floor(i*source.segmentParts.length/count);coords.set(source.coords.slice(j*6,j*6+6),i*6);parts[i]=source.segmentParts[j];}
+        this.models[key]={...source,coords,segmentParts:parts,segments:count,views:key==='ship'?createShipViews(coords,parts,source.parts,source.dimensions):createViews(coords,parts,source.parts)};
+      }
+      return;
+    }
     const rover = extractRover(this.rover, limit);
     const lander = extractLander(this.lander, limit);
     rover.views = createViews(rover.coords, rover.segmentParts, rover.parts);
     lander.views = createViews(lander.coords, lander.segmentParts, lander.parts);
     this.models = { rover, lander };
+    if(this.ship){const ship=extractShip(this.ship,limit);ship.views=createShipViews(ship.coords,ship.segmentParts,ship.parts,ship.dimensions);this.models.ship=ship;}
   }
   _deferCapture() {
     this.captureFrame = requestAnimationFrame(() => {
@@ -739,7 +761,8 @@ export class OpeningBlueprintSequence {
       ["rover-hold", this.timing.roverHold],
       ["transition", this.timing.gap],
       ["lander", this.timing.lander],
-      ["lander-hold", this.timing.landerHold]
+      ["lander-hold", this.timing.landerHold],
+      ...(this.hasShip?[["ship-transition",this.timing.shipGap],["ship",this.timing.ship],["ship-hold",this.timing.shipHold]]:[])
     ];
     let current = stages.at(-1)[0];
     let local = stages.at(-1)[1];
@@ -766,7 +789,7 @@ export class OpeningBlueprintSequence {
       this._drawNoise(local / duration);
       return;
     }
-    if (current === "transition") {
+    if (current.endsWith("transition")) {
       this.reveal = 0;
       this.scan = 0;
       this.scanDirection = 0;
@@ -775,7 +798,7 @@ export class OpeningBlueprintSequence {
       this._drawBlackout(local / duration);
       return;
     }
-    const modelKey = current.startsWith("rover") ? "rover" : "lander";
+    const modelKey = current.startsWith("rover") ? "rover" : current.startsWith("ship") ? "ship" : "lander";
     this.shown.add(modelKey);
     if (current.endsWith("-hold")) {
       this.reveal = 1;
@@ -797,9 +820,21 @@ export class OpeningBlueprintSequence {
     this.el.classList.toggle("bp-noise-active", current === "noise");
     this.el.classList.toggle("bp-residual-on", current !== "noise");
     if (current === "noise") return;
-    if (current === "transition") {
+    if (current.endsWith("transition")) {
       this.counter.textContent = "PLATE TRANSFER / BLACK DATUM";
       renderDotMatrix(this.signal, "--/--", { label: "PLATE TRANSFER" });
+      return;
+    }
+    if(current.startsWith('ship')){
+      const model=this.models.ship,d=model.dimensions;
+      this.counter.textContent='PLATE 03 / 03 · MIGRATION ARK';
+      this.index.textContent='INTERPLANETARY MIGRATION / ARK–01';
+      this.title.textContent='Migration Ark / Assembly Study';
+      this.summary.textContent='Actual fleet geometry, separated by system: shielding, habitation, heat rejection and propulsion. Orthographic views retain the assembled envelope.';
+      this.metrics.innerHTML=[['Envelope',`${d.x.toFixed(1)} W × ${d.z.toFixed(1)} L × ${d.y.toFixed(1)} H`],['Scale','Scene units / conceptual spacecraft'],['Habitation','10 pressure modules'],['Thermal','2 deployable radiator wings'],['Propulsion','3 aft nozzles'],['Geometry',`${model.meshes} meshes / ${model.segments} lines`]].map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+      this.parts.textContent=SHIP_CALLOUTS.map(p=>p.name).join(' · ');
+      renderDotMatrix(this.signal,'ARK/03',{label:'MIGRATION ARK PLATE 03'});
+      this.resolution.textContent=`${model.sourceSegments.toLocaleString()} SOURCE EDGES → ${model.segments.toLocaleString()} DISPLAY LINES`;
       return;
     }
     const rover = current.startsWith("rover");
@@ -820,7 +855,7 @@ export class OpeningBlueprintSequence {
       ["Ramp", "3.14 W \xD7 4.90 L m"],
       ["Restoration", `4 structural systems / ${model.segments} lines`]
     ];
-    this.counter.textContent = rover ? "PLATE 01 / 02 \xB7 ROVER" : "PLATE 02 / 02 \xB7 LANDER";
+    this.counter.textContent = rover ? `PLATE 01 / ${this.hasShip?"03":"02"} · ROVER` : `PLATE 02 / ${this.hasShip?"03":"02"} · LANDER`;
     this.index.textContent = rover ? "SURFACE EXPLORATION UNIT / RVR\u201301" : "AUTONOMOUS DESCENT HABITAT / LDR\u201301";
     this.title.textContent = rover ? "Rover Blueprint" : "Lander Blueprint";
     this.summary.textContent = rover ? "Eight terrain contacts, fixed suspension links, telescopic dampers and the hinged solar field are resolved from the current mission model." : "Six jointed legs, terrain pads and the clear transfer bay are resolved directly from the posed mission meshes; restoration state is unchanged.";
@@ -907,21 +942,26 @@ export class OpeningBlueprintSequence {
     const pad = Math.max(12, Math.min(24, w * 0.026));
     const insetGap = Math.max(8, w * 0.012);
     const insetH = Math.max(54, Math.min(h * 0.235, 122));
-    const main = { x: pad, y: pad, w: w - pad * 2, h: h - pad * 2 - insetH - insetGap };
+    const main = { x: pad, y: pad + 14, w: w - pad * 2, h: h - pad * 2 - insetH - insetGap - 14 };
     const insetW = (w - pad * 2 - insetGap) / 2;
     const side = { x: pad, y: h - pad - insetH, w: insetW, h: insetH };
     const top = { x: pad + insetW + insetGap, y: h - pad - insetH, w: insetW, h: insetH };
     drawPlate(ctx, model.views.axon, main, reveal, 0.78, true);
     drawPlate(ctx, model.views.side, side, detail, 0.48, false);
     drawPlate(ctx, model.views.top, top, detail, 0.48, false);
-    drawViewLabel(ctx, main, "AXONOMETRIC / ACTUAL MESH EDGES");
+    const shipPlate = this.current.startsWith('ship');
+    drawViewLabel(ctx, main, shipPlate ? "EXPLODED AXONOMETRIC / SYSTEM SEPARATION" : "AXONOMETRIC / ACTUAL MESH EDGES");
+    if (shipPlate && detail > .6) {
+      drawDimension(ctx, side, model.views.side, model.dimensions.z, 'L');
+      drawDimension(ctx, top, model.views.top, model.dimensions.z, 'L');
+    }
     drawViewLabel(ctx, side, "SIDE ELEVATION");
     drawViewLabel(ctx, top, "PLAN / LOAD ENVELOPE");
     drawReciprocatingScan(ctx, main, motion, this.reduced);
-    const callouts = this.current.startsWith("rover") ? ROVER_CALLOUTS : LANDER_CALLOUTS;
+    const callouts = this.current.startsWith("rover") ? ROVER_CALLOUTS : this.current.startsWith("ship") ? SHIP_CALLOUTS : LANDER_CALLOUTS;
     this.annotationCount = drawPartCallouts(ctx, model.views.axon, main, callouts, motion, phase, this.reduced);
-    const pips = this.current.startsWith("rover") ? 0 : 1;
-    for (let i = 0; i < 2; i++) {
+    const pips = this.current.startsWith("rover") ? 0 : this.current.startsWith("ship") ? 2 : 1;
+    for (let i = 0; i < (this.hasShip?3:2); i++) {
       ctx.fillStyle = i === pips ? PHOSPHOR : "#2b2e32";
       ctx.fillRect(w - pad - 15 + i * 9, pad + 1, 4, 4);
     }
@@ -933,7 +973,7 @@ export class OpeningBlueprintSequence {
   }
   _complete() {
     if (!this.active) return;
-    if (this.current !== "lander") this.shown.add("lander");
+    this.shown.add(this.hasShip?"ship":"lander");
     this.current = "complete";
     this.progress = 1;
     this.reveal = 1;
@@ -1083,6 +1123,43 @@ function createViews(coords, parts, partCount) {
     top: project(coords, parts, "top")
   };
 }
+// Exploded offsets communicate assembly; orthographic dimensions are unmodified.
+function createShipViews(coords, parts, partCount, dimensions) {
+  const exploded = new Float32Array(coords);
+  for (let i = 0; i < parts.length; i++) {
+    const kind = parts[i];
+    for (let end = 0; end < 2; end++) {
+      const j = i * 6 + end * 3;
+      if (kind === 1) exploded[j + 1] += dimensions.y * .85;
+      if (kind === 2) exploded[j] += Math.sign(coords[j]) * dimensions.x * .13;
+      if (kind === 3) exploded[j + 2] -= dimensions.z * .13;
+      if (kind === 4) exploded[j + 1] -= dimensions.y * .38;
+    }
+  }
+  const views = createViews(coords, parts, partCount);
+  views.axon = project(exploded, parts, 'axon');
+  views.axon.anchors = partAnchors(views.axon, partCount);
+  views.top = project(coords, parts, 'ship-plan');
+  return views;
+}
+function drawDimension(ctx, rect, view, value, axis) {
+  const b = view.bounds, margin = Math.min(rect.w, rect.h) * .12;
+  const scale = Math.min((rect.w-margin*2)/(b.maxX-b.minX),(rect.h-margin*2)/(b.maxY-b.minY));
+  const halfWidth = (b.maxX-b.minX)*scale*.5;
+  const x1 = rect.x + rect.w*.5-halfWidth, x2 = rect.x + rect.w*.5+halfWidth;
+  const y = rect.y + rect.h - 9;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(139,255,169,.55)'; ctx.lineWidth = .65;
+  ctx.beginPath();ctx.moveTo(x1,y);ctx.lineTo(x2,y);
+  for (const x of [x1,x2]) {ctx.moveTo(x,y-3);ctx.lineTo(x,y+3);}
+  ctx.stroke();
+  ctx.font = "6px 'DM Mono',monospace";ctx.textAlign = 'center';
+  const label = `${axis} ${value.toFixed(1)} / SCENE UNITS`;
+  const width = ctx.measureText(label).width + 8;
+  ctx.fillStyle = '#070809';ctx.fillRect((x1+x2-width)/2,y-5,width,9);
+  ctx.fillStyle = '#85f2a8';ctx.fillText(label,(x1+x2)/2,y+2);
+  ctx.restore();
+}
 function partAnchors(view, partCount) {
   const sums = Array.from({ length: partCount }, () => ({ x: 0, y: 0, count: 0 }));
   for (let i = 0; i < view.parts.length; i++) {
@@ -1114,7 +1191,10 @@ function project(coords, parts, mode) {
       const x = coords[offset], y = coords[offset + 1], z = coords[offset + 2];
       let px;
       let py;
-      if (mode === "top") {
+      if (mode === "ship-plan") {
+        px = z;
+        py = x;
+      } else if (mode === "top") {
         px = x;
         py = z;
       } else if (mode === "side") {
@@ -1330,3 +1410,24 @@ function drawReciprocatingScan(ctx, rect, motion, reduced) {
 const _a = new THREE.Vector3();
 const _b = new THREE.Vector3();
 const _box = new THREE.Box3();
+
+export function extractShip(root,limit=6200){
+  root.updateMatrixWorld(true);
+  const inverse=root.matrixWorld.clone().invert(),bounds=new THREE.Box3(),coords=[],parts=[];
+  let meshes=0,sourceSegments=0;
+  const instance=new THREE.Matrix4();
+  root.traverse(object=>{
+    if(!object.isMesh||!object.geometry||!object.visible||object.material?.transparent)return;
+    const kind=object.name==='shield-hull'?0:object.name==='pressure-module'?1:object.parent?.name==='radiator-wing'?2:/nozzle|engine/.test(object.name)?3:4;
+    const edges=new THREE.EdgesGeometry(object.geometry,22),position=edges.getAttribute('position'),count=Math.floor(position.count/2);
+    for(let i=0;i<(object.isInstancedMesh?object.count:1);i++){
+      const matrix=new THREE.Matrix4().multiplyMatrices(inverse,object.matrixWorld);
+      if(object.isInstancedMesh){object.getMatrixAt(i,instance);matrix.multiply(instance);}
+      expandGeometryBounds(bounds,object.geometry,matrix);sourceSegments+=count;meshes++;
+      const stride=Math.max(1,Math.ceil(count/1500));
+      for(let j=0;j<count;j+=stride){_a.fromBufferAttribute(position,j*2).applyMatrix4(matrix);_b.fromBufferAttribute(position,j*2+1).applyMatrix4(matrix);coords.push(..._a.toArray(),..._b.toArray());parts.push(kind);}
+    }
+    edges.dispose();
+  });
+  return finaliseModel(coords,parts,bounds,meshes,sourceSegments,limit,SHIP_CALLOUTS.length);
+}

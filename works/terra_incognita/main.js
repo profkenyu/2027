@@ -57,7 +57,6 @@ import {
   uFirstDawn
 } from "./surface.js";
 import { MiniMap, Optics, Survey } from "../../engine/core/survey.js";
-import { OpeningBlueprintSequence } from "./opening-blueprints.js";
 import { AnimeRituals } from "./anime-rituals.js";
 import { RoverReticle } from "../../engine/core/rover-reticle.js";
 const touchTerminal = typeof navigator !== "undefined" && navigator.maxTouchPoints > 0 && (matchMedia("(any-pointer: coarse)").matches || matchMedia("(hover: none)").matches);
@@ -391,7 +390,7 @@ let docking, voyage, shotDirector, power, transferFx, matterPassage;
 
 // Interface and exhibition lifecycle.
 let hud, captions, ambient, kiosk, fieldArchive, minimap, optics, survey;
-let mobileControl, openingBlueprints, animeRituals, roverReticle;
+let mobileControl, animeRituals, roverReticle;
 
 let world = "terra";
 let landerPresent = true;
@@ -405,7 +404,7 @@ let driveReleaseAt = 0, dockedHoldUntil = 0;
 let pendingArrival = null, finalTableau = null;
 let experienceMode = "observer", lastExplorerIntent = -Infinity;
 let released = false;
-let prologuePhase = "blueprints";
+let prologuePhase = "boot";
 let entryRevealRequested = false;
 let soundControl = null;
 let fieldArchiveControl = null;
@@ -588,7 +587,6 @@ try {
     enterObserver(now, { resumeRoute: observerMayDrive() });
     kiosk.last = now;
   };
-  openingBlueprints = new OpeningBlueprintSequence({ rover, lander, tier });
   animeRituals = new AnimeRituals();
   power = new Power(heightCPU, solarAccessCPU);
   minimap = new MiniMap(document.getElementById("ti-minimap"), BH.start, {
@@ -877,8 +875,6 @@ window.TI_RENDER_MODE = () => ({
   lens: !!lens
 });
 window.TI_AUDIO = () => ambient.snapshot();
-window.TI_BLUEPRINT = () => openingBlueprints.snapshot();
-window.TI_OPENING = () => openingBlueprints.snapshot();
 window.TI_OBSERVED = () => ({
   ...restoration.snapshot().registration,
   suspended: completionTableau?.pausedAt != null
@@ -967,51 +963,6 @@ window.TI_SEQUENCE = () => ({
   cameraShot: shotDirector.rendered
 });
 queueLoop();
-const PROLOGUE_TEXT_MS = 8e3;
-const ARM_MS = 0;
-const PROLOGUE_EXIT_MS = 3600;
-const prologueTimers = {
-  release: { id: 0, deadline: 0, remaining: null, run: () => releasePrologue() },
-  arm: { id: 0, deadline: 0, remaining: null, run: () => armPrologue() },
-  blueprint: { id: 0, deadline: 0, remaining: null, run: () => completeBlueprintPrologue() }
-};
-function schedulePrologueTimer(timer, delay) {
-  clearTimeout(timer.id);
-  const ms = Math.max(0, delay);
-  timer.remaining = null;
-  timer.deadline = performance.now() + ms;
-  timer.id = setTimeout(() => {
-    timer.id = 0;
-    timer.deadline = 0;
-    timer.remaining = null;
-    timer.run();
-  }, ms);
-}
-function cancelPrologueTimers() {
-  for (const timer of Object.values(prologueTimers)) {
-    clearTimeout(timer.id);
-    timer.id = 0;
-    timer.deadline = 0;
-    timer.remaining = null;
-  }
-}
-function suspendPrologueTimers() {
-  const now = performance.now();
-  for (const timer of Object.values(prologueTimers)) {
-    if (!timer.id) continue;
-    timer.remaining = Math.max(0, timer.deadline - now);
-    clearTimeout(timer.id);
-    timer.id = 0;
-    timer.deadline = 0;
-  }
-}
-function resumePrologueTimers() {
-  for (const timer of Object.values(prologueTimers)) {
-    if (timer.remaining == null) continue;
-    const delay = timer.remaining;
-    schedulePrologueTimer(timer, delay);
-  }
-}
 function setExperienceControlsReady(ready) {
   document.body.classList.toggle("ti-prologue-released", ready);
   soundControl.disabled = !ready;
@@ -1020,77 +971,10 @@ function setExperienceControlsReady(ready) {
   syncDriveModeControl();
   syncRoverUtilityControls();
 }
-window.TI_PROLOGUE = () => ({
-  phase: prologuePhase,
-  released,
-  controlsReady: document.body.classList.contains("ti-prologue-released"),
-  soundDisabled: soundControl.disabled,
-  timers: Object.fromEntries(Object.entries(prologueTimers).map(([name, timer]) => [name, {
-    active: !!timer.id,
-    paused: timer.remaining != null,
-    remaining: timer.remaining ?? (timer.id ? Math.max(0, timer.deadline - performance.now()) : null)
-  }]))
-});
-function beginTextPrologue() {
-  if (released || prologuePhase !== "blueprints") return;
-  prologuePhase = "text";
-  document.body.classList.add("ti-prologue-reading");
-  animeRituals.beginTitleBinding();
-  schedulePrologueTimer(prologueTimers.release, PROLOGUE_TEXT_MS);
-  schedulePrologueTimer(prologueTimers.arm, ARM_MS);
-}
-function startPrologueSequence() {
-  cancelPrologueTimers();
-  animeRituals.reset();
-  released = false;
-  entryRevealRequested = false;
-  prologuePhase = "blueprints";
-  setExperienceControlsReady(false);
-  document.body.classList.remove(
-    "ti-prologue-out",
-    "ti-prologue-reading",
-    "ti-blueprints-out",
-    "ti-entry-blackout",
-    "ti-entry-revealing"
-  );
-  const prologue = document.getElementById("ti-prologue");
-  prologue?.classList.remove("armed");
-  prologue?.setAttribute("aria-hidden", "false");
-  removeEventListener("keydown", onPrologueKey);
-  for (const id of ["ti-start", "ti-mobile-start"]) {
-    const button = document.getElementById(id);
-    if (button) button.disabled = true;
-  }
-  rover.auto = false;
-  openingBlueprints.start(beginTextPrologue);
-  window.TI_REVEAL_OPENING?.();
-}
-function releasePrologue({ throughBlack = false } = {}) {
-  if (prologuePhase !== "text") return;
-  cancelPrologueTimers();
-  entryRevealRequested = throughBlack;
-  prologuePhase = "release";
-  openingBlueprints.finish({ preserve: true });
-  document.body.classList.toggle("ti-entry-blackout", throughBlack);
-  document.body.classList.remove("ti-entry-revealing");
-  document.body.classList.add("ti-prologue-out");
-  const prologue = document.getElementById("ti-prologue");
-  prologue?.classList.remove("armed");
-  prologue?.setAttribute("aria-hidden", "true");
-  for (const id of ["ti-start", "ti-mobile-start"]) {
-    const button = document.getElementById(id);
-    if (button) button.disabled = true;
-  }
-  const now = performance.now();
-  rover.auto = false;
-  rover.missionHold = true;
-  rover.scriptedDrive = { throttle: 0, steer: 0 };
-  kiosk.last = now;
-  removeEventListener("keydown", onPrologueKey);
-  schedulePrologueTimer(prologueTimers.blueprint, PROLOGUE_EXIT_MS);
-}
-function completeBlueprintPrologue() {
-  if (prologuePhase !== "release") return;
+window.TI_PROLOGUE = () => ({phase:prologuePhase,released,controlsReady:document.body.classList.contains('ti-prologue-released'),soundDisabled:soundControl.disabled});
+function beginPlanetExperience() {
+  entryRevealRequested = true;
+  window.TI_REVEAL_PLANET?.();
   prologuePhase = "released";
   released = true;
   setExperienceControlsReady(true);
@@ -1143,43 +1027,11 @@ function activateArrivalMission(key, now) {
     captions.force(activated ? { r: 0, ko: "PLANET 03 \xB7 \uB450 \uAE30\uC5B5\uC7A5\uC758 \uAD50\uCC28 \uACB0\uC808 \uCD94\uC801", en: "PLANET 03 \xB7 TRACE THREE MEMORY CONCORDANCE NODES" } : { r: 0, ko: "PLANET 03 \xB7 \uC774\uC804 \uD589\uC131 \uB370\uC774\uD130 \uBD88\uC644\uC804", en: "PLANET 03 \xB7 PRIOR-PLANET EVIDENCE INCOMPLETE" }, now, 7200);
   }
 }
-mobileControl.bindStart(() => {
-  ambient.start();
-  releasePrologue({ throughBlack: true });
-});
-desktopStart = document.getElementById("ti-start");
-desktopStart?.addEventListener("pointerdown", (e) => e.stopPropagation());
-desktopStart?.addEventListener("click", (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  ambient.start();
-  releasePrologue({ throughBlack: true });
-});
-function onPrologueKey(e) {
-  if (e.repeat || e.code !== "Enter" && e.code !== "Space") return;
-  e.preventDefault();
-  ambient.start();
-  releasePrologue({ throughBlack: true });
-}
-function armPrologue() {
-  if (released || prologuePhase !== "text") return;
-  document.getElementById("ti-prologue")?.classList.add("armed");
-  for (const id of ["ti-start", "ti-mobile-start"]) {
-    const button = document.getElementById(id);
-    if (button) button.disabled = false;
-  }
-  addEventListener("keydown", onPrologueKey);
-  if (!mobileControl.active) desktopStart?.focus({ preventScroll: true });
-}
-if (location.search.includes("embed")) {
-  openingBlueprints.finish({ preserve: true });
-  released = true;
-  prologuePhase = "released";
-  setExperienceControlsReady(true);
-  rover.auto = true;
-} else {
-  startPrologueSequence();
-}
+// The title and START belong to index.html. A planet URL starts the survey.
+if(location.search.includes('embed')){
+  released=true;prologuePhase='released';setExperienceControlsReady(true);rover.auto=true;
+  window.TI_REVEAL_PLANET?.();
+}else beginPlanetExperience();
 const resume = () => {
   const now = performance.now();
   if(finalTableau?.pausedAt != null) {
@@ -1201,13 +1053,11 @@ const resume = () => {
   }
   document.body.classList.remove("ti-paused");
   ambient?.resume();
-  openingBlueprints?.resume();
   animeRituals?.resume();
   if (completionTableau) restoration?.setCompletionRegistration(
     lander?.setCompletionHighlight(restoration.registrationReduced ? 1 : (now - completionTableau.t0) / COMPLETION_TABLEAU_MS),
     (now - completionTableau.t0) / COMPLETION_TABLEAU_MS
   );
-  resumePrologueTimers();
   matterPassage?.resume(now);
   if (!running) {
     running = true;
@@ -1227,11 +1077,9 @@ const pause = () => {
   }
   document.body.classList.add("ti-paused");
   ambient?.suspend();
-  openingBlueprints?.suspend();
   animeRituals?.suspend();
   if (completionTableau && completionTableau.pausedAt == null) completionTableau.pausedAt = now;
   if (finalTableau && finalTableau.pausedAt == null) finalTableau.pausedAt = now;
-  suspendPrologueTimers();
   matterPassage?.suspend(now);
 };
 addEventListener("pageshow", resume);
@@ -1877,9 +1725,7 @@ async function prepareVoyageDestination(destination) {
   lens?.focusAt(camera.position.distanceTo(lander.group.position));
 }
 async function returnToStart() {
-  cancelPrologueTimers();
   animeRituals.reset();
-  openingBlueprints.cancel({ preserve: false });
   voyage.reset();
   shotDirector.reset();
   docking.reset();
@@ -1947,9 +1793,8 @@ async function returnToStart() {
   shotDirector.setIntro(false);
   lens?.focusAt(camera.position.distanceTo(rover.group.position));
   if (!location.search.includes("embed")) {
-    startPrologueSequence();
+    beginPlanetExperience();
   } else {
-    openingBlueprints.finish({ preserve: true });
     released = true;
     prologuePhase = "released";
     setExperienceControlsReady(true);

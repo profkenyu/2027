@@ -4,7 +4,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const rng = seed => () => { seed = Math.imul(seed ^ seed >>> 15, 1 | seed); seed ^= seed + Math.imul(seed ^ seed >>> 7, 61 | seed); return ((seed ^ seed >>> 14) >>> 0) / 4294967296; };
 
-export function createFleet(tier) {
+export function createFleet(tier,count=5) {
   // Physical surface response: ceramic shielding, recessed metal and MLI.
   const toon=(color,extra={})=>new THREE.MeshStandardMaterial({color,roughness:.72,metalness:.18,...extra});
   const armour=toon(0xb9bec0,{vertexColors:true});
@@ -90,7 +90,7 @@ export function createFleet(tier) {
     for(const side of [-1,1]){
       for(let j=0;j<5;j++){
         const z=-340+j*100,x=side*(carrier?139:95),y=64-j*4;
-        const pod=new THREE.Mesh(pressure,ivory);pod.position.set(x,y,z);pod.castShadow=pod.receiveShadow=true;root.add(pod);
+        const pod=new THREE.Mesh(pressure,ivory);pod.name="pressure-module";pod.position.set(x,y,z);pod.castShadow=pod.receiveShadow=true;root.add(pod);
         add(1,x,y-12,z,31,5,75);
         for(const dz of [-19,19])add(0,x,y+11,z+dz,24,2,3);
         beam([x,y-16,z-43],[x,y-16,z+43],2);
@@ -131,7 +131,7 @@ export function createFleet(tier) {
     const hatch=new THREE.Mesh(new THREE.CylinderGeometry(17,17,6,20),dark);hatch.position.set(0,-73,105);root.add(hatch);
     const deployables=[];
     for(const side of [-1,1]){
-      const pivot=new THREE.Group();pivot.position.set(side*(carrier?203:165),4,-250);
+      const pivot=new THREE.Group();pivot.name="radiator-wing";pivot.position.set(side*(carrier?203:165),4,-250);
       const radiator=new THREE.Mesh(new RoundedBoxGeometry(116,3,330,1,1),dark);radiator.position.x=side*60;radiator.castShadow=radiator.receiveShadow=true;pivot.add(radiator);
       const rails=new THREE.InstancedMesh(unitBox,steel,10);
       for(let j=0;j<10;j++){matrix.makeScale(111,.8,1.2);matrix.setPosition(side*60,2,-148+j*33);rails.setMatrixAt(j,matrix);}
@@ -141,7 +141,7 @@ export function createFleet(tier) {
     const rim=new THREE.TorusGeometry(23.5,1.7,8,tier==='low'?20:40);
     const throat=new THREE.CircleGeometry(16,tier==='low'?16:32);
     for(const x of [-76,0,76]){
-      const bell=new THREE.Mesh(nozzle,steel);bell.position.set(x,-4,-540);root.add(bell);
+      const bell=new THREE.Mesh(nozzle,steel);bell.name="engine-nozzle";bell.position.set(x,-4,-540);root.add(bell);
       const lip=new THREE.Mesh(rim,ivory);lip.position.set(x,-4,-564);root.add(lip);
       const core=new THREE.Mesh(throat,engine);core.rotation.y=Math.PI;core.position.set(x,-4,-521);root.add(core);
     }
@@ -154,7 +154,7 @@ export function createFleet(tier) {
       jet.rotation.z=sign*Math.PI/2;jet.position.set(x+sign*17,0,z);jet.visible=false;root.add(jet);jets.push(jet);
     }
     const geometry=mergeGeometries(meshParts);meshParts.forEach(g=>g.dispose());
-    const body=new THREE.Mesh(geometry,armour);body.castShadow=body.receiveShadow=true;root.add(body);
+    const body=new THREE.Mesh(geometry,armour);body.name="shield-hull";body.castShadow=body.receiveShadow=true;root.add(body);
     const wire=new THREE.LineSegments(new THREE.EdgesGeometry(geometry,32),new THREE.LineBasicMaterial({color:0x171d22,transparent:true,opacity:.16,depthWrite:false}));
     wire.name='structural-wireframe';root.add(wire);
     instances.forEach((list,i)=>{
@@ -165,5 +165,5 @@ export function createFleet(tier) {
     root.userData={panels:meshParts.length,instances:instances.reduce((n,v)=>n+v.length,0),jets,kind:carrier?'carrier':capsule?'habitat':'migration',deployables};
     return root;
   };
-  return Array.from({length:5},(_,i)=>create(i));
+  return Array.from({length:count},(_,i)=>create(i));
 }

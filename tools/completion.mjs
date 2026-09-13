@@ -2,7 +2,7 @@ import { chromium } from "playwright";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const TARGET = `file://${ROOT}/index.html?embed`;
+const TARGET = `file://${ROOT}/planet.html?embed`;
 const requestedCase = process.argv[2];
 const cases = [
   { name: "desktop", viewport: { width: 1600, height: 900 }, quality: "high", columns: 4 },

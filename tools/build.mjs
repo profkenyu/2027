@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildEnding } from './build-ending.mjs';
+import {buildOpening} from './build-opening.mjs';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const WORK = process.argv[2] ?? "terra_incognita";
 async function main() {
@@ -57,7 +58,15 @@ ${js}
 <\/script>`
   );
   const archiveShell = await readFile(`${ROOT}/works/${WORK}/field-archive.dev.html`, "utf8");
-  const archive = inlineFonts(archiveShell);
+  const archiveBundle = await build({
+    entryPoints: [`${ROOT}/works/${WORK}/field-archive-viewer.js`],
+    bundle: true, format: "iife", target: "es2022", write: false,
+    minify: false, charset: "utf8", legalComments: "none"
+  });
+  const archive = inlineFonts(archiveShell).replace(
+    '<script type="module" src="./field-archive-viewer.js"></script>',
+    () => `<script>${archiveBundle.outputFiles[0].text}</script>`
+  );
   try {
     new (await import("node:vm")).SourceTextModule(js);
   } catch (e) {
@@ -70,7 +79,7 @@ ${js}
   const name = WORK.toUpperCase();
   const digest = createHash("sha256").update(html).digest("hex");
   const archiveDigest = createHash("sha256").update(archive).digest("hex");
-  await writeFile(`${ROOT}/works/${WORK}/index.html`, html);
+  await writeFile(`${ROOT}/works/${WORK}/${WORK==="terra_incognita"?"planet":"index"}.html`, html);
   await writeFile(`${ROOT}/works/${WORK}/field-archive.html`, archive);
   await writeFile(`${ROOT}/dist/${name}.html`, html);
   await writeFile(`${ROOT}/dist/${name}.html.sha256`, `${digest}  ${name}.html
@@ -79,7 +88,10 @@ ${js}
   await writeFile(`${ROOT}/dist/FIELD_ARCHIVE.html.sha256`, `${archiveDigest}  FIELD_ARCHIVE.html
 `);
   if (WORK === "terra_incognita") {
-    await writeFile(`${ROOT}/index.html`, html);
+    await writeFile(`${ROOT}/planet.html`, html);
+    await writeFile(`${ROOT}/dist/planet.html`, html);
+    await writeFile(`${ROOT}/dist/field-archive.html`, archive);
+    await buildOpening();
     await writeFile(`${ROOT}/field-archive.html`, archive);
   }
   await rm(tmp, { recursive: true, force: true });
@@ -88,7 +100,7 @@ ${js}
 \u2713 ${WORK} \u2014 ${kb} KB, self-contained`);
   console.log(`  sha256 ${digest}`);
   console.log(`  field archive sha256 ${archiveDigest}`);
-  console.log("  open index.html directly \u2014 no server needed");
+  console.log("  open index.html → planet.html → ending.html / field-archive.html");
   if (Number(kb) < 600) console.warn("  ! smaller than expected \u2014 is three actually inlined?");
 }
 main().catch((e) => {

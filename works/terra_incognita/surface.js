@@ -14,7 +14,8 @@ import {
   abs,
   sqrt,
   sin,
-  uniform
+  uniform,
+  exp
 } from "three/tsl";
 import { fbm, ridge, grain } from "../../engine/tsl/noise.js";
 import { cfg } from "../../engine/config.js";
@@ -211,18 +212,23 @@ export const shadeGround = (C) => (ctx) => {
 };
 export const shadeSky = ({ dir, elev, sunDot }) => {
   const C = cfg();
-  const terra = mix(
-    vec3(64e-4, 75e-4, 0.0106),
-    vec3(31e-4, 31e-4, 35e-4),
-    pow(saturate(elev.mul(2.1)), 0.7)
-  ).add(vec3(0.055, 0.125, 0.132).mul(
-    pow(saturate(float(1).sub(abs(elev.sub(0.018)).mul(7.5))), 9)
-  ).mul(0.28)).add(vec3(0.088, 0.094, 0.105).mul(pow(saturate(float(1).sub(abs(elev))), 26)).mul(0.22)).add(vec3(0.753, 0.082, 0.165).mul(pow(sunDot, 12)).mul(0.075));
-  const desertAtmosphere = mix(
-    vec3(6e-3, 4e-3, 8e-3),
-    vec3(12e-4, 1e-3, 24e-4),
-    pow(saturate(elev.mul(1.65)), 0.62)
-  ).add(vec3(0.96, 0.62, 0.31).mul(pow(sunDot, 520)).mul(1.08));
+  // Analytic optical-depth approximation. Density and chromatic response are
+  // fictional atmosphere design, not measured properties of these worlds.
+  const airMass = float(1).div(max(elev, float(.025)).add(.055));
+  const rayleigh = float(1).add(sunDot.mul(sunDot)).mul(.5);
+  const forward = float(1).div(float(1.12).sub(sunDot).pow(1.4));
+  const thin = float(1).sub(exp(airMass.mul(-.013)));
+  const terra = mix(vec3(.0014,.002,.0038), vec3(.032,.060,.080), thin)
+    .add(vec3(.024,.045,.068).mul(rayleigh).mul(thin))
+    .add(vec3(.72,.65,.57).mul(smoothstep(float(.9997),float(.99996),sunDot)));
+  const dustColumn = float(1).sub(exp(airMass.mul(-.085)));
+  const windAxis = dir.x.mul(D.windCos).add(dir.z.mul(D.windSin));
+  const strata = exp(abs(elev.sub(.055).sub(windAxis.mul(.018))).mul(-38))
+    .add(exp(abs(elev.sub(.13).sub(windAxis.mul(.028))).mul(-55)).mul(.28));
+  const desertAtmosphere = mix(vec3(.007,.0045,.0034), vec3(.17,.089,.038), dustColumn.mul(.76))
+    .add(vec3(.045,.027,.012).mul(strata))
+    .add(vec3(.052,.031,.015).mul(forward).mul(.045))
+    .add(vec3(.85,.63,.37).mul(smoothstep(float(.9993),float(.9999),sunDot)));
   const bodyCentre = vec3(-0.5, 0.075, -0.8628);
   const bodyE1 = vec3(-0.8652, 0, 0.5014);
   const bodyE2 = vec3(0.0376, 0.9972, 0.0649);
@@ -238,11 +244,10 @@ export const shadeSky = ({ dir, elev, sunDot }) => {
   const bodyLight = max(dot(bodyNormal, solar), float(0));
   const bodyColour = vec3(0.011, 0.024, 0.029).mul(bodyLight.mul(0.92).add(0.045));
   const desert = mix(desertAtmosphere, bodyColour, body.mul(0.92)).add(vec3(0.12, 0.25, 0.24).mul(bodyRim).mul(bodyLight).mul(0.18));
-  const granite = mix(
-    vec3(7e-3, 8e-3, 0.011),
-    vec3(14e-4, 17e-4, 32e-4),
-    pow(saturate(elev.mul(1.8)), 0.66)
-  ).add(vec3(0.86, 0.82, 0.94).mul(pow(sunDot, 520)).mul(0.92))
+  const clearColumn = float(1).sub(exp(airMass.mul(-.032)));
+  const granite = mix(vec3(.0025,.005,.012),vec3(.075,.112,.17),clearColumn)
+    .add(vec3(.022,.047,.095).mul(rayleigh).mul(saturate(elev)).mul(.6))
+    .add(vec3(.93,.91,.86).mul(smoothstep(float(.99975),float(.99997),sunDot)))
     .add(mix(vec3(.18,.24,.29),vec3(.32,.25,.17),pow(sunDot,8)).mul(pow(float(1).sub(saturate(abs(elev).mul(2))),5)).mul(uFirstDawn));
   return mix(mix(terra, desert, uWorldMix), granite, uWorldGranite);
 };

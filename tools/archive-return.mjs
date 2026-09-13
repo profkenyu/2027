@@ -24,7 +24,7 @@ try {
       const direct=await directContext.newPage();
       await direct.evaluate(url=>location.replace(url),`${server.url}${route}`);
       await direct.waitForURL(`${server.url}${route}`);
-      const expected=route.replace(/[^/]+$/,route.includes('/dist/')?'TERRA_INCOGNITA.html':'index.html');
+      const expected=route.replace(/[^/]+$/,'planet.html');
       const href=await direct.locator('[data-return]').getAttribute('href');
       if(new URL(href,direct.url()).pathname!==expected) throw Error('Wrong direct-entry fallback');
       if(await direct.evaluate(()=>history.length)!==1) throw Error('Not a cold entry');

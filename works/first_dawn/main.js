@@ -18,9 +18,8 @@ schedule.forEach((s,i)=>{
 let currentShot='arrival';
 let renderer,scene,camera,fleet,environment,seconds=0,paused=false,last=performance.now(),frame=0,frameTime=16,pixelRatio=Math.min(devicePixelRatio,quality.dpr),audio=null,playing=false;
 const title=document.getElementById('line'),replay=document.getElementById('replay'),archive=document.getElementById('archive'),sound=document.getElementById('sound');
-const isDist=/\/dist\//.test(location.pathname);
-document.getElementById('return').href=isDist?'TERRA_INCOGNITA.html':/\/works\/first_dawn\//.test(location.pathname)?'../terra_incognita/index.html':'index.html';
-archive.href=isDist?'FIELD_ARCHIVE.html':/\/works\/first_dawn\//.test(location.pathname)?'../terra_incognita/field-archive.html':'field-archive.html';
+document.getElementById('return').href=location.pathname.includes('/works/first_dawn/')?'../terra_incognita/index.html':'index.html';
+archive.href=location.pathname.includes('/works/first_dawn/')?'../terra_incognita/field-archive.html':'field-archive.html';
 
 function resize(){
   camera.aspect=innerWidth/innerHeight;camera.fov=camera.aspect<1?56:42;

@@ -1,3 +1,4 @@
+import { flightProfile } from "./flight-profiles.js";
 import * as THREE from "three";
 const clamp01 = (value) => Math.max(0, Math.min(1, value));
 const smooth = (value) => {
@@ -362,10 +363,19 @@ export class ShotDirector {
     const transit = this.voyage.phase === "transit";
     if (!transit) {
       const altitude = Math.max(0, this.lander.group.position.y - (this.lander.site?.y ?? this.heightAt(this.lander.group.position.x, this.lander.group.position.z)));
-      this._camera.copy(this.lander.dockingPoint(-22, 18, 6));
+      const profile = (this.voyage.phase === 'lift' ? this.voyage.departureProfile : this.voyage.arrivalProfile) ?? flightProfile('terra');
+      const [z, x, y] = profile.camera;
+      const descent = this.voyage.phase === 'descent';
+      const reveal = 1 - Math.min(1, altitude / profile.height);
+      this._camera.copy(this.lander.dockingPoint(z, x, y));
+      // Desert: ground-side witness to the lateral wind corridor.
+      // Granite: elevated terrain survey resolves into a close landing view.
+      if (profile.key === 'desert') this._camera.y = (this.voyage.baseY ?? this.lander.site?.y ?? 0) + y + altitude * .16;
+      else if (profile.key === 'granite') this._camera.y = (this.voyage.baseY ?? this.lander.site?.y ?? 0) + y + altitude * .72;
+      else this._camera.y = (this.voyage.baseY ?? this.lander.site?.y ?? 0) + y + altitude * .3;
       this._camera.y = Math.max(this._camera.y, this.heightAt(this._camera.x, this._camera.z) + 1.2);
-      this._aim.copy(this.lander.dockingPoint(0.25, 0, 1 - Math.min(altitude * 0.3, 3)));
-      this.camera.fov = 48;
+      this._aim.copy(this.lander.dockingPoint(.25, 0, 1));
+      this.camera.fov = profile.fov - (descent && profile.key === 'granite' ? reveal * 9 : 0);
       return;
     }
     const drift = this.reducedMotion ? 0 : Math.sin(now * 75e-6) * 0.9;
