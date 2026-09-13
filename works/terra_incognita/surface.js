@@ -22,6 +22,7 @@ import { T, D, G, BH, BODY02_WATER_SITE } from "./spec.js";
 import { heightCPU, normalCPU, veff, solarAccessCPU, setCPUWorldMix } from "./surface.cpu.js";
 export const uWorldMix = uniform(0);
 export const uWorldGranite = uniform(0);
+export const uFirstDawn = uniform(0);
 export function setWorldMode(mode) {
   uWorldMix.value = mode === "desert" ? 1 : 0;
   uWorldGranite.value = mode === "granite" ? 1 : 0;
@@ -241,7 +242,8 @@ export const shadeSky = ({ dir, elev, sunDot }) => {
     vec3(7e-3, 8e-3, 0.011),
     vec3(14e-4, 17e-4, 32e-4),
     pow(saturate(elev.mul(1.8)), 0.66)
-  ).add(vec3(0.86, 0.82, 0.94).mul(pow(sunDot, 520)).mul(0.92));
+  ).add(vec3(0.86, 0.82, 0.94).mul(pow(sunDot, 520)).mul(0.92))
+    .add(mix(vec3(.18,.24,.29),vec3(.32,.25,.17),pow(sunDot,8)).mul(pow(float(1).sub(saturate(abs(elev).mul(2))),5)).mul(uFirstDawn));
   return mix(mix(terra, desert, uWorldMix), granite, uWorldGranite);
 };
 export const shadeBlade = (C) => ({ t, seed, ndl, radius, dir, worldPos }) => {

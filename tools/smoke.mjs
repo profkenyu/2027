@@ -572,6 +572,21 @@ if (SEQUENCE) {
           const repeated = await page.evaluate(() => window.TI_MEMORY?.().geological);
           if (repeated.records.length !== completed.records.length) throw Error('Repeated = duplicated observations');
           console.log('  ✓ production = shortcut: all three planets complete; final tableau reached');
+          if (process.env.FINALE === '1') {
+            await page.waitForFunction(()=>window.TI_FINALE?.().seconds>=12,null,{timeout:20000});
+            const beforePause=await page.evaluate(()=>{dispatchEvent(new PageTransitionEvent('pagehide'));return TI_FINALE().seconds;});
+            await page.waitForTimeout(350);
+            const paused=await page.evaluate(()=>TI_FINALE().seconds);
+            if(Math.abs(paused-beforePause)>.05) throw Error('Ending advanced while paused');
+            await page.evaluate(()=>dispatchEvent(new PageTransitionEvent('pageshow')));
+            for(const seconds of [14,28,39]) {
+              await page.waitForFunction(s=>TI_FINALE().seconds>=s,seconds,{timeout:22000});
+              await page.screenshot({path:`${ROOT}/dist/first-dawn-production-${seconds}.png`});
+            }
+            const ending=await page.evaluate(()=>({state:TI_FINALE(),title:document.getElementById('ti-dawn-title').textContent,titleOpacity:Number(getComputedStyle(document.getElementById('ti-dawn-title')).opacity),archive:!document.getElementById('ti-ending-archive').hidden}));
+            if(ending.state.ships!==5 || ending.state.wave<.99 || ending.titleOpacity<.99 || !ending.archive) throw Error('Ending incomplete: '+JSON.stringify(ending));
+            console.log('  ✓ first dawn: five arks, three wave sources, title, archive and pause/resume');
+          }
         }
         break;
       }
@@ -674,6 +689,12 @@ report.soundCycle = soundCycle;
 report.greenMode = greenMode;
 report.roverTools = roverTools;
 await page.screenshot({ path: `${ROOT}/dist/${SEQUENCE ? "sequence-smoke" : "smoke"}.png` });
+if(process.env.FINALE==='1') {
+  await page.waitForFunction(()=>TI_WORLD==='terra' && !TI_FINALE().active,null,{timeout:22000});
+  const clean=await page.evaluate(()=>TI_FINALE().wave===0 && document.getElementById('ti-dawn-title').hidden && document.getElementById('ti-ending-archive').hidden);
+  if(!clean) throw Error('Ending did not reset cleanly');
+  console.log('  ✓ first dawn: returned to opening with no residual scene or title');
+}
 await browser.close();
 const pad = (s) => String(s).padEnd(22);
 console.log("");

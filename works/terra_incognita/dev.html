@@ -930,6 +930,8 @@
   #ti-ending-archive[hidden] { display: none; }
   #ti-ending-archive:focus-visible { outline: 1px dotted currentColor; }
   body.ti-memory-tableau #fh-cap-line { opacity: 0 !important; }
+  #ti-dawn-title { position:fixed; left:0; right:0; bottom:calc(env(safe-area-inset-bottom, 0px) + 95px); z-index:89; text-align:center; color:#d7dedb; font:300 clamp(13px,1.3vw,21px)/1.8 sans-serif; letter-spacing:.2em; opacity:0; pointer-events:none; }
+  #ti-dawn-title[hidden] { display:none; }
   body.ti-completion-tableau #ti-monitor,
   body.ti-completion-tableau #ti-sound,
   body.ti-completion-tableau #survey-log,
@@ -1954,6 +1956,7 @@
 </section>
 
 <a id="ti-ending-archive" href="field-archive.html" hidden>FIELD ARCHIVE <span aria-hidden="true">↗</span></a>
+<div id="ti-dawn-title" hidden>우리는 이제, 여기서 시작한다.</div>
 
 <script>
   (function() {

@@ -241,12 +241,44 @@ export class Ambient {
       return x * x * (3 - 2 * x);
     };
     let presence = phase < 15 ? 1 : phase < 19 ? 1 - smooth((phase - 15) / 4) : phase < 36 ? 0 : phase < 41 ? smooth((phase - 36) / 5) : 1;
-    if (performance.now() < this.silenceUntil || this.voyageActive) presence = 0;
+    if (performance.now() < this.silenceUntil || this.voyageActive || this.finaleActive) presence = 0;
     this.worldGain.gain.setTargetAtTime(presence, t, 0.85);
     return q;
   }
   silenceFor(ms) {
     this.silenceUntil = Math.max(this.silenceUntil, performance.now() + ms);
+  }
+  beginFinale() {
+    this.endFinale();
+    this.finaleActive=true;
+    if(!this.ctx || !this.master) return;
+    const ctx=this.ctx;
+    const bus=ctx.createGain(); bus.gain.value=0;
+    const filter=ctx.createBiquadFilter(); filter.type='lowpass'; filter.frequency.value=850;
+    filter.connect(bus).connect(this.master);
+    // An authored open fifth opens into a major third as the arks arrive.
+    this.finaleVoices=[36.708,55,73.416,110,138.591].map((frequency,i)=>{
+      const osc=ctx.createOscillator(), gain=ctx.createGain();
+      osc.type=i<2?'sine':'triangle'; osc.frequency.value=frequency;
+      gain.gain.value=i===4?0:.18/(1+i*.35);
+      osc.connect(gain).connect(filter); osc.start();
+      return {osc,gain};
+    });
+    this.finaleBus=bus; this.finaleFilter=filter;
+  }
+  updateFinale(seconds) {
+    if(!this.finaleActive || !this.ctx) return;
+    if(!this.finaleBus) { this.beginFinale(); if(!this.finaleBus) return; }
+    const smooth=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x);};
+    const swell=smooth((seconds-5)/17)*(1-smooth((seconds-32)/12));
+    this.finaleBus.gain.setTargetAtTime(swell*.32,this.ctx.currentTime,.25);
+    this.finaleVoices[4].gain.gain.setTargetAtTime(smooth((seconds-18)/10)*.075,this.ctx.currentTime,.4);
+  }
+  endFinale() {
+    for(const voice of this.finaleVoices??[]) {voice.osc.stop();voice.osc.disconnect();voice.gain.disconnect();}
+    this.finaleVoices=[];
+    this.finaleBus?.disconnect(); this.finaleFilter?.disconnect();
+    this.finaleBus=null; this.finaleFilter=null; this.finaleActive=false;
   }
   setVoyage(active) {
     this.voyageActive = !!active;
