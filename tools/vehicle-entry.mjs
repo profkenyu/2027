@@ -9,7 +9,7 @@ async function opening(page){
 async function start(page){
  await page.evaluate(()=>TI_OPENING_TEST.seek(TI_BLUEPRINT().duration));
  await page.locator((await page.evaluate(()=>innerWidth<700))?'#ti-mobile-start':'#ti-start').click();
- await page.waitForURL('**/planet.html?**');
+ await page.waitForURL('**/planet-01.html?**');
  await page.waitForFunction(()=>window.TI_WORLD&&window.TI_CAMERA&&window.TI_PROLOGUE?.().released||document.getElementById('fh-gate')||document.getElementById('fh-fatal'),null,{timeout:60000});
 }
 try{

@@ -49,7 +49,7 @@ export const RESTORATION_ITEMS = Object.freeze([
     sample: "CARBON COMPOSITE",
     module: "SERVICE / PRESSURE",
     sign: "LOW ALBEDO DENSITY",
-    ko: koreanLabels("탄소 복합재", "압력 격실", "저반사율 탄소질 성분"),
+    ko: koreanLabels("탄소 복합재", "기밀 격실", "저반사율 탄소질 성분"),
     color: 9414317,
     form: "nodules",
     grammar: "signal-absorption"
@@ -61,7 +61,7 @@ export const RESTORATION_ITEMS = Object.freeze([
     sample: "CONDUCTIVE LATTICE",
     module: "TRANSFER / VISOR",
     sign: "METALLIC LATTICE",
-    ko: koreanLabels("전도성 격자", "이송부\u00b7센서 바이저", "금속 격자 반사 특성"),
+    ko: koreanLabels("전도성 격자", "이송 장치·센서 보호창", "금속 격자 반사 특성"),
     color: 14854475,
     form: "lattice",
     grammar: "phase-lock"
@@ -429,14 +429,14 @@ export class Restoration {
     };
   }
   _defaultStatusText() {
-    if (this.complete) return "착륙선 외피와 공급원료 확보 완료";
+    if (this.complete) return "착륙선 외피와 원료 확보 완료";
     if (this.structureComplete)
-      return `외피 구조재 고정 \xB7 공급원료 ${this.rawCount} / ${RAW_MATERIAL_COUNT}`;
+      return `외피 구조재 고정 \xB7 원료 ${this.rawCount} / ${RAW_MATERIAL_COUNT}`;
     if (this.count) return "현장 시료 동정 완료";
-    return "설계 상태 \xB7 외피 구조재 4종과 공급원료 2종 필요";
+    return "설계 상태 \xB7 외피 구조재 4종과 원료 2종 필요";
   }
   _syncUi(message = "") {
-    if (this.progress) this.progress.textContent = `외피 구조재 ${this.structuralCount} / ${STRUCTURAL_MATERIAL_COUNT} \xB7 공급원료 ${this.rawCount} / ${RAW_MATERIAL_COUNT}`;
+    if (this.progress) this.progress.textContent = `외피 구조재 ${this.structuralCount} / ${STRUCTURAL_MATERIAL_COUNT} \xB7 원료 ${this.rawCount} / ${RAW_MATERIAL_COUNT}`;
     for (let i = 0; i < this.cells.length; i++)
       this.cells[i].classList.toggle("on", !!this.acquiredItems[i]);
     this._syncGauges();
@@ -550,7 +550,7 @@ export class Restoration {
     if (fixed) {
       if (this.registrationPhase) this.registrationPhase.textContent = "계획 04 → 확인 04";
       if (this.registrationSample) this.registrationSample.textContent = "착륙선 외피 고정";
-      if (this.registrationModule) this.registrationModule.textContent = "관측 완료 \xB7 외피 구조재 4종 고정 \xB7 공급원료 2종 적재";
+      if (this.registrationModule) this.registrationModule.textContent = "관측 완료 \xB7 외피 구조재 4종 고정 \xB7 원료 2종 적재";
     } else {
       if (this.registrationPhase) this.registrationPhase.textContent = `구성재 등록 \xB7 ${String(registered).padStart(2, "0")} / 04`;
       if (this.registrationSample) this.registrationSample.textContent = item.ko.sample;
@@ -721,7 +721,7 @@ export class Restoration {
       item: {
         sample: "4 STRUCTURES + 2 RAW MATERIALS",
         ko: {
-          sample: "외피 구조재 4종·공급원료 2종",
+          sample: "외피 구조재 4종·원료 2종",
           module: "탐사 적재물"
         },
         module: "MISSION LOADOUT"
@@ -751,7 +751,7 @@ export class Restoration {
     this.state = "acquired";
     this.group.visible = true;
     this.root?.classList.add("active");
-    this._syncUi("외피 구조재 4종·공급원료 2종 확보");
+    this._syncUi("외피 구조재 4종·원료 2종 확보");
     return true;
   }
   _animate(now) {
@@ -803,7 +803,7 @@ export class Restoration {
         this.state = "complete";
         this.sample.visible = this.ring.visible = this.particles.visible = false;
         this.root?.classList.remove("active");
-        this._syncUi("착륙선 외피 고정 \xB7 공급원료 2종 적재 완료");
+        this._syncUi("착륙선 외피 고정 \xB7 원료 2종 적재 완료");
       }
       return;
     }
@@ -860,10 +860,17 @@ export class Restoration {
       this._syncUi(this.complete ? "현장 시료 회수 완료 \xB7 좌표 기록 6건 생성" : `${module} \xB7 적재 완료`);
     }
   }
-  reset(level = 0) {
+  checkpoint() {
+    return Array.from(this.acquiredItems, (acquired,index) => acquired ? this.sites.findIndex(site=>site.itemIndex===index&&site.acquired) : -1);
+  }
+  reset(level = 0, selections = null) {
     this.count = Math.max(0, Math.min(this.items.length, Math.floor(level)));
     this.acquiredItems.fill(0);
     for (let index = 0; index < this.count; index++) this.acquiredItems[index] = 1;
+    if (selections) {
+      for (let i=0;i<this.items.length;i++) this.acquiredItems[i] = selections[i]>=0 && this.sites[selections[i]]?.itemIndex===i ? 1 : 0;
+      this.count=this.acquiredItems.reduce((sum,n)=>sum+n,0);
+    }
     for (let i = 0; i < this.gaugeValues.length; i++)
       this.gaugeValues[i] = this.acquiredItems[STRUCTURAL_MATERIAL_COUNT + i] ? 1 : 0;
     this.gaugeDisplayValues.set(this.gaugeValues);
@@ -877,14 +884,14 @@ export class Restoration {
     this.sample.visible = this.ring.visible = this.particles.visible = false;
     this.root?.classList.remove("active");
     this.setCompletionRegistration(null);
-    this.lander.setRestorationLevel(this.structuralCount);
+    this.lander.setRestorationLevel(Array.from(this.acquiredItems).slice(0,STRUCTURAL_MATERIAL_COUNT));
     for (const site of this.sites) {
       site.acquired = false;
       site.root.visible = !this.acquiredItems[site.itemIndex];
     }
     for (let itemIndex = 0; itemIndex < this.acquiredItems.length; itemIndex++) {
       if (!this.acquiredItems[itemIndex]) continue;
-      const primary = this.sites.find((site) => site.itemIndex === itemIndex && site.data.primary) ??
+      const primary = (selections ? this.sites[selections[itemIndex]] : null) ?? this.sites.find((site) => site.itemIndex === itemIndex && site.data.primary) ??
         this.sites.find((site) => site.itemIndex === itemIndex);
       if (primary) primary.acquired = true;
     }

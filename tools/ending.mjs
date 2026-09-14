@@ -1,85 +1,66 @@
+import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
 import {startPreviewServer} from './lib/preview-server.mjs';
-import {mkdtemp,copyFile,rm} from 'node:fs/promises';
+import {mkdir,mkdtemp,copyFile,rm,writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {pathToFileURL} from 'node:url';
-const server=await startPreviewServer();let browser;
+import {DURATION,CUTS,TITLE_AT,ARCHIVE_AT} from '../works/first_dawn/timeline.js';
+const server=await startPreviewServer(),reports=[];let browser;
+await mkdir('output/qa/ending-90',{recursive:true});
 try{
   browser=await chromium.launch({channel:'chrome',headless:true});
   for(const [tier,width,height] of [['high',1600,1000],['mid',1180,820],['low',390,844]]){
     const page=await browser.newPage({viewport:{width,height}}),errors=[],requests=[];
     page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});page.on('request',r=>requests.push(r.url()));
     await page.goto(`${server.url}/ending.html?test&quality=${tier}`);
-    await page.waitForFunction(()=>window.FIRST_DAWN,null,{timeout:60000}).catch(e=>{throw Error(`${e}\n${errors.join('\n')}`);});
+    await page.waitForFunction(()=>window.FIRST_DAWN,null,{timeout:60000});
     await page.waitForFunction(()=>document.getElementById('loading').hidden);
-    let peak;
-    for(const t of [0,10,14,16,25,34,36,45,59,60]){
+    const frames=[];
+    for(const t of [0,5,10,19,21,32,44,46,60,72,89,90]){
       const state=await page.evaluate(t=>{FIRST_DAWN.seek(t);return FIRST_DAWN.snapshot();},t);
-      if(state.total!==5||!state.independent||state.ships!==(t?5:0))throw Error('Incorrect fleet/state');
-      if(t===60){peak=state;if(state.animation!=='anime.js'||state.deployment.some(v=>v!==1))throw Error('Mechanical deployment did not complete');if(tier==='low'&&state.triangles>350000)throw Error('LOW geometry budget exceeded');}
-      await page.screenshot({path:`dist/ending-${tier}-${t}.png`});
+      assert.equal(state.total,5);assert(state.independent);assert.equal(state.duration,DURATION);
+      assert.equal(state.shot,t<CUTS[0]?'arrival':t<CUTS[1]?'hull':'surface');
+      if(t===DURATION){assert(state.deployment.every(v=>v===1));assert.equal(state.animation,'anime.js');if(tier==='low')assert(state.triangles<350000);}
+      await page.screenshot({path:`output/qa/ending-90/${tier}-${t}.png`});frames.push(state);
     }
-    await page.evaluate(()=>{
-      FIRST_DAWN.seek(20);const a=FIRST_DAWN.positions();FIRST_DAWN.seek(21);const b=FIRST_DAWN.positions();
-      const speeds=[];a.forEach((p,i)=>{if(p[0]!==b[i][0]||p[1]!==b[i][1]||b[i][2]<=p[2])throw Error('Vanishing point path failure');speeds.push(Math.round((b[i][2]-p[2])*100));});
-      if(new Set(speeds).size!==5)throw Error('Identical approach speeds');
-      dispatchEvent(new PageTransitionEvent('pagehide'));if(!FIRST_DAWN.snapshot().paused)throw Error('Pause failure');dispatchEvent(new PageTransitionEvent('pageshow'));
-      FIRST_DAWN.seek(59);
-    });
-    await page.evaluate(()=>{
-      const expected=['arrival','hull','hull','surface'];
-      [10,20,30,45].forEach((t,i)=>{FIRST_DAWN.seek(t);if(FIRST_DAWN.snapshot().shot!==expected[i])throw Error('Camera sequence mismatch');});
-      for(const [from,to,relative] of [[2,14,false],[16,34,true]]){
-        FIRST_DAWN.seek(from);const start=FIRST_DAWN.snapshot(),shipA=FIRST_DAWN.positions()[0];
-        FIRST_DAWN.seek(to);const end=FIRST_DAWN.snapshot(),shipB=FIRST_DAWN.positions()[0];
-        if(end.cameraFov>=start.cameraFov)throw Error('Shot zoom missing');
-        const az=start.cameraPosition[2]-(relative?shipA[2]:0),bz=end.cameraPosition[2]-(relative?shipB[2]:0);
-        if(bz>=az)throw Error('Shot forward approach missing');
-      }
-      const sequence=[];
-      for(let t=0;t<=60;t+=1){FIRST_DAWN.seek(t);const shot=FIRST_DAWN.snapshot().shot;if(sequence.at(-1)!==shot)sequence.push(shot);}
-      if(sequence.join(',')!=='arrival,hull,surface')throw Error('Expected exactly three shots');
-      FIRST_DAWN.seek(25);if(Number(document.getElementById('cut').style.opacity)!==0)throw Error('Obsolete camera cut remains');
-      FIRST_DAWN.seek(34);if(Number(document.getElementById('line').style.opacity)!==0)throw Error('Subtitle before ground shot');
-      FIRST_DAWN.seek(45);const a=FIRST_DAWN.snapshot();
-      if(Math.abs(a.cameraPosition[1]-a.surfaceHeight-1.7)>1e-6)throw Error('Camera is not at surface eye height');
-      FIRST_DAWN.seek(59);const b=FIRST_DAWN.snapshot();
-      if(b.cameraPosition[2]>=a.cameraPosition[2]||b.cameraPosition[0]>=a.cameraPosition[0]||b.cameraFov>=a.cameraFov)throw Error('Final push-in or zoom missing');
-      if(b.cameraPosition[1]!==a.cameraPosition[1])throw Error('Ground camera height drift');
-      FIRST_DAWN.seek(60);const end=FIRST_DAWN.snapshot();
-      FIRST_DAWN.seek(35);const start=FIRST_DAWN.snapshot();
-      if(Math.abs(start.cameraPosition[2]-end.cameraPosition[2]-120)>1e-6)throw Error('Push-in distance mismatch');
-      FIRST_DAWN.seek(100);if(FIRST_DAWN.snapshot().seconds!==60)throw Error('Duration exceeds 60 seconds');
-      FIRST_DAWN.seek(14.99);if(FIRST_DAWN.snapshot().shot!=='arrival')throw Error('First shot ends early');
-      FIRST_DAWN.seek(15);if(FIRST_DAWN.snapshot().shot!=='hull')throw Error('15-second cut mismatch');
-      FIRST_DAWN.seek(35);if(FIRST_DAWN.snapshot().shot!=='surface')throw Error('35-second cut mismatch');
-      FIRST_DAWN.seek(59);
-      if(document.getElementById('line').textContent!=='우리는 이제 여기서 시작한다')throw Error('Exact final copy mismatch');
-      FIRST_DAWN.seek(20);const first=JSON.stringify(FIRST_DAWN.positions());
-      FIRST_DAWN.seek(45);FIRST_DAWN.seek(20);
-      if(first!==JSON.stringify(FIRST_DAWN.positions()))throw Error('Camera affects fleet trajectory');
-      FIRST_DAWN.seek(59);
-    });
-    if(await page.locator('#line').evaluate(e=>Number(getComputedStyle(e).opacity))!==1)throw Error('Final title missing');
-    await page.locator('#sound').click();if(await page.locator('#sound').getAttribute('aria-pressed')!=='true')throw Error('Audio gesture failure');
-    await page.locator('#sound').click();await page.locator('#replay').click();
-    if((await page.evaluate(()=>FIRST_DAWN.snapshot())).seconds!==0)throw Error('Replay failure');
-    if(requests.some(url=>!url.includes('/ending.html')))throw Error('Standalone page fetched an external dependency: '+requests.join(','));
-    if(errors.length)throw Error(errors.join('\n'));
-    console.log(tier,{triangles:peak.triangles,calls:peak.calls,ships:peak.total,animation:peak.animation},'render / paths / lifecycle / audio / replay PASS');await page.close();
+    await page.evaluate(({DURATION,CUTS,TITLE_AT,ARCHIVE_AT})=>{
+      const positions=t=>{FIRST_DAWN.seek(t);return FIRST_DAWN.positions();};
+      const farA=positions(10),farB=positions(11),nearA=positions(54),nearB=positions(55),speeds=[];
+      farA.forEach((p,i)=>{
+        const far=farB[i][2]-p[2],near=nearB[i][2]-nearA[i][2];
+        if(far<=0||near<far*4)throw Error('Approach must accelerate');
+        if(nearA[i][0]!==nearB[i][0]||nearA[i][1]!==nearB[i][1])throw Error('Lateral drift');
+        speeds.push(Math.round(near*100));
+      });
+      if(new Set(speeds).size!==5)throw Error('Identical fleet speed');
+      const shot=t=>{FIRST_DAWN.seek(t);return FIRST_DAWN.snapshot();};
+      for(const cut of CUTS){shot(cut);if(Number(document.getElementById('cut').style.opacity)!==1)throw Error('Missing authored cut');}
+      if(shot(CUTS[0]-.01).shot!=='arrival'||shot(CUTS[1]-.01).shot!=='hull')throw Error('Shot ends early');
+      for(const [a,b]of [[2,19],[21,44]])if(shot(b).cameraFov>=shot(a).cameraFov)throw Error('Scale reveal missing');
+      const first=shot(CUTS[1]),end=shot(DURATION);
+      if(Math.abs(first.cameraPosition[2]-end.cameraPosition[2]-120)>1e-6)throw Error('Ground push-in changed');
+      if(Math.abs(end.cameraPosition[1]-end.surfaceHeight-1.7)>1e-6)throw Error('Observer height changed');
+      shot(TITLE_AT-1);if(Number(document.getElementById('line').style.opacity)!==0)throw Error('Early title');
+      shot(ARCHIVE_AT-1);if(!document.getElementById('archive').hidden)throw Error('Early archive');
+      shot(DURATION+100);if(FIRST_DAWN.snapshot().seconds!==DURATION)throw Error('Duration clamp missing');
+      if(document.getElementById('line').textContent!=='우리는 이제 여기서 시작한다')throw Error('Final copy changed');
+      const a=JSON.stringify(positions(30));positions(80);if(JSON.stringify(positions(30))!==a)throw Error('Nondeterministic seeking');
+      dispatchEvent(new PageTransitionEvent('pagehide'));if(!FIRST_DAWN.snapshot().paused)throw Error('Pause failed');dispatchEvent(new PageTransitionEvent('pageshow'));shot(DURATION);
+    },{DURATION,CUTS,TITLE_AT,ARCHIVE_AT});
+    await page.locator('#sound').click();assert.equal(await page.locator('#sound').getAttribute('aria-pressed'),'true');
+    await page.locator('#sound').click();await page.locator('#replay').click();assert.equal(await page.evaluate(()=>FIRST_DAWN.snapshot().seconds),0);
+    assert(!requests.some(url=>!url.includes('/ending.html')));assert.deepEqual(errors,[]);
+    reports.push({tier,frames,errors});console.log(`${tier}: 90s / 20s opening / acceleration / atmosphere / camera / audio / replay PASS`);await page.close();
   }
   const live=await browser.newPage();await live.goto(`${server.url}/ending.html`);await live.waitForFunction(()=>window.FIRST_DAWN);
-  const before=await live.evaluate(()=>FIRST_DAWN.snapshot().seconds);await live.waitForTimeout(1200);
-  const after=await live.evaluate(()=>FIRST_DAWN.snapshot().seconds);if(after<=before)throw Error('Autonomous playback stalled');
-  await live.evaluate(()=>dispatchEvent(new PageTransitionEvent('pagehide')));const paused=await live.evaluate(()=>FIRST_DAWN.snapshot().seconds);await live.waitForTimeout(300);
-  if(await live.evaluate(()=>FIRST_DAWN.snapshot().seconds)!==paused)throw Error('Live pause failed');
-  console.log('autonomous playback / live pause PASS');await live.close();
+  const before=await live.evaluate(()=>FIRST_DAWN.snapshot().seconds);await live.waitForTimeout(1200);assert(await live.evaluate(()=>FIRST_DAWN.snapshot().seconds)>before);
+  await live.evaluate(()=>dispatchEvent(new PageTransitionEvent('pagehide')));const paused=await live.evaluate(()=>FIRST_DAWN.snapshot().seconds);await live.waitForTimeout(300);assert.equal(await live.evaluate(()=>FIRST_DAWN.snapshot().seconds),paused);await live.close();
   const portable=await mkdtemp(join(tmpdir(),'first-dawn-standalone-'));
   try{
     const file=join(portable,'ending.html');await copyFile(new URL('../ending.html',import.meta.url),file);
-    const local=await browser.newPage(),failures=[];local.on('pageerror',e=>failures.push(String(e)));
-    await local.goto(pathToFileURL(file).href);await local.waitForFunction(()=>window.FIRST_DAWN?.snapshot().independent);
-    if(failures.length)throw Error(failures.join('\n'));console.log('isolated file:// HTML without mission files PASS');await local.close();
+    const local=await browser.newPage();await local.goto(pathToFileURL(file).href);await local.waitForFunction(()=>window.FIRST_DAWN?.snapshot().independent);await local.close();
   }finally{await rm(portable,{recursive:true,force:true});}
+  await writeFile('output/qa/ending-90/report.json',JSON.stringify(reports,null,2));
+  console.log('autonomous playback / live pause / isolated file:// PASS');
 }finally{await browser?.close();await server.close();}

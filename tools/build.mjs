@@ -10,6 +10,8 @@ const WORK = process.argv[2] ?? "terra_incognita";
 async function main() {
   const tmp = `${ROOT}/.build`;
   await rm(tmp, { recursive: true, force: true });
+  await rm(`${ROOT}/dist`, { recursive: true, force: true });
+  await mkdir(`${ROOT}/dist`, { recursive: true });
   await cp(`${ROOT}/engine`, `${tmp}/engine`, { recursive: true });
   await cp(`${ROOT}/works`, `${tmp}/works`, { recursive: true });
   const cfgPath = `${tmp}/engine/config.js`;
@@ -18,7 +20,7 @@ async function main() {
   const out = await build({
     entryPoints: [`${tmp}/works/${WORK}/main.js`],
     bundle: true,
-    format: "esm",
+    format: "iife",
     target: "es2022",
     minifyWhitespace: true,
     minifySyntax: true,
@@ -29,6 +31,12 @@ async function main() {
     plugins: [{
       name: "three-local",
       setup(b) {
+        b.onLoad({ filter: /works\/[^/]+\/main\.js$/ }, async ({path}) => {
+          const source = await readFile(path, 'utf8');
+          const imports = [];
+          const body = source.replace(/^import\s[\s\S]*?;\s*$/gm, statement => { imports.push(statement); return ''; });
+          return { contents: `${imports.join('\n')}\n(async()=>{\n${body}\n})().catch(error=>{console.error(error);document.body.dataset.bootError=error.message;});`, loader: 'js' };
+        });
         const threeRoot = `${ROOT}/node_modules/three`;
         const core = `${threeRoot}/build/three.webgpu.js`;
         b.onResolve({ filter: /^three$/ }, () => ({ path: core }));
@@ -53,9 +61,7 @@ async function main() {
   }
   const html = inlineFonts(shell).replace(/\n?\s*<script type="importmap">[\s\S]*?<\/script>/, "").replace(
     /<script type="module" src="\.\/main\.js"><\/script>/,
-    `<script type="module">
-${js}
-<\/script>`
+    '<script defer src="./planet-engine.js"></script>'
   );
   const archiveShell = await readFile(`${ROOT}/works/${WORK}/field-archive.dev.html`, "utf8");
   const archiveBundle = await build({
@@ -75,33 +81,43 @@ ${js}
   if ([html, archive].some((candidate) => /<(?:script|link)\b[^>]*(?:src|href)=["']https?:/i.test(candidate) || /<script\s+type=["']importmap["']/i.test(candidate))) {
     throw new Error("the exhibition candidate still contains a network dependency");
   }
-  await mkdir(`${ROOT}/dist`, { recursive: true });
-  const name = WORK.toUpperCase();
   const digest = createHash("sha256").update(html).digest("hex");
   const archiveDigest = createHash("sha256").update(archive).digest("hex");
-  await writeFile(`${ROOT}/works/${WORK}/${WORK==="terra_incognita"?"planet":"index"}.html`, html);
   await writeFile(`${ROOT}/works/${WORK}/field-archive.html`, archive);
-  await writeFile(`${ROOT}/dist/${name}.html`, html);
-  await writeFile(`${ROOT}/dist/${name}.html.sha256`, `${digest}  ${name}.html
-`);
-  await writeFile(`${ROOT}/dist/FIELD_ARCHIVE.html`, archive);
-  await writeFile(`${ROOT}/dist/FIELD_ARCHIVE.html.sha256`, `${archiveDigest}  FIELD_ARCHIVE.html
-`);
   if (WORK === "terra_incognita") {
-    await writeFile(`${ROOT}/planet.html`, html);
-    await writeFile(`${ROOT}/dist/planet.html`, html);
+    for (const folder of [ROOT, `${ROOT}/dist`, `${ROOT}/works/${WORK}`]) {
+      await writeFile(`${folder}/planet-engine.js`, js);
+      for (const number of ['01', '02', '03']) {
+        await writeFile(`${folder}/planet-${number}.html`, html.replace(/<title>[^<]*<\/title>/, `<title>Terra Incognita · Planet ${number}</title>`));
+      }
+    }
     await writeFile(`${ROOT}/dist/field-archive.html`, archive);
     await buildOpening();
     await writeFile(`${ROOT}/field-archive.html`, archive);
+    const deploymentFiles = [
+      "index.html",
+      "planet-01.html",
+      "planet-02.html",
+      "planet-03.html",
+      "planet-engine.js",
+      "field-archive.html",
+      "ending.html"
+    ];
+    const checksums = [];
+    for (const file of deploymentFiles) {
+      const content = await readFile(`${ROOT}/dist/${file}`);
+      checksums.push(`${createHash("sha256").update(content).digest("hex")}  ${file}`);
+    }
+    await writeFile(`${ROOT}/dist/SHA256SUMS`, `${checksums.join("\n")}\n`);
   }
   await rm(tmp, { recursive: true, force: true });
   const kb = (Buffer.byteLength(html) / 1024).toFixed(0);
   console.log(`
-\u2713 ${WORK} \u2014 ${kb} KB, self-contained`);
+\u2713 ${WORK} \u2014 ${kb} KB page with shared engine`);
   console.log(`  sha256 ${digest}`);
   console.log(`  field archive sha256 ${archiveDigest}`);
-  console.log("  open index.html → planet.html → ending.html / field-archive.html");
-  if (Number(kb) < 600) console.warn("  ! smaller than expected \u2014 is three actually inlined?");
+  console.log("  open index.html → planet-01.html → planet-02.html → planet-03.html → ending.html");
+  console.log(`  shared planet-engine.js: ${Math.round(Buffer.byteLength(js) / 1024)} KB`);
 }
 main().catch((e) => {
   console.error(e);

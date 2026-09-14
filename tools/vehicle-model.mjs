@@ -1,5 +1,8 @@
 import { chromium } from "playwright";
+import { mkdir } from "node:fs/promises";
 import { startPreviewServer } from "./lib/preview-server.mjs";
+const output = new URL('../output/qa/vehicle-model/', import.meta.url);
+await mkdir(output, {recursive: true});
 
 const server = await startPreviewServer();
 let browser;
@@ -18,7 +21,7 @@ try {
     console.log(await page.evaluate(() => preview.check()));
     for (const kind of ["rover", "lander", "fold", "bay"]) {
       await page.evaluate(kind => preview.frame(kind), kind);
-      await page.screenshot({path: `dist/model-${tier}-${kind}.png`});
+      await page.screenshot({path: new URL(`model-${tier}-${kind}.png`, output).pathname});
     }
     if (errors.length) throw Error(errors.join("\n"));
     await page.close();

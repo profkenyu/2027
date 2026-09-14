@@ -182,6 +182,24 @@ export class VoyageSequence {
     this.onCue?.("flight-lock", now, destination);
     return true;
   }
+  resumeArrival(destination, now = performance.now()) {
+    this.start(destination, now);
+    this.phase = "transit";
+    this.t0 = now - 6400;
+    this.swapped = true;
+    this.rover.stowedIn = this.lander;
+    this.lander.setLegFold(1);
+    this.lander.group.position.y = this.baseY + this.arrivalProfile.height;
+    this.group.visible = true;
+    document.body.classList.add("ti-voyage");
+    this.onSpace?.(true);
+  }
+  resumeSurface(destination) {
+    this.destination=destination;
+    this.arrivalProfile=flightProfile(destination.key);
+    this.departureProfile=this.arrivalProfile;
+    this.phase='arrived';
+  }
   async beforeRover(now) {
     if (!this.active) return;
     this.lander.setFlightThrust?.(0);

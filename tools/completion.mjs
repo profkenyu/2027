@@ -1,8 +1,11 @@
 import { chromium } from "playwright";
+import { mkdir } from "node:fs/promises";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const TARGET = `file://${ROOT}/planet.html?embed`;
+const TARGET = `file://${ROOT}/planet-01.html?embed`;
+const OUTPUT = `${ROOT}/output/qa/completion`;
+await mkdir(OUTPUT, { recursive: true });
 const requestedCase = process.argv[2];
 const cases = [
   { name: "desktop", viewport: { width: 1600, height: 900 }, quality: "high", columns: 4 },
@@ -130,7 +133,7 @@ for (const test of cases) {
     { timeout: 6e3 }
   );
   const fixed = await measure();
-  await page.screenshot({ path: `${ROOT}/dist/completion-${test.name}.png` });
+  await page.screenshot({ path: `${OUTPUT}/completion-${test.name}.png` });
   await page.waitForFunction(() => {
     const state = window.TI_SEQUENCE?.();
     return state?.tableau === "idle" && state?.docking !== "idle";

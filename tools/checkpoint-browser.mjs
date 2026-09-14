@@ -1,0 +1,74 @@
+import assert from 'node:assert/strict';
+import {readFile,mkdir} from 'node:fs/promises';
+import {chromium} from 'playwright';
+import {startPreviewServer} from './lib/preview-server.mjs';
+import {MissionMemory} from '../engine/core/mission-memory.js';
+const server=await startPreviewServer(),browser=await chromium.launch({channel:'chrome',headless:true});
+const page=await browser.newPage({acceptDownloads:true,viewport:{width:1440,height:900}}),errors=[];
+page.on('pageerror',e=>errors.push(String(e)));
+const ready=()=>page.waitForFunction(()=>window.TI_CHECKPOINT&&TI_PROLOGUE().released,null,{timeout:60000});
+try {
+  await page.goto(`${server.url}/planet-01.html?test&quality=low&fresh=1`);await ready();
+  await page.waitForFunction(()=>!TI_CAMERA().locked,null,{timeout:15000});
+  await page.locator('#ti-drive-mode').click();
+  await page.keyboard.down('ArrowUp');await page.waitForTimeout(1000);await page.keyboard.up('ArrowUp');
+  await page.waitForTimeout(6000);
+  const pose=await page.evaluate(()=>TI_EXPERIENCE().position);
+  await page.reload();await ready();
+  assert(await page.evaluate(()=>TI_CHECKPOINT().restored));
+  let live=await page.evaluate(()=>TI_EXPERIENCE());assert.equal(live.mode,'explorer');
+  assert(Math.hypot(live.position.x-pose.x,live.position.z-pose.z)<1);
+  console.log('PASS real manual movement → automatic save → reload restores pose and MANUAL');
+  const base=await page.evaluate(()=>TI_CHECKPOINT().saved);
+  const install=async state=>{
+    await page.goto(`${server.url}/field-archive.html`);
+    await page.evaluate(state=>sessionStorage.setItem('terra-incognita:checkpoint:v1',JSON.stringify(state)),state);
+  };
+  await install({...base,selections:[1,-1,7,-1,-1,-1]});
+  await page.goto(`${server.url}/planet-01.html?test&quality=low`);await ready();
+  assert.equal(await page.evaluate(()=>TI_SEQUENCE().restoration),2);
+  assert.deepEqual(await page.evaluate(()=>TI_ANOMALIES().filter(s=>s.state==='trace').map(s=>s.index)),[1,7]);
+  console.log('PASS out-of-order material selections survive restoration');
+  await install({...base,world:'desert',rover:{x:80,z:485,heading:0},selections:[0,3,6,9,12,15]});
+  await page.goto(`${server.url}/planet-02.html?quality=low`);await ready();
+  assert.equal(await page.evaluate(()=>TI_SEQUENCE().voyage),'arrived');
+  assert.equal(await page.evaluate(()=>TI_SEQUENCE().water),'searching');
+  assert.equal(await page.evaluate(()=>TI_EXPERIENCE().position.x),80);
+  const memory=new MissionMemory({storage:{getItem(){return null},setItem(){}}});
+  memory.recordSamples(Array.from({length:6},(_,index)=>({sample:`SAMPLE ${index}`,x:index+100,z:400})));
+  memory.recordWater({complete:true,site:{id:'BODY02-H2O-01',x:52,z:428}});
+  await install({...base,world:'granite',rover:{x:120,z:460,heading:0},selections:[0,3,6,9,12,15],geological:2,memory:memory.snapshot()});
+  await page.goto(`${server.url}/planet-03.html?quality=low`);await ready();
+  assert.equal(await page.evaluate(()=>TI_SEQUENCE().geologicalNode),2);
+  assert.equal(await page.evaluate(()=>TI_SEQUENCE().voyage),'arrived');
+  console.log('PASS planet 2 surface mission and planet 3 completed nodes restore without replaying landing');
+  await page.goto(`${server.url}/index.html?test&quality=low`);
+  await page.waitForFunction(()=>window.TI_OPENING_TEST&&TI_BLUEPRINT().models?.ship);
+  await page.evaluate(()=>TI_OPENING_TEST.seek(TI_BLUEPRINT().duration));
+  assert.equal(await page.locator('#ti-start span').innerText(),'RESUME');
+  await page.locator('#ti-start').click();await ready();
+  assert.match(page.url(),/planet-03.html/);assert(await page.evaluate(()=>TI_CHECKPOINT().restored));
+  await page.goto(`${server.url}/field-archive.html`);
+  for(const format of ['json','csv']){
+    const downloadEvent=page.waitForEvent('download');await page.locator(`[data-export="${format}"]`).click();
+    const download=await downloadEvent;const bytes=await readFile(await download.path(),'utf8');
+    if(format==='json'){const data=JSON.parse(bytes);assert.equal(data.schema,'terra-incognita.field-archive');assert.equal(data.stations.length,24);}
+    else assert(bytes.includes('PAGE_ELAPSED_MS'));
+  }
+  await mkdir('output/qa/checkpoint',{recursive:true});
+  await page.setViewportSize({width:390,height:844});await page.screenshot({path:'output/qa/checkpoint/archive-mobile.png'});
+  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+  assert.doesNotMatch(await page.locator('body').innerText(),/[\uac00-\ud7a3]/);
+  console.log('PASS RESUME routing, JSON/CSV downloads, mobile archive layout and English copy');
+  await page.setViewportSize({width:1440,height:900});
+  await page.goto(`${server.url}/index.html?test&quality=low`);
+  await page.waitForFunction(()=>window.TI_OPENING_TEST&&TI_BLUEPRINT().models?.ship);
+  await page.evaluate(()=>TI_OPENING_TEST.seek(TI_BLUEPRINT().duration));
+  await page.locator('#ti-restart').click();await ready();
+  assert.equal(await page.evaluate(()=>TI_WORLD),'terra');
+  assert.equal(await page.evaluate(()=>TI_CHECKPOINT().restored),false);
+  assert.equal(await page.evaluate(()=>TI_SEQUENCE().restoration),0);
+  assert.equal(await page.evaluate(()=>TI_FIELD_ARCHIVE().captured),0);
+  console.log('PASS NEW MISSION clears prior progress and records');
+  assert.deepEqual(errors,[]);
+}finally{await browser.close();await server.close();}

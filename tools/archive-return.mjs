@@ -6,7 +6,7 @@ let browser;
 try {
   browser = await chromium.launch({channel:'chrome',headless:true});
   for (const viewport of [{width:1400,height:1000},{width:390,height:844}]) {
-    for (const route of ['/field-archive.html','/works/terra_incognita/field-archive.html','/dist/FIELD_ARCHIVE.html']) {
+    for (const route of ['/field-archive.html','/works/terra_incognita/field-archive.html','/dist/field-archive.html']) {
       const context = await browser.newContext({viewport});
       const page = await context.newPage();
       const errors=[];
@@ -24,7 +24,7 @@ try {
       const direct=await directContext.newPage();
       await direct.evaluate(url=>location.replace(url),`${server.url}${route}`);
       await direct.waitForURL(`${server.url}${route}`);
-      const expected=route.replace(/[^/]+$/,'planet.html');
+      const expected=route.replace(/[^/]+$/,'planet-01.html');
       const href=await direct.locator('[data-return]').getAttribute('href');
       if(new URL(href,direct.url()).pathname!==expected) throw Error('Wrong direct-entry fallback');
       if(await direct.evaluate(()=>history.length)!==1) throw Error('Not a cold entry');
@@ -35,7 +35,7 @@ try {
       console.log({route,width:viewport.width,noReferrerBack:'pass',reloadBack:'pass',directFallback:'pass'});
     }
   }
-  for (const route of ['field-archive.html','works/terra_incognita/field-archive.html','dist/FIELD_ARCHIVE.html']) {
+  for (const route of ['field-archive.html','works/terra_incognita/field-archive.html','dist/field-archive.html']) {
     const context=await browser.newContext();
     const page=await context.newPage();
     const previous=new URL('../README.md',import.meta.url).href;

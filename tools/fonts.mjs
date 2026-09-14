@@ -12,6 +12,7 @@ const GENERATED_HTML = new Set([
 ]);
 async function walk(dir, out = []) {
   for (const e of await readdir(dir, { withFileTypes: true })) {
+    if (e.name === 'planet-engine.js' || /^planet(?:-0[123])?\.html$/.test(e.name)) continue;
     const p = join(dir, e.name);
     if (e.isDirectory()) await walk(p, out);
     else if (/\.(js|html)$/.test(e.name)) out.push(p);
@@ -26,7 +27,8 @@ async function usedCharacters() {
   ].filter((file) => !GENERATED_HTML.has(file));
   const set = new Set();
   for (const f of files) {
-    for (const ch of await readFile(f, "utf8")) {
+    const source = (await readFile(f, "utf8")).replace(/\\u([0-9a-f]{4})/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+    for (const ch of source) {
       if (ch.codePointAt(0) > 0x7f) set.add(ch);
     }
   }

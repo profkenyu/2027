@@ -862,9 +862,10 @@ export class Lander {
     }
   }
   setRestorationLevel(level = 0) {
-    this.restorationLevel = Math.max(0, Math.min(this.structureCount, Math.floor(level)));
+    const selected = Array.isArray(level) ? level : Array.from({length:this.structureCount},(_,i)=>i<Math.floor(level));
+    this.restorationLevel = selected.filter(Boolean).length;
     for (const part of this.parts) {
-      const restored = part.assembly < this.restorationLevel;
+      const restored = !!selected[part.assembly];
       part.state = restored ? "solid" : "wire";
       part.started = 0;
       for (const object of part.objects) {

@@ -3,17 +3,19 @@ import { createFleet } from './ships.js';
 import { createEnvironment } from './environment.js';
 import { createTimeline } from 'animejs';
 import {CUTS,directCamera} from './camera.js';
+import {approachProgress} from './flight.js';
+import {DURATION,TITLE_AT,ARCHIVE_AT} from './timeline.js';
 
 const params=new URLSearchParams(location.search), requested=params.get('quality');
 const tier=['high','mid','low'].includes(requested)?requested:innerWidth<700?'low':navigator.hardwareConcurrency>=8?'high':'mid';
 const quality={high:{dpr:1.65,shadow:2048},mid:{dpr:1.25,shadow:1024},low:{dpr:1,shadow:512}}[tier];
 const smooth=x=>{x=THREE.MathUtils.clamp(x,0,1);return x*x*(3-2*x);};
-const schedule=[{start:5,duration:143,z:-150,x:50,y:20,scale:1.35},{start:18,duration:129,z:-1400,x:-800,y:220,scale:.65},{start:12,duration:155,z:-1750,x:1050,y:420,scale:.74},{start:27,duration:144,z:-2500,x:-1620,y:80,scale:.6},{start:36,duration:139,z:-3200,x:1830,y:490,scale:.62}];
+const schedule=[{start:1.5,duration:69,z:-150,x:50,y:20,scale:1.6},{start:4,duration:70,z:-1400,x:-800,y:220,scale:.65},{start:6,duration:72,z:-1750,x:1050,y:420,scale:.74},{start:8,duration:73,z:-2500,x:-1620,y:80,scale:.6},{start:9.5,duration:74,z:-3200,x:1830,y:490,scale:.62}];
 const motion=schedule.map(()=>({approach:0,deploy:0}));
 const choreography=createTimeline({autoplay:false});
 schedule.forEach((s,i)=>{
   choreography.add(motion[i],{approach:[0,1],duration:s.duration*1000,ease:'linear'},s.start*1000);
-  choreography.add(motion[i],{deploy:[0,1],duration:24000,ease:'inOutSine'},(91+i*7)*1000);
+  choreography.add(motion[i],{deploy:[0,1],duration:16000,ease:'inOutSine'},(45+i*3)*1000);
 });
 let currentShot='arrival';
 let renderer,scene,camera,fleet,environment,seconds=0,paused=false,last=performance.now(),frame=0,frameTime=16,pixelRatio=Math.min(devicePixelRatio,quality.dpr),audio=null,playing=false;
@@ -26,23 +28,18 @@ function resize(){
   camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);
 }
 function render(t){
-  seconds=THREE.MathUtils.clamp(t,0,60);
-  // Retime the authored fleet to three editorial windows; preserve the approved
-  // final approach state while bringing the fleet close within the first 15s.
-  const flightTime=seconds<15?seconds*(95/15):seconds<35?95+(seconds-15)*2.5:145+(seconds-35)*1.4;
-  choreography.seek(flightTime*1000);
+  seconds=THREE.MathUtils.clamp(t,0,DURATION);
+  const flightTime=seconds*2;
+  choreography.seek(seconds*1000);
   const portrait=camera.aspect<1;
   fleet.forEach((ship,i)=>{
     const s=schedule[i],p=motion[i].approach;
     // The flight frame is independent of all three observer positions.
-    const anchorZ=portrait?2000:1000,near=anchorZ-s.z,far=18000+i*2200;
-    // Constant velocity coast followed by finite-duration braking. Units and
-    // encounter duration are cinematic, not an orbital ephemeris.
-    const brake=.84, u=Math.min(p,brake), v=Math.max(0,(p-brake)/(1-brake));
-    const travel=(u+(1-brake)*(v-v*v*v+.5*v*v*v*v))/(brake+(1-brake)*.5);
+    const anchorZ=portrait?2000:1000,near=anchorZ-s.z,far=16000+i*2200;
+    const travel=approachProgress(p);
     const depth=THREE.MathUtils.lerp(far,near,travel);
     ship.position.set(s.x*(portrait?.5:1),s.y,anchorZ-depth);
-    ship.scale.setScalar(s.scale);ship.visible=flightTime>=s.start;
+    ship.scale.setScalar(s.scale);ship.visible=seconds>=s.start;
     // One small rest-to-rest attitude correction, no perpetual floating wobble.
     const correction=smooth((flightTime-64-i*3)/22);
     ship.rotation.set(-.025+i*.008,-.13+correction*.085,(i-2)*.012);
@@ -53,16 +50,16 @@ function render(t){
   currentShot=directCamera(camera,seconds,fleet[0],environment.observerHeight);
   environment.update(flightTime,currentShot==='surface',camera,seconds);
   document.getElementById('cut').style.opacity=String(Math.max(...CUTS.map(at=>1-smooth(Math.abs(seconds-at)/.75))));
-  title.style.opacity=String(currentShot==='surface'?smooth((seconds-38)/6):0);
-  replay.hidden=seconds<59;archive.hidden=seconds<39;
-  if(audio){const rise=smooth((seconds-2)/20),fall=1-smooth((seconds-35)/24);audio.gain.gain.setTargetAtTime(playing?rise*fall*.12:0,audio.ctx.currentTime,.6);}
+  title.style.opacity=String(currentShot==='surface'?smooth((seconds-TITLE_AT)/8):0);
+  replay.hidden=seconds<DURATION-1;archive.hidden=seconds<ARCHIVE_AT;
+  if(audio){const rise=smooth((seconds-2)/30),fall=1-smooth((seconds-64)/25);audio.gain.gain.setTargetAtTime(playing?rise*fall*.12:0,audio.ctx.currentTime,.6);}
   renderer.render(scene,camera);
 }
 function tick(now){
   requestAnimationFrame(tick);
   const dt=Math.min(.1,(now-last)/1000);last=now;
   if(paused || document.hidden || renderer.getContext().isContextLost())return;
-  if(seconds>=60)return;
+  if(seconds>=DURATION)return;
   if(params.has('test'))return;
   frameTime=frameTime*.97+dt*1000*.03;
   if(++frame%180===0 && frameTime>27 && pixelRatio>.8){pixelRatio=Math.max(.8,pixelRatio-.15);renderer.setPixelRatio(pixelRatio);}
@@ -95,6 +92,6 @@ try{
   document.addEventListener('visibilitychange',()=>document.hidden?pause():resume());addEventListener('pagehide',pause);addEventListener('pageshow',resume);
   renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();pause();document.getElementById('error').hidden=false;document.getElementById('error').textContent='화면 연결이 중단되었습니다. 새로고침하면 다시 시작합니다.';});
   replay.addEventListener('click',()=>{render(0);resume();});sound.addEventListener('click',()=>toggleSound().catch(()=>{sound.textContent='SOUND OFF';playing=false;}));
-  window.FIRST_DAWN={snapshot:()=>({seconds,duration:60,tier,shot:currentShot,cameraPosition:camera.position.toArray(),cameraFov:camera.fov,surfaceHeight:environment.observerHeight,ships:fleet.filter(s=>s.visible).length,total:fleet.length,paused,triangles:renderer.info.render.triangles,calls:renderer.info.render.calls,pixelRatio,independent:!window.TI_WORLD,animation:'anime.js',motion:'inertial-coast / finite-braking',deployment:motion.map(s=>s.deploy)}),...(params.has('test')?{seek:render,positions:()=>fleet.map(s=>s.position.toArray())}:{})};
+  window.FIRST_DAWN={snapshot:()=>({seconds,duration:DURATION,tier,shot:currentShot,cameraPosition:camera.position.toArray(),cameraFov:camera.fov,surfaceHeight:environment.observerHeight,ships:fleet.filter(s=>s.visible).length,total:fleet.length,paused,triangles:renderer.info.render.triangles,calls:renderer.info.render.calls,pixelRatio,independent:!window.TI_WORLD,animation:'anime.js',motion:'restrained-distant / accelerating-approach / finite-braking',deployment:motion.map(s=>s.deploy)}),...(params.has('test')?{seek:render,positions:()=>fleet.map(s=>s.position.toArray())}:{})};
   requestAnimationFrame(tick);
 }catch(error){document.getElementById('loading').hidden=true;const box=document.getElementById('error');box.hidden=false;box.textContent='3D 화면을 시작할 수 없습니다. WebGL을 지원하는 브라우저에서 다시 열어주세요.';console.error(error);}

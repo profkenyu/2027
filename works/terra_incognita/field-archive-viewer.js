@@ -1,4 +1,5 @@
 import { archiveCaptureProfile as captureFor, archiveEnglish, archiveImage, readFieldArchive } from '../../engine/core/field-archive.js';
+import {createArchiveExport,archiveCSV} from '../../engine/core/archive-export.js';
 
 (() => {
   const FALLBACK = [
@@ -54,6 +55,17 @@ import { archiveCaptureProfile as captureFor, archiveEnglish, archiveImage, read
   const stationNumbers = new Map(stations.map((station, index) => [station.id, String(index).padStart(3, "0")]));
   const records = (source.records || []).filter((record) => stationsById.has(record.id));
   const recordsById = byId(records);
+  document.querySelectorAll('[data-export]').forEach(button=>button.addEventListener('click',()=>{
+    try {
+      const data=createArchiveExport({stations,records,seed:storage?.getItem('universe_seed')});
+      const csv=button.dataset.export==='csv';
+      const blob=new Blob([csv?archiveCSV(data):JSON.stringify(data,null,2)],{type:csv?'text/csv;charset=utf-8':'application/json'});
+      const url=URL.createObjectURL(blob),link=document.createElement('a');
+      link.href=url;link.download=`terra-incognita-${data.exportedAt.slice(0,10)}.${csv?'csv':'json'}`;
+      document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+      document.getElementById('fa-export-status').textContent=`${csv?'CSV':'JSON'} export prepared · ${data.count} acquired records`;
+    }catch{document.getElementById('fa-export-status').textContent='Export unavailable. Please try again.';}
+  }));
   const ledger = document.getElementById("fa-ledger");
   const image = document.getElementById("fa-image");
   const empty = document.getElementById("fa-empty");
@@ -168,7 +180,12 @@ import { archiveCaptureProfile as captureFor, archiveEnglish, archiveImage, read
   image.addEventListener("load", () => positionPreview());
   image.addEventListener("error", () => { image.classList.remove("on"); empty.hidden = false; emptyTitle.textContent = "NO IMAGE"; emptyStatus.textContent = "IMAGE UNAVAILABLE"; frameSurface.classList.add("empty"); });
   const returnLink = document.querySelector("[data-return]");
-  if (returnLink) returnLink.href = 'planet.html';
+  let returnPage = 'planet-01.html';
+  try {
+    const saved = sessionStorage.getItem('terra-incognita:last-planet');
+    if (/^planet-0[123]\.html$/.test(saved)) returnPage = saved;
+  } catch {}
+  if (returnLink) returnLink.href = returnPage;
   returnLink?.addEventListener("click", (event) => {
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || history.length <= 1) return;
     event.preventDefault();

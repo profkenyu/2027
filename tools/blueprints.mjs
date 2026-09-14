@@ -1,5 +1,8 @@
 import { chromium } from 'playwright';
+import { mkdir } from 'node:fs/promises';
 import { startPreviewServer } from "./lib/preview-server.mjs";
+const output = new URL('../output/qa/blueprints/', import.meta.url);
+await mkdir(output, {recursive: true});
 const server = await startPreviewServer();
 let browser;
 try {
@@ -75,9 +78,9 @@ try {
       bp._apply(bp.timing.noise+bp.timing.rover*.8);
       return {source: bp.snapshot().models, reduced: bp.reduced, scanBothWays: true, unchangedRestoration: true, followsPose: true, terrainIndependentRoverAngle: true};
     }, test.tier);
-    await page.screenshot({path: `dist/blueprint-${test.name}-rover.png`});
+    await page.screenshot({path: new URL(`blueprint-${test.name}-rover.png`, output).pathname});
     await page.evaluate(() => bp._apply(bp.timing.noise+bp.timing.rover+bp.timing.roverHold+bp.timing.gap+bp.timing.lander*.8));
-    await page.screenshot({path: `dist/blueprint-${test.name}-lander.png`});
+    await page.screenshot({path: new URL(`blueprint-${test.name}-lander.png`, output).pathname});
     if(errors.length)throw Error(errors.join('\n'));
     console.log(test.name, JSON.stringify(report));
     await page.close();

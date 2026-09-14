@@ -5,13 +5,15 @@ const browser=await chromium.launch({channel:'chrome',headless:true,args:['--all
 const page=await browser.newPage({viewport:{width:1440,height:900}});const errors=[],states=[],captures=new Set();
 page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
 try {
- await page.goto(new URL('../planet.html?quality=low',import.meta.url).href);
+ await page.goto(new URL('../planet-01.html?quality=low',import.meta.url).href);
  await page.waitForFunction(()=>window.TI_WORLD&&window.TI_CAMERA&&TI_PROLOGUE().released,null,{timeout:60000});
  await page.waitForTimeout(6000);await page.keyboard.press('Equal');
  let last='',p2=false,complete=false;
  const deadline=Date.now()+360000;
  while(Date.now()<deadline){
-  const state=await page.evaluate(()=>TI_SEQUENCE());
+  let state;
+  try { state=await page.evaluate(()=>window.TI_SEQUENCE?.()); } catch { continue; }
+  if (!state) { await page.waitForTimeout(500); continue; }
   const key=`${state.world}/${state.voyage}/${state.docking}/${state.water}`;
   if(key!==last){console.log(key);states.push(state);last=key;}
   const capture=`live-${state.world}-${state.voyage}`;

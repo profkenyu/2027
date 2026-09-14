@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {CUTS} from './timeline.js';
 
 // Authored dry basin: relief is a procedural interpretation, not Mars DEM data.
 export function groundHeight(x,z){
@@ -43,20 +44,28 @@ export function createSurface(scene,tier){
     dummy.position.set(x,groundHeight(x,z)+r*.2,z);dummy.scale.set(r,r*.55,r*.8);dummy.rotation.set(rand(),rand()*6,rand());dummy.updateMatrix();rocks.setMatrixAt(i,dummy.matrix);
   }
   rocks.computeBoundingSphere();group.add(rocks);
-  // A distant atmospheric colour veil, artistically aurora-like rather than
-  // a magnetosphere simulation. It is part of the sky, behind every vessel.
-  const skyUniforms={elapsed:{value:35}};
+  // Slant optical depth and a broad forward-scattering lobe organize the sky.
+  // The faint inherited colour veil remains an artistic atmospheric layer.
+  const skyUniforms={elapsed:{value:CUTS[1]},surfaceStart:{value:CUTS[1]}};
   const sky=new THREE.Mesh(new THREE.SphereGeometry(39000,32,20),new THREE.ShaderMaterial({
     uniforms:skyUniforms,side:THREE.BackSide,depthWrite:false,
     vertexShader:`varying vec3 skyDirection;void main(){skyDirection=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
     fragmentShader:`
-      uniform float elapsed;varying vec3 skyDirection;
+      uniform float elapsed;uniform float surfaceStart;varying vec3 skyDirection;
       void main(){
         vec3 direction=normalize(skyDirection);
         float h=max(0.,direction.y),az=atan(direction.x,-direction.z);
-        float age=max(0.,elapsed-35.);
+        float age=max(0.,elapsed-surfaceStart);
         float emergence=smoothstep(0.,10.,age);
-        vec3 col=mix(vec3(.19,.135,.096),vec3(.012,.012,.016),smoothstep(0.,.65,h));
+        float airMass=1./sqrt(h*h+.025);
+        vec3 beta=vec3(.12,.17,.235),transmittance=exp(-beta*airMass);
+        vec3 solar=normalize(vec3(-.46,.18,-.87));
+        float mu=dot(direction,solar),g=.72;
+        float mie=(1.-g*g)/pow(max(.08,1.+g*g-2.*g*mu),1.5);
+        float rayleigh=.75*(1.+mu*mu);
+        vec3 col=vec3(.014,.023,.042)*transmittance;
+        col+=(1.-transmittance)*mix(vec3(.30,.205,.125),vec3(.09,.14,.20),smoothstep(.1,.8,h))*(.62+rayleigh*.13);
+        col+=vec3(.22,.135,.065)*(1.-transmittance)*mie*.045;
         float bend=.13+.035*sin(az*3.2+age*.037)+.018*sin(az*7.-age*.022);
         float envelope=smoothstep(.015,.075,h)*(1.-smoothstep(.32,.58,h));
         float curtain=exp(-abs(h-bend)*12.);
@@ -65,7 +74,7 @@ export function createSurface(scene,tier){
         float shift=.5+.5*sin(az*1.8+age*.055);
         vec3 gasTint=mix(vec3(.032,.092,.075),vec3(.077,.047,.088),shift);
         // Broad low-contrast colour change, with faint upward folds only.
-        col+=gasTint*(curtain*folds*.8+mist*.32)*envelope*emergence;
+        col+=gasTint*(curtain*folds*.35+mist*.12)*envelope*emergence;
         gl_FragColor=vec4(col,1.);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>

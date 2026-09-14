@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import {createSurface} from './surface.js';
+import {createAtmosphere} from './atmosphere.js';
 
 export function createEnvironment(scene,tier){
   // A curved planet is a spatial reference for the kilometre-scale fleet.
-  const uniforms={time:{value:0},dawn:{value:0},sun:{value:new THREE.Vector3(-.6,.32,.7).normalize()}};
+  const uniforms={time:{value:0},dawn:{value:0},sun:{value:new THREE.Vector3(-1400,2600,1700).normalize()}};
   const geometry=new THREE.SphereGeometry(16500,tier==='low'?64:128,tier==='low'?40:80);
   const material=new THREE.ShaderMaterial({uniforms,vertexShader:`
     varying vec3 vN;varying vec3 vP;
@@ -40,7 +41,7 @@ export function createEnvironment(scene,tier){
     }
   `});
   const planet=new THREE.Mesh(geometry,material);planet.position.set(0,-17400,-10500);scene.add(planet);
-  const atmo=new THREE.Mesh(new THREE.SphereGeometry(16635,64,40),new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.BackSide,blending:THREE.AdditiveBlending,vertexShader:`varying vec3 n;varying vec3 e;void main(){vec4 p=modelViewMatrix*vec4(position,1.);n=normalize(normalMatrix*normal);e=normalize(-p.xyz);gl_Position=projectionMatrix*p;}`,fragmentShader:`varying vec3 n;varying vec3 e;void main(){float rim=pow(1.-abs(dot(normalize(n),normalize(e))),5.);gl_FragColor=vec4(.28,.21,.14,rim*.23);}`}));
+  const atmo=createAtmosphere(planet,uniforms.sun.value,tier);
   atmo.position.copy(planet.position);scene.add(atmo);
   // A fixed celestial sphere: sparse bright stars and a subdued stellar band.
   // Stars do not follow ship motion or twinkle in vacuum.

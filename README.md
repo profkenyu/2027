@@ -6,9 +6,15 @@
 
 ## 전시용 파일
 
-[dist/TERRA_INCOGNITA.html](dist/TERRA_INCOGNITA.html)을 사용한다. 임무 화면은 리소스가 내장된 HTML이며 직접 열어 실행할 수 있다. 전체 전시 흐름에는 같은 폴더의 `ending.html`과 `FIELD_ARCHIVE.html`도 함께 둔다.
+[index.html](index.html)에서 시작한다. 배포할 때는 `dist` 폴더의 `index.html`, `planet-01.html`, `planet-02.html`, `planet-03.html`, `planet-engine.js`, `ending.html`, `field-archive.html`을 같은 경로에 둔다. 세 행성은 공통 엔진을 공유하며, Chrome에서는 파일을 직접 열거나 HTTP로 실행할 수 있다.
 
-엔딩은 [ending.html](ending.html)을 직접 열어 별도로 감상할 수 있다. 임무 엔진을 불러오지 않는 독립 WebGL 페이지이며 Three.js와 anime.js, 모델·재질이 모두 내장되어 네트워크 없이 재생된다. 약 3분 동안 다섯 이주선이 공통 소실점에서 서로 다른 속도로 접근하고, 방열판이 천천히 펼쳐진다. 150초부터 마지막 문구와 기록 링크, 175초부터 REPLAY가 표시된다. SOUND 버튼으로 소리를 켜고 RETURN으로 임무 시작 화면에 돌아간다.
+우주 비행 중 다음 행성 페이지로 이동하고, 도착 페이지에서 감속·착륙·로버 전개를 이어간다. 같은 탭의 세션 저장소에 시료, 물 탐사 결과, 이동·체류 이력, 영상 기록, 우주 시드, 화면 색상 및 음소거 설정을 유지한다. 안전한 주행 상태를 5초 간격과 페이지 이탈 시 저장하며, 새로고침 또는 시작 화면의 RESUME으로 위치·전력·주행 모드·완료된 관측을 복구한다. 측정·격납·비행 도중에는 직전 안전 지점으로 돌아간다. 체크포인트가 없으면 진입 연출부터 재생한다. NEW MISSION은 현재 탐사와 기록을 초기화한다. 탭을 닫으면 세션이 종료되므로 보관할 기록은 FIELD ARCHIVE의 EXPORT JSON(이미지 포함) 또는 EXPORT CSV(좌표·관측 정보)로 내려받는다. 내보낸 파일을 임무에 가져오는 기능은 포함하지 않는다.
+
+행성 3에 선행 기록 없이 직접 들어오면 지형을 보여주고 행성 1 탐사 시작 링크를 제공한다. 관측 기록을 임의로 채우지 않는다.
+
+용어 선택과 과학 모델의 범위는 [terminology.md](terminology.md)에 정리했다. FIELD ARCHIVE는 영어 전용이다.
+
+엔딩은 [ending.html](ending.html)을 직접 열어 별도로 감상할 수 있다. 임무 엔진을 불러오지 않는 독립 WebGL 페이지이며 Three.js와 anime.js, 모델·재질이 모두 내장되어 네트워크 없이 재생된다. 90초 구성은 원거리 접근(0–20초), 선체 근접(20–45초), 지표 관측(45–90초)이다. 가까워질수록 가속하고 마지막에는 짧게 감속한다. 행성 대기는 구형 산란층과 고도별 지수 밀도로 근사하며, HIGH/MID/LOW에서 각각 16/12/8회 적분한다. 가상 행성의 연출용 계수이며 실제 대기 측정이나 궤도 해석 자료가 아니다. SOUND로 소리를 켜고 RETURN으로 독립 시작 화면에 돌아간다.
 
 WebGPU를 지원하는 최신 브라우저와 GPU가 필요하다. 전시 전에는 실제 맥북 또는 프로젝터 연결 환경에서 화면 비율, 절전 해제, 브라우저 전체 화면을 확인한다.
 
@@ -39,8 +45,9 @@ npm run dev
 서버가 시작되면 `http://localhost:5173/works/terra_incognita/dev.html`을 연다. 루트 `dev.html`도 이 개발 진입점으로 자동 이동한다.
 
 ```bash
-npm run build      # index.html 및 dist/TERRA_INCOGNITA.html 생성
+npm run build      # 루트 실행본과 dist 전시 배포본 생성
 npm run verify     # 모듈, HUD, 폰트, 단일 파일 검증
+npm run checkpoint # 안전 지점 복구, RESUME/NEW MISSION, JSON/CSV 다운로드 검증
 npm run build:ending # 독립 엔딩만 빌드
 npm run finale     # 엔딩 세 품질 단계·원근 경로·anime.js 전개·사운드·재시작 검증
 npm run smoke:finale # 임무 완료 → 독립 엔딩 → 임무 복귀 검증
@@ -81,7 +88,7 @@ P03은 재료·수분 기록에 수동 이동 거리, 방향과 정지 시간을
 engine/                    공통 렌더링, HUD, 사운드, 로버, 먼지 시스템
 works/terra_incognita/     작품별 서피스, 설정, 루프, 개발 템플릿
 tools/                     빌드 및 검증 스크립트
-dist/TERRA_INCOGNITA.html  전시 배포본
+dist/                       전시 배포본 7개와 SHA256SUMS
 ```
 
 `works/terra_incognita/surface.js`와 `surface.cpu.js`는 같은 지형을 GPU와 CPU에서 각각 계산한다. CPU 버전은 로버 바퀴 접지와 먼지의 지면 충돌에 사용되므로, 지형을 변경할 때 두 구현의 일관성을 `npm run verify`와 `npm run terrain`으로 반드시 확인한다.
@@ -101,7 +108,7 @@ dist/TERRA_INCOGNITA.html  전시 배포본
 - 프로젝터 연결 시 운영체제의 화면 잠금·절전·알림을 비활성화한다.
 - 브라우저는 전체 화면으로 두고, 관람 중에는 HUD가 숨은 gallery mode를 기본 상태로 유지한다.
 - 네트워크가 없어도 작품은 실행되지만, WebGPU를 지원하지 않는 장비에서는 실행할 수 없다.
-- `dist/TERRA_INCOGNITA.html.sha256`으로 전시 파일이 검증본과 같은지 확인한다.
+- `cd dist && shasum -a 256 -c SHA256SUMS`로 전시 파일이 검증본과 같은지 확인한다.
 
 ## 전시 문서
 

@@ -1890,6 +1890,11 @@
 <style>
 #opening-error{position:fixed;inset:30% 10%;z-index:100;color:#bfc9c2;text-align:center;line-height:2}
 #opening-error[hidden]{display:none}
+#ti-restart{display:block;margin:12px auto 0;padding:8px 12px;border:0;background:none;color:#9aa59d;font:9px 'DM Mono',monospace;letter-spacing:.12em;cursor:pointer}
+#ti-restart[hidden]{display:none}
+#ti-prologue.armed #ti-restart:not(:disabled){pointer-events:auto}
+#ti-restart:focus-visible{outline:1px solid #9aa59d;outline-offset:3px}
+@media(max-width:900px){body.ti-mobile #ti-restart{position:fixed;right:100px;bottom:calc(var(--frame-bottom) + 28px);margin:0}}
 </style></head><body>
 <div class="bar t"></div><div class="bar b"></div>
 <div id="ti-copyright">©2026 KIM GUNWOO. ALL RIGHTS RESERVED.</div>
@@ -1902,6 +1907,7 @@
     <span class="mission">Three-Body Autonomous Survey · Matter / Water / Memory<span id="ti-terminal-state">Archival Terminal · Low Bandwidth</span></span>
     <button id="ti-start" class="skip desktop-start" type="button" disabled><span>START</span></button>
     <button id="ti-mobile-start" class="skip" type="button" disabled><span>START</span></button>
+    <button id="ti-restart" type="button" hidden disabled aria-label="현재 탐사 기록을 초기화하고 처음부터 시작">NEW MISSION</button>
   </div>
   <div class="controls"><span class="desktop-controls">AUTO DRIVE &nbsp;·&nbsp; <kbd>WASD</kbd> MANUAL &nbsp;·&nbsp; <kbd>C</kbd> CAMERA &nbsp;·&nbsp; <kbd>SPACE</kbd> RETURN TO AUTO</span><span class="mobile-controls">기본 자동 주행 · MANUAL 전환 후 기울이거나 드래그<br>Auto by default · Switch to manual, then tilt or drag</span></div>
 </section>

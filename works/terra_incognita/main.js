@@ -59,6 +59,8 @@ import {
 import { MiniMap, Optics, Survey } from "../../engine/core/survey.js";
 import { AnimeRituals } from "./anime-rituals.js";
 import { RoverReticle } from "../../engine/core/rover-reticle.js";
+import { entryPlanet, entryCheckpoint, travelToPlanet } from "./planet-pages.js";
+import {writeCheckpoint, clearCheckpoint, readCheckpoint} from '../../engine/core/checkpoint.js';
 const touchTerminal = typeof navigator !== "undefined" && navigator.maxTouchPoints > 0 && (matchMedia("(any-pointer: coarse)").matches || matchMedia("(hover: none)").matches);
 const tier = touchTerminal ? "low" : deviceTier();
 const pick = (o) => o[tier];
@@ -121,7 +123,7 @@ const LINES = [
   },
   {
     r: 250,
-    ko: "\uC8FC\uBCC0 \uC0DD\uCCB4 \uC2E0\uD638 0 \xB7 \uC218\uB3D9 \uC751\uB2F5 \uCC44\uB110 \uBB34\uC785\uB825",
+    ko: "생명 징후 미검출 \xB7 수동 응답 채널 무입력",
     en: "BIOSCAN \xB7 LOCAL SIGNALS 0 / MANUAL CHANNEL IDLE"
   },
   {
@@ -136,7 +138,7 @@ const LINES = [
   },
   {
     r: 60,
-    ko: "\uD3D0\uACE1\uC120 \uAD11\uACBD\uB85C \uAC80\uCD9C \xB7 \uAD11\uC790\uAD6C\uBA74 r = 60.00 m",
+    ko: "원형 광자 궤도 \xB7 광자구 r = 60.00 m",
     en: "OPTICS \xB7 CLOSED NULL PATH / R 60.00 M"
   },
   {
@@ -146,7 +148,7 @@ const LINES = [
   },
   {
     r: 41,
-    ko: "\uC88C\uD45C \uC2DC\uAC04 \uBC1C\uC0B0 \xB7 \uC678\uBD80 \uAE30\uC900 \uB3C4\uB2EC\uAC12 \uC5C6\uC74C",
+    ko: "좌표시간 발산 \xB7 원거리 관측자의 시간 지연",
     en: "METRIC \xB7 COORDINATE TIME DIVERGENT / ARRIVAL UNDEFINED"
   }
 ];
@@ -175,7 +177,7 @@ const DESERT_LINES = [
   { r: 350, ko: "\uC57C\uAC04 \uC9C0\uD45C \uC5F4\uAD00\uC131 \uC800\uD558", en: "THERMAL \xB7 NIGHT-SIDE INERTIA LOW" },
   { r: 245, ko: "\uC57C\uB974\uB2F9 \uB2A5\uC120\xB7\uC18C\uACB0 \uC9C0\uAC01 \uAD50\uCC28 \uAC80\uCD9C \xB7 \uD45C\uBA74 \uBAA8\uB378 \uAC31\uC2E0", en: "GROUND \xB7 YARDANG / SINTERED CRUST" },
   { r: 140, ko: "\uC720\uB9AC\uC9C8 \uAD11\uBB3C\uC0C1 \uBD88\uC5F0\uC18D \uBD84\uD3EC \xB7 \uBC18\uC0AC\uC728 \uD3B8\uCC28 \uC99D\uAC00", en: "MINERAL \xB7 GLASS PHASE / ALBEDO VARIANCE" },
-  { r: 90, ko: "\uC8FC\uBCC0 \uC0DD\uCCB4 \uC2E0\uD638 0 \xB7 \uC751\uB2F5 \uD328\uD0B7 0", en: "BIOSCAN \xB7 LOCAL SIGNALS 0 / RETURN PACKETS 0" }
+  { r: 90, ko: "생명 징후 미검출 \xB7 응답 패킷 0", en: "BIOSCAN \xB7 LOCAL SIGNALS 0 / RETURN PACKETS 0" }
 ];
 const GRANITE_SURVEY = [
   [520, "MEMORY \xB7 CROSS-PLANET FIELD SYNTHESIS"],
@@ -184,26 +186,26 @@ const GRANITE_SURVEY = [
   [190, "WEATHERING \xB7 EXFOLIATION DOMES"]
 ];
 const GRANITE_LINES = [
-  { r: 520, ko: "\uD589\uC131 \uAC04 \uAE30\uC5B5\uC7A5 \uD569\uC131 \xB7 \uC138 \uAC1C \uAD50\uCC28 \uACB0\uC808 \uC0DD\uC131", en: "MEMORY SYNTHESIS \xB7 THREE CONCORDANCE NODES GENERATED" },
-  { r: 410, ko: "\uAD11\uBB3C \uBC18\uC0AC \uBD84\uB9AC", en: "LITHOLOGY \xB7 QUARTZ / FELDSPAR / MICA" },
+  { r: 520, ko: "행성 간 탐사 자료 합성 \xB7 관측 지점 3곳 산출", en: "MEMORY SYNTHESIS \xB7 THREE CONCORDANCE NODES GENERATED" },
+  { r: 410, ko: "광물 반사 스펙트럼 분리", en: "LITHOLOGY \xB7 QUARTZ / FELDSPAR / MICA" },
   { r: 300, ko: "\uB450 \uC808\uB9AC \uAD50\uCC28 \xB7 \uC0B0\uD654\uBA74 \uAC80\uCD9C", en: "STRUCTURE \xB7 CONJUGATE JOINT SETS" },
   { r: 190, ko: "\uD48D\uD654 \uAD6C\uC870 \uAC80\uCD9C", en: "WEATHERING \xB7 EXFOLIATION DOMES / TORS" }
 ];
 const DOCKING_LINES = Object.freeze({
-  recall: { r: 0, ko: "외피 구조재 4/4 \xB7 공급원료 2/2 \xB7 귀환 좌표 산출", en: "STRUCTURE 4/4 \xB7 RAW MATERIALS 2/2 \xB7 COORDINATE RECALL" },
+  recall: { r: 0, ko: "외피 구조재 4/4 \xB7 원료 2/2 \xB7 귀환 좌표 산출", en: "STRUCTURE 4/4 \xB7 RAW MATERIALS 2/2 \xB7 COORDINATE RECALL" },
   ramp: { r: 0, ko: "\uCC29\uB959\uC120 \uACA9\uB0A9 \uACBD\uB85C \uAC1C\uBC29", en: "LANDER \xB7 STOW PATH OPENING" },
-  approach: { r: 0, ko: "\uC2E4\uC811\uC9C0 \uADC0\uD658 \xB7 8\uB95C \uAD6C\uB3D9 \uC720\uC9C0", en: "FINAL APPROACH \xB7 EIGHT CONTACTS LIVE" },
-  secure: { r: 0, ko: "\uACA9\uB0A9 \uC704\uCE58 \uACE0\uC815 \xB7 \uAD6C\uC870\uAD11 \uC18C\uAC70", en: "ROVER SECURED \xB7 LOCATORS FALL SILENT" },
-  docked: { r: 0, ko: "\uD0D0\uC0AC\uC120 \uACA9\uB0A9 \uC644\uB8CC \xB7 \uBE44\uD589 \uC7A0\uAE08", en: "ROVER STOWED \xB7 FLIGHT INTERLOCK" }
+  approach: { r: 0, ko: "착륙선 최종 접근 \xB7 8륜 구동 유지", en: "FINAL APPROACH \xB7 EIGHT CONTACTS LIVE" },
+  secure: { r: 0, ko: "격납 위치 고정 \xB7 위치 유도등 소등", en: "ROVER SECURED \xB7 LOCATORS FALL SILENT" },
+  docked: { r: 0, ko: "탐사 로버 격납 완료 \xB7 비행 잠금", en: "ROVER STOWED \xB7 FLIGHT INTERLOCK" }
 });
 const VOYAGE_LINES = Object.freeze({
-  "flight-lock": { r: 0, ko: "\uACA9\uB0A9 \uC9C8\uB7C9 \uACE0\uC815 \xB7 \uBE44\uD589 \uC778\uD130\uB85D \uD574\uC81C", en: "STOW MASS LOCKED \xB7 FLIGHT INTERLOCK RELEASED" },
-  fold: { r: 0, ko: "6\uAC1C \uCC29\uB959 \uC9C0\uC9C0\uACC4 \uC218\uB0A9", en: "SIX LANDING LOAD PATHS \xB7 RETRACTING" },
-  lift: { r: 0, ko: "\uD45C\uBA74 \uAE30\uC900 \uBD84\uB9AC \xB7 \uC800\uC18D \uC0C1\uC2B9", en: "SURFACE DATUM RELEASED \xB7 LOW ASCENT" },
-  transit: { r: 0, ko: "\uAD00\uC131 \uAE30\uC900 \uC804\uD658 \xB7 \uBAA9\uC801\uC9C0 \uC88C\uD45C \uB3D9\uAE30", en: "INERTIAL FRAME \xB7 DESTINATION COORDINATES LOCKED" },
-  descent: { r: 0, ko: "\uB2E4\uC74C \uD589\uC131 \uC9C0\uD45C \uD68D\uB4DD \xB7 \uD558\uAC15", en: "NEXT PLANET ACQUIRED \xB7 CONTROLLED DESCENT" },
-  touchdown: { r: 0, ko: "6\uC810 \uC811\uC9C0 \uD655\uC778", en: "SIX-POINT GROUND CONTACT CONFIRMED" },
-  egress: { r: 0, ko: "\uACA9\uB0A9 \uD574\uC81C \xB7 \uD0D0\uC0AC\uC120 \uC7AC\uBC30\uCE58", en: "STOW RELEASE \xB7 ROVER REDEPLOYMENT" },
+  "flight-lock": { r: 0, ko: "탐사 로버 고정 \xB7 발사 안전 잠금 해제", en: "STOW MASS LOCKED \xB7 FLIGHT INTERLOCK RELEASED" },
+  fold: { r: 0, ko: "착륙 다리 6개 수납", en: "SIX LANDING LOAD PATHS \xB7 RETRACTING" },
+  lift: { r: 0, ko: "이륙 \xB7 저속 상승", en: "SURFACE DATUM RELEASED \xB7 LOW ASCENT" },
+  transit: { r: 0, ko: "관성항법 전환 \xB7 목표 좌표 설정", en: "INERTIAL FRAME \xB7 DESTINATION COORDINATES LOCKED" },
+  descent: { r: 0, ko: "착륙 지점 포착 \xB7 하강", en: "NEXT PLANET ACQUIRED \xB7 CONTROLLED DESCENT" },
+  touchdown: { r: 0, ko: "착륙 다리 6점 접촉 확인", en: "SIX-POINT GROUND CONTACT CONFIRMED" },
+  egress: { r: 0, ko: "격납 해제 \xB7 탐사 로버 전개", en: "STOW RELEASE \xB7 ROVER REDEPLOYMENT" },
   epilogue: { r: 0, ko: "\uB450 \uBC88\uC9F8 \uD45C\uBA74\uC5D0 \uCCAB \uC88C\uD45C\uAC00 \uB0A8\uB294\uB2E4", en: "PLANET 02 \xB7 THE FIRST COORDINATE REMAINS" }
 });
 const DESERT_START = [96, 520];
@@ -282,7 +284,7 @@ const FIELD_ARCHIVE_STATIONS = Object.freeze({
 const COMPLETION_TABLEAU_MS = 5400;
 const COMPLETION_CAPTION = Object.freeze({
   r: 0,
-  ko: "착륙선 외피 조립 완료 \xB7 구조재 4종 결속 \xB7 공급원료 2종 적재",
+  ko: "착륙선 외피 조립 완료 \xB7 구조재 4종 결속 \xB7 원료 2종 적재",
   en: "LANDER SHELL FIXED \xB7 FOUR STRUCTURES \xB7 TWO RAW MATERIALS CHARGED"
 });
 const OPENING_CAMERA_MS = 6e3;
@@ -395,6 +397,11 @@ let mobileControl, animeRituals, roverReticle;
 let world = "terra";
 let landerPresent = true;
 let archiveMode = false, greenMonitorManual = false, rawMonitorManual = false;
+try {
+  const saved = JSON.parse(sessionStorage.getItem('terra-incognita:display') || 'null');
+  greenMonitorManual = saved?.green === true;
+  rawMonitorManual = saved?.raw === true;
+} catch {}
 let lastArchiveFrame = 0, archiveCueTimer = 0, archiveRecordTimer = 0, resourceSignalAt = 0;
 let openingShot = null;
 let completionTableau = null;
@@ -414,6 +421,8 @@ let lightControl = null;
 let cameraControl = null;
 let desktopStart = null;
 let running = false;
+let lastCheckpointAt = -Infinity;
+let checkpointRestored = false;
 let hasTimestamp = false;
 let rafId = 0;
 let loopGeneration = 0;
@@ -496,9 +505,6 @@ try {
   restoration = new Restoration(lander, heightCPU, TERRA_RESOURCE_SITES);
   missionMemory = new MissionMemory();
   fieldArchive = new FieldArchive();
-  if (location.pathname.endsWith("/TERRA_INCOGNITA.html")) {
-    document.getElementById("ti-ending-archive").href = "FIELD_ARCHIVE.html";
-  }
   fieldArchive.registerStations([
     ...FIELD_ARCHIVE_STATIONS.terra,
     ...FIELD_ARCHIVE_STATIONS.desert
@@ -518,7 +524,7 @@ try {
     camera,
     onCue: (phase, now) => {
       openingShot = null;
-      const line = world === "desert" && phase === "recall" ? { r: 0, ko: "\uC218\uBD84 \uD655\uC778 \xB7 \uADC0\uD658 \uC88C\uD45C \uC555\uCD95", en: "H\u2082O CONFIRMED \xB7 COORDINATE RECALL" } : DOCKING_LINES[phase];
+      const line = world === "desert" && phase === "recall" ? { r: 0, ko: "물 존재 확인 \xB7 귀환 경로 계산", en: "H₂O CONFIRMED \xB7 COORDINATE RECALL" } : DOCKING_LINES[phase];
       if (line) captions.force(line, now, phase === "docked" ? 12e3 : 4600);
       if (phase === "recall") {
         kiosk.last = now;
@@ -531,7 +537,7 @@ try {
     camera,
     ambient,
     passage: matterPassage,
-    onSwap: prepareVoyageDestination,
+    onSwap: destination => travelToPlanet(destination.key, missionMemory),
     onSpace: (active) => {
       sky.visible = !active;
       ground.mesh.visible = !active;
@@ -563,7 +569,7 @@ try {
       pendingArrival = { key: planet.key, at: now + ARRIVAL_BREATH_MS };
       captions.force({
         r: 0,
-        ko: `${planet.id} \xB7 \uD45C\uBA74 \uAE30\uC900 \uC548\uC815\uD654`,
+        ko: `${planet.id} \xB7 착륙 자세 안정화`,
         en: `${planet.id} \xB7 SURFACE DATUM STABILISING`
       }, now, ARRIVAL_BREATH_MS - 350);
     },
@@ -654,7 +660,7 @@ addEventListener("keydown", (e) => {
         rover.flashAcquisition(now2);
         captions.force({
           r: 0,
-          ko: "외피 구조재 4종 \xB7 공급원료 2종 일괄 적재",
+          ko: "외피 구조재 4종 \xB7 원료 2종 일괄 적재",
           en: "FOUR STRUCTURES \xB7 TWO RAW MATERIALS ACQUIRED"
         }, now2, 5200);
         kiosk.last = now2;
@@ -701,7 +707,7 @@ function recordWaterConfirmation(_site, now) {
   missionMemory.recordWater({ complete: true, site: BODY02_WATER_SITE });
   captions.force({
     r: 0,
-    ko: "\uC218\uBD84 \uD655\uC778 \xB7 \uC218\uD654 \uADDC\uC0B0\uC5FC\uACFC \uC218\uBD84 \uC2E0\uD638 \uC77C\uCE58",
+    ko: "물 존재 확인 \xB7 수화 규산염 흡수대 확인",
     en: "H\u2082O CONFIRMED \xB7 HYDRATED SILICA / PORE ICE MATCH"
   }, now, 5200);
   kiosk.last = now;
@@ -722,6 +728,7 @@ function updateFinalTableau(now) {
 
   if (now-finalTableau.t0 >= 1500 && !finalTableau.requested) {
     finalTableau.requested = true;
+    clearCheckpoint();
     location.assign(new URL('ending.html',location.href).href);
   }
 }
@@ -962,7 +969,6 @@ window.TI_SEQUENCE = () => ({
   experience: experienceMode,
   cameraShot: shotDirector.rendered
 });
-queueLoop();
 function setExperienceControlsReady(ready) {
   document.body.classList.toggle("ti-prologue-released", ready);
   soundControl.disabled = !ready;
@@ -1012,7 +1018,7 @@ function activateArrivalMission(key, now) {
     storm.setActive(planet.storm);
     captions.force({
       r: 0,
-      ko: "\uB2E8\uC77C \uC784\uBB34 \xB7 \uC9C0\uD45C \uC218\uBD84 \uC2E0\uD638 \uD655\uC778",
+      ko: "단일 임무 \xB7 지표 수화물 분광 탐사",
       en: "SINGLE OBJECTIVE \xB7 CONFIRM SURFACE WATER"
     }, now, 5200);
   } else if (planet.mission === "geological-memory") {
@@ -1024,14 +1030,73 @@ function activateArrivalMission(key, now) {
     rover.auto = activated;
     rover.missionHold = false;
     rover.operatorHold = !activated;
-    captions.force(activated ? { r: 0, ko: "PLANET 03 \xB7 \uB450 \uAE30\uC5B5\uC7A5\uC758 \uAD50\uCC28 \uACB0\uC808 \uCD94\uC801", en: "PLANET 03 \xB7 TRACE THREE MEMORY CONCORDANCE NODES" } : { r: 0, ko: "PLANET 03 \xB7 \uC774\uC804 \uD589\uC131 \uB370\uC774\uD130 \uBD88\uC644\uC804", en: "PLANET 03 \xB7 PRIOR-PLANET EVIDENCE INCOMPLETE" }, now, 7200);
+    if (!activated) {
+      const prior = document.createElement('a');
+      prior.id = 'ti-prior-mission';
+      prior.href = 'planet-01.html' + location.search;
+      prior.textContent = '선행 탐사 기록 필요 · 행성 1에서 탐사 시작';
+      prior.style.cssText = 'position:fixed;z-index:90;left:50%;bottom:15%;transform:translateX(-50%);padding:12px 18px;background:#101417;color:#ddd;font:12px sans-serif;text-align:center';
+      document.body.append(prior);
+    }
+    captions.force(activated ? { r: 0, ko: "PLANET 03 \xB7 광물·수화물 탐사 자료 대조", en: "PLANET 03 \xB7 TRACE THREE MEMORY CONCORDANCE NODES" } : { r: 0, ko: "PLANET 03 \xB7 선행 탐사 기록 필요", en: "PLANET 03 \xB7 PRIOR-PLANET EVIDENCE INCOMPLETE" }, now, 7200);
   }
 }
-// The title and START belong to index.html. A planet URL starts the survey.
-if(location.search.includes('embed')){
+// Each numbered URL owns one planet; arrival continues after the transfer.
+window.addEventListener('pagehide', () => {
+  saveMissionCheckpoint(performance.now(), true);
+  missionMemory.persist();
+  try { sessionStorage.setItem('terra-incognita:display', JSON.stringify({green:greenMonitorManual, raw:rawMonitorManual})); } catch {}
+});
+if (entryCheckpoint?.world === entryPlanet) {
+  await restoreMissionCheckpoint(entryCheckpoint);
+} else if (entryPlanet !== 'terra') {
+  await prepareVoyageDestination(PLANETS[entryPlanet]);
+  released = true;
+  prologuePhase = 'released';
+  setExperienceControlsReady(true);
+  window.TI_REVEAL_PLANET?.();
+  voyage.resumeArrival(PLANETS[entryPlanet]);
+} else if(location.search.includes('embed')){
   released=true;prologuePhase='released';setExperienceControlsReady(true);rover.auto=true;
   window.TI_REVEAL_PLANET?.();
 }else beginPlanetExperience();
+window.TI_CHECKPOINT = () => ({restored:checkpointRestored, saved:readCheckpoint()});
+queueLoop();
+function saveMissionCheckpoint(now, force=false) {
+  if ((!force && now-lastCheckpointAt<5000) || !released || driveReleaseAt || authoredExperienceLock() ||
+      rover.disabled || power.dead || power.charge<=.001 || restoration.event || waterMission.event || geologicalMemory.event ||
+      (world==='terra'&&restoration.complete) || (world==='desert'&&waterMission.complete) ||
+      (world==='granite'&&(!geologicalMemory.model||geologicalMemory.complete))) return false;
+  lastCheckpointAt=now;
+  return writeCheckpoint({version:1,world,seed:window.UNIVERSE_SEED,savedAt:Date.now(),
+    rover:{x:rover.pos.x,z:rover.pos.z,heading:rover.heading},charge:power.charge,
+    mode:experienceMode,lamps:rover.lamps,selections:restoration.checkpoint(),
+    geological:geologicalMemory.current,memory:missionMemory.snapshot()});
+}
+async function restoreMissionCheckpoint(saved) {
+  const now=performance.now();
+  missionMemory.restore(saved.memory);
+  if (entryPlanet!=='terra') await prepareVoyageDestination(PLANETS[entryPlanet]);
+  released=true;prologuePhase='released';driveReleaseAt=0;openingShot=null;
+  shotDirector.setOpening(false);shotDirector.setIntro(false);
+  setExperienceControlsReady(true);
+  if(entryPlanet==='terra') restoration.reset(0,saved.selections);
+  else {
+    voyage.resumeSurface(PLANETS[entryPlanet]);
+    activateArrivalMission(entryPlanet,now);
+    if(entryPlanet==='granite') geologicalMemory.restoreProgress(saved.geological,now);
+  }
+  rover.stowedIn=null;rover.surfaceOverride=null;rover.group.visible=true;
+  rover.teleport(saved.rover.x,saved.rover.z,saved.rover.heading);
+  rover.speed=0;rover.scriptedDrive=null;rover.missionHold=false;rover.operatorHold=false;
+  rover.lamps=saved.lamps!==false;power.reset(saved.charge);
+  if(saved.mode==='explorer') enterExplorer(now);else enterObserver(now,{resumeRoute:true});
+  ground.syncTo(rover.pos.x,rover.pos.z);
+  await rebuild();
+  captions.force({r:0,ko:'탐사 기록 복구 · 마지막 안전 지점에서 재개',en:'CHECKPOINT RESTORED · SURVEY RESUMED'},now,4200);
+  window.TI_REVEAL_PLANET?.();
+  checkpointRestored=true;kiosk.last=now;
+}
 const resume = () => {
   const now = performance.now();
   if(finalTableau?.pausedAt != null) {
@@ -1161,7 +1226,7 @@ function queueLoop(generation = loopGeneration) {
 function missionObjectiveText() {
   if (world === "terra") {
     return restoration.structureComplete
-      ? `공급원료 \xB7 ${restoration.rawCount} / 2`
+      ? `원료 \xB7 ${restoration.rawCount} / 2`
       : `착륙선 외피 \xB7 ${restoration.structuralCount} / 4`;
   }
   if (world === "desert") {
@@ -1186,6 +1251,7 @@ function reconStatusText() {
 
 async function frame() {
   const now = performance.now();
+  saveMissionCheckpoint(now);
   const dt = Math.min(0.05, (now - tPrev) / 1e3);
   const frameMs = now - tPrev;
   tPrev = now;
@@ -1356,7 +1422,7 @@ async function frame() {
       document.body.classList.add("fh-dead");
       captions.force({
         r: 0,
-        ko: "\uC804\uB825 \uC140 \uACE0\uAC08 \xB7 \uBB3C\uC9C8 \uD1B5\uB85C \uD615\uC131 \uC2E4\uD328",
+        ko: "축전지 방전 \xB7 전이 중단",
         en: "POWER CELL EMPTY \xB7 MATERIAL PASSAGE INCOMPLETE"
       }, now, CFG.power.deadHold);
     }
@@ -1725,6 +1791,11 @@ async function prepareVoyageDestination(destination) {
   lens?.focusAt(camera.position.distanceTo(lander.group.position));
 }
 async function returnToStart() {
+  clearCheckpoint();
+  if (entryPlanet !== 'terra') {
+    await travelToPlanet('terra', missionMemory);
+    return;
+  }
   animeRituals.reset();
   voyage.reset();
   shotDirector.reset();

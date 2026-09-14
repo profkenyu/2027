@@ -169,8 +169,8 @@ export class MissionMemory {
     this.key = options.key ?? DEFAULT_MEMORY_KEY;
     this.storage = storageOrNull(options.storage);
     this.data = { version: MISSION_MEMORY_VERSION, samples: [], water: null };
-    this.load();
     this.resetJourney();
+    this.load();
   }
 
   resetJourney() {
@@ -224,15 +224,26 @@ export class MissionMemory {
     try {
       const parsed = JSON.parse(this.storage.getItem(this.key) ?? "null");
       if (parsed?.version !== MISSION_MEMORY_VERSION) return this.snapshot();
-      this.data.samples = (parsed.samples ?? []).slice(0, REQUIRED_BODY01_SAMPLE_COUNT).map(cleanSample);
-      this.data.water = cleanWater(parsed.water);
+      this.restore(parsed);
     } catch {
     }
     return this.snapshot();
   }
+  restore(parsed) {
+      if (parsed?.version !== MISSION_MEMORY_VERSION || !Array.isArray(parsed.samples)) return false;
+      this.data.samples = parsed.samples.slice(0, REQUIRED_BODY01_SAMPLE_COUNT).map(cleanSample);
+      this.data.water = cleanWater(parsed.water);
+      this.journey = {
+        distance: Math.max(0, Math.min(JOURNEY.maxDistance, finite(parsed.journey?.distance))),
+        dwell: Math.max(0, Math.min(JOURNEY.maxDwell, finite(parsed.journey?.dwell))),
+        turn: Math.max(-JOURNEY.maxTurn, Math.min(JOURNEY.maxTurn, finite(parsed.journey?.turn)))
+      };
+      this.lastJourneyPoint = null;
+      return true;
+  }
   persist() {
     try {
-      this.storage?.setItem(this.key, JSON.stringify(this.data));
+      this.storage?.setItem(this.key, JSON.stringify({ ...this.data, journey: this.journey }));
     } catch {
     }
   }

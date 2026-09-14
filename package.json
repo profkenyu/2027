@@ -20,6 +20,7 @@
     "build:ending": "node tools/build-ending.mjs",
     "harness": "node tools/harness.mjs",
     "memory": "node tools/memory.mjs",
+    "checkpoint": "node tools/checkpoint-export.mjs && node tools/checkpoint-browser.mjs",
     "observation": "node tools/observation.mjs",
     "terrain": "node tools/terrain.mjs",
     "verify": "node tools/verify.mjs",

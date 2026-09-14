@@ -10,6 +10,7 @@ const bad = (t, d = "") => {
 };
 async function walk(dir, out = []) {
   for (const e of await readdir(dir, { withFileTypes: true })) {
+    if (e.name === 'planet-engine.js') continue;
     const p = join(dir, e.name);
     if (e.isDirectory()) await walk(p, out);
     else if ([".js", ".mjs"].includes(extname(e.name))) out.push(p);
@@ -266,6 +267,29 @@ await unexercised();
 await staleImports();
 await ui();
 await build();
+const shared = await readFile(`${ROOT}/planet-engine.js`, 'utf8');
+for (const folder of [ROOT, `${ROOT}/dist`, `${ROOT}/works/terra_incognita`]) {
+  if (await readFile(`${folder}/planet-engine.js`, 'utf8') !== shared) bad('shared engine copies', folder);
+  for (const n of ['01', '02', '03']) {
+    const page = await readFile(`${folder}/planet-${n}.html`, 'utf8');
+    if (!page.includes('src="./planet-engine.js"') || page.includes('type="importmap"')) bad('planet page engine link', `${folder}/planet-${n}.html`);
+  }
+}
+ok('three planet pages share the same engine', 'root / dist / works');
+const expectedDeployment = [
+  'SHA256SUMS',
+  'ending.html',
+  'field-archive.html',
+  'index.html',
+  'planet-01.html',
+  'planet-02.html',
+  'planet-03.html',
+  'planet-engine.js'
+];
+const deployment = (await readdir(`${ROOT}/dist`)).sort();
+JSON.stringify(deployment) === JSON.stringify(expectedDeployment)
+  ? ok('deployment directory contains production files only', `${deployment.length} files`)
+  : bad('deployment directory contents', `expected ${expectedDeployment.join(', ')}; found ${deployment.join(', ')}`);
 console.log(fail ? `
 \u2717 ${fail} problem(s)` : "\n\u2713 PASS");
 process.exit(fail ? 1 : 0);

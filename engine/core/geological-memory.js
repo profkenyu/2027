@@ -249,6 +249,11 @@ export class GeologicalMemory {
     this.group.visible = true;
     return true;
   }
+  restoreProgress(count, now = performance.now()) {
+    if (!this.model || !Number.isInteger(count) || count<0 || count>=this.model.sites.length) return false;
+    while (this.current<count) this._commit(now);
+    return true;
+  }
   reset() {
     this.state = "inactive";
     this.model = null;
