@@ -82,9 +82,10 @@ try{
       const a=JSON.stringify(positions(30));positions(80);if(JSON.stringify(positions(30))!==a)throw Error('Nondeterministic seeking');
       dispatchEvent(new PageTransitionEvent('pagehide'));if(!FIRST_DAWN.snapshot().paused)throw Error('Pause failed');dispatchEvent(new PageTransitionEvent('pageshow'));shot(DURATION);
     },{DURATION,CUTS,TITLE_AT,ARCHIVE_AT});
-    await page.locator('#sound').click();assert.equal(await page.locator('#sound').getAttribute('aria-pressed'),'true');
+    await page.locator('#sound').click();await page.waitForFunction(()=>document.getElementById('sound').getAttribute('aria-pressed')==='true');
     await page.locator('#sound').click();await page.locator('#replay').click();assert.equal(await page.evaluate(()=>FIRST_DAWN.snapshot().seconds),0);
-    assert(!requests.some(url=>!url.includes('/ending.html')));assert.deepEqual(errors,[]);
+    // Tone's inline clock worker uses a local blob URL, not a network asset.
+    assert(!requests.some(url=>!url.includes('/ending.html')&&!url.startsWith('blob:')),JSON.stringify(requests));assert.deepEqual(errors,[]);
     reports.push({tier,frames,errors});console.log(`${tier}: ${DURATION}s / five original arks + one reference ark / ring passage / acceleration / atmosphere / audio / replay PASS`);await page.close();
   }
   const live=await browser.newPage();await live.goto(`${server.url}/ending.html`);await live.waitForFunction(()=>window.FIRST_DAWN);

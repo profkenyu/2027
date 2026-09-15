@@ -4,6 +4,7 @@ import {fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
 const root=fileURLToPath(new URL('../',import.meta.url));
 export async function buildEnding(){
+  await build({entryPoints:[resolve(root,'node_modules/tone/build/esm/index.js')],bundle:true,format:'esm',target:'es2022',minify:true,outfile:resolve(root,'works/first_dawn/tone-runtime.js')});
   const result=await build({entryPoints:[resolve(root,'works/first_dawn/main.js')],bundle:true,format:'esm',target:'es2022',minify:true,write:false,metafile:true});
   if(Object.keys(result.metafile.inputs).some(p=>resolve(root,p).startsWith(resolve(root,'engine')+'/')))throw Error('Ending depends on mission engine');
   const shell=await readFile(resolve(root,'works/first_dawn/dev.html'),'utf8');

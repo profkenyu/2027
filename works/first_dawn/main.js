@@ -6,6 +6,7 @@ import { createTimeline } from 'animejs';
 import {CUTS,directCamera} from './camera.js';
 import {approachProgress} from './flight.js';
 import {DURATION,TITLE_AT,ARCHIVE_AT} from './timeline.js';
+import {createDeepSpaceAudio} from './audio.js';
 
 const params=new URLSearchParams(location.search), requested=params.get('quality');
 const tier=['high','mid','low'].includes(requested)?requested:innerWidth<700?'low':navigator.hardwareConcurrency>=8?'high':'mid';
@@ -19,9 +20,14 @@ schedule.forEach((s,i)=>{
   choreography.add(motion[i],{deploy:[0,1],duration:16000,ease:'inOutSine'},(45+i*3)*1000);
 });
 let currentShot='arrival';
-let renderer,scene,camera,fleet,environment,keyLight,seconds=0,paused=false,last=performance.now(),frame=0,frameTime=16,pixelRatio=Math.min(devicePixelRatio,quality.dpr),audio=null,playing=false;
+let renderer,scene,camera,fleet,environment,keyLight,seconds=0,paused=false,last=performance.now(),frame=0,frameTime=16,pixelRatio=Math.min(devicePixelRatio,quality.dpr);
 const sunlightOffset=new THREE.Vector3(-1400,2600,1700);
 const title=document.getElementById('line'),replay=document.getElementById('replay'),archive=document.getElementById('archive'),sound=document.getElementById('sound');
+const audio=createDeepSpaceAudio(tier,on=>{
+  sound.setAttribute('aria-pressed',String(on));
+  sound.setAttribute('aria-label',on?'사운드 끄기':'사운드 켜기');
+  sound.title=on?'사운드 끄기':'사운드 켜기';
+},{inspect:params.has('test')});
 document.getElementById('return').href=location.pathname.includes('/works/first_dawn/')?'../terra_incognita/index.html':'index.html';
 archive.href=location.pathname.includes('/works/first_dawn/')?'../terra_incognita/field-archive.html':'field-archive.html';
 
@@ -59,7 +65,7 @@ function render(t){
   document.getElementById('cut').style.opacity=String(Math.max(...CUTS.map(at=>1-smooth(Math.abs(seconds-at)/.75))));
   title.style.opacity=String(currentShot==='surface'?smooth((seconds-TITLE_AT)/8):0);
   replay.hidden=seconds<DURATION-1;archive.hidden=seconds<ARCHIVE_AT;
-  if(audio){const rise=smooth((seconds-2)/30),fall=1-smooth((seconds-TITLE_AT)/(DURATION-TITLE_AT));audio.gain.gain.setTargetAtTime(playing?rise*fall*.12:0,audio.ctx.currentTime,.6);}
+  audio.update(seconds,camera.position.distanceTo(shadowSubject.position));
   renderer.render(scene,camera);
 }
 function tick(now){
@@ -72,16 +78,13 @@ function tick(now){
   if(++frame%180===0 && frameTime>27 && pixelRatio>.8){pixelRatio=Math.max(.8,pixelRatio-.15);renderer.setPixelRatio(pixelRatio);}
   render(seconds+dt);
 }
-async function toggleSound(){
-  if(!audio){
-    const ctx=new AudioContext(),gain=ctx.createGain(),filter=ctx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=900;gain.gain.value=0;gain.connect(filter);filter.connect(ctx.destination);
-    const voices=[36.708,55,73.416,110,138.591].map((f,i)=>{const osc=ctx.createOscillator(),g=ctx.createGain();osc.type=i<2?'sine':'triangle';osc.frequency.value=f;g.gain.value=.23/(1+i*.6);osc.connect(g);g.connect(gain);osc.start();return osc;});
-    audio={ctx,gain,voices};
-  }
-  playing=!playing;await audio.ctx.resume();sound.textContent=playing?'SOUND ON':'SOUND OFF';sound.setAttribute('aria-pressed',String(playing));sound.setAttribute('aria-label',playing?'사운드 끄기':'사운드 켜기');render(seconds);
+function pause(){paused=true;audio.pause();}
+function resume(){paused=false;last=performance.now();audio.resume();}
+let soundChosen=false;
+function firstInput(e){
+  if(soundChosen||e.target.closest?.('button,a')||e.type==='keydown'&&['Shift','Control','Alt','Meta','Tab','Escape'].includes(e.key))return;
+  soundChosen=true;audio.enable();
 }
-function pause(){paused=true;audio?.ctx.suspend();}
-function resume(){paused=false;last=performance.now();if(playing)audio?.ctx.resume();}
 try{
   renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:tier==='low'?'low-power':'high-performance'});
   renderer.setPixelRatio(pixelRatio);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
@@ -98,7 +101,10 @@ try{
   addEventListener('resize',()=>{resize();render(seconds);});
   document.addEventListener('visibilitychange',()=>document.hidden?pause():resume());addEventListener('pagehide',pause);addEventListener('pageshow',resume);
   renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();pause();document.getElementById('error').hidden=false;document.getElementById('error').textContent='화면 연결이 중단되었습니다. 새로고침하면 다시 시작합니다.';});
-  replay.addEventListener('click',()=>{render(0);resume();});sound.addEventListener('click',()=>toggleSound().catch(()=>{sound.textContent='SOUND OFF';playing=false;}));
+  replay.addEventListener('click',()=>{audio.replay();render(0);resume();if(!soundChosen){soundChosen=true;audio.enable();}});
+  sound.addEventListener('click',()=>{soundChosen=true;if(audio.enabled)audio.mute();else audio.enable();});
+  addEventListener('pointerdown',firstInput);addEventListener('keydown',firstInput);
   window.FIRST_DAWN={snapshot:()=>({seconds,duration:DURATION,tier,shot:currentShot,cameraPosition:camera.position.toArray(),cameraFov:camera.fov,surfaceHeight:environment.surfaceHeightAt(camera.position.x,camera.position.z),ships:fleet.filter(s=>s.visible).length,total:fleet.length,referenceArks:fleet.filter(s=>s.name==='sf-migration-ark').length,originalArks:fleet.filter(s=>s.name.startsWith('ark-')).length,paused,triangles:renderer.info.render.triangles,calls:renderer.info.render.calls,pixelRatio,independent:!window.TI_WORLD,animation:'anime.js',motion:'restrained-distant / accelerating-approach / finite-braking',deployment:motion.map(s=>s.deploy)}),...(params.has('test')?{seek:render,positions:()=>fleet.map(s=>s.position.toArray())}:{})};
+  if(params.has('test'))window.FIRST_DAWN.audio=audio.snapshot;
   requestAnimationFrame(tick);
 }catch(error){document.getElementById('loading').hidden=true;const box=document.getElementById('error');box.hidden=false;box.textContent='3D 화면을 시작할 수 없습니다. WebGL을 지원하는 브라우저에서 다시 열어주세요.';console.error(error);}

@@ -2,7 +2,7 @@
   "name": "terra-incognita",
   "private": true,
   "version": "0.1.0-phase1",
-  "description": "Terra Incognita \u00b7 20th solo exhibition",
+  "description": "Terra Incognita · 20th solo exhibition",
   "type": "module",
   "scripts": {
     "dev": "python3 -m http.server 5173",
@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "animejs": "4.5.0",
-    "three": "0.185.1"
+    "three": "0.185.1",
+    "tone": "15.1.22"
   }
 }
