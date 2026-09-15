@@ -67,7 +67,7 @@ export function createEnvironment(scene,tier){
 }`}));scene.add(starfield);
   const surface=createSurface(scene,tier);
   const surfaceFog=new THREE.FogExp2(0x594334,.00022);
-  return {observerHeight:surface.observerHeight,update(seconds,onSurface=false,camera=null,elapsed=seconds){
+  return {observerHeight:surface.observerHeight,surfaceHeightAt:surface.heightAt,update(seconds,onSurface=false,camera=null,elapsed=seconds){
     surface.update(elapsed);
     if(camera)starfield.position.copy(camera.position);
     uniforms.time.value=seconds;uniforms.dawn.value=THREE.MathUtils.smoothstep(seconds,110,160);

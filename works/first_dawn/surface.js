@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {CUTS} from './timeline.js';
+import {SURFACE_TRAVEL,surfaceTrackX,surfaceTrackZ} from './surface-flight.js';
 
 // Authored dry basin: relief is a procedural interpretation, not Mars DEM data.
 export function groundHeight(x,z){
@@ -20,6 +21,15 @@ export function createSurface(scene,tier){
     c.copy(dark).lerp(pale,.25+strata*.6);colors.push(c.r,c.g,c.b);
   }
   geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geometry.computeVertexNormals();
+  // Match the displayed triangle heights, including the coarse LOW grid.
+  const heightAt=(x,z)=>{
+    const gx=THREE.MathUtils.clamp((x+24000)/48000*segments,0,segments-1e-6);
+    const gz=THREE.MathUtils.clamp((z+24000)/48000*segments,0,segments-1e-6);
+    const ix=Math.floor(gx),iz=Math.floor(gz),fx=gx-ix,fz=gz-iz;
+    const a=iz*(segments+1)+ix,b=a+segments+1;
+    return fx+fz<=1?pos.getY(a)+(pos.getY(a+1)-pos.getY(a))*fx+(pos.getY(b)-pos.getY(a))*fz:
+      pos.getY(b+1)+(pos.getY(b)-pos.getY(b+1))*(1-fx)+(pos.getY(a+1)-pos.getY(b+1))*(1-fz);
+  };
   const material=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,metalness:0});
   // Fine sediment striations affect the surface only, never the ship or sky.
   material.onBeforeCompile=shader=>{
@@ -28,7 +38,9 @@ export function createSurface(scene,tier){
       float grit=sin(basinPosition.x*2.3+sin(basinPosition.z*3.7))*sin(basinPosition.z*2.9+sin(basinPosition.x*2.1));
       float ripple=sin(basinPosition.x*.23+sin(basinPosition.z*.031)*4.);
       float detailFade=1.-smoothstep(180.,2000.,length(vViewPosition));
-      diffuseColor.rgb*=1.+(grit*.009+ripple*.012)*detailFade;
+      float rippleAA=1.-smoothstep(.25,1.2,fwidth(basinPosition.x*.23+sin(basinPosition.z*.031)*4.));
+      float gritAA=1.-smoothstep(.2,1.,max(fwidth(basinPosition.x),fwidth(basinPosition.z))*3.7);
+      diffuseColor.rgb*=1.+(grit*.035*gritAA+ripple*.085*rippleAA)*detailFade;
       // Ground-hugging gas masks distant relief while retaining a near horizon.
       float groundVeil=1.-exp(-length(vViewPosition)*.0019);
       diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.29,.215,.16),groundVeil*.82);`);
@@ -36,17 +48,20 @@ export function createSurface(scene,tier){
   const terrain=new THREE.Mesh(geometry,material);terrain.receiveShadow=true;group.add(terrain);
   // Fixed boulders provide foreground scale without particles or animation.
   const rockGeometry=new THREE.IcosahedronGeometry(1,tier==='low'?0:1),rockMaterial=new THREE.MeshStandardMaterial({color:0x50382b,roughness:1});
-  const rocks=new THREE.InstancedMesh(rockGeometry,rockMaterial,tier==='low'?25:65);
+  const rocks=new THREE.InstancedMesh(rockGeometry,rockMaterial,tier==='low'?40:80);
   const dummy=new THREE.Object3D();let seed=7103;
   const rand=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
   for(let i=0;i<rocks.count;i++){
-    const x=850+(rand()-.5)*2600,z=1400-rand()*4000,r=1+Math.pow(rand(),3)*6;
-    dummy.position.set(x,groundHeight(x,z)+r*.2,z);dummy.scale.set(r,r*.55,r*.8);dummy.rotation.set(rand(),rand()*6,rand());dummy.updateMatrix();rocks.setMatrixAt(i,dummy.matrix);
+    const along=(i/28)*1.15+.035,side=i%2?1:-1;
+    const x=i<28?surfaceTrackX(along)+side*(18+rand()*68):850+(rand()-.5)*2600;
+    const z=i<28?surfaceTrackZ(along)+(rand()-.5)*SURFACE_TRAVEL*.03:1400-rand()*4000;
+    const r=i<28?1.8+rand()*4:1+Math.pow(rand(),3)*6;
+    dummy.position.set(x,heightAt(x,z)+r*.2,z);dummy.scale.set(r,r*.55,r*.8);dummy.rotation.set(rand(),rand()*6,rand());dummy.updateMatrix();rocks.setMatrixAt(i,dummy.matrix);
   }
   rocks.computeBoundingSphere();group.add(rocks);
   // Slant optical depth and a broad forward-scattering lobe organize the sky.
   // The faint inherited colour veil remains an artistic atmospheric layer.
-  const skyUniforms={elapsed:{value:CUTS[1]},surfaceStart:{value:CUTS[1]}};
+  const skyUniforms={elapsed:{value:CUTS[2]},surfaceStart:{value:CUTS[2]}};
   const sky=new THREE.Mesh(new THREE.SphereGeometry(39000,32,20),new THREE.ShaderMaterial({
     uniforms:skyUniforms,side:THREE.BackSide,depthWrite:false,
     vertexShader:`varying vec3 skyDirection;void main(){skyDirection=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
@@ -81,5 +96,5 @@ export function createSurface(scene,tier){
       }`
   }));
   sky.position.set(850,-760,1800);group.add(sky);
-  return {group,observerHeight:groundHeight(850,1800),update(seconds){skyUniforms.elapsed.value=seconds;}};
+  return {group,heightAt,observerHeight:heightAt(850,1800),update(seconds){skyUniforms.elapsed.value=seconds;}};
 }
