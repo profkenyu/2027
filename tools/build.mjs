@@ -5,6 +5,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildEnding } from './build-ending.mjs';
 import {buildOpening} from './build-opening.mjs';
+import {buildSpace} from './build-space.mjs';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const WORK = process.argv[2] ?? "terra_incognita";
 async function main() {
@@ -54,6 +55,7 @@ async function main() {
   let shell = await readFile(`${ROOT}/works/${WORK}/dev.html`, "utf8");
   if (WORK === "terra_incognita") {
     await buildEnding();
+    await buildSpace();
     for (const asset of ["camera-icon.png", "light-icon.png"]) {
       const data = await readFile(`${ROOT}/works/${WORK}/assets/${asset}`);
       shell = shell.replaceAll(`./assets/${asset}`, `data:image/png;base64,${data.toString("base64")}`);
@@ -88,7 +90,7 @@ async function main() {
     for (const folder of [ROOT, `${ROOT}/dist`, `${ROOT}/works/${WORK}`]) {
       await writeFile(`${folder}/planet-engine.js`, js);
       for (const number of ['01', '02', '03']) {
-        await writeFile(`${folder}/planet-${number}.html`, html.replace(/<title>[^<]*<\/title>/, `<title>Terra Incognita · Planet ${number}</title>`));
+        await writeFile(`${folder}/planet-${number}.html`, html.replace(/<title>[^<]*<\/title>/, `<title>BEYOND THE KNOWN - A Terrafoming Project · Planet ${number}</title>`));
       }
     }
     await writeFile(`${ROOT}/dist/field-archive.html`, archive);
@@ -97,6 +99,8 @@ async function main() {
     const deploymentFiles = [
       "index.html",
       "planet-01.html",
+      "space-01.html",
+      "space-02.html",
       "planet-02.html",
       "planet-03.html",
       "planet-engine.js",
@@ -116,7 +120,7 @@ async function main() {
 \u2713 ${WORK} \u2014 ${kb} KB page with shared engine`);
   console.log(`  sha256 ${digest}`);
   console.log(`  field archive sha256 ${archiveDigest}`);
-  console.log("  open index.html → planet-01.html → planet-02.html → planet-03.html → ending.html");
+  console.log("  open index.html → planet-01.html → space-01.html → planet-02.html → space-02.html → planet-03.html → ending.html");
   console.log(`  shared planet-engine.js: ${Math.round(Buffer.byteLength(js) / 1024)} KB`);
 }
 main().catch((e) => {

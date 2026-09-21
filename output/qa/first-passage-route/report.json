@@ -1,0 +1,387 @@
+{
+  "events": [
+    {
+      "departure": {
+        "state": {
+          "seconds": 0.1,
+          "duration": 64,
+          "shot": "departure",
+          "tier": "low",
+          "triangles": 9362,
+          "calls": 37,
+          "dpr": 1,
+          "paused": false,
+          "independent": true,
+          "response": {
+            "thermal": 0.7353492304341129,
+            "radiator": 0.6779769997821734,
+            "toneHz": 41.74833616254702,
+            "signalGain": 0.022983800225759753,
+            "energy": 1
+          },
+          "environment": {
+            "temperature": 257.79769997821734,
+            "radiation": 0.3193520090303901,
+            "energy": 1,
+            "terrainHeight": 0.7810288181546388,
+            "water": 0,
+            "elapsed": 56.7742,
+            "observations": 55,
+            "provenance": "authored environmental estimate"
+          },
+          "radiators": [
+            -1.25,
+            1.25
+          ],
+          "audio": {
+            "enabled": false,
+            "state": "locked",
+            "toneHz": 41.74833616254702,
+            "gain": 0
+          },
+          "position": [
+            0,
+            0,
+            -0.005000000000000001
+          ]
+        },
+        "memory": {
+          "version": 3,
+          "samples": [
+            {
+              "index": 0,
+              "sample": "FE–NI ALLOY",
+              "module": "FOUNDATION",
+              "sign": "METALLIC REFLECTANCE",
+              "color": 14189621,
+              "x": 231.6,
+              "z": 543.4
+            },
+            {
+              "index": 1,
+              "sample": "SILICATE CERAMIC",
+              "module": "LOAD PATHS",
+              "sign": "SPECTRAL SPLIT",
+              "color": 13219211,
+              "x": 199.1,
+              "z": 516.1
+            },
+            {
+              "index": 2,
+              "sample": "CARBON COMPOSITE",
+              "module": "SERVICE / PRESSURE",
+              "sign": "LOW ALBEDO DENSITY",
+              "color": 9414317,
+              "x": 209.9,
+              "z": 471.4
+            },
+            {
+              "index": 3,
+              "sample": "CONDUCTIVE LATTICE",
+              "module": "TRANSFER / VISOR",
+              "sign": "METALLIC LATTICE",
+              "color": 14854475,
+              "x": 168.5,
+              "z": 445.3
+            },
+            {
+              "index": 4,
+              "sample": "N₂ FEEDSTOCK",
+              "module": "ATMOSPHERIC FEEDSTOCK",
+              "sign": "RAMAN N₂ BAND",
+              "color": 12175812,
+              "x": 173.9,
+              "z": 391.9
+            },
+            {
+              "index": 5,
+              "sample": "ALCOHOL FEEDSTOCK · C₂H₅OH",
+              "module": "CHEMICAL FEEDSTOCK",
+              "sign": "C–O / O–H SPECTRUM",
+              "color": 16757276,
+              "x": 127.7,
+              "z": 352.8
+            }
+          ],
+          "water": null,
+          "journey": {
+            "distance": 0,
+            "dwell": 0,
+            "turn": 0
+          }
+        },
+        "transfer": {
+          "version": 1,
+          "source": "terra",
+          "target": "desert",
+          "stage": "flight",
+          "seed": "2185E3",
+          "elapsed": 0,
+          "environment": {
+            "temperature": 257.79769997821734,
+            "radiation": 0.3193520090303901,
+            "energy": 1,
+            "terrainHeight": 0.7810288181546388,
+            "water": 0,
+            "elapsed": 56.7742,
+            "observations": 55,
+            "provenance": "authored environmental estimate"
+          }
+        }
+      }
+    },
+    {
+      "arrival": {
+        "sequence": {
+          "world": "desert",
+          "planets": 3,
+          "restoration": 6,
+          "structure": 4,
+          "rawMaterials": 2,
+          "simultaneous": false,
+          "prologue": "released",
+          "mission": "water",
+          "water": "inactive",
+          "waterDistance": null,
+          "geological": "inactive",
+          "geologicalNode": 0,
+          "docking": "idle",
+          "voyage": "descent",
+          "matter": "inactive",
+          "tableau": "idle",
+          "observed": "idle",
+          "landerPresent": true,
+          "roverVisible": false,
+          "experience": "observer",
+          "cameraShot": "ascent"
+        },
+        "seed": "2185E3",
+        "ledger": {
+          "version": 3,
+          "ready": false,
+          "samplesReady": true,
+          "waterReady": false,
+          "journey": {
+            "distance": 0,
+            "dwell": 0,
+            "turn": 0
+          },
+          "samples": [
+            {
+              "index": 0,
+              "sample": "FE–NI ALLOY",
+              "module": "FOUNDATION",
+              "sign": "METALLIC REFLECTANCE",
+              "color": 14189621,
+              "x": 231.6,
+              "z": 543.4
+            },
+            {
+              "index": 1,
+              "sample": "SILICATE CERAMIC",
+              "module": "LOAD PATHS",
+              "sign": "SPECTRAL SPLIT",
+              "color": 13219211,
+              "x": 199.1,
+              "z": 516.1
+            },
+            {
+              "index": 2,
+              "sample": "CARBON COMPOSITE",
+              "module": "SERVICE / PRESSURE",
+              "sign": "LOW ALBEDO DENSITY",
+              "color": 9414317,
+              "x": 209.9,
+              "z": 471.4
+            },
+            {
+              "index": 3,
+              "sample": "CONDUCTIVE LATTICE",
+              "module": "TRANSFER / VISOR",
+              "sign": "METALLIC LATTICE",
+              "color": 14854475,
+              "x": 168.5,
+              "z": 445.3
+            },
+            {
+              "index": 4,
+              "sample": "N₂ FEEDSTOCK",
+              "module": "ATMOSPHERIC FEEDSTOCK",
+              "sign": "RAMAN N₂ BAND",
+              "color": 12175812,
+              "x": 173.9,
+              "z": 391.9
+            },
+            {
+              "index": 5,
+              "sample": "ALCOHOL FEEDSTOCK · C₂H₅OH",
+              "module": "CHEMICAL FEEDSTOCK",
+              "sign": "C–O / O–H SPECTRUM",
+              "color": 16757276,
+              "x": 127.7,
+              "z": 352.8
+            }
+          ],
+          "water": null
+        }
+      }
+    },
+    {
+      "settled": {
+        "state": {
+          "version": 1,
+          "worlds": {
+            "terra": {
+              "temperature": 257.79769997821734,
+              "radiation": 0.3193520090303901,
+              "energy": 1,
+              "terrainHeight": 0.7810288181546388,
+              "water": 0,
+              "elapsed": 56.7742,
+              "observations": 55,
+              "provenance": "authored environmental estimate"
+            },
+            "desert": {
+              "temperature": 223.83656893404248,
+              "radiation": 0.5599135875327175,
+              "energy": 1,
+              "terrainHeight": 3.864031311355339,
+              "water": 0,
+              "elapsed": 8.533600000000105,
+              "observations": 8,
+              "provenance": "authored environmental estimate"
+            },
+            "granite": {
+              "temperature": 233,
+              "radiation": 0.21,
+              "energy": 1,
+              "terrainHeight": 0,
+              "water": 0,
+              "elapsed": 0,
+              "observations": 0,
+              "provenance": "authored environmental estimate"
+            }
+          }
+        },
+        "sequence": {
+          "world": "desert",
+          "planets": 3,
+          "restoration": 6,
+          "structure": 4,
+          "rawMaterials": 2,
+          "simultaneous": false,
+          "prologue": "released",
+          "mission": "water",
+          "water": "searching",
+          "waterDistance": 97.9440730889785,
+          "geological": "inactive",
+          "geologicalNode": 0,
+          "docking": "idle",
+          "voyage": "arrived",
+          "matter": "inactive",
+          "tableau": "idle",
+          "observed": "idle",
+          "landerPresent": true,
+          "roverVisible": true,
+          "experience": "observer",
+          "cameraShot": "wide"
+        },
+        "checkpoint": {
+          "restored": false,
+          "saved": {
+            "version": 1,
+            "world": "desert",
+            "seed": "2185E3",
+            "savedAt": 1789867416883,
+            "rover": {
+              "x": 90.28712165383288,
+              "z": 519.1644340373809,
+              "heading": 0.42260475825865484
+            },
+            "charge": 1,
+            "mode": "observer",
+            "lamps": true,
+            "selections": [
+              0,
+              3,
+              6,
+              9,
+              12,
+              15
+            ],
+            "geological": 0,
+            "memory": {
+              "version": 3,
+              "ready": false,
+              "samplesReady": true,
+              "waterReady": false,
+              "journey": {
+                "distance": 0,
+                "dwell": 0,
+                "turn": 0
+              },
+              "samples": [
+                {
+                  "index": 0,
+                  "sample": "FE–NI ALLOY",
+                  "module": "FOUNDATION",
+                  "sign": "METALLIC REFLECTANCE",
+                  "color": 14189621,
+                  "x": 231.6,
+                  "z": 543.4
+                },
+                {
+                  "index": 1,
+                  "sample": "SILICATE CERAMIC",
+                  "module": "LOAD PATHS",
+                  "sign": "SPECTRAL SPLIT",
+                  "color": 13219211,
+                  "x": 199.1,
+                  "z": 516.1
+                },
+                {
+                  "index": 2,
+                  "sample": "CARBON COMPOSITE",
+                  "module": "SERVICE / PRESSURE",
+                  "sign": "LOW ALBEDO DENSITY",
+                  "color": 9414317,
+                  "x": 209.9,
+                  "z": 471.4
+                },
+                {
+                  "index": 3,
+                  "sample": "CONDUCTIVE LATTICE",
+                  "module": "TRANSFER / VISOR",
+                  "sign": "METALLIC LATTICE",
+                  "color": 14854475,
+                  "x": 168.5,
+                  "z": 445.3
+                },
+                {
+                  "index": 4,
+                  "sample": "N₂ FEEDSTOCK",
+                  "module": "ATMOSPHERIC FEEDSTOCK",
+                  "sign": "RAMAN N₂ BAND",
+                  "color": 12175812,
+                  "x": 173.9,
+                  "z": 391.9
+                },
+                {
+                  "index": 5,
+                  "sample": "ALCOHOL FEEDSTOCK · C₂H₅OH",
+                  "module": "CHEMICAL FEEDSTOCK",
+                  "sign": "C–O / O–H SPECTRUM",
+                  "color": 16757276,
+                  "x": 127.7,
+                  "z": 352.8
+                }
+              ],
+              "water": null
+            }
+          }
+        }
+      }
+    }
+  ],
+  "errors": []
+}

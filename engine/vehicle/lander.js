@@ -21,6 +21,7 @@ import {
 import { fitLink, makeLink } from "./mechanics.js";
 import { cfg } from "../config.js";
 import { LanderExhaust, LANDER_NOZZLES } from "./lander-exhaust.js";
+import {createFlightHardware} from './flight-hardware.js';
 const Y = new THREE.Vector3(0, 1, 0);
 const LEVEL_PAD = new THREE.Quaternion();
 const LEG = Object.freeze({
@@ -78,6 +79,7 @@ function shaded(rgb, sheen = 0.08, gloss = 26) {
   const C = cfg();
   const L = normalize(vec3(...C.sun));
   const mat = new THREE.MeshBasicNodeMaterial();
+  mat.userData.flightSurface={rgb,sheen,gloss};
   mat.colorNode = Fn(() => {
     const n = normalize(normalWorld);
     const v = normalize(cameraPosition.sub(positionWorld));
@@ -750,6 +752,9 @@ export class Lander {
     this.crown.add(beacon);
     this._track(7, coreHousing, coreInset, beaconBase, beacon);
     this._buildFinish({ ceramic, graphite, metal, dark, service });
+    this.flightHardware=createFlightHardware(C.tier,{graphite,metal});
+    this.core.add(this.flightHardware.group);
+    this.flightHardware.group.traverse(o=>{if(o.isMesh)this._track(2,o);});
   }
   _buildFinish({ ceramic, graphite, metal, dark, service }) {
     // Batch fixed details by restoration stage and material: no per-frame work.
@@ -776,10 +781,20 @@ export class Lander {
         const points = [new THREE.Vector3(a[0]*s0,y0,a[1]*s0), new THREE.Vector3(a[0]*s1,y1,a[1]*s1), new THREE.Vector3(b[0]*s1,y1,b[1]*s1), new THREE.Vector3(b[0]*s0,y0,b[1]*s0)];
         const center = points.reduce((v,p)=>v.add(p),new THREE.Vector3()).multiplyScalar(.25);
         const normal = new THREE.Vector3().subVectors(points[1],points[0]).cross(new THREE.Vector3().subVectors(points[3],points[0])).normalize();
-        for (const p of points) p.sub(center).multiplyScalar(.945).add(center).addScaledVector(normal,.028);
+        for (const p of points) p.sub(center).multiplyScalar(.985).add(center).addScaledVector(normal,.028);
         const g = new THREE.BufferGeometry();
         g.setAttribute('position',new THREE.Float32BufferAttribute([0,1,3,3,1,2].flatMap(j=>points[j].toArray()),3));g.computeVertexNormals();
         add(3,ceramic,g);
+        // Replaceable tile subdivisions and recessed fasteners follow each real hull face.
+        const tileRows=tier==='low'?2:3;
+        for(let row=0;row<tileRows;row++)for(let col=0;col<2;col++){
+          const quad=[];
+          for(const [u,v] of [[col/2,row/tileRows],[col/2,(row+1)/tileRows],[(col+1)/2,(row+1)/tileRows],[(col+1)/2,row/tileRows]])quad.push(points[0].clone().lerp(points[3],u).lerp(points[1].clone().lerp(points[2],u),v));
+          const middle=quad.reduce((sum,p)=>sum.add(p),new THREE.Vector3()).multiplyScalar(.25);
+          for(const p of quad)p.sub(middle).multiplyScalar(.974).add(middle).addScaledVector(normal,.012);
+          const tile=new THREE.BufferGeometry();tile.setAttribute('position',new THREE.Float32BufferAttribute([0,1,3,3,1,2].flatMap(j=>quad[j].toArray()),3));tile.computeVertexNormals();add(3,(row+col)%3===0?metal:ceramic,tile);
+          if(tier!=='low')for(const q of [quad[0],quad[2]]){const bolt=q.clone().lerp(middle,.13).addScaledVector(normal,.009);add(3,dark,new THREE.SphereGeometry(.015,5,3),bolt.toArray());}
+        }
       }
     }
     // Side radiator cassettes stay outside the forward transfer aperture.
@@ -793,6 +808,18 @@ export class Lander {
       for(const y of [2.45,4.4]) box(5,ceramic,[.19,.24,.14],[side*1.73,y,-3.88]);
     }
     // Three restrained underside bells; the open profile carries depth without glow.
+    // Service-panel fasteners and thermal covers are physical, batched geometry.
+    // Keep the central transfer corridor and the articulated landing gear clear.
+    for(const side of [-1,1]){
+      const yaw=side*Math.PI/2;
+      for(const z of [-1.5,-.55,.4,1.35]){
+        box(3,graphite,[.78,.64,.055],[side*3.48,4.22,z],yaw);
+        box(3,ceramic,[.70,.56,.065],[side*3.52,4.22,z],yaw);
+        if(tier!=='low')for(const y of [3.99,4.45])for(const dz of [-.28,.28])
+          add(3,metal,new THREE.SphereGeometry(.024,6,4),[side*3.56,y,z+dz]);
+      }
+      for(let i=0;i<(tier==='high'?12:6);i++)box(2,dark,[.025,.38,.018],[side*3.75,3.99,.34+(i/Math.max(1,(tier==='high'?11:5))-.5)*1.3],yaw);
+    }
     for (const [x,z] of LANDER_NOZZLES) {
       const bell = new THREE.LatheGeometry([new THREE.Vector2(.19,.53),new THREE.Vector2(.22,.32),new THREE.Vector2(.32,.09),new THREE.Vector2(.47,-.13),new THREE.Vector2(.44,-.16),new THREE.Vector2(.29,.07),new THREE.Vector2(.17,.3)],tier==='high'?20:tier==='mid'?14:10);
       add(0,metal,bell,[x,.61,z]);

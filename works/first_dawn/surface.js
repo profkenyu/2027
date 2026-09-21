@@ -48,12 +48,12 @@ export function createSurface(scene,tier){
   const terrain=new THREE.Mesh(geometry,material);terrain.receiveShadow=true;group.add(terrain);
   // Fixed boulders provide foreground scale without particles or animation.
   const rockGeometry=new THREE.IcosahedronGeometry(1,tier==='low'?0:1),rockMaterial=new THREE.MeshStandardMaterial({color:0x50382b,roughness:1});
-  const rocks=new THREE.InstancedMesh(rockGeometry,rockMaterial,tier==='low'?40:80);
+  const rocks=new THREE.InstancedMesh(rockGeometry,rockMaterial,tier==='low'?3:7);
   const dummy=new THREE.Object3D();let seed=7103;
   const rand=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
   for(let i=0;i<rocks.count;i++){
     const along=(i/28)*1.15+.035,side=i%2?1:-1;
-    const x=i<28?surfaceTrackX(along)+side*(18+rand()*68):850+(rand()-.5)*2600;
+    const x=i<28?surfaceTrackX(along)+side*(100+rand()*160):850+(rand()-.5)*2600;
     const z=i<28?surfaceTrackZ(along)+(rand()-.5)*SURFACE_TRAVEL*.03:1400-rand()*4000;
     const r=i<28?1.8+rand()*4:1+Math.pow(rand(),3)*6;
     dummy.position.set(x,heightAt(x,z)+r*.2,z);dummy.scale.set(r,r*.55,r*.8);dummy.rotation.set(rand(),rand()*6,rand());dummy.updateMatrix();rocks.setMatrixAt(i,dummy.matrix);

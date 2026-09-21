@@ -105,13 +105,14 @@ function starLayer(count, size, seed) {
   return { group: points, points };
 }
 export class VoyageSequence {
-  constructor({ lander, rover, camera, ambient, passage = null, onSwap, onSpace, onCue, onComplete, onLandingDust }) {
+  constructor({ lander, rover, camera, ambient, passage = null, onSwap, onDeparture, onSpace, onCue, onComplete, onLandingDust }) {
     this.lander = lander;
     this.rover = rover;
     this.camera = camera;
     this.ambient = ambient;
     this.passage = passage;
     this.onSwap = onSwap;
+    this.onDeparture=onDeparture;
     this.onSpace = onSpace;
     this.onCue = onCue;
     this.onComplete = onComplete;
@@ -184,15 +185,16 @@ export class VoyageSequence {
   }
   resumeArrival(destination, now = performance.now()) {
     this.start(destination, now);
-    this.phase = "transit";
-    this.t0 = now - 6400;
+    this.phase = 'descent';
+    this.t0 = now;
     this.swapped = true;
     this.rover.stowedIn = this.lander;
     this.lander.setLegFold(1);
     this.lander.group.position.y = this.baseY + this.arrivalProfile.height;
-    this.group.visible = true;
+    this.group.visible = false;
     document.body.classList.add("ti-voyage");
-    this.onSpace?.(true);
+    this.onSpace?.(false);
+    this.baseY=this.lander.site.y;this.flightOrigin.copy(this.lander.group.position);this.onCue?.('descent',now,destination);
   }
   resumeSurface(destination) {
     this.destination=destination;
@@ -241,6 +243,10 @@ export class VoyageSequence {
         this.onCue?.("fold", now, this.destination);
       }
       if (elapsed >= buildMs + flightMs) {
+        if(this.onDeparture?.(this.destination)){
+          this.phase='departing';this.lander.setFlightThrust?.(0);
+          this.swapPending=true;await this.onSwap?.(this.destination);return;
+        }
         this.lander.group.position.y = this.baseY + height;
         this.lander.setLegFold(1);
         this.phase = "transit";

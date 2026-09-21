@@ -1,0 +1,1182 @@
+{
+  "camera": [
+    {
+      "width": 1600,
+      "height": 1000,
+      "minClearance": 19.17093743088415
+    },
+    {
+      "width": 1180,
+      "height": 820,
+      "minClearance": 19.17093743088415
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "minClearance": 28.112708628184272
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "minClearance": 19.17093743088415
+    }
+  ],
+  "frames": [
+    {
+      "passage": 2,
+      "seconds": 3,
+      "duration": 64,
+      "shot": "keel",
+      "tier": "high",
+      "triangles": 63786,
+      "calls": 43,
+      "dpr": 1,
+      "paused": false,
+      "independent": true,
+      "response": {
+        "thermal": 0.12307692307692308,
+        "radiator": 0.28,
+        "toneHz": 46.08,
+        "signalGain": 0.029,
+        "energy": 1
+      },
+      "environment": {
+        "temperature": 218,
+        "radiation": 0.56,
+        "energy": 1,
+        "terrainHeight": 0,
+        "water": 0,
+        "elapsed": 0,
+        "observations": 0,
+        "provenance": "authored environmental estimate"
+      },
+      "radiators": [
+        -1.25,
+        1.25
+      ],
+      "audio": {
+        "enabled": false,
+        "state": "locked",
+        "toneHz": 46.08,
+        "gain": 0
+      },
+      "position": [
+        0,
+        0,
+        -4.5
+      ],
+      "cameraPosition": [
+        21.815657715066,
+        -9.483841602184798,
+        -39.103550295857985
+      ],
+      "cameraFov": 46,
+      "cameraFocus": [
+        0,
+        2,
+        -4.5
+      ]
+    },
+    {
+      "passage": 2,
+      "seconds": 13,
+      "duration": 64,
+      "shot": "keel",
+      "tier": "high",
+      "triangles": 63786,
+      "calls": 43,
+      "dpr": 1,
+      "paused": false,
+      "independent": true,
+      "response": {
+        "thermal": 0.12307692307692308,
+        "radiator": 0.28,
+        "toneHz": 46.08,
+        "signalGain": 0.029,
+        "energy": 1
+      },
+      "environment": {
+        "temperature": 218,
+        "radiation": 0.56,
+        "energy": 1,
+        "terrainHeight": 0,
+        "water": 0,
+        "elapsed": 0,
+        "observations": 0,
+        "provenance": "authored environmental estimate"
+      },
+      "radiators": [
+        -1.25,
+        1.25
+      ],
+      "audio": {
+        "enabled": false,
+        "state": "locked",
+        "toneHz": 46.08,
+        "gain": 0
+      },
+      "position": [
+        0,
+        0,
+        -72
+      ],
+      "cameraPosition": [
+        19.5,
+        -3,
+        -76.5
+      ],
+      "cameraFov": 46,
+      "cameraFocus": [
+        0,
+        2,
+        -72
+      ]
+    },
+    {
+      "passage": 2,
+      "seconds": 24,
+      "duration": 64,
+      "shot": "keel",
+      "tier": "high",
+      "triangles": 88842,
+      "calls": 44,
+      "dpr": 1,
+      "paused": false,
+      "independent": true,
+      "response": {
+        "thermal": 0.12307692307692308,
+        "radiator": 0.28,
+        "toneHz": 46.08,
+        "signalGain": 0.029,
+        "energy": 1
+      },
+      "environment": {
+        "temperature": 218,
+        "radiation": 0.56,
+        "energy": 1,
+        "terrainHeight": 0,
+        "water": 0,
+        "elapsed": 0,
+        "observations": 0,
+        "provenance": "authored environmental estimate"
+      },
+      "radiators": [
+        -1.1806122448979592,
+        1.1806122448979592
+      ],
+      "audio": {
+        "enabled": false,
+        "state": "locked",
+        "toneHz": 46.08,
+        "gain": 0
+      },
+      "position": [
+        0,
+        0,
+        -160
+      ],
+      "cameraPosition": [
+        17.08420573509331,
+        3.7642239417387344,
+        -133.09467455621302
+      ],
+      "cameraFov": 46,
+      "cameraFocus": [
+        0,
+        2,
+        -160
+      ]
+    },
+    {
+      "passage": 2,
+      "seconds": 30,
+      "duration": 64,
+      "shot": "crossing",
+      "tier": "high",
+      "triangles": 88842,
+      "calls": 44,
+      "dpr": 1,
+      "paused": false,
+      "independent": true,
+      "response": {
+        "thermal": 0.12307692307692308,
+        "radiator": 0.28,
+        "toneHz": 46.08,
+        "signalGain": 0.029,
+        "energy": 1
+      },
+      "environment": {
+        "temperature": 218,
+        "radiation": 0.56,
+        "energy": 1,
+        "terrainHeight": 0,
+        "water": 0,
+        "elapsed": 0,
+        "observations": 0,
+        "provenance": "authored environmental estimate"
+      },
+      "radiators": [
+        -0.9693877551020408,
+        0.9693877551020408
+      ],
+      "audio": {
+        "enabled": false,
+        "state": "locked",
+        "toneHz": 46.08,
+        "gain": 0
+      },
+      "position": [
+        0,
+        0,
+        -208
+      ],
+      "cameraPosition": [
+        -61.21399176954733,
+        19.116598079561044,
+        -146.73799725651577
+      ],
+      "cameraFov": 39,
+      "cameraFocus": [
+        -10,
+        3,
+        -208
+      ]
+    },
+    {
+      "passage": 2,
+      "seconds": 40,
+      "duration": 64,
+      "shot": "crossing",
+      "tier": "high",
+      "triangles": 88874,
+      "calls": 46,
+      "dpr": 1,
+      "paused": false,
+      "independent": true,
+      "response": {
+        "thermal": 0.12307692307692308,
+        "radiator": 0.28,
+        "toneHz": 46.08,
+        "signalGain": 0.029,
+        "energy": 1
+      },
+      "environment": {
+        "temperature": 218,
+        "radiation": 0.56,
+        "energy": 1,
+        "terrainHeight": 0,
+        "water": 0,
+        "elapsed": 0,
+        "observations": 0,
+        "provenance": "authored environmental estimate"
+      },
+      "radiators": [
+        -0.8999999999999999,
+        0.8999999999999999
+      ],
+      "audio": {
+        "enabled": false,
+        "state": "locked",
+        "toneHz": 46.08,
+        "gain": 0
+      },
+      "position": [
+        0,
+        0,
+        -288
+      ],
+      "cameraPosition": [
+        -38.78600823045268,
+        13.883401920438958,
+        -219.26200274348423
+      ],
+      "cameraFov": 39,
+      "cameraFocus": [
+        -10,
+        3,
+        -288
+      ]
+    },
+    {
+      "passage": 2,
+      "seconds": 46,
+      "duration": 64,
+      "shot": "horizon",
+      "tier": "high",
+      "triangles": 88842,
+      "calls": 44,
+      "dpr": 1,
+      "paused": false,
+      "independent": true,
+      "response": {
+        "thermal": 0.12307692307692308,
+        "radiator": 0.28,
+        "toneHz": 46.08,
+        "signalGain": 0.029,
+        "energy": 1
+      },
+      "environment": {
+        "temperature": 218,
+        "radiation": 0.56,
+        "energy": 1,
+        "terrainHeight": 0,
+        "water": 0,
+        "elapsed": 0,
+        "observations": 0,
+        "provenance": "authored environmental estimate"
+      },
+      "radiators": [
+        -0.8999999999999999,
+        0.8999999999999999
+      ],
+      "audio": {
+        "enabled": false,
+        "state": "locked",
+        "toneHz": 46.08,
+        "gain": 0
+      },
+      "position": [
+        0,
+        0,
+        -336
+      ],
+      "cameraPosition": [
+        -22,
+        15.336,
+        -248.34
+      ],
+      "cameraFov": 44,
+      "cameraFocus": [
+        -70,
+        24,
+        -556
+      ]
+    },
+    {
+      "passage": 2,
+      "seconds": 60,
+      "duration": 64,
+      "shot": "horizon",
+      "tier": "high",
+      "triangles": 88842,
+      "calls": 44,
+      "dpr": 1,
+      "paused": false,
+      "independent": true,
+      "response": {
+        "thermal": 0.12307692307692308,
+        "radiator": 0.28,
+        "toneHz": 46.08,
+        "signalGain": 0.029,
+        "energy": 1
+      },
+      "environment": {
+        "temperature": 218,
+        "radiation": 0.56,
+        "energy": 1,
+        "terrainHeight": 0,
+        "water": 0,
+        "elapsed": 0,
+        "observations": 0,
+        "provenance": "authored environmental estimate"
+      },
+      "radiators": [
+        -1.2136,
+        1.2136
+      ],
+      "audio": {
+        "enabled": false,
+        "state": "locked",
+        "toneHz": 46.08,
+        "gain": 0
+      },
+      "position": [
+        0,
+        0,
+        -426.6666666666667
+      ],
+      "cameraPosition": [
+        -22,
+        25.752000000000002,
+        -256.5466666666667
+      ],
+      "cameraFov": 44,
+      "cameraFocus": [
+        -70,
+        24,
+        -646.6666666666667
+      ]
+    },
+    {
+      "passage": 2,
+      "seconds": 3,
+      "duration": 64,
+      "shot": "keel",
+      "tier": "mid",
+      "triangles": 53514,
+      "calls": 43,
+      "dpr": 1,
+      "paused": false,
+      "independent": true,
+      "response": {
+        "thermal": 0.12307692307692308,
+        "radiator": 0.28,
+        "toneHz": 46.08,
+        "signalGain": 0.029,
+        "energy": 1
+      },
+      "environment": {
+        "temperature": 218,
+        "radiation": 0.56,
+        "energy": 1,
+        "terrainHeight": 0,
+        "water": 0,
+        "elapsed": 0,
+        "observations": 0,
+        "provenance": "authored environmental estimate"
+      },
+      "radiators": [
+        -1.25,
+        1.25
+      ],
+      "audio": {
+        "enabled": false,
+        "state": "locked",
+        "toneHz": 46.08,
+        "gain": 0
+      },
+      "position": [
+        0,
+        0,
+        -4.5
+      ],
+      "cameraPosition": [
+        21.815657715066,
+        -9.483841602184798,
+        -39.103550295857985
+      ],
+      "cameraFov": 46,
+      "cameraFocus": [
+        0,
+        2,
+        -4.5
+      ]
+    },
+    {
+      "passage": 2,
+      "seconds": 13,
+      "duration": 64,
+      "shot": "keel",
+      "tier": "mid",
+      "triangles": 53514,
+      "calls": 43,
+      "dpr": 1,
+      "paused": false,
+      "independent": true,
+      "response": {
+        "thermal": 0.12307692307692308,
+        "radiator": 0.28,
+        "toneHz": 46.08,
+        "signalGain": 0.029,
+        "energy": 1
+      },
+      "environment": {
+        "temperature": 218,
+        "radiation": 0.56,
+        "energy": 1,
+        "terrainHeight": 0,
+        "water": 0,
+        "elapsed": 0,
+        "observations": 0,
+        "provenance": "authored environmental estimate"
+      },
+      "radiators": [
+        -1.25,
+        1.25
+      ],
+      "audio": {
+        "enabled": false,
+        "state": "locked",
+        "toneHz": 46.08,
+        "gain": 0
+      },
+      "position": [
+        0,
+        0,
+        -72
+      ],
+      "cameraPosition": [
+        19.5,
+        -3,
+        -76.5
+      ],
+      "cameraFov": 46,
+      "cameraFocus": [
+        0,
+        2,
+        -72
+      ]
+    },
+    {
+      "passage": 2,
+      "seconds": 24,
+      "duration": 64,
+      "shot": "keel",
+      "tier": "mid",
+      "triangles": 78570,
+      "calls": 44,
+      "dpr": 1,
+      "paused": false,
+      "independent": true,
+      "response": {
+        "thermal": 0.12307692307692308,
+        "radiator": 0.28,
+        "toneHz": 46.08,
+        "signalGain": 0.029,
+        "energy": 1
+      },
+      "environment": {
+        "temperature": 218,
+        "radiation": 0.56,
+        "energy": 1,
+        "terrainHeight": 0,
+        "water": 0,
+        "elapsed": 0,
+        "observations": 0,
+        "provenance": "authored environmental estimate"
+      },
+      "radiators": [
+        -1.1806122448979592,
+        1.1806122448979592
+      ],
+      "audio": {
+        "enabled": false,
+        "state": "locked",
+        "toneHz": 46.08,
+        "gain": 0
+      },
+      "position": [
+        0,
+        0,
+        -160
+      ],
+      "cameraPosition": [
+        17.08420573509331,
+        3.7642239417387344,
+        -133.09467455621302
+      ],
+      "cameraFov": 46,
+      "cameraFocus": [
+        0,
+        2,
+        -160
+      ]
+    },
+    {
+      "passage": 2,
+      "seconds": 30,
+      "duration": 64,
+      "shot": "crossing",
+      "tier": "mid",
+      "triangles": 78570,
+      "calls": 44,
+      "dpr": 1,
+      "paused": false,
+      "independent": true,
+      "response": {
+        "thermal": 0.12307692307692308,
+        "radiator": 0.28,
+        "toneHz": 46.08,
+        "signalGain": 0.029,
+        "energy": 1
+      },
+      "environment": {
+        "temperature": 218,
+        "radiation": 0.56,
+        "energy": 1,
+        "terrainHeight": 0,
+        "water": 0,
+        "elapsed": 0,
+        "observations": 0,
+        "provenance": "authored environmental estimate"
+      },
+      "radiators": [
+        -0.9693877551020408,
+        0.9693877551020408
+      ],
+      "audio": {
+        "enabled": false,
+        "state": "locked",
+        "toneHz": 46.08,
+        "gain": 0
+      },
+      "position": [
+        0,
+        0,
+        -208
+      ],
+      "cameraPosition": [
+        -61.21399176954733,
+        19.116598079561044,
+        -146.73799725651577
+      ],
+      "cameraFov": 39,
+      "cameraFocus": [
+        -10,
+        3,
+        -208
+      ]
+    },
+    {
+      "passage": 2,
+      "seconds": 40,
+      "duration": 64,
+      "shot": "crossing",
+      "tier": "mid",
+      "triangles": 78602,
+      "calls": 46,
+      "dpr": 1,
+      "paused": false,
+      "independent": true,
+      "response": {
+        "thermal": 0.12307692307692308,
+        "radiator": 0.28,
+        "toneHz": 46.08,
+        "signalGain": 0.029,
+        "energy": 1
+      },
+      "environment": {
+        "temperature": 218,
+        "radiation": 0.56,
+        "energy": 1,
+        "terrainHeight": 0,
+        "water": 0,
+        "elapsed": 0,
+        "observations": 0,
+        "provenance": "authored environmental estimate"
+      },
+      "radiators": [
+        -0.8999999999999999,
+        0.8999999999999999
+      ],
+      "audio": {
+        "enabled": false,
+        "state": "locked",
+        "toneHz": 46.08,
+        "gain": 0
+      },
+      "position": [
+        0,
+        0,
+        -288
+      ],
+      "cameraPosition": [
+        -38.78600823045268,
+        13.883401920438958,
+        -219.26200274348423
+      ],
+      "cameraFov": 39,
+      "cameraFocus": [
+        -10,
+        3,
+        -288
+      ]
+    },
+    {
+      "passage": 2,
+      "seconds": 46,
+      "duration": 64,
+      "shot": "horizon",
+      "tier": "mid",
+      "triangles": 78570,
+      "calls": 44,
+      "dpr": 1,
+      "paused": false,
+      "independent": true,
+      "response": {
+        "thermal": 0.12307692307692308,
+        "radiator": 0.28,
+        "toneHz": 46.08,
+        "signalGain": 0.029,
+        "energy": 1
+      },
+      "environment": {
+        "temperature": 218,
+        "radiation": 0.56,
+        "energy": 1,
+        "terrainHeight": 0,
+        "water": 0,
+        "elapsed": 0,
+        "observations": 0,
+        "provenance": "authored environmental estimate"
+      },
+      "radiators": [
+        -0.8999999999999999,
+        0.8999999999999999
+      ],
+      "audio": {
+        "enabled": false,
+        "state": "locked",
+        "toneHz": 46.08,
+        "gain": 0
+      },
+      "position": [
+        0,
+        0,
+        -336
+      ],
+      "cameraPosition": [
+        -22,
+        15.336,
+        -248.34
+      ],
+      "cameraFov": 44,
+      "cameraFocus": [
+        -70,
+        24,
+        -556
+      ]
+    },
+    {
+      "passage": 2,
+      "seconds": 60,
+      "duration": 64,
+      "shot": "horizon",
+      "tier": "mid",
+      "triangles": 78570,
+      "calls": 44,
+      "dpr": 1,
+      "paused": false,
+      "independent": true,
+      "response": {
+        "thermal": 0.12307692307692308,
+        "radiator": 0.28,
+        "toneHz": 46.08,
+        "signalGain": 0.029,
+        "energy": 1
+      },
+      "environment": {
+        "temperature": 218,
+        "radiation": 0.56,
+        "energy": 1,
+        "terrainHeight": 0,
+        "water": 0,
+        "elapsed": 0,
+        "observations": 0,
+        "provenance": "authored environmental estimate"
+      },
+      "radiators": [
+        -1.2136,
+        1.2136
+      ],
+      "audio": {
+        "enabled": false,
+        "state": "locked",
+        "toneHz": 46.08,
+        "gain": 0
+      },
+      "position": [
+        0,
+        0,
+        -426.6666666666667
+      ],
+      "cameraPosition": [
+        -22,
+        25.752000000000002,
+        -256.5466666666667
+      ],
+      "cameraFov": 44,
+      "cameraFocus": [
+        -70,
+        24,
+        -646.6666666666667
+      ]
+    },
+    {
+      "passage": 2,
+      "seconds": 3,
+      "duration": 64,
+      "shot": "keel",
+      "tier": "low",
+      "triangles": 19626,
+      "calls": 43,
+      "dpr": 1,
+      "paused": false,
+      "independent": true,
+      "response": {
+        "thermal": 0.12307692307692308,
+        "radiator": 0.28,
+        "toneHz": 46.08,
+        "signalGain": 0.029,
+        "energy": 1
+      },
+      "environment": {
+        "temperature": 218,
+        "radiation": 0.56,
+        "energy": 1,
+        "terrainHeight": 0,
+        "water": 0,
+        "elapsed": 0,
+        "observations": 0,
+        "provenance": "authored environmental estimate"
+      },
+      "radiators": [
+        -1.25,
+        1.25
+      ],
+      "audio": {
+        "enabled": false,
+        "state": "locked",
+        "toneHz": 46.08,
+        "gain": 0
+      },
+      "position": [
+        0,
+        0,
+        -4.5
+      ],
+      "cameraPosition": [
+        30.815657715066,
+        -9.483841602184798,
+        -39.103550295857985
+      ],
+      "cameraFov": 66,
+      "cameraFocus": [
+        0,
+        2,
+        -4.5
+      ]
+    },
+    {
+      "passage": 2,
+      "seconds": 13,
+      "duration": 64,
+      "shot": "keel",
+      "tier": "low",
+      "triangles": 19626,
+      "calls": 43,
+      "dpr": 1,
+      "paused": false,
+      "independent": true,
+      "response": {
+        "thermal": 0.12307692307692308,
+        "radiator": 0.28,
+        "toneHz": 46.08,
+        "signalGain": 0.029,
+        "energy": 1
+      },
+      "environment": {
+        "temperature": 218,
+        "radiation": 0.56,
+        "energy": 1,
+        "terrainHeight": 0,
+        "water": 0,
+        "elapsed": 0,
+        "observations": 0,
+        "provenance": "authored environmental estimate"
+      },
+      "radiators": [
+        -1.25,
+        1.25
+      ],
+      "audio": {
+        "enabled": false,
+        "state": "locked",
+        "toneHz": 46.08,
+        "gain": 0
+      },
+      "position": [
+        0,
+        0,
+        -72
+      ],
+      "cameraPosition": [
+        28.5,
+        -3,
+        -76.5
+      ],
+      "cameraFov": 66,
+      "cameraFocus": [
+        0,
+        2,
+        -72
+      ]
+    },
+    {
+      "passage": 2,
+      "seconds": 24,
+      "duration": 64,
+      "shot": "keel",
+      "tier": "low",
+      "triangles": 31722,
+      "calls": 44,
+      "dpr": 1,
+      "paused": false,
+      "independent": true,
+      "response": {
+        "thermal": 0.12307692307692308,
+        "radiator": 0.28,
+        "toneHz": 46.08,
+        "signalGain": 0.029,
+        "energy": 1
+      },
+      "environment": {
+        "temperature": 218,
+        "radiation": 0.56,
+        "energy": 1,
+        "terrainHeight": 0,
+        "water": 0,
+        "elapsed": 0,
+        "observations": 0,
+        "provenance": "authored environmental estimate"
+      },
+      "radiators": [
+        -1.1806122448979592,
+        1.1806122448979592
+      ],
+      "audio": {
+        "enabled": false,
+        "state": "locked",
+        "toneHz": 46.08,
+        "gain": 0
+      },
+      "position": [
+        0,
+        0,
+        -160
+      ],
+      "cameraPosition": [
+        26.08420573509331,
+        3.7642239417387344,
+        -133.09467455621302
+      ],
+      "cameraFov": 66,
+      "cameraFocus": [
+        0,
+        2,
+        -160
+      ]
+    },
+    {
+      "passage": 2,
+      "seconds": 30,
+      "duration": 64,
+      "shot": "crossing",
+      "tier": "low",
+      "triangles": 19626,
+      "calls": 43,
+      "dpr": 1,
+      "paused": false,
+      "independent": true,
+      "response": {
+        "thermal": 0.12307692307692308,
+        "radiator": 0.28,
+        "toneHz": 46.08,
+        "signalGain": 0.029,
+        "energy": 1
+      },
+      "environment": {
+        "temperature": 218,
+        "radiation": 0.56,
+        "energy": 1,
+        "terrainHeight": 0,
+        "water": 0,
+        "elapsed": 0,
+        "observations": 0,
+        "provenance": "authored environmental estimate"
+      },
+      "radiators": [
+        -0.9693877551020408,
+        0.9693877551020408
+      ],
+      "audio": {
+        "enabled": false,
+        "state": "locked",
+        "toneHz": 46.08,
+        "gain": 0
+      },
+      "position": [
+        0,
+        0,
+        -208
+      ],
+      "cameraPosition": [
+        -61.21399176954733,
+        19.116598079561044,
+        -146.73799725651577
+      ],
+      "cameraFov": 61,
+      "cameraFocus": [
+        -2,
+        3,
+        -208
+      ]
+    },
+    {
+      "passage": 2,
+      "seconds": 40,
+      "duration": 64,
+      "shot": "crossing",
+      "tier": "low",
+      "triangles": 31754,
+      "calls": 46,
+      "dpr": 1,
+      "paused": false,
+      "independent": true,
+      "response": {
+        "thermal": 0.12307692307692308,
+        "radiator": 0.28,
+        "toneHz": 46.08,
+        "signalGain": 0.029,
+        "energy": 1
+      },
+      "environment": {
+        "temperature": 218,
+        "radiation": 0.56,
+        "energy": 1,
+        "terrainHeight": 0,
+        "water": 0,
+        "elapsed": 0,
+        "observations": 0,
+        "provenance": "authored environmental estimate"
+      },
+      "radiators": [
+        -0.8999999999999999,
+        0.8999999999999999
+      ],
+      "audio": {
+        "enabled": false,
+        "state": "locked",
+        "toneHz": 46.08,
+        "gain": 0
+      },
+      "position": [
+        0,
+        0,
+        -288
+      ],
+      "cameraPosition": [
+        -38.78600823045268,
+        13.883401920438958,
+        -219.26200274348423
+      ],
+      "cameraFov": 61,
+      "cameraFocus": [
+        -2,
+        3,
+        -288
+      ]
+    },
+    {
+      "passage": 2,
+      "seconds": 46,
+      "duration": 64,
+      "shot": "horizon",
+      "tier": "low",
+      "triangles": 31722,
+      "calls": 44,
+      "dpr": 1,
+      "paused": false,
+      "independent": true,
+      "response": {
+        "thermal": 0.12307692307692308,
+        "radiator": 0.28,
+        "toneHz": 46.08,
+        "signalGain": 0.029,
+        "energy": 1
+      },
+      "environment": {
+        "temperature": 218,
+        "radiation": 0.56,
+        "energy": 1,
+        "terrainHeight": 0,
+        "water": 0,
+        "elapsed": 0,
+        "observations": 0,
+        "provenance": "authored environmental estimate"
+      },
+      "radiators": [
+        -0.8999999999999999,
+        0.8999999999999999
+      ],
+      "audio": {
+        "enabled": false,
+        "state": "locked",
+        "toneHz": 46.08,
+        "gain": 0
+      },
+      "position": [
+        0,
+        0,
+        -336
+      ],
+      "cameraPosition": [
+        -5,
+        15.336,
+        -248.34
+      ],
+      "cameraFov": 69,
+      "cameraFocus": [
+        -25,
+        24,
+        -556
+      ]
+    },
+    {
+      "passage": 2,
+      "seconds": 60,
+      "duration": 64,
+      "shot": "horizon",
+      "tier": "low",
+      "triangles": 31722,
+      "calls": 44,
+      "dpr": 1,
+      "paused": false,
+      "independent": true,
+      "response": {
+        "thermal": 0.12307692307692308,
+        "radiator": 0.28,
+        "toneHz": 46.08,
+        "signalGain": 0.029,
+        "energy": 1
+      },
+      "environment": {
+        "temperature": 218,
+        "radiation": 0.56,
+        "energy": 1,
+        "terrainHeight": 0,
+        "water": 0,
+        "elapsed": 0,
+        "observations": 0,
+        "provenance": "authored environmental estimate"
+      },
+      "radiators": [
+        -1.2136,
+        1.2136
+      ],
+      "audio": {
+        "enabled": false,
+        "state": "locked",
+        "toneHz": 46.08,
+        "gain": 0
+      },
+      "position": [
+        0,
+        0,
+        -426.6666666666667
+      ],
+      "cameraPosition": [
+        -5,
+        25.752000000000002,
+        -256.5466666666667
+      ],
+      "cameraFov": 69,
+      "cameraFocus": [
+        -25,
+        24,
+        -646.6666666666667
+      ]
+    }
+  ],
+  "errors": []
+}

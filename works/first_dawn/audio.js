@@ -1,5 +1,5 @@
 import * as Tone from 'tone';
-import {DURATION} from './timeline.js';
+import {DURATION,CUTS} from './timeline.js';
 
 // Deep Space Resonance: an authored acoustic interpretation, not sound in vacuum.
 // Visual time owns the score; Web Audio owns continuous oscillation and envelopes.
@@ -8,12 +8,13 @@ const fade=(t,a,b)=>1-smooth((t-a)/(b-a));
 const TIERS={high:{decay:20,extra:true},mid:{decay:16,extra:false},low:{decay:12,extra:false}};
 export function soundScore(t,distance=12000){
   return {
-    high:smooth((t-12)/20)*fade(t,66,84),
-    mid:smooth((t-8)/18)*fade(t,76,94),
-    drone:smooth((t-1)/18)*fade(t,82,101),
-    floor:smooth(t/20)*fade(t,103,DURATION),
+    high:smooth((t-12)/20)*fade(t,64,70),
+    mid:smooth((t-8)/18)*fade(t,66,74),
+    drone:smooth((t-1)/18)*fade(t,68,78),
+    wind:smooth((t-CUTS[2])/5)*fade(t,98,108)*(.36+.64*Math.sin(Math.PI*Math.max(0,Math.min(1,(t-68)/40)))),
+    floor:smooth(t/20)*fade(t,103,DURATION)*(1-.75*smooth((t-68)/8)),
     proximity:1/(1+Math.max(0,distance)/4500),
-    phase:t>=DURATION?'silence':t>=101?'sub-only':t>=94?'drone-release':t>=84?'mid-release':t>=66?'high-release':'resonance'
+    phase:t>=DURATION?'silence':t>=68?'surface-wind':t>=64?'surface-crossfade':'resonance'
   };
 }
 
@@ -35,7 +36,16 @@ export function createDeepSpaceAudio(tier,onState,{inspect=false}={}){
     const meter=inspect?own(new Tone.Analyser('waveform',2048)):null;
     if(meter)compressor.connect(meter);
     const gates={};
-    for(const name of ['high','mid','drone','floor','event'])gates[name]=own(new Tone.Gain(0)).connect(master);
+    for(const name of ['high','mid','drone','floor','event','wind'])gates[name]=own(new Tone.Gain(0)).connect(master);
+    // Dry, enclosed windshield turbulence. No space reverb on this surface sound.
+    const windNoise=own(new Tone.Noise('pink'));
+    const windHigh=own(new Tone.Filter({type:'highpass',frequency:85,rolloff:-24}));
+    const windLow=own(new Tone.Filter({type:'lowpass',frequency:1150,rolloff:-24,Q:.65}));
+    const windBody=own(new Tone.Filter({type:'peaking',frequency:240,Q:1.1,gain:4}));
+    const windGain=own(new Tone.Gain(.21));const windPan=own(new Tone.Panner(0));
+    windNoise.chain(windHigh,windLow,windBody,windGain,windPan,gates.wind);windNoise.start();
+    own(new Tone.LFO({frequency:.37,min:.11,max:.25,type:'sine'})).connect(windGain.gain).start();
+    own(new Tone.LFO({frequency:.19,min:-.25,max:.25,type:'sine'})).connect(windPan.pan).start();
     // A single shared convolution; band gates FOLLOW effects, so tails cannot
     // leak high/mid frequencies into the final isolated 30 Hz passage.
     const reverb=own(new Tone.Reverb({decay:config.decay,preDelay:.12,wet:1}));
@@ -78,14 +88,14 @@ export function createDeepSpaceAudio(tier,onState,{inspect=false}={}){
     if(Math.abs(t-lastUpdate)<.08 && t!==DURATION)return;
     lastUpdate=t;
     const score=soundScore(t,d);
-    if(wanted&&!blocked&&t>=nextEvent&&t<90){
+    if(wanted&&!blocked&&t>=nextEvent&&t<68){
       eventStart=t;nextEvent=t+40+Math.random()*50;eventCount++;
       graph.sub.frequency.cancelAndHoldAtTime(now);
       graph.sub.frequency.setValueAtTime(38,now);graph.sub.frequency.linearRampToValueAtTime(29,now+18);
     }
-    const age=t-eventStart,event=smooth(age/8)*fade(age,12,28)*fade(t,90,101);
+    const age=t-eventStart,event=smooth(age/8)*fade(age,12,28)*fade(t,64,68);
     const targets={...score,event};
-    for(const name of ['high','mid','drone','floor','event']){
+    for(const name of ['high','mid','drone','floor','event','wind']){
       const param=graph.gates[name].gain;
       param.cancelAndHoldAtTime(now);
       param.linearRampToValueAtTime(targets[name],now+.08);

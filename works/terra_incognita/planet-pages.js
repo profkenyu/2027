@@ -1,9 +1,11 @@
 import {PLANET_PAGES, readCheckpoint, clearCheckpoint} from '../../engine/core/checkpoint.js';
+import {resetPlanetState,beginTransfer,transferPage} from '../../engine/core/planet-state.js';
 export const planetPages = PLANET_PAGES;
 export const entryPlanet = Object.entries(planetPages).find(([, path]) => location.pathname.endsWith('/' + path))?.[0] ?? 'terra';
 const key = 'terra-incognita:last-planet';
 if(new URLSearchParams(location.search).get('fresh')==='1'){
   clearCheckpoint();
+  resetPlanetState();
   try { for(const name of ['terra-incognita:mission-memory:v3','terra-incognita:field-archive:v4','terra-incognita:field-archive:v3','terra-incognita:field-archive:v2'])sessionStorage.removeItem(name); }catch{}
   const clean=new URL(location.href);clean.searchParams.delete('fresh');history.replaceState(history.state,'',clean.href);
 }
@@ -13,10 +15,12 @@ if (entryCheckpoint?.world === entryPlanet) {
   try { sessionStorage.setItem('universe_seed', entryCheckpoint.seed); } catch {}
 }
 try { sessionStorage.setItem(key, planetPages[entryPlanet]); } catch {}
-export function travelToPlanet(planet, memory) {
+export function travelToPlanet(planet, memory, environment=null) {
   clearCheckpoint();
   memory.persist();
-  const url = new URL(planetPages[planet], location.href);
+  const space=environment&&((entryPlanet==='terra'&&planet==='desert')||(entryPlanet==='desert'&&planet==='granite'));
+  const transfer=space?beginTransfer(window.UNIVERSE_SEED,environment,entryPlanet,planet):null;
+  const url = new URL(transfer?transferPage(transfer):planetPages[planet], location.href);
   url.search = location.search;
   location.assign(url.href);
   // Freeze the old simulation while the destination page initializes.

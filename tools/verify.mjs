@@ -131,7 +131,7 @@ async function imports() {
       }
     }
     for (const n of new Set([...src.matchAll(/THREE\.([\w$]+)/g)].map((m) => m[1]))) {
-      const symbols=f.includes('/works/first_dawn/')?webglSymbols:pools['three'];
+      const symbols=/\/works\/(first_dawn|space)\//.test(f)?webglSymbols:pools['three'];
       if (n !== "TimestampQuery" && !symbols.has(n)) {
         bad("THREE symbol", `${f.split("/").pop()}: THREE.${n}`);
         issues++;
@@ -284,7 +284,8 @@ const expectedDeployment = [
   'planet-01.html',
   'planet-02.html',
   'planet-03.html',
-  'planet-engine.js'
+  'planet-engine.js',
+  'space-01.html', 'space-02.html'
 ];
 const deployment = (await readdir(`${ROOT}/dist`)).sort();
 JSON.stringify(deployment) === JSON.stringify(expectedDeployment)

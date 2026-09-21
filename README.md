@@ -1,4 +1,4 @@
-# Terra Incognita
+# BEYOND THE KNOWN - A Terrafoming Project
 
 20회 개인전 · Kim Gunwoo
 
@@ -6,7 +6,9 @@
 
 ## 전시용 파일
 
-[index.html](index.html)에서 시작한다. 배포할 때는 `dist` 폴더의 `index.html`, `planet-01.html`, `planet-02.html`, `planet-03.html`, `planet-engine.js`, `ending.html`, `field-archive.html`을 같은 경로에 둔다. 세 행성은 공통 엔진을 공유하며, Chrome에서는 파일을 직접 열거나 HTTP로 실행할 수 있다.
+[index.html](index.html)에서 시작한다. 배포할 때는 `dist` 폴더의 `index.html`, `planet-01.html`, `space-01.html`, `planet-02.html`, `space-02.html`, `planet-03.html`, `planet-engine.js`, `ending.html`, `field-archive.html`을 같은 경로에 둔다. 세 행성은 공통 엔진을 공유한다. 두 항해와 엔딩은 각각 모델과 렌더러가 내장된 독립 WebGL 페이지다. 세션 기록을 이어가는 전체 관람은 같은 출처의 HTTP 환경에서 검증한다.
+
+첫 행성에서 격납·이륙을 마친 뒤 `space-01.html`의 64초 항해를 거쳐 행성 2 착륙으로 연결한다. 행성 2 이륙 이후에는 `space-02.html`의 별도 64초 항해를 거쳐 행성 3 착륙으로 이어진다. 두 항해는 2초 간격으로 진행 시간을 저장하고 새로고침 후 재개한다. 각 행성의 가상 환경 추정은 별도로 보관하며, 출발 행성의 온도·에너지·방사선 지표가 항해 중 방열판 전개와 기내 음향에 함께 반영된다. 상세 범위와 과학적 해석은 [첫 실행 기록](기술문서/FIRST_PASSAGE_IMPLEMENTATION.md)과 [두 번째 항해 기록](기술문서/SECOND_PASSAGE_IMPLEMENTATION.md)을 참고한다. 후속 6번의 생명 장면은 실제 발견이 아닌 시뮬레이션 속 가능성으로 표현한다.
 
 우주 비행 중 다음 행성 페이지로 이동하고, 도착 페이지에서 감속·착륙·로버 전개를 이어간다. 같은 탭의 세션 저장소에 시료, 물 탐사 결과, 이동·체류 이력, 영상 기록, 우주 시드, 화면 색상 및 음소거 설정을 유지한다. 안전한 주행 상태를 5초 간격과 페이지 이탈 시 저장하며, 새로고침 또는 시작 화면의 RESUME으로 위치·전력·주행 모드·완료된 관측을 복구한다. 측정·격납·비행 도중에는 직전 안전 지점으로 돌아간다. 체크포인트가 없으면 진입 연출부터 재생한다. NEW MISSION은 현재 탐사와 기록을 초기화한다. 탭을 닫으면 세션이 종료되므로 보관할 기록은 FIELD ARCHIVE의 EXPORT JSON(이미지 포함) 또는 EXPORT CSV(좌표·관측 정보)로 내려받는다. 내보낸 파일을 임무에 가져오는 기능은 포함하지 않는다.
 

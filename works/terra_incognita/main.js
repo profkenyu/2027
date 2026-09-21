@@ -60,6 +60,9 @@ import { MiniMap, Optics, Survey } from "../../engine/core/survey.js";
 import { AnimeRituals } from "./anime-rituals.js";
 import { RoverReticle } from "../../engine/core/rover-reticle.js";
 import { entryPlanet, entryCheckpoint, travelToPlanet } from "./planet-pages.js";
+import {PlanetState,readTransfer,transferPage} from '../../engine/core/planet-state.js';
+const planetState=new PlanetState();
+window.TI_PLANET_STATE=()=>planetState.snapshot();
 import {writeCheckpoint, clearCheckpoint, readCheckpoint} from '../../engine/core/checkpoint.js';
 const touchTerminal = typeof navigator !== "undefined" && navigator.maxTouchPoints > 0 && (matchMedia("(any-pointer: coarse)").matches || matchMedia("(hover: none)").matches);
 const tier = touchTerminal ? "low" : deviceTier();
@@ -351,7 +354,7 @@ const off = (name) => SAFE || OFF.has("no" + name);
 addEventListener("error", (e) => fatal(e.error ?? e.message, "window"));
 addEventListener("unhandledrejection", (e) => fatal(e.reason, "promise"));
 if (!navigator.gpu) {
-  unsupported("api", "Terra Incognita");
+  unsupported("api", "BEYOND THE KNOWN - A Terrafoming Project");
   await HALT();
 }
 window.TI_BOOT?.beat("device");
@@ -537,7 +540,8 @@ try {
     camera,
     ambient,
     passage: matterPassage,
-    onSwap: destination => travelToPlanet(destination.key, missionMemory),
+    onSwap: destination => travelToPlanet(destination.key, missionMemory,planetState.departure(world,power.charge)),
+    onDeparture: destination => (world==='terra'&&destination.key==='desert')||(world==='desert'&&destination.key==='granite'),
     onSpace: (active) => {
       sky.visible = !active;
       ground.mesh.visible = !active;
@@ -1045,7 +1049,13 @@ function activateArrivalMission(key, now) {
 window.addEventListener('pagehide', () => {
   saveMissionCheckpoint(performance.now(), true);
   missionMemory.persist();
+  planetState.persist();
   try { sessionStorage.setItem('terra-incognita:display', JSON.stringify({green:greenMonitorManual, raw:rawMonitorManual})); } catch {}
+});
+window.addEventListener('pageshow',event=>{
+  if(event.persisted&&voyage.phase==='departing'){
+    const transfer=readTransfer();if(transfer)location.replace(new URL(transferPage(transfer),location.href));
+  }
 });
 if (entryCheckpoint?.world === entryPlanet) {
   await restoreMissionCheckpoint(entryCheckpoint);
@@ -1056,6 +1066,8 @@ if (entryCheckpoint?.world === entryPlanet) {
   setExperienceControlsReady(true);
   window.TI_REVEAL_PLANET?.();
   voyage.resumeArrival(PLANETS[entryPlanet]);
+  const incoming=readTransfer();
+  if(incoming?.target===entryPlanet)power.charge=incoming.environment.energy;
 } else if(location.search.includes('embed')){
   released=true;prologuePhase='released';setExperienceControlsReady(true);rover.auto=true;
   window.TI_REVEAL_PLANET?.();
@@ -1328,6 +1340,7 @@ async function frame() {
   });
   syncDriveModeControl();
   const v = rover.update(dt);
+  if(released&&!voyage.active&&!missionEnding)planetState.observe(world,dt,{x:v.x,height:heightCPU(rover.pos.x,rover.pos.z)},power.charge,world==='desert'&&waterMission.complete);
   missionMemory.recordJourney(v, dt, world, released && experienceMode === "explorer" && !authoredExperienceLock());
   restoration.update(v, now, world === "terra");
   if (world === "terra" && restoration.event && !restoration.event.all && restoration.event.t0 !== resourceSignalAt) {

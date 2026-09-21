@@ -21,8 +21,15 @@ try{
     assert.equal(active.context,'running');assert.equal(active.decay,{high:20,mid:16,low:12}[tier]);
     assert(active.waveform.some(x=>Math.abs(x)>.00001),'Audio graph is silent');
     assert(active.waveform.every(Number.isFinite));assert(Math.max(...active.waveform.map(Math.abs))<.9);
-    await page.evaluate(()=>FIRST_DAWN.seek(FIRST_DAWN.audio().nextEvent));
-    let event=await page.evaluate(()=>FIRST_DAWN.audio());assert.equal(event.eventCount,1);assert(event.nextEvent-event.time>=40&&event.nextEvent-event.time<=90);
+    // Re-seeking resets the rare event schedule; sample an event before the surface crossfade.
+    await page.evaluate(()=>{FIRST_DAWN.seek(0);FIRST_DAWN.seek(40);});
+    // Inspect actual windshield signal independently from the earlier resonance.
+    await page.evaluate(()=>FIRST_DAWN.seek(88));await page.waitForTimeout(800);
+    const wind=await page.evaluate(()=>FIRST_DAWN.audio());assert(wind.score.wind>.2);assert.equal(wind.score.phase,'surface-wind');assert(wind.waveform.some(v=>Math.abs(v)>.00001));assert(wind.waveform.every(Number.isFinite));
+    await page.evaluate(()=>FIRST_DAWN.seek(30));
+    const scheduled=await page.evaluate(()=>FIRST_DAWN.audio().nextEvent);
+    await page.evaluate(t=>FIRST_DAWN.seek(Math.min(67,t)),scheduled);
+    let event=await page.evaluate(()=>FIRST_DAWN.audio());assert.equal(event.eventCount,scheduled<=67?1:0);if(event.eventCount)assert(event.nextEvent-event.time>=40&&event.nextEvent-event.time<=90);
     for(const [at,zeros] of [[84,['high']],[94,['high','mid']],[101,['high','mid','drone']],[108,['high','mid','drone','floor']]]){
       await page.evaluate(t=>FIRST_DAWN.seek(t),at);
       const state=await page.evaluate(()=>FIRST_DAWN.audio());for(const name of zeros)assert.equal(state.score[name],0);
