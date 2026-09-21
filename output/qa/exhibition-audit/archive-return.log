@@ -1,0 +1,48 @@
+{
+  route: '/field-archive.html',
+  width: 1400,
+  noReferrerBack: 'pass',
+  reloadBack: 'pass',
+  directFallback: 'pass'
+}
+{
+  route: '/works/terra_incognita/field-archive.html',
+  width: 1400,
+  noReferrerBack: 'pass',
+  reloadBack: 'pass',
+  directFallback: 'pass'
+}
+{
+  route: '/dist/field-archive.html',
+  width: 1400,
+  noReferrerBack: 'pass',
+  reloadBack: 'pass',
+  directFallback: 'pass'
+}
+{
+  route: '/field-archive.html',
+  width: 390,
+  noReferrerBack: 'pass',
+  reloadBack: 'pass',
+  directFallback: 'pass'
+}
+{
+  route: '/works/terra_incognita/field-archive.html',
+  width: 390,
+  noReferrerBack: 'pass',
+  reloadBack: 'pass',
+  directFallback: 'pass'
+}
+{
+  route: '/dist/field-archive.html',
+  width: 390,
+  noReferrerBack: 'pass',
+  reloadBack: 'pass',
+  directFallback: 'pass'
+}
+{ route: 'field-archive.html', localFileBack: 'pass' }
+{
+  route: 'works/terra_incognita/field-archive.html',
+  localFileBack: 'pass'
+}
+{ route: 'dist/field-archive.html', localFileBack: 'pass' }

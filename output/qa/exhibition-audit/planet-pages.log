@@ -1,0 +1,4 @@
+PASS HTTP direct entry + reload: planet 01, high
+PASS HTTP direct entry + reload: planet 02, mid
+PASS HTTP direct entry + reload: planet 03, low
+PASS last-planet return link, English archive, missing-evidence recovery, no page errors

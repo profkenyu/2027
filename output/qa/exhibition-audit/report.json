@@ -1,0 +1,107 @@
+[
+  {
+    "name": "terrain",
+    "code": 0,
+    "seconds": 0
+  },
+  {
+    "name": "memory",
+    "code": 0,
+    "seconds": 0
+  },
+  {
+    "name": "observation",
+    "code": 0,
+    "seconds": 0
+  },
+  {
+    "name": "harness",
+    "code": 0,
+    "seconds": 7
+  },
+  {
+    "name": "model",
+    "code": 0,
+    "seconds": 3
+  },
+  {
+    "name": "docking",
+    "code": 0,
+    "seconds": 3
+  },
+  {
+    "name": "archive-return",
+    "code": 0,
+    "seconds": 4
+  },
+  {
+    "name": "blueprints",
+    "code": 0,
+    "seconds": 4
+  },
+  {
+    "name": "entry",
+    "code": 0,
+    "seconds": 13
+  },
+  {
+    "name": "desktop",
+    "code": 0,
+    "seconds": 17
+  },
+  {
+    "name": "completion",
+    "code": 0,
+    "seconds": 43
+  },
+  {
+    "name": "mobile-landscape",
+    "code": 0,
+    "seconds": 14
+  },
+  {
+    "name": "mobile-portrait",
+    "code": 0,
+    "seconds": 14
+  },
+  {
+    "name": "mobile-narrow",
+    "code": 0,
+    "seconds": 14
+  },
+  {
+    "name": "flight-finish",
+    "code": 0,
+    "seconds": 0
+  },
+  {
+    "name": "space-01",
+    "code": 0,
+    "seconds": 10
+  },
+  {
+    "name": "space-camera",
+    "code": 0,
+    "seconds": 2
+  },
+  {
+    "name": "space-02",
+    "code": 0,
+    "seconds": 3
+  },
+  {
+    "name": "ending",
+    "code": 0,
+    "seconds": 10
+  },
+  {
+    "name": "ending-audio",
+    "code": 0,
+    "seconds": 20
+  },
+  {
+    "name": "planet-pages",
+    "code": 0,
+    "seconds": 40
+  }
+]

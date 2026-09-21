@@ -22,15 +22,16 @@ import { fitLink, makeLink } from "./mechanics.js";
 import { cfg } from "../config.js";
 import { LanderExhaust, LANDER_NOZZLES } from "./lander-exhaust.js";
 import {createFlightHardware} from './flight-hardware.js';
+import {SHOULDER_RADII} from './landing-gear-layout.js';
 const Y = new THREE.Vector3(0, 1, 0);
-const LEVEL_PAD = new THREE.Quaternion();
 const LEG = Object.freeze({
   sleeveLength: 1.3,
   minimumLength: 1.65,
   reachMargin: 0.015,
   maximumPadTilt: 0.28,
-  foldedRadius: 4.15,
-  foldedFootY: 1.06,
+  foldedRadius: 4.5,
+  stowShoulderAngle: -56 * Math.PI / 180,
+  actuatorLength: .85,
   forkOffset: 0.16
 });
 const RESTORATION_PARTS = Object.freeze([
@@ -513,7 +514,8 @@ export class Lander {
     const radial = C.clipmap.grid >= 600 ? 14 : C.clipmap.grid >= 450 ? 10 : 6;
     for (let i = 0; i < 6; i++) {
       const a = i * Math.PI / 3;
-      const shoulder = [Math.cos(a) * 2.62, 2.24, Math.sin(a) * 2.62];
+      const mountRadius=SHOULDER_RADII[i],tangentSide=i===4?-1:1;
+      const shoulder = [Math.cos(a) * mountRadius, 2.24, Math.sin(a) * mountRadius];
       const elbow = [Math.cos(a) * 4.12, 1.35, Math.sin(a) * 4.12];
       const foot = [Math.cos(a) * padRadius, 0.16, Math.sin(a) * padRadius];
       const upper = cylinderBetween(shoulder, elbow, 0.22, ceramic, 8);
@@ -543,6 +545,22 @@ export class Lander {
       padCore.position.copy(pad.position);
       padCore.position.y += 0.1;
       this.group.add(padCore);
+      // The pressure hull stays intact: an external cradle accepts the upright
+      // pad. The radial spar remains outside the forward rover corridor.
+      const cradle=new THREE.Group();cradle.rotation.y=Math.PI/2-a;
+      const armLength=Math.hypot(4.12-mountRadius,1.35-2.24),stowKneeR=mountRadius+Math.cos(LEG.stowShoulderAngle)*armLength;
+      const cradleY=2.24+Math.sin(LEG.stowShoulderAngle)*armLength+Math.sqrt(LEG.minimumLength**2-(LEG.foldedRadius-stowKneeR)**2);
+      cradle.position.set(Math.cos(a)*4.35,cradleY,Math.sin(a)*4.35);this.group.add(cradle);
+      // Split backing leaves a central slot for the folded shock strut.
+      for(const side of [-1,1]){const back=new THREE.Mesh(new THREE.BoxGeometry(.37,1.74,.035),graphite);back.position.set(side*.425,0,-.05);cradle.add(back);}
+      for(const side of [-1,1]){const rail=new THREE.Mesh(new THREE.BoxGeometry(.055,1.82,.10),metal);rail.position.set(side*.70,0,-.015);cradle.add(rail);}
+      const latch=new THREE.Mesh(new THREE.BoxGeometry(.30,.09,.16),metal);latch.position.set(0,.76,-.04);cradle.add(latch);
+      const spar=cylinderBetween([Math.cos(a)*3.18,cradleY,Math.sin(a)*3.18],[Math.cos(a)*4.30,cradleY,Math.sin(a)*4.30],.08,graphite,radial);this.group.add(spar);
+      const actuatorBarrel=makeLink(.10,LEG.actuatorLength,graphite,radial),actuatorRod=makeLink(.048,LEG.actuatorLength,metal,radial);this.group.add(actuatorBarrel,actuatorRod);
+      const ankleJoint=new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,.42,radial),metal);ankleJoint.quaternion.copy(shoulderJoint.quaternion);this.group.add(ankleJoint);
+      // Geared knee housing separates deployment rotation from shock absorption.
+      const kneeDrive=new THREE.Mesh(new THREE.CylinderGeometry(.32,.32,.18,radial),graphite);kneeDrive.quaternion.copy(shoulderJoint.quaternion);this.group.add(kneeDrive);
+      const downPin=new THREE.Mesh(new THREE.CylinderGeometry(.085,.085,.50,radial),metal);downPin.quaternion.copy(shoulderJoint.quaternion);this.group.add(downPin);
       this.legs.push({
         shoulder,
         elbow,
@@ -557,6 +575,11 @@ export class Lander {
         upperLength: Math.hypot(elbow[0]-shoulder[0], elbow[1]-shoulder[1], elbow[2]-shoulder[2]),
         normal: new THREE.Vector3(0, 1, 0),
         padRotation: new THREE.Quaternion(),
+        stowPadRotation: new THREE.Quaternion().setFromUnitVectors(Y,new THREE.Vector3(Math.cos(a),0,Math.sin(a))),
+        cradle,latch,actuatorBarrel,actuatorRod,ankleJoint,kneeDrive,downPin,tangentSide,
+        actuatorAnchor:new THREE.Vector3(Math.cos(a)*(mountRadius+.12)-Math.sin(a)*.28*tangentSide,2.72,Math.sin(a)*(mountRadius+.12)+Math.cos(a)*.28*tangentSide),
+        actuatorTip:new THREE.Vector3(),actuatorEnd:new THREE.Vector3(),actuatorStart:new THREE.Vector3(),
+        stowLocked:false,downLocked:true,
         a: new THREE.Vector3(), b: new THREE.Vector3(), c: new THREE.Vector3(),
         sleeveEnd: new THREE.Vector3(), braceA: new THREE.Vector3(), braceB: new THREE.Vector3(),
         elbowJoint,
@@ -566,7 +589,7 @@ export class Lander {
         deployedFoot: foot.slice(),
         foldOffset: [0, 2, 4, 1, 3, 5].indexOf(i) / 5
       });
-      this._track(1, upper, lower, sleeve, middle, brace, shoulderJoint, elbowJoint, pad, padCore);
+      this._track(1, upper, lower, sleeve, middle, brace, shoulderJoint, elbowJoint, pad, padCore,...cradle.children,spar,actuatorBarrel,actuatorRod,ankleJoint,kneeDrive,downPin);
     }
     const hull = new THREE.Mesh(facetedHullGeometry(), graphite);
     this.core.add(hull);
@@ -1112,6 +1135,10 @@ export class Lander {
     leg.a.set(...leg.shoulder);
     leg.b.set(cx * radius, y, cz * radius);
     leg.c.set(...foot);
+    this._renderLeg(leg,fold);
+  }
+  _renderLeg(leg,fold=0){
+    const angle=Math.atan2(leg.shoulder[2],leg.shoulder[0]),cx=Math.cos(angle),cz=Math.sin(angle),lower=leg.lowerExtension;
     fitLink(leg.upper, leg.a, leg.b);
     leg.braceA.copy(leg.b).sub(leg.c).normalize().multiplyScalar(LEG.sleeveLength).add(leg.c);
     fitLink(leg.lower, leg.braceA, leg.c);
@@ -1130,23 +1157,47 @@ export class Lander {
     leg.braceB.z += cx * LEG.forkOffset;
     fitLink(leg.brace, leg.braceA, leg.braceB);
     leg.elbowJoint.position.copy(leg.b);
-    leg.pad.quaternion.copy(leg.padRotation).slerp(LEVEL_PAD, fold);
+    leg.pad.quaternion.copy(leg.padRotation).slerp(leg.stowPadRotation, fold);
     leg.padCore.quaternion.copy(leg.pad.quaternion);
     leg.braceA.copy(Y).applyQuaternion(leg.pad.quaternion);
     leg.pad.position.copy(leg.c).addScaledVector(leg.braceA, -0.08);
     leg.padCore.position.copy(leg.c).addScaledVector(leg.braceA, 0.02);
+    leg.ankleJoint.position.copy(leg.c);
+    leg.kneeDrive.position.copy(leg.b);leg.kneeDrive.position.x-=cz*.31*leg.tangentSide;leg.kneeDrive.position.z+=cx*.31*leg.tangentSide;
+    leg.actuatorTip.copy(leg.a).lerp(leg.b,.7);leg.actuatorTip.x-=cz*.28*leg.tangentSide;leg.actuatorTip.z+=cx*.28*leg.tangentSide;
+    leg.braceA.subVectors(leg.actuatorTip,leg.actuatorAnchor).normalize();
+    leg.actuatorEnd.copy(leg.actuatorAnchor).addScaledVector(leg.braceA,LEG.actuatorLength);
+    leg.actuatorStart.copy(leg.actuatorTip).addScaledVector(leg.braceA,-LEG.actuatorLength);
+    fitLink(leg.actuatorBarrel,leg.actuatorAnchor,leg.actuatorEnd);fitLink(leg.actuatorRod,leg.actuatorStart,leg.actuatorTip);
+    leg.actuatorExtension=leg.actuatorAnchor.distanceTo(leg.actuatorTip);
   }
   setLegFold(progress = 0) {
     const p = Math.max(0, Math.min(1, progress));
     for (const leg of this.legs) {
       const staged = Math.max(0, Math.min(1, (p - leg.foldOffset * 0.3) / 0.7));
-      const t = staged * staged * (3 - 2 * staged);
       const angle = Math.atan2(leg.shoulder[2], leg.shoulder[0]);
-      const foot = leg.poseFoot;
-      foot[0] = leg.deployedFoot[0] + (Math.cos(angle) * LEG.foldedRadius-leg.deployedFoot[0])*t;
-      foot[1] = leg.deployedFoot[1] + (LEG.foldedFootY - leg.deployedFoot[1])*t;
-      foot[2] = leg.deployedFoot[2] + (Math.sin(angle) * LEG.foldedRadius-leg.deployedFoot[2])*t;
-      this._poseLeg(leg, foot, 0, t);
+      // Recover the terrain-fitted deployed joint angles. Then articulate about
+      // fixed hinges; never linearly drag the foot through the pressure hull.
+      this._poseLeg(leg,leg.deployedFoot);
+      const shoulderRadius=Math.hypot(leg.a.x,leg.a.z);
+      const kneeRadius=Math.hypot(leg.b.x,leg.b.z),footRadius=Math.hypot(leg.c.x,leg.c.z);
+      const initialUpper=Math.atan2(leg.b.y-leg.a.y,kneeRadius-shoulderRadius);
+      const initialLower=Math.atan2(leg.c.y-leg.b.y,footRadius-kneeRadius);
+      const retract=THREE.MathUtils.smoothstep(staged,0,.18),rotate=THREE.MathUtils.smoothstep(staged,.18,.88);
+      const upperAngle=THREE.MathUtils.lerp(initialUpper,LEG.stowShoulderAngle,rotate);
+      const targetKnee=shoulderRadius+Math.cos(LEG.stowShoulderAngle)*leg.upperLength;
+      const targetLower=Math.acos((LEG.foldedRadius-targetKnee)/LEG.minimumLength);
+      const lowerAngle=THREE.MathUtils.lerp(initialLower,targetLower,rotate);
+      const length=THREE.MathUtils.lerp(leg.lowerExtension,LEG.minimumLength,retract);
+      const r=shoulderRadius+Math.cos(upperAngle)*leg.upperLength;
+      leg.b.set(Math.cos(angle)*r,leg.a.y+Math.sin(upperAngle)*leg.upperLength,Math.sin(angle)*r);
+      const footR=r+Math.cos(lowerAngle)*length;
+      leg.c.set(Math.cos(angle)*footR,leg.b.y+Math.sin(lowerAngle)*length,Math.sin(angle)*footR);leg.lowerExtension=length;
+      this._renderLeg(leg,THREE.MathUtils.smoothstep(staged,.28,.86));
+      leg.stowLocked=staged>=.98;leg.downLocked=staged<=.001;
+      leg.latch.position.z=THREE.MathUtils.lerp(-.11,.11,THREE.MathUtils.smoothstep(staged,.90,.98));
+      leg.downPin.position.copy(leg.a);const pinTravel=THREE.MathUtils.smoothstep(staged,.01,.08)*.34;
+      leg.downPin.position.x-=Math.sin(angle)*pinTravel*leg.tangentSide;leg.downPin.position.z+=Math.cos(angle)*pinTravel*leg.tangentSide;
     }
     this.legFold = p;
   }

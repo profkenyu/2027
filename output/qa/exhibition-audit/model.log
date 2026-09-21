@@ -1,0 +1,48 @@
+{
+  tier: 'high',
+  linkSweep: 'pass',
+  damperOverlap: 'pass',
+  legFold: 'pass',
+  foldHullClearance: 'pass',
+  actuatorOverlap: 'pass',
+  stowAndDownLocks: 'pass',
+  uprightPads: 'pass',
+  restoration: 'pass',
+  jawClearance: 'pass',
+  bayVolume: 'pass',
+  slopedFeet: 'pass',
+  triangles: 65719,
+  meshes: 345
+}
+{
+  tier: 'mid',
+  linkSweep: 'pass',
+  damperOverlap: 'pass',
+  legFold: 'pass',
+  foldHullClearance: 'pass',
+  actuatorOverlap: 'pass',
+  stowAndDownLocks: 'pass',
+  uprightPads: 'pass',
+  restoration: 'pass',
+  jawClearance: 'pass',
+  bayVolume: 'pass',
+  slopedFeet: 'pass',
+  triangles: 63655,
+  meshes: 345
+}
+{
+  tier: 'low',
+  linkSweep: 'pass',
+  damperOverlap: 'pass',
+  legFold: 'pass',
+  foldHullClearance: 'pass',
+  actuatorOverlap: 'pass',
+  stowAndDownLocks: 'pass',
+  uprightPads: 'pass',
+  restoration: 'pass',
+  jawClearance: 'pass',
+  bayVolume: 'pass',
+  slopedFeet: 'pass',
+  triangles: 50431,
+  meshes: 344
+}

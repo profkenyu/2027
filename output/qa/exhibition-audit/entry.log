@@ -1,0 +1,13 @@
+Unsupported GPU: opening works, mission gate rejects
+{
+  entry: 'direct-desktop',
+  openingReload: 'pass',
+  missionReload: 'pass',
+  historyReturn: 'pass'
+}
+{
+  entry: 'external-mobile',
+  openingReload: 'pass',
+  missionReload: 'pass',
+  historyReturn: 'pass'
+}

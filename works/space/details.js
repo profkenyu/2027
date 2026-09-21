@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {flightMaterial} from './surfaces.js';
+import {SHOULDER_RADII} from '../../engine/vehicle/landing-gear-layout.js';
 
 // Flight-only close-view finish on the existing service cells and engine bells.
 // No changes to the silhouette, landing joints, or deployment mechanism.
@@ -37,7 +38,7 @@ export function addFlightDetails(group,tier){
   // Retainer rings around the existing landing-gear shoulder bearings.
   for(let i=0;i<6;i++){
     const a=i*Math.PI/3,ring=new THREE.TorusGeometry(.265,.022,6,tier==='low'?16:32);
-    add(silver,ring,[Math.cos(a)*2.64,2.24,Math.sin(a)*2.64],Math.PI/2-a);
+    add(silver,ring,[Math.cos(a)*(SHOULDER_RADII[i]+.02),2.24,Math.sin(a)*(SHOULDER_RADII[i]+.02)],Math.PI/2-a);
   }
   for(const [material,geometries] of batches){
     const geometry=mergeGeometries(geometries);for(const g of geometries)g.dispose();

@@ -1,0 +1,4 @@
+PASS high: first passage rendering / lifecycle / audio / self-contained
+PASS mid: first passage rendering / lifecycle / audio / self-contained
+PASS low: first passage rendering / lifecycle / audio / self-contained
+PASS: opening RESUME preserves flight state / NEW MISSION clears it

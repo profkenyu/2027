@@ -1,23 +1,23 @@
 [
   {
     "tier": "high",
-    "peak": 0.04996909946203232,
+    "peak": 0.053523264825344086,
     "decay": 20,
-    "eventInterval": 81.23740680214527,
+    "eventInterval": 17.42055279079571,
     "errors": []
   },
   {
     "tier": "mid",
-    "peak": 0.04160752892494202,
+    "peak": 0.02731012925505638,
     "decay": 16,
-    "eventInterval": 49.78947996250842,
+    "eventInterval": 60.953930378138594,
     "errors": []
   },
   {
     "tier": "low",
-    "peak": 0.030386393889784813,
+    "peak": 0.015875985845923424,
     "decay": 12,
-    "eventInterval": 53.01555160313668,
+    "eventInterval": 14.376164434890171,
     "errors": []
   }
 ]

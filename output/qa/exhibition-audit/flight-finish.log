@@ -1,0 +1,3 @@
+PASS high: 34301 ship triangles / finite geometry / retained silhouette / large planet / clearance
+PASS mid: 28589 ship triangles / finite geometry / retained silhouette / large planet / clearance
+PASS low: 11069 ship triangles / finite geometry / retained silhouette / large planet / clearance

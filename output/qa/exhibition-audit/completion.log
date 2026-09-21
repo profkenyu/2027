@@ -1,0 +1,5 @@
+  ✓ desktop            1060×172 · 4 cols · gauges 0→27→100% · fixed 4/4 · handoff compress-out · lifecycle held
+  ✓ portrait           346×137 · 4 cols · gauges 0→27→100% · fixed 4/4 · handoff compress-out · lifecycle held
+  ✓ landscape-reduced  772×128 · 4 cols · gauges 0→27→100% · fixed 4/4 · handoff compress-out · lifecycle held
+
+✓ PASS — observed material register is finite, safe-framed and lifecycle-stable
