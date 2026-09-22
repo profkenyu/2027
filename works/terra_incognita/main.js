@@ -1039,7 +1039,6 @@ function activateArrivalMission(key, now) {
       prior.id = 'ti-prior-mission';
       prior.href = 'planet-01.html' + location.search;
       prior.textContent = '선행 탐사 기록 필요 · 행성 1에서 탐사 시작';
-      prior.style.cssText = 'position:fixed;z-index:90;left:50%;bottom:15%;transform:translateX(-50%);padding:12px 18px;background:#101417;color:#ddd;font:12px sans-serif;text-align:center';
       document.body.append(prior);
     }
     captions.force(activated ? { r: 0, ko: "PLANET 03 \xB7 광물·수화물 탐사 자료 대조", en: "PLANET 03 \xB7 TRACE THREE MEMORY CONCORDANCE NODES" } : { r: 0, ko: "PLANET 03 \xB7 선행 탐사 기록 필요", en: "PLANET 03 \xB7 PRIOR-PLANET EVIDENCE INCOMPLETE" }, now, 7200);

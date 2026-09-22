@@ -2,7 +2,7 @@ import * as THREE from 'three';
 export const DURATION=64;
 export const CUTS=[20,40];
 const target=new THREE.Vector3(),offset=new THREE.Vector3();
-const smooth=(a,b,t)=>THREE.MathUtils.smoothstep(t,a,b);
+const smooth=(a,b,t)=>{const x=THREE.MathUtils.clamp((t-a)/(b-a),0,1);return x*x*x*(x*(x*6-15)+10);};
 // Finite acceleration, inertial coast, finite braking. Exhibition time/length units.
 export function displacement(t){t=THREE.MathUtils.clamp(t,0,DURATION);return t<8?.5*t*t:t<52?32+8*(t-8):384+8*(t-52)-(t-52)**2/3;}
 export function shotAt(t,passage=1){return passage===2?(t<26?'keel':t<44?'crossing':'horizon'):t<20?'departure':t<40?'structure':'destination';}
@@ -43,7 +43,7 @@ export function pose(camera,ship,t,passage=1){
     const p=smooth(20,40,t);
     // Match the ending's hull passage: a foreground-to-aft translation,
     // lowering the observer to expose fittings, landing struts and the keel.
-    camera.position.copy(ship.position).add(offset.set(portrait?-26+p*4:-18+p*6,9-p*6,-22+p*50));
+    camera.position.copy(ship.position).add(offset.set(portrait?-26+p*4:-17+p*5,10-p*8,-22+p*50));
     target.copy(ship.position).add(offset.set(0,3.2-p*.8,-2+p*5));
     camera.fov=(portrait?64:45)-p*4;
   }else{
@@ -66,8 +66,20 @@ export function createVoid(scene,tier,passage=1){
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));g.setAttribute('color',new THREE.Float32BufferAttribute(c,3));
   stars.add(new THREE.Points(g,new THREE.PointsMaterial({size:.85,sizeAttenuation:false,vertexColors:true,transparent:true,opacity:.65,depthWrite:false})));scene.add(stars);
   const planetMaterial=new THREE.ShaderMaterial({uniforms:{sun:{value:new THREE.Vector3(-.85,.23,-.32).normalize()}},vertexShader:`varying vec3 n;varying vec3 world;void main(){n=normalize(normalMatrix*normal);world=normalize(normal);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,fragmentShader:`uniform vec3 sun;varying vec3 n;varying vec3 world;
-    float field(vec3 p){return sin(p.x*19.+sin(p.z*13.)*2.)*sin(p.y*23.+p.z*11.);}
-    void main(){vec3 N=normalize(world);float light=max(dot(N,sun),0.);float strata=.5+.5*field(N);float detail=.5+.5*field(N*3.7);vec3 ground=mix(vec3(.085,.063,.042),vec3(.27,.19,.10),strata*.65+detail*.15);vec3 color=ground*(.004+light*1.6);float limb=pow(1.-abs(normalize(n).z),5.);color+=vec3(.15,.12,.075)*limb*pow(light,.7)*.5;gl_FragColor=vec4(color,1.);
+    float hash(vec3 p){p=fract(p*.1031);p+=dot(p,p.yzx+33.33);return fract((p.x+p.y)*p.z);}
+    float field(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(mix(hash(i),hash(i+vec3(1,0,0)),f.x),mix(hash(i+vec3(0,1,0)),hash(i+vec3(1,1,0)),f.x),f.y),mix(mix(hash(i+vec3(0,0,1)),hash(i+vec3(1,0,1)),f.x),mix(hash(i+vec3(0,1,1)),hash(i+vec3(1,1,1)),f.x),f.y),f.z);}
+    float terrain(vec3 p){float s=0.,a=.5;for(int i=0;i<${tier==='low'?3:5};i++){s+=field(p)*a;p=p*2.07+vec3(7,13,3);a*=.5;}return s;}
+    void main(){
+      vec3 N=normalize(world);float incidence=dot(N,sun),light=max(incidence,0.);
+      float strata=terrain(N*5.3);float detail=terrain(N*27.+strata*2.);
+      vec3 ground=mix(vec3(.085,.063,.042),vec3(.27,.19,.10),smoothstep(.25,.72,strata)*.7+detail*.2);
+      // Static terrain albedo, a bounded penumbra and a thin sunlit limb.
+      // Not a geological reconstruction or a full atmospheric scattering solve.
+      vec3 color=ground*(.002+light*1.5);
+      float limb=pow(1.-abs(normalize(n).z),4.5);
+      float daylight=smoothstep(-.055,.13,incidence);
+      color+=vec3(.15,.12,.075)*limb*daylight*.48;
+      gl_FragColor=vec4(color,1.);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
     }`});

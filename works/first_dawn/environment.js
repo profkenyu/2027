@@ -47,7 +47,7 @@ export function createEnvironment(scene,tier){
   // Stars do not follow ship motion or twinkle in vacuum.
   const points=[],colours=[],sizes=[];let seed=231;
   const rand=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
-  const count={high:6500,mid:4200,low:2000}[tier];
+  const count={high:3500,mid:2300,low:1000}[tier];
   const direction=new THREE.Vector3();
   for(let i=0;i<count;i++){
     const az=rand()*Math.PI*2;

@@ -7,6 +7,8 @@ import {CUTS,directCamera} from './camera.js';
 import {approachProgress} from './flight.js';
 import {DURATION,TITLE_AT,ARCHIVE_AT} from './timeline.js';
 import {createDeepSpaceAudio} from './audio.js';
+import {installCinemaFrame} from '../shared/cinema-frame.js';
+import {createFlightEnvironment} from '../space/surfaces.js';
 
 const params=new URLSearchParams(location.search), requested=params.get('quality');
 const tier=['high','mid','low'].includes(requested)?requested:innerWidth<700?'low':navigator.hardwareConcurrency>=8?'high':'mid';
@@ -91,14 +93,16 @@ try{
   renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   document.body.prepend(renderer.domElement);scene=new THREE.Scene();scene.background=new THREE.Color(0x030507);
   camera=new THREE.PerspectiveCamera(42,innerWidth/innerHeight,2,80000);resize();
-  scene.add(new THREE.HemisphereLight(0xb7cbdf,0x584535,.23));
+  scene.environment=createFlightEnvironment(renderer,tier,1,{sun:sunlightOffset,planet:new THREE.Vector3(0,-17400,-10500)}).texture;
+  scene.environmentIntensity=.55;
+  scene.add(new THREE.HemisphereLight(0xb7cbdf,0x584535,.16));
   keyLight=new THREE.DirectionalLight(0xffe4c4,2.45);keyLight.castShadow=true;
   keyLight.shadow.mapSize.setScalar(quality.shadow);Object.assign(keyLight.shadow.camera,{left:-1900,right:1900,top:1900,bottom:-1900,near:100,far:9000});keyLight.shadow.bias=-.00012;keyLight.shadow.normalBias=1.1;scene.add(keyLight,keyLight.target);
-  const fill=new THREE.DirectionalLight(0x8faccc,.38);fill.position.set(1800,600,-2200);scene.add(fill);
+  const fill=new THREE.DirectionalLight(0x8faccc,.22);fill.position.set(1800,-600,-2200);scene.add(fill);
   environment=createEnvironment(scene,tier);fleet=[...createFleet(tier),createReferenceArk(tier)];fleet.forEach(ship=>scene.add(ship));
   render(0);document.getElementById('loading').classList.add('done');
   setTimeout(()=>{document.getElementById('loading').hidden=true;},1300);
-  addEventListener('resize',()=>{resize();render(seconds);});
+  installCinemaFrame((width,height,left,top)=>{camera.aspect=width/height;renderer.setSize(width,height);Object.assign(renderer.domElement.style,{left:`${left}px`,top:`${top}px`});render(seconds);});
   document.addEventListener('visibilitychange',()=>document.hidden?pause():resume());addEventListener('pagehide',pause);addEventListener('pageshow',resume);
   renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();pause();document.getElementById('error').hidden=false;document.getElementById('error').textContent='화면 연결이 중단되었습니다. 새로고침하면 다시 시작합니다.';});
   replay.addEventListener('click',()=>{audio.replay();render(0);resume();if(!soundChosen){soundChosen=true;audio.enable();}});

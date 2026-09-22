@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import {scanHold} from './scan-hold.js';
 const clamp01 = (value) => Math.max(0, Math.min(1, value));
 const hash = (n) => {
   const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
@@ -122,7 +123,7 @@ export class WaterMission {
   }
   shouldHold(probe) {
     if (!this.active || !probe) return false;
-    return Math.hypot(probe.x - this.site.x, probe.z - this.site.z) <= this.site.acquireRadius + 0.35;
+    return scanHold(probe, this.site, !!this.event);
   }
   forceAcquire(now = performance.now()) {
     if (!this.active) return false;

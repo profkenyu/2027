@@ -1,0 +1,31 @@
+{
+  "checks": [
+    {
+      "label": "cold-entry",
+      "state": {
+        "classes": "ti-observer ti-mobile ti-handheld-crt ti-terminal ti-granite ti-prologue-released",
+        "hidden": []
+      }
+    },
+    {
+      "label": "reload",
+      "state": {
+        "classes": "ti-observer ti-mobile ti-handheld-crt ti-terminal ti-granite ti-prologue-released",
+        "hidden": []
+      }
+    },
+    {
+      "label": "history-return",
+      "state": {
+        "classes": "ti-observer ti-mobile ti-handheld-crt ti-terminal ti-granite ti-prologue-released",
+        "hidden": []
+      }
+    },
+    {
+      "label": "storage-denied",
+      "boot": "visible",
+      "persistence": "unavailable by design"
+    }
+  ],
+  "errors": []
+}

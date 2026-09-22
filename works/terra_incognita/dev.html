@@ -23,6 +23,7 @@
       root.style.setProperty("--viewport-height", `${height}px`);
       root.style.setProperty("--viewport-top", `${Math.max(0, Math.round(viewport?.offsetTop || 0))}px`);
       root.style.setProperty("--viewport-left", `${Math.max(0, Math.round(viewport?.offsetLeft || 0))}px`);
+      root.style.setProperty("--viewport-bottom", `${Math.max(0, window.innerHeight-height-(viewport?.offsetTop || 0))}px`);
       if (!root.classList.contains("ti-viewport-ready")) {
         root.classList.add("ti-viewport-ready");
         dispatchEvent(new CustomEvent("ti-viewportready", { detail: { width, height } }));
@@ -43,8 +44,8 @@
     addEventListener("resize", schedule, { passive: true });
     addEventListener("orientationchange", schedule, { passive: true });
     addEventListener("pageshow", schedule, { passive: true });
-    visualViewport?.addEventListener("resize", schedule, { passive: true });
-    visualViewport?.addEventListener("scroll", schedule, { passive: true });
+    window.visualViewport?.addEventListener("resize", schedule, { passive: true });
+    window.visualViewport?.addEventListener("scroll", schedule, { passive: true });
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible") schedule();
     });
@@ -57,14 +58,15 @@
     --viewport-height:100dvh;
     --viewport-top:0px;
     --viewport-left:0px;
+    --viewport-bottom:0px;
     --safe-top:env(safe-area-inset-top,0px);
     --safe-bottom:env(safe-area-inset-bottom,0px);
     --safe-left:env(safe-area-inset-left,0px);
     --safe-right:env(safe-area-inset-right,0px);
     --bar:9vh;
     --bar:clamp(34px,9svh,80px);
-    --frame-top:calc(var(--bar) + var(--safe-top));
-    --frame-bottom:calc(var(--bar) + var(--safe-bottom));
+    --frame-top:calc(var(--bar) + var(--safe-top) + var(--viewport-top));
+    --frame-bottom:calc(var(--bar) + var(--safe-bottom) + var(--viewport-bottom));
     --utility-button-height:44px;
   }
   * {
@@ -1862,6 +1864,31 @@
       margin-top: 7px;
     }
   }
+  /* Short landscape screens cannot contain the former four-button column. */
+  @media (orientation:landscape) and (max-height:440px) {
+    body.ti-mobile #ti-rover-tools {
+      top:auto;
+      bottom:calc(var(--frame-bottom) + 64px);
+      width:192px;
+      grid-template-columns:repeat(4,48px);
+      grid-template-rows:44px;
+    }
+    body.ti-mobile #ti-rover-tools > button,
+    body.ti-mobile #ti-rover-tools > a { height:44px;min-height:44px; }
+    body.ti-mobile #ti-green { right:max(14px,env(safe-area-inset-right)); }
+    body.ti-mobile #ti-drive-mode { right:calc(max(14px,env(safe-area-inset-right)) + 98px); }
+    body.ti-mobile #ti-mobile-drive {
+      width:calc(var(--viewport-width) - var(--safe-left) - var(--safe-right) - 240px);
+      bottom:calc(var(--frame-bottom) + 12px);
+    }
+    body.ti-mobile #ti-monitor { transform:scale(.40); }
+  }
+  #ti-prior-mission {
+    position:fixed;z-index:90;left:50%;bottom:calc(var(--frame-bottom) + 62px);
+    transform:translateX(-50%);width:min(360px,calc(var(--viewport-width) - 40px));
+    min-height:44px;padding:12px 18px;background:#101417;color:#ddd;
+    font:12px/1.6 sans-serif;text-align:center;
+  }
   body.ti-paused * {
     animation-play-state: paused !important;
   }
@@ -1950,10 +1977,11 @@
 
 <script>
   (function() {
-    var s = sessionStorage.getItem("universe_seed");
+    var s;
+    try { s = sessionStorage.getItem("universe_seed"); } catch {}
     if (!s) {
       s = Math.floor(Math.random() * 16777216).toString(16).padStart(6, "0").toUpperCase();
-      sessionStorage.setItem("universe_seed", s);
+      try { sessionStorage.setItem("universe_seed", s); } catch {}
     }
     window.UNIVERSE_SEED = s;
     var lbl = document.getElementById("universe-label");

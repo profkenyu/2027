@@ -1,9 +1,14 @@
 import * as THREE from 'three';
+import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
 
 // Geometry adapted from the user's ending_sf.html. Exactly one additional ark.
 // Habitat rings are structural geometry; artificial gravity is not simulated.
 export function createReferenceArk(tier) {
-  const detail = { high: 64, mid: 40, low: 24 }[tier], box = new THREE.BoxGeometry(1, 1, 1);
+  const detail = { high: 64, mid: 40, low: 24 }[tier];
+  // Narrow edge highlights reveal structure during the close ring passage.
+  // Low retains the silhouette while omitting bevel tessellation.
+  const box = tier==='low'?new THREE.BoxGeometry(1,1,1):new RoundedBoxGeometry(1,1,1,1,.025);
+  const radial=tier==='high'?24:tier==='mid'?16:12;
   const mats = [new THREE.MeshStandardMaterial({ color: 11186613, roughness: 0.66, metalness: 0.35 }), new THREE.MeshStandardMaterial({ color: 2370610, roughness: 0.6, metalness: 0.65 }), new THREE.MeshStandardMaterial({ color: 5595499, roughness: 0.48, metalness: 0.72 }), new THREE.MeshStandardMaterial({ color: 13948626, roughness: 0.72, metalness: 0.2 }), new THREE.MeshStandardMaterial({ color: 11388364, emissive: 9219772, emissiveIntensity: 0.65, roughness: 0.4 }), new THREE.MeshStandardMaterial({ color: 5514282, roughness: 0.7, metalness: 0.3 })];
   {
     const ship = new THREE.Group();
@@ -43,11 +48,11 @@ export function createReferenceArk(tier) {
     for (const side of [-1, 1]) for (let j = 0; j < 5; j++) {
       const z = -205 + j * 117, x = side * 86;
       beam([side * 27, 0, z], [x, 0, z], 9);
-      const geo = new THREE.CylinderGeometry(29, 29, 94, tier === "low" ? 8 : 12);
+      const geo = new THREE.CylinderGeometry(29, 29, 94, radial);
       geo.rotateX(Math.PI / 2);
       mesh(geo, 3, x, 0, z);
       for (const dz of [-43, 43]) {
-        const collar = new THREE.CylinderGeometry(31, 31, 6, 12);
+        const collar = new THREE.CylinderGeometry(31, 31, 6, radial);
         collar.rotateX(Math.PI / 2);
         mesh(collar, 2, x, 0, z + dz);
       }
@@ -77,7 +82,7 @@ export function createReferenceArk(tier) {
     for (const side of [-1, 1]) {
       beam([side * 40, -16, -315], [side * 142, -16, -390], 18);
       beam([side * 40, 16, -460], [side * 142, 16, -465], 14);
-      const pod = new THREE.CylinderGeometry(43, 37, 191, 12);
+      const pod = new THREE.CylinderGeometry(43, 37, 191, radial);
       pod.rotateX(Math.PI / 2);
       mesh(pod, 2, side * 142, 0, -426);
       for (let k = 0; k < 5; k++) block(0, side * 142, 41, -350 - k * 31, 44, 7, 20);

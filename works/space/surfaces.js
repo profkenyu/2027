@@ -41,11 +41,11 @@ export function sourceMaterial(batch){
   return flightMaterial(batch.rgb,kind);
 }
 
-export function createFlightEnvironment(renderer,tier,passage){
+export function createFlightEnvironment(renderer,tier,passage,directions={}){
   // A sparse solar/planetary radiance map, not an indoor studio HDRI.
   const width=tier==='high'?512:256,height=width/2,data=new Float32Array(width*height*4);
-  const sun=new THREE.Vector3(passage===2?28:-28,24,-14).normalize();
-  const planet=new THREE.Vector3(passage===2?-1650:1450,-250,-5700).normalize();
+  const sun=(directions.sun?.clone()??new THREE.Vector3(passage===2?28:-28,24,-14)).normalize();
+  const planet=(directions.planet?.clone()??new THREE.Vector3(passage===2?-1650:1450,-250,-5700)).normalize();
   const direction=new THREE.Vector3(),planetColor=passage===2?[.095,.12,.14]:[.13,.095,.06];
   for(let y=0;y<height;y++)for(let x=0;x<width;x++){
     const theta=Math.PI*(y+.5)/height,phi=2*Math.PI*(x+.5)/width;

@@ -3,6 +3,7 @@ import {createSurveyor} from './model.js';
 import {DURATION,CUTS,pose,createVoid,shotAt} from './scene.js';
 import {createCabinAudio} from './audio.js';
 import {createFlightEnvironment} from './surfaces.js';
+import {installCinemaFrame} from '../shared/cinema-frame.js';
 import {readTransfer,saveTransfer,baseline,flightResponse} from '../../engine/core/planet-state.js';
 const params=new URLSearchParams(location.search),test=params.has('test');
 const passage=document.body.dataset.passage==='2'?2:1,source=passage===2?'desert':'terra',destination=passage===2?'planet-03.html':'planet-02.html';
@@ -24,7 +25,7 @@ function render(seconds){
   const blackout=Math.max(1-THREE.MathUtils.smoothstep(t,0,2),THREE.MathUtils.smoothstep(t,61.5,64),...cuts.map(c=>1-THREE.MathUtils.smoothstep(Math.abs(t-c),0,.7)));
   veil.style.opacity=String(blackout);audio.update(t);renderer.render(scene,camera);
 }
-function resize(){camera.aspect=innerWidth/innerHeight;renderer.setSize(innerWidth,innerHeight);render(t);}
+function resize(width,height,left=0,top=0){camera.aspect=width/height;renderer.setSize(width,height);Object.assign(renderer.domElement.style,{left:`${left}px`,top:`${top}px`});render(t);}
 function pause(){paused=true;persist();audio.pause();}
 function resume(){paused=false;last=performance.now();audio.resume();}
 function tick(now){requestAnimationFrame(tick);const dt=Math.min(.1,(now-last)/1000);last=now;if(paused||document.hidden||leaving||test)return;average=.97*average+.03*dt*1000;if(++frames%180===0&&average>27&&dpr>.8){dpr=Math.max(.8,dpr-.15);renderer.setPixelRatio(dpr);}render(t+dt);if(t-lastSave>=2){lastSave=t;persist();}if(t>=DURATION)arrive();}
@@ -33,12 +34,14 @@ try{
   scene=new THREE.Scene();scene.background=new THREE.Color(0x030507);scene.environment=createFlightEnvironment(renderer,tier,passage).texture;camera=new THREE.PerspectiveCamera(43,innerWidth/innerHeight,.25,30000);
   scene.add(new THREE.HemisphereLight(0x9bacba,0x15110d,.23));keyLight=new THREE.DirectionalLight(0xffe4c4,2.45);keyLight.castShadow=true;keyLight.shadow.mapSize.setScalar(quality.shadow);Object.assign(keyLight.shadow.camera,{left:-12,right:12,top:12,bottom:-12,near:1,far:100});keyLight.shadow.normalBias=.025;keyLight.shadow.bias=-.00015;scene.add(keyLight,keyLight.target);
   if(passage===2)keyLight.color.setHex(0xe4ecf3);
-  const fill=new THREE.DirectionalLight(0x8faccc,.22);fill.position.set(10,5,20);scene.add(fill);
+  // One directional sun and restrained planet return. Darkness separates the
+  // far hull from the small sunlit bevels; no bloom or lens-flare overlay.
+  const fill=new THREE.DirectionalLight(passage===2?0x91adc4:0xb9a18a,.13);fill.position.set(10,-6,-20);scene.add(fill);
   surveyor=createSurveyor(tier);scene.add(surveyor.group);voidScene=createVoid(scene,tier,passage);render(t);document.getElementById('loading').hidden=true;
   window.BTK_SPACE={snapshot:()=>({passage,seconds:t,duration:DURATION,shot:shotAt(t,passage),tier,triangles:renderer.info.render.triangles,calls:renderer.info.render.calls,dpr,paused,independent:!window.TI_WORLD,response,environment:transfer?.environment??baseline(source),radiators:surveyor.radiators.map(r=>r.pivot.rotation.z),audio:audio.snapshot(),position:surveyor.group.position.toArray(),cameraPosition:camera.position.toArray(),cameraFov:camera.fov,cameraFocus:camera.userData.focus.toArray()}),...(test?{seek:render,arrive}:{})};
-  sound.addEventListener('click',async()=>{if(audio.enabled)audio.mute();else await audio.enable();sound.setAttribute('aria-pressed',String(audio.enabled));audio.update(t);});
+  sound.addEventListener('click',async()=>{if(audio.enabled)audio.mute();else await audio.enable();sound.setAttribute('aria-pressed',String(audio.enabled));sound.setAttribute('aria-label',audio.enabled?'기내 사운드 끄기':'기내 사운드 켜기');audio.update(t);});
   // Browser audio permission remains a deliberate gesture on this document.
-  addEventListener('resize',resize);addEventListener('pagehide',pause);addEventListener('pageshow',resume);document.addEventListener('visibilitychange',()=>document.hidden?pause():resume());
+  installCinemaFrame(resize);addEventListener('pagehide',pause);addEventListener('pageshow',resume);document.addEventListener('visibilitychange',()=>document.hidden?pause():resume());
   renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();pause();const error=document.getElementById('error');error.hidden=false;error.textContent='화면 연결이 중단되었습니다. 새로고침하면 저장된 항해 지점에서 재개합니다.';});
   requestAnimationFrame(tick);
 }catch(error){document.getElementById('loading').hidden=true;const box=document.getElementById('error');box.hidden=false;box.textContent='우주비행 화면을 시작하지 못했습니다. 새로고침해 다시 시도해주세요.';console.error(error);}

@@ -201,6 +201,7 @@ export class VoyageSequence {
     this.arrivalProfile=flightProfile(destination.key);
     this.departureProfile=this.arrivalProfile;
     this.phase='arrived';
+    document.body.classList.remove('ti-voyage','ti-epilogue','ti-epilogue-quiet');
   }
   async beforeRover(now) {
     if (!this.active) return;
@@ -391,7 +392,9 @@ export class VoyageSequence {
           this.t0 = now;
           this.rover.scriptedDrive = null;
           this.rover.surfaceOverride = null;
-          document.body.classList.remove("ti-epilogue", "ti-epilogue-quiet");
+          // Independent landing pages bypass the old transit exit. Clear the
+          // flight mask here too, otherwise HUD and controls stay invisible.
+          document.body.classList.remove("ti-voyage", "ti-epilogue", "ti-epilogue-quiet");
           this.onComplete?.(this.destination, now);
         } else {
           this.phase = "epilogue";

@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import {scanHold} from './scan-hold.js';
 import {
   Fn,
   attributeArray,
@@ -271,7 +272,7 @@ export class GeologicalMemory {
   shouldHold(probe) {
     const target = this.target;
     if (!target || !probe) return false;
-    return Math.hypot(probe.x - target.x, probe.z - target.z) <= target.acquireRadius + 0.35;
+    return scanHold(probe, target, !!this.event);
   }
   forceAcquire(now = performance.now()) {
     if (!this.active) return false;

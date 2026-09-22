@@ -105,7 +105,7 @@ export function createRenderer(canvas) {
   };
   addEventListener("resize", scheduleViewport, { passive: true });
   addEventListener("orientationchange", scheduleViewport, { passive: true });
-  visualViewport?.addEventListener("resize", scheduleViewport, { passive: true });
+  window.visualViewport?.addEventListener("resize", scheduleViewport, { passive: true });
   return { renderer, camera };
 }
 export function captureDeviceErrors(renderer, onError) {

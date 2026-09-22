@@ -1,0 +1,587 @@
+{
+  "cases": [
+    {
+      "file": "space-01",
+      "width": 1600,
+      "height": 1000,
+      "layout": {
+        "text": "© 2026 KIM GUNWOO\nRETURN",
+        "overflow": false,
+        "buttons": [
+          {
+            "id": "sound",
+            "x": 1416.015625,
+            "y": 946,
+            "w": 44,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "return",
+            "x": 1472.015625,
+            "y": 946,
+            "w": 63.984375,
+            "h": 44,
+            "hit": true
+          }
+        ]
+      }
+    },
+    {
+      "file": "space-01",
+      "width": 390,
+      "height": 844,
+      "layout": {
+        "text": "© 2026 KIM GUNWOO\nRETURN",
+        "overflow": false,
+        "buttons": [
+          {
+            "id": "sound",
+            "x": 144.453125,
+            "y": 774,
+            "w": 44,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "return",
+            "x": 192.453125,
+            "y": 774,
+            "w": 53.09375,
+            "h": 44,
+            "hit": true
+          }
+        ]
+      }
+    },
+    {
+      "file": "space-01",
+      "width": 320,
+      "height": 568,
+      "layout": {
+        "text": "© 2026 KIM GUNWOO\nRETURN",
+        "overflow": false,
+        "buttons": [
+          {
+            "id": "sound",
+            "x": 109.453125,
+            "y": 498,
+            "w": 44,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "return",
+            "x": 157.453125,
+            "y": 498,
+            "w": 53.09375,
+            "h": 44,
+            "hit": true
+          }
+        ]
+      }
+    },
+    {
+      "file": "space-01",
+      "width": 568,
+      "height": 320,
+      "layout": {
+        "text": "© 2026 KIM GUNWOO\nRETURN",
+        "overflow": false,
+        "buttons": [
+          {
+            "id": "sound",
+            "x": 233.453125,
+            "y": 250,
+            "w": 44,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "return",
+            "x": 281.453125,
+            "y": 250,
+            "w": 53.09375,
+            "h": 44,
+            "hit": true
+          }
+        ]
+      }
+    },
+    {
+      "file": "space-01",
+      "width": 844,
+      "height": 390,
+      "layout": {
+        "text": "© 2026 KIM GUNWOO\nRETURN",
+        "overflow": false,
+        "buttons": [
+          {
+            "id": "sound",
+            "x": 690.265625,
+            "y": 336,
+            "w": 44,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "return",
+            "x": 746.265625,
+            "y": 336,
+            "w": 63.984375,
+            "h": 44,
+            "hit": true
+          }
+        ]
+      }
+    },
+    {
+      "file": "space-01",
+      "width": 820,
+      "height": 1180,
+      "layout": {
+        "text": "© 2026 KIM GUNWOO\nRETURN",
+        "overflow": false,
+        "buttons": [
+          {
+            "id": "sound",
+            "x": 667.21875,
+            "y": 1126,
+            "w": 44,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "return",
+            "x": 723.21875,
+            "y": 1126,
+            "w": 63.984375,
+            "h": 44,
+            "hit": true
+          }
+        ]
+      }
+    },
+    {
+      "file": "space-02",
+      "width": 1600,
+      "height": 1000,
+      "layout": {
+        "text": "© 2026 KIM GUNWOO\nRETURN",
+        "overflow": false,
+        "buttons": [
+          {
+            "id": "sound",
+            "x": 1416.015625,
+            "y": 946,
+            "w": 44,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "return",
+            "x": 1472.015625,
+            "y": 946,
+            "w": 63.984375,
+            "h": 44,
+            "hit": true
+          }
+        ]
+      }
+    },
+    {
+      "file": "space-02",
+      "width": 390,
+      "height": 844,
+      "layout": {
+        "text": "© 2026 KIM GUNWOO\nRETURN",
+        "overflow": false,
+        "buttons": [
+          {
+            "id": "sound",
+            "x": 144.453125,
+            "y": 774,
+            "w": 44,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "return",
+            "x": 192.453125,
+            "y": 774,
+            "w": 53.09375,
+            "h": 44,
+            "hit": true
+          }
+        ]
+      }
+    },
+    {
+      "file": "space-02",
+      "width": 320,
+      "height": 568,
+      "layout": {
+        "text": "© 2026 KIM GUNWOO\nRETURN",
+        "overflow": false,
+        "buttons": [
+          {
+            "id": "sound",
+            "x": 109.453125,
+            "y": 498,
+            "w": 44,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "return",
+            "x": 157.453125,
+            "y": 498,
+            "w": 53.09375,
+            "h": 44,
+            "hit": true
+          }
+        ]
+      }
+    },
+    {
+      "file": "space-02",
+      "width": 568,
+      "height": 320,
+      "layout": {
+        "text": "© 2026 KIM GUNWOO\nRETURN",
+        "overflow": false,
+        "buttons": [
+          {
+            "id": "sound",
+            "x": 233.453125,
+            "y": 250,
+            "w": 44,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "return",
+            "x": 281.453125,
+            "y": 250,
+            "w": 53.09375,
+            "h": 44,
+            "hit": true
+          }
+        ]
+      }
+    },
+    {
+      "file": "space-02",
+      "width": 844,
+      "height": 390,
+      "layout": {
+        "text": "© 2026 KIM GUNWOO\nRETURN",
+        "overflow": false,
+        "buttons": [
+          {
+            "id": "sound",
+            "x": 690.265625,
+            "y": 336,
+            "w": 44,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "return",
+            "x": 746.265625,
+            "y": 336,
+            "w": 63.984375,
+            "h": 44,
+            "hit": true
+          }
+        ]
+      }
+    },
+    {
+      "file": "space-02",
+      "width": 820,
+      "height": 1180,
+      "layout": {
+        "text": "© 2026 KIM GUNWOO\nRETURN",
+        "overflow": false,
+        "buttons": [
+          {
+            "id": "sound",
+            "x": 667.21875,
+            "y": 1126,
+            "w": 44,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "return",
+            "x": 723.21875,
+            "y": 1126,
+            "w": 63.984375,
+            "h": 44,
+            "hit": true
+          }
+        ]
+      }
+    },
+    {
+      "file": "ending",
+      "width": 1600,
+      "height": 1000,
+      "layout": {
+        "text": "© 2026 KIM GUNWOO\nREPLAY\nFIELD ARCHIVE ↗\nRETURN",
+        "overflow": false,
+        "buttons": [
+          {
+            "id": "sound",
+            "x": 1212.78125,
+            "y": 946,
+            "w": 44,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "replay",
+            "x": 1268.78125,
+            "y": 946,
+            "w": 62.421875,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "archive",
+            "x": 1343.203125,
+            "y": 946,
+            "w": 115.734375,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "return",
+            "x": 1470.9375,
+            "y": 946,
+            "w": 65.0625,
+            "h": 44,
+            "hit": true
+          }
+        ]
+      }
+    },
+    {
+      "file": "ending",
+      "width": 390,
+      "height": 844,
+      "layout": {
+        "text": "© 2026 KIM GUNWOO\nREPLAY\nFIELD ARCHIVE ↗\nRETURN",
+        "overflow": false,
+        "buttons": [
+          {
+            "id": "sound",
+            "x": 62.671875,
+            "y": 774,
+            "w": 44,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "replay",
+            "x": 110.671875,
+            "y": 774,
+            "w": 52.546875,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "archive",
+            "x": 167.21875,
+            "y": 774,
+            "w": 101.203125,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "return",
+            "x": 272.421875,
+            "y": 774,
+            "w": 54.90625,
+            "h": 44,
+            "hit": true
+          }
+        ]
+      }
+    },
+    {
+      "file": "ending",
+      "width": 320,
+      "height": 568,
+      "layout": {
+        "text": "© 2026 KIM GUNWOO\nREPLAY\nFIELD ARCHIVE ↗\nRETURN",
+        "overflow": false,
+        "buttons": [
+          {
+            "id": "sound",
+            "x": 27.671875,
+            "y": 498,
+            "w": 44,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "replay",
+            "x": 75.671875,
+            "y": 498,
+            "w": 52.546875,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "archive",
+            "x": 132.21875,
+            "y": 498,
+            "w": 101.203125,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "return",
+            "x": 237.421875,
+            "y": 498,
+            "w": 54.90625,
+            "h": 44,
+            "hit": true
+          }
+        ]
+      }
+    },
+    {
+      "file": "ending",
+      "width": 568,
+      "height": 320,
+      "layout": {
+        "text": "© 2026 KIM GUNWOO\nREPLAY\nFIELD ARCHIVE ↗\nRETURN",
+        "overflow": false,
+        "buttons": [
+          {
+            "id": "sound",
+            "x": 151.671875,
+            "y": 250,
+            "w": 44,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "replay",
+            "x": 199.671875,
+            "y": 250,
+            "w": 52.546875,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "archive",
+            "x": 256.21875,
+            "y": 250,
+            "w": 101.203125,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "return",
+            "x": 361.421875,
+            "y": 250,
+            "w": 54.90625,
+            "h": 44,
+            "hit": true
+          }
+        ]
+      }
+    },
+    {
+      "file": "ending",
+      "width": 844,
+      "height": 390,
+      "layout": {
+        "text": "© 2026 KIM GUNWOO\nREPLAY\nFIELD ARCHIVE ↗\nRETURN",
+        "overflow": false,
+        "buttons": [
+          {
+            "id": "sound",
+            "x": 487.03125,
+            "y": 336,
+            "w": 44,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "replay",
+            "x": 543.03125,
+            "y": 336,
+            "w": 62.421875,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "archive",
+            "x": 617.453125,
+            "y": 336,
+            "w": 115.734375,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "return",
+            "x": 745.1875,
+            "y": 336,
+            "w": 65.0625,
+            "h": 44,
+            "hit": true
+          }
+        ]
+      }
+    },
+    {
+      "file": "ending",
+      "width": 820,
+      "height": 1180,
+      "layout": {
+        "text": "© 2026 KIM GUNWOO\nREPLAY\nFIELD ARCHIVE ↗\nRETURN",
+        "overflow": false,
+        "buttons": [
+          {
+            "id": "sound",
+            "x": 463.984375,
+            "y": 1126,
+            "w": 44,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "replay",
+            "x": 519.984375,
+            "y": 1126,
+            "w": 62.421875,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "archive",
+            "x": 594.40625,
+            "y": 1126,
+            "w": 115.734375,
+            "h": 44,
+            "hit": true
+          },
+          {
+            "id": "return",
+            "x": 722.140625,
+            "y": 1126,
+            "w": 65.0625,
+            "h": 44,
+            "hit": true
+          }
+        ]
+      }
+    }
+  ],
+  "errors": []
+}

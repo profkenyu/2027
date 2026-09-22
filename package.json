@@ -12,6 +12,8 @@
     "smoke:mobile": "MOBILE=1 VIEWPORT=844x390 node tools/smoke.mjs",
     "smoke:mobile:portrait": "MOBILE=1 VIEWPORT=390x844 node tools/smoke.mjs",
     "smoke:mobile:narrow": "MOBILE=1 VIEWPORT=320x568 node tools/smoke.mjs",
+    "qa:cinema": "node tools/cinema-ui.mjs",
+    "qa:missions": "node tools/mission-arrival.mjs && node tools/mobile-missions.mjs",
     "smoke:completion": "node tools/completion.mjs",
     "smoke:sequence": "SEQUENCE=1 node tools/smoke.mjs",
     "smoke:shortcut": "SEQUENCE=1 COMPLETE_SHORTCUT=1 node tools/smoke.mjs",

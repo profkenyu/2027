@@ -9,7 +9,7 @@ export async function buildSpace(){
   await mkdir(new URL('dist/',root),{recursive:true});
   for(const passage of [1,2]){
     const name=`space-0${passage}.html`;
-    const output=passage===1?html:html.replace('<body>','<body data-passage="2">').replaceAll('Passage 01','Passage 02').replaceAll('PASSAGE 01','PASSAGE 02').replace('PLANET 01 → PLANET 02','PLANET 02 → PLANET 03');
+    const output=passage===1?html:html.replace('<body>','<body data-passage="2">').replaceAll('Passage 01','Passage 02').replaceAll('PASSAGE 01','PASSAGE 02');
     for(const file of [name,'works/terra_incognita/'+name,'dist/'+name])await writeFile(new URL(file,root),output);
   }
   console.log(`✓ two independent passages — ${Math.round(Buffer.byteLength(html)/1024)} KB each`);

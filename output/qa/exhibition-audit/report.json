@@ -22,7 +22,7 @@
   {
     "name": "model",
     "code": 0,
-    "seconds": 3
+    "seconds": 2
   },
   {
     "name": "docking",
@@ -32,7 +32,7 @@
   {
     "name": "archive-return",
     "code": 0,
-    "seconds": 4
+    "seconds": 5
   },
   {
     "name": "blueprints",
@@ -42,17 +42,17 @@
   {
     "name": "entry",
     "code": 0,
-    "seconds": 13
+    "seconds": 12
   },
   {
     "name": "desktop",
     "code": 0,
-    "seconds": 17
+    "seconds": 14
   },
   {
     "name": "completion",
     "code": 0,
-    "seconds": 43
+    "seconds": 42
   },
   {
     "name": "mobile-landscape",
@@ -77,12 +77,12 @@
   {
     "name": "space-01",
     "code": 0,
-    "seconds": 10
+    "seconds": 11
   },
   {
     "name": "space-camera",
     "code": 0,
-    "seconds": 2
+    "seconds": 3
   },
   {
     "name": "space-02",
@@ -102,6 +102,6 @@
   {
     "name": "planet-pages",
     "code": 0,
-    "seconds": 40
+    "seconds": 37
   }
 ]

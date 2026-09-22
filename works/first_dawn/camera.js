@@ -23,13 +23,13 @@ export function directCamera(camera,t,lead,surfaceHeightAt,referenceArk){
     camera.fov=(portrait?58:48)-progress*5;
     // Parallel tracking plus a slow lateral approach reveals the ship's flank.
     // A small look-target shift lets the hull move gently through the frame.
-    camera.position.copy(lead.position).add(target.set((portrait?1350:1050)-progress*(portrait?230:300),-200+progress*25,(portrait?1700:1050)-progress*260));
+    camera.position.copy(lead.position).add(target.set((portrait?1350:980)-progress*(portrait?230:300),-245+progress*80,(portrait?1700:1050)-progress*260));
     target.copy(lead.position);target.y+=25;target.z+=-40+progress*65;
   }else if(shot==='ring-passage'){
     const progress=THREE.MathUtils.smoothstep(t,CUTS[1],CUTS[2]);
     camera.fov=(portrait?65:52)-progress*4;
     camera.position.copy(referenceArk.position).add(target.set(
-      (portrait?2100:1900)-progress*(portrait?750:950),
+      (portrait?2100:1750)-progress*(portrait?750:920),
       -480+progress*220,
       1900-progress*3800
     ));
