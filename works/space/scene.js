@@ -92,6 +92,22 @@ export function createVoid(scene,tier,passage=1){
     }`});
   if(passage===2){
     planetMaterial.fragmentShader=planetMaterial.fragmentShader.replace('vec3(.085,.063,.042),vec3(.27,.19,.10)','vec3(.052,.065,.077),vec3(.24,.27,.29)').replace('vec3(.15,.12,.075)','vec3(.085,.12,.15)');
+    // Paired oblique fracture families expose a dry jointed world. Static
+    // directional relief is an artistic approximation, not measured geology.
+    planetMaterial.fragmentShader=planetMaterial.fragmentShader.replace('vec3 color=ground*(.055+light*2.1);',`
+      float joint=abs(terrain(N*12.+vec3(strata*3.))-.46);
+      float fracture=(1.-smoothstep(.0015,.008,joint))*smoothstep(.30,.53,detail);
+      float shoulder=(1.-smoothstep(.008,.019,joint))*(1.-fracture);
+      ground*=1.-fracture*.32;
+      ground+=vec3(.017,.022,.025)*shoulder*light;
+      vec3 color=ground*(.055+light*2.1);`);
+  }else{
+    // Gas veils erase surface information in broad strata; the second transit
+    // deliberately reveals information rather than repeating this obscuration.
+    planetMaterial.fragmentShader=planetMaterial.fragmentShader.replace('vec3 color=ground*(.055+light*2.1);',`
+      float veil=smoothstep(.15,.8,.5+.5*sin(N.y*24.+strata*4.+N.x*2.));
+      ground=mix(ground,vec3(.24,.18,.105),veil*.48);
+      vec3 color=ground*(.055+light*2.1);`);
   }
   // Deliberately larger than the frame: the vessel is a near-field scale cue,
   // not a peer of a conveniently framed globe. Spatial scale is exhibition-authored.

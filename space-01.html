@@ -4148,7 +4148,16 @@ vHullPosition=position;`),i.fragmentShader=i.fragmentShader.replace("#include <c
       gl_FragColor=vec4(color,1.);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
-    }`});e===2&&(c.fragmentShader=c.fragmentShader.replace("vec3(.085,.063,.042),vec3(.27,.19,.10)","vec3(.052,.065,.077),vec3(.24,.27,.29)").replace("vec3(.15,.12,.075)","vec3(.085,.12,.15)"));let a=new se(new JB(e===2?3700:3300,A==="low"?96:144,A==="low"?64:88),c);a.position.set(e===2?-1650:1450,e===2?-100:-430,-5700),t.add(a);let I=null;return e===1&&(I=new se(a.geometry,new De({uniforms:{sun:{value:rB(e).normalize()}},transparent:!0,depthWrite:!1,vertexShader:`varying vec3 worldN;varying vec3 viewN;varying vec3 viewPos;
+    }`});e===2?(c.fragmentShader=c.fragmentShader.replace("vec3(.085,.063,.042),vec3(.27,.19,.10)","vec3(.052,.065,.077),vec3(.24,.27,.29)").replace("vec3(.15,.12,.075)","vec3(.085,.12,.15)"),c.fragmentShader=c.fragmentShader.replace("vec3 color=ground*(.055+light*2.1);",`
+      float joint=abs(terrain(N*12.+vec3(strata*3.))-.46);
+      float fracture=(1.-smoothstep(.0015,.008,joint))*smoothstep(.30,.53,detail);
+      float shoulder=(1.-smoothstep(.008,.019,joint))*(1.-fracture);
+      ground*=1.-fracture*.32;
+      ground+=vec3(.017,.022,.025)*shoulder*light;
+      vec3 color=ground*(.055+light*2.1);`)):c.fragmentShader=c.fragmentShader.replace("vec3 color=ground*(.055+light*2.1);",`
+      float veil=smoothstep(.15,.8,.5+.5*sin(N.y*24.+strata*4.+N.x*2.));
+      ground=mix(ground,vec3(.24,.18,.105),veil*.48);
+      vec3 color=ground*(.055+light*2.1);`);let a=new se(new JB(e===2?3700:3300,A==="low"?96:144,A==="low"?64:88),c);a.position.set(e===2?-1650:1450,e===2?-100:-430,-5700),t.add(a);let I=null;return e===1&&(I=new se(a.geometry,new De({uniforms:{sun:{value:rB(e).normalize()}},transparent:!0,depthWrite:!1,vertexShader:`varying vec3 worldN;varying vec3 viewN;varying vec3 viewPos;
         void main(){worldN=normal;viewN=normalize(normalMatrix*normal);vec4 p=modelViewMatrix*vec4(position,1.);viewPos=p.xyz;gl_Position=projectionMatrix*p;}`,fragmentShader:`uniform vec3 sun;varying vec3 worldN;varying vec3 viewN;varying vec3 viewPos;
         void main(){vec3 N=normalize(worldN);float mu=clamp(dot(normalize(viewN),normalize(-viewPos)),0.,1.);
           float rim=pow(1.-mu,2.5);float day=smoothstep(-.2,.6,dot(N,sun));

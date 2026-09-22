@@ -641,8 +641,8 @@
       "preview": false,
       "possibility": {
         "steps": 200,
-        "mass": 5.555845899315867,
-        "peak": 0.2279726266860962,
+        "mass": 80.94288697154843,
+        "peak": 0.32303646206855774,
         "status": "persisting",
         "conditions": {
           "resource": 0.8,
@@ -690,8 +690,8 @@
       "preview": false,
       "possibility": {
         "steps": 440,
-        "mass": 33.440795716705054,
-        "peak": 0.3974388837814331,
+        "mass": 59.104963194578886,
+        "peak": 0.16451257467269897,
         "status": "persisting",
         "conditions": {
           "resource": 0.8,
@@ -739,8 +739,8 @@
       "preview": false,
       "possibility": {
         "steps": 480,
-        "mass": 42.05935214427738,
-        "peak": 0.4079606235027313,
+        "mass": 42.82121535670012,
+        "peak": 0.11923196166753769,
         "status": "persisting",
         "conditions": {
           "resource": 0.8,
@@ -1420,8 +1420,8 @@
       "preview": false,
       "possibility": {
         "steps": 200,
-        "mass": 5.555845899315867,
-        "peak": 0.2279726266860962,
+        "mass": 80.94288697154843,
+        "peak": 0.32303646206855774,
         "status": "persisting",
         "conditions": {
           "resource": 0.8,
@@ -1469,8 +1469,8 @@
       "preview": false,
       "possibility": {
         "steps": 440,
-        "mass": 33.440795716705054,
-        "peak": 0.3974388837814331,
+        "mass": 59.104963194578886,
+        "peak": 0.16451257467269897,
         "status": "persisting",
         "conditions": {
           "resource": 0.8,
@@ -1518,8 +1518,8 @@
       "preview": false,
       "possibility": {
         "steps": 480,
-        "mass": 42.05935214427738,
-        "peak": 0.4079606235027313,
+        "mass": 42.82121535670012,
+        "peak": 0.11923196166753769,
         "status": "persisting",
         "conditions": {
           "resource": 0.8,
@@ -2199,8 +2199,8 @@
       "preview": false,
       "possibility": {
         "steps": 200,
-        "mass": 5.555845899315867,
-        "peak": 0.2279726266860962,
+        "mass": 80.94288697154843,
+        "peak": 0.32303646206855774,
         "status": "persisting",
         "conditions": {
           "resource": 0.8,
@@ -2248,8 +2248,8 @@
       "preview": false,
       "possibility": {
         "steps": 440,
-        "mass": 33.440795716705054,
-        "peak": 0.3974388837814331,
+        "mass": 59.104963194578886,
+        "peak": 0.16451257467269897,
         "status": "persisting",
         "conditions": {
           "resource": 0.8,
@@ -2297,8 +2297,8 @@
       "preview": false,
       "possibility": {
         "steps": 480,
-        "mass": 42.05935214427738,
-        "peak": 0.4079606235027313,
+        "mass": 42.82121535670012,
+        "peak": 0.11923196166753769,
         "status": "persisting",
         "conditions": {
           "resource": 0.8,
