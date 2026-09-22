@@ -61,6 +61,7 @@ import { AnimeRituals } from "./anime-rituals.js";
 import { RoverReticle } from "../../engine/core/rover-reticle.js";
 import { entryPlanet, entryCheckpoint, travelToPlanet } from "./planet-pages.js";
 import {PlanetState,readTransfer,transferPage} from '../../engine/core/planet-state.js';
+import {beginPostMission} from '../shared/post-mission-state.js';
 const planetState=new PlanetState();
 window.TI_PLANET_STATE=()=>planetState.snapshot();
 import {writeCheckpoint, clearCheckpoint, readCheckpoint} from '../../engine/core/checkpoint.js';
@@ -733,7 +734,11 @@ function updateFinalTableau(now) {
   if (now-finalTableau.t0 >= 1500 && !finalTableau.requested) {
     finalTableau.requested = true;
     clearCheckpoint();
-    location.assign(new URL('ending.html',location.href).href);
+    missionMemory.persist();
+    beginPostMission(window.UNIVERSE_SEED,missionMemory.snapshot(),planetState.departure(world,power.charge),geologicalMemory.snapshot());
+    const next=new URL('migration.html',location.href);
+    for(const key of ['quality','full','terminal'])if(new URLSearchParams(location.search).has(key))next.searchParams.set(key,new URLSearchParams(location.search).get(key));
+    location.assign(next.href);
   }
 }
 

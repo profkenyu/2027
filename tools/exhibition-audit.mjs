@@ -7,7 +7,7 @@ const jobs=[
  ['entry',['tools/vehicle-entry.mjs']],['desktop',['tools/smoke.mjs']],['completion',['tools/completion.mjs']],
  ['mobile-landscape',['tools/smoke.mjs'],{MOBILE:'1',VIEWPORT:'844x390'}],['mobile-portrait',['tools/smoke.mjs'],{MOBILE:'1',VIEWPORT:'390x844'}],['mobile-narrow',['tools/smoke.mjs'],{MOBILE:'1',VIEWPORT:'320x568'}],
  ['flight-finish',['tools/flight-finish.mjs']],['space-01',['tools/space-qa.mjs']],['space-camera',['tools/space-camera.mjs']],['space-02',['tools/second-passage.mjs','--render-only']],
- ['ending',['tools/ending.mjs']],['ending-audio',['tools/ending-audio.mjs']],['planet-pages',['tools/planet-pages.mjs']]
+ ['possibility',['tools/possibility-model.mjs']],['ending',['tools/ending.mjs']],['ending-audio',['tools/ending-audio.mjs']],['cinema-ui',['tools/cinema-ui.mjs']],['planet-pages',['tools/planet-pages.mjs']]
 ];
 const reports=[];
 for(const [name,args,env={}] of jobs){

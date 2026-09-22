@@ -87,75 +87,75 @@
 
 ══ TERRA INCOGNITA — gate bypassed, WebGL2 backend ══
 
-  ✓ import three                                           35.6ms  
-  ✓ import engine barrel                                   22.5ms  
-  ✓ import work spec                                          1ms  
+  ✓ import three                                           35.7ms  
+  ✓ import engine barrel                                   27.7ms  
+  ✓ import work spec                                        0.7ms  
   ✓ import work surface                                     1.1ms  
-  ✓ import local survey atlas                                 1ms  
-  ✓ configure(work)                                         4.7ms  seed 32773849 · 746,900 instances
-  ✓ ATLAS · measured cells, finite memory, isolated bodies   18.9ms  48 detail + 16 coarse · 25 archived · BODY 01 restored
-  ✓ ATLAS TRANSFER · archive survives, destination stays blank    1.2ms  2 cells collapsed · BODY 01 memory / BODY 02 live blank
+  ✓ import local survey atlas                               0.8ms  
+  ✓ configure(work)                                         4.6ms  seed 32773849 · 746,900 instances
+  ✓ ATLAS · measured cells, finite memory, isolated bodies   16.4ms  48 detail + 16 coarse · 25 archived · BODY 01 restored
+  ✓ ATLAS TRANSFER · archive survives, destination stays blank    0.9ms  2 cells collapsed · BODY 01 memory / BODY 02 live blank
   ✓ VACUUM · persistent distance fog is absent                0ms  fog density 0 · ballistic emitters only
   ✓ new Wake      (3 passes, two-track stamp)               0.5ms  
-  ✓ new Clipmap   (grid, 2 passes, wake relief)             4.2ms  
-  ✓ new Field     (curl grid + sampler)                       0ms  
-  ✓ new Scatter   (3 rings, scatter + ribbons)                1ms  
+  ✓ new Clipmap   (grid, 2 passes, wake relief)             3.9ms  
+  ✓ new Field     (curl grid + sampler)                     0.1ms  
+  ✓ new Scatter   (3 rings, scatter + ribbons)              0.6ms  
   ✓ buildSky                                                0.7ms  
   ✓ new Rover     (8 wheels, sprung, hinged lid)           11.7ms  
-  ✓ new Lander    (clear bay + six load paths)               14ms  
-  ✓ BODY 01 SCAN · real contact, full stop, 3.6 s integration    3.8ms  d≤2.0 m · |v|≤0.12 m/s · continuous 3.6 s
-  ✓ BODY 01 MANUAL · alternative sites support out-of-order recovery    1.7ms  18 manifestations · arbitrary resource order · deterministic auto fallback
-  ✓ BODY 01 GRAMMAR · six behaviours, six traces, field subtraction    1.5ms  6 behaviours · 18 manifestations → 6 coordinate traces
+  ✓ new Lander    (clear bay + six load paths)             14.5ms  
+  ✓ BODY 01 SCAN · real contact, full stop, 3.6 s integration    4.3ms  d≤2.0 m · |v|≤0.12 m/s · continuous 3.6 s
+  ✓ BODY 01 MANUAL · alternative sites support out-of-order recovery    1.6ms  18 manifestations · arbitrary resource order · deterministic auto fallback
+  ✓ BODY 01 GRAMMAR · six behaviours, six traces, field subtraction    1.8ms  6 behaviours · 18 manifestations → 6 coordinate traces
   ✓ FIELD ARCHIVE · selected evidence and resolved potential      1ms  1 evidence image · 2 unchosen sites · v2 records migrated to v4 with capture profiles
   ✓ scene.add all                                             0ms  7 children
-  ✓ BODY 03 MEMORY · persistent fields + GPU storage compute    3.3ms  4 structure + 2 raw materials + H₂O → 3 nodes · 495 GPU particles
-  ✓ new Hud / Captions / Kiosk / Ambient                    0.6ms  
-  ✓ new Lens      (pass + dof + bloom)                      0.7ms  
-  ✓ new Power     (array, shadow probe, budget)               0ms  
+  ✓ BODY 03 MEMORY · persistent fields + GPU storage compute    2.9ms  4 structure + 2 raw materials + H₂O → 3 nodes · 495 GPU particles
+  ✓ new Hud / Captions / Kiosk / Ambient                    0.8ms  
+  ✓ new Lens      (pass + dof + bloom)                      0.5ms  
+  ✓ new Power     (array, shadow probe, budget)             0.1ms  
   ✓ POWER · blueshift gain shares the renderer ceiling      0.2ms  raw q⁴ 1.00e+12 → 6.0×
-  ✓ drive 40 s from the start (r 620 → inward)            120.3ms  77 m · r 543 m · pitch mean 4.1° max 9.1° · traction min 100%
+  ✓ drive 40 s from the start (r 620 → inward)              119ms  77 m · r 543 m · pitch mean 4.1° max 9.1° · traction min 100%
   ✓ ROVER model · geometry and mass budget                  0.1ms  153 meshes · 46,180 triangles · 8 wheels · lid hinged
-  ✓ ROVER design · expedition systems remain present        0.2ms  layered armour · closed nose · grounded twin camera mast · 6×12 cell matrix · rubber/metal wheels
-  ✓ ROVER · autonomous survey hold is a true stop          14.4ms  14 s mission pauses can remain mechanically still
-  ✓ TRANSFER · ordered parts, material points, exact restore   15.3ms  signal → panel → wheel → body / exact reverse · 4 material-colour clouds
-  ✓ SUSPENSION · contact retention against a rigid chassis  140.4ms  cruise — a rigid chassis loses 6.4 of 8 wheels (rms gap 5.1 cm); the stroke keeps all 8 down at 7 cm mean, 16 max · stops 0%   ||   6 m/s — stops 11%
-  ✓ ROVER · 8-wheel contact cost                           22.5ms  0.037 ms/frame  (2.2 ms/s of a 16.7 ms budget)
-  ✓ SLAM · does speed cost anything?                      140.8ms  cruise 1.9 m/s — stops 0%, grip 100%, draw 0.63  ||  fast 5.6 m/s — stops 2%, grip 99%, draw 0.65 %/s
-  ✓ LAMP BUS · does a jolt actually reach the light?      140.6ms  cruise — bus 100% mean, 100% min, dark 0%   ||   fast — 98% mean, 46% min, dark 1%
-  ✓ LAMP BUS · brownout as the cell empties                 0.2ms  100% → 100% · 20% → 100% · 12% → 84% · 6% → 32% · 0% → 0%
+  ✓ ROVER design · expedition systems remain present        0.1ms  layered armour · closed nose · grounded twin camera mast · 6×12 cell matrix · rubber/metal wheels
+  ✓ ROVER · autonomous survey hold is a true stop          14.1ms  14 s mission pauses can remain mechanically still
+  ✓ TRANSFER · ordered parts, material points, exact restore   12.7ms  signal → panel → wheel → body / exact reverse · 4 material-colour clouds
+  ✓ SUSPENSION · contact retention against a rigid chassis  135.1ms  cruise — a rigid chassis loses 6.4 of 8 wheels (rms gap 5.1 cm); the stroke keeps all 8 down at 7 cm mean, 16 max · stops 0%   ||   6 m/s — stops 11%
+  ✓ ROVER · 8-wheel contact cost                           22.1ms  0.037 ms/frame  (2.2 ms/s of a 16.7 ms budget)
+  ✓ SLAM · does speed cost anything?                      135.6ms  cruise 1.9 m/s — stops 0%, grip 100%, draw 0.63  ||  fast 5.6 m/s — stops 2%, grip 99%, draw 0.65 %/s
+  ✓ LAMP BUS · does a jolt actually reach the light?      134.9ms  cruise — bus 100% mean, 100% min, dark 0%   ||   fast — 98% mean, 46% min, dark 1%
+  ✓ LAMP BUS · brownout as the cell empties                 0.1ms  100% → 100% · 20% → 100% · 12% → 84% · 6% → 32% · 0% → 0%
   ✓ LID · array output against hinge angle                  0.2ms  0° → 0.83 · 20° → 3.01 · 40° → 4.82 · 55° → 5.81 · 69° → 6.38 %/s   (load with lamps ≈0.64)
-  ✓ LID · autonomous sun tracking survives reset and mode changes   23.8ms  67° toward sun → 2° away · AUTO retained
-  ✓ POWER · 6 min on the open plain, lamps ON             978.3ms  cell 100% · shadowed 23% of the time · survived
-  ✓ POWER · descend from r 95, lamps ON                  1151.3ms  cell 28% · survived · shadowed 38%
-  ✓ POWER · descend from r 95, lamps ON, LID FULL        1145.4ms  cell 29% · survived · shadowed 38%
-  ✓ POWER · descend from r 95, lamps OFF                 1145.6ms  cell 72% · survived · shadowed 38%
+  ✓ LID · autonomous sun tracking survives reset and mode changes   23.1ms  67° toward sun → 2° away · AUTO retained
+  ✓ POWER · 6 min on the open plain, lamps ON               965ms  cell 100% · shadowed 23% of the time · survived
+  ✓ POWER · descend from r 95, lamps ON                  1143.1ms  cell 28% · survived · shadowed 38%
+  ✓ POWER · descend from r 95, lamps ON, LID FULL        1141.4ms  cell 29% · survived · shadowed 38%
+  ✓ POWER · descend from r 95, lamps OFF                 1142.1ms  cell 72% · survived · shadowed 38%
   ✓ ROVER · legacy mast/rear/front API remains internally sound   12.1ms  rear dot -26.3 m · front dot 7.4 m · front boom 6.6 m
-  ✓ CAMERA · C adds rear + 8 mm rover POV without escaping authored shots    4.2ms  BODY 01/02/03 → rear · intro/scans/transit retain authored priority
-  ✓ LANDER · bay is dark, empty and supports the full wheelbase    2.8ms  clear to z 0.80 · closed-floor support 2.04 m
-  ✓ CHASE camera · 30 s drive while orbiting the probe    119.3ms  clearance min 0.85 m · boom 2.6–33.9 m · probe off-frame 0.0%
-  ✓ drive 120 s at the mass (r 95 → the horizon)          364.6ms  halted at r 55.12 m (rs = 40) · speed 0.105 m/s · lapse 0.5238 · traction min 10%
-  ✓ drive across the rampart (r 95, heading 90°)           78.9ms  15 m traversed · r 96.2 m · roll mean 33.5° max 38.5°
-  ✓ ground.syncTo + nearestVertex                             0ms  vertex 207040
-  ✓ heightCPU(0,620)                                        0.1ms  -5.6984 m
+  ✓ CAMERA · C adds rear + 8 mm rover POV without escaping authored shots    3.5ms  BODY 01/02/03 → rear · intro/scans/transit retain authored priority
+  ✓ LANDER · bay is dark, empty and supports the full wheelbase      3ms  clear to z 0.80 · closed-floor support 2.04 m
+  ✓ CHASE camera · 30 s drive while orbiting the probe    109.5ms  clearance min 0.85 m · boom 2.6–33.9 m · probe off-frame 0.0%
+  ✓ drive 120 s at the mass (r 95 → the horizon)          331.1ms  halted at r 55.12 m (rs = 40) · speed 0.105 m/s · lapse 0.5238 · traction min 10%
+  ✓ drive across the rampart (r 95, heading 90°)           71.7ms  15 m traversed · r 96.2 m · roll mean 33.5° max 38.5°
+  ✓ ground.syncTo + nearestVertex                           0.2ms  vertex 207040
+  ✓ heightCPU(0,620)                                          0ms  -5.6984 m
   ✓ aim the camera at the lit ground                        0.1ms  lamps 1.05 m above a flat plane, aimed 9° down
-  ✓ RENDER ONE FRAME (WebGL2 — compiles every material)   698.5ms  compiled clean
-  ✓ read back the generated fragment shader                 4.9ms  fragment 71569 chars · 1 uniform · 2 binding lines · lamp PRESENT
-  ✓ stamp two wheel tracks into the wake by hand            3.6ms  256² grid, two gaussian tracks at ±0.72 m
-  ✓ lamp A/B by reading the framebuffer directly           44.1ms  peak +0/255 · 0.0% of pixels brighter
+  ✓ RENDER ONE FRAME (WebGL2 — compiles every material)   712.7ms  compiled clean
+  ✓ read back the generated fragment shader                 2.4ms  fragment 71569 chars · 1 uniform · 2 binding lines · lamp PRESENT
+  ✓ stamp two wheel tracks into the wake by hand            2.2ms  256² grid, two gaussian tracks at ±0.72 m
+  ✓ lamp A/B by reading the framebuffer directly           42.2ms  peak +0/255 · 0.0% of pixels brighter
   ✓ budget                                                  0.1ms  746,900 inst / 7.46M verts / ground 409,600
 
   first failure  : none
 
 ══ A SECOND, MINIMAL WORK — gate bypassed, WebGL2 backend ══
 
-  ✓ import three                                           26.8ms  
-  ✓ import engine barrel                                   18.3ms  
-  ✓ configure(minimal work, no metric)                      0.2ms  metric none · 25,600 instances
+  ✓ import three                                           24.6ms  
+  ✓ import engine barrel                                   19.7ms  
+  ✓ configure(minimal work, no metric)                        0ms  metric none · 25,600 instances
   ✓ new Clipmap   (a different surface)                     1.8ms  
   ✓ new Field     (a different potential)                     0ms  
   ✓ new Wake                                                0.1ms  
-  ✓ new Scatter   (one ring)                                0.1ms  
-  ✓ buildSky      (engine default)                          0.5ms  
+  ✓ new Scatter   (one ring)                                0.2ms  
+  ✓ buildSky      (engine default)                          0.4ms  
   ✓ redshift is identity without a metric                     0ms  ν ratio 1, lapse 1 — no branches, no cost
 
   first failure  : none

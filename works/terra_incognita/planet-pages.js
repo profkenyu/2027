@@ -1,11 +1,13 @@
 import {PLANET_PAGES, readCheckpoint, clearCheckpoint} from '../../engine/core/checkpoint.js';
 import {resetPlanetState,beginTransfer,transferPage} from '../../engine/core/planet-state.js';
+import {clearPostMission} from '../shared/post-mission-state.js';
 export const planetPages = PLANET_PAGES;
 export const entryPlanet = Object.entries(planetPages).find(([, path]) => location.pathname.endsWith('/' + path))?.[0] ?? 'terra';
 const key = 'terra-incognita:last-planet';
 if(new URLSearchParams(location.search).get('fresh')==='1'){
   clearCheckpoint();
   resetPlanetState();
+  clearPostMission();
   try { for(const name of ['terra-incognita:mission-memory:v3','terra-incognita:field-archive:v4','terra-incognita:field-archive:v3','terra-incognita:field-archive:v2'])sessionStorage.removeItem(name); }catch{}
   const clean=new URL(location.href);clean.searchParams.delete('fresh');history.replaceState(history.state,'',clean.href);
 }

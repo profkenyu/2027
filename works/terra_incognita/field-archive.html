@@ -391,6 +391,20 @@
     return "\uFEFF" + rows.map((row) => row.map(csvCell).join(",")).join("\r\n") + "\r\n";
   }
 
+  // works/shared/post-mission-state.js
+  var POST_KEY = "beyond-known:post-mission:v1";
+  var POST_PHASES = Object.freeze({ migration: { file: "migration.html", start: 0, duration: 68, next: "arrival" }, arrival: { file: "arrival.html", start: 68, duration: 70, next: "ending" }, ending: { file: "ending.html", start: 0, duration: 18, next: null } });
+  function readPostMission() {
+    try {
+      const s = JSON.parse(sessionStorage.getItem(POST_KEY) || "null");
+      if (s?.version !== 1 || !POST_PHASES[s.phase] || !Number.isFinite(s.elapsed) || s.elapsed < 0 || s.elapsed > POST_PHASES[s.phase].duration) return null;
+      if (s.evidence && (!/^[0-9a-f]{6}$/i.test(s.seed) || !Number.isFinite(s.evidence.temperature) || !Number.isFinite(s.evidence.energy) || !Number.isFinite(s.evidence.radiation) || s.evidence.samples !== 6 || s.evidence.water !== true || s.evidence.nodes !== 3)) return null;
+      return s;
+    } catch {
+      return null;
+    }
+  }
+
   // works/terra_incognita/field-archive-viewer.js
   (() => {
     const FALLBACK = [
@@ -603,6 +617,8 @@
     } catch {
     }
     if (returnLink) returnLink.href = returnPage;
+    const post = readPostMission();
+    if (post && returnLink) returnLink.href = POST_PHASES[post.phase].file;
     returnLink?.addEventListener("click", (event) => {
       if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || history.length <= 1) return;
       event.preventDefault();

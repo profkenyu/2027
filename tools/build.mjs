@@ -105,6 +105,8 @@ async function main() {
       "planet-03.html",
       "planet-engine.js",
       "field-archive.html",
+      "migration.html",
+      "arrival.html",
       "ending.html"
     ];
     const checksums = [];
@@ -120,7 +122,7 @@ async function main() {
 \u2713 ${WORK} \u2014 ${kb} KB page with shared engine`);
   console.log(`  sha256 ${digest}`);
   console.log(`  field archive sha256 ${archiveDigest}`);
-  console.log("  open index.html → planet-01.html → space-01.html → planet-02.html → space-02.html → planet-03.html → ending.html");
+  console.log("  index → planet-01 → space-01 → planet-02 → space-02 → planet-03 → migration → arrival → ending (+ field-archive)");
   console.log(`  shared planet-engine.js: ${Math.round(Buffer.byteLength(js) / 1024)} KB`);
 }
 main().catch((e) => {

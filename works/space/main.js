@@ -2,8 +2,9 @@ import * as THREE from 'three';
 import {createSurveyor} from './model.js';
 import {DURATION,CUTS,pose,createVoid,shotAt} from './scene.js';
 import {createCabinAudio} from './audio.js';
-import {createFlightEnvironment} from './surfaces.js';
+import {createFlightEnvironment,flightSun} from './surfaces.js';
 import {installCinemaFrame} from '../shared/cinema-frame.js';
+import {passageEdit} from '../../engine/core/flight-edit.js';
 import {readTransfer,saveTransfer,baseline,flightResponse} from '../../engine/core/planet-state.js';
 const params=new URLSearchParams(location.search),test=params.has('test');
 const passage=document.body.dataset.passage==='2'?2:1,source=passage===2?'desert':'terra',destination=passage===2?'planet-03.html':'planet-02.html';
@@ -12,7 +13,7 @@ const tier=['high','mid','low'].includes(params.get('quality'))?params.get('qual
 const quality={high:{dpr:1.65,shadow:2048},mid:{dpr:1.25,shadow:1024},low:{dpr:1,shadow:512}}[tier];
 const savedTransfer=readTransfer(),transfer=savedTransfer?.source===source?savedTransfer:null,response=flightResponse(transfer?.environment??baseline(source));
 const audio=createCabinAudio(response),veil=document.getElementById('veil'),sound=document.getElementById('sound');
-const lightOffset=new THREE.Vector3(passage===2?28:-28,24,-14);
+const lightOffset=flightSun(passage);
 let renderer,scene,camera,surveyor,voidScene,keyLight,t=test?0:transfer?.stage==='flight'?Math.min(transfer.elapsed,DURATION-2):0,last=performance.now(),paused=false,leaving=false,average=16,frames=0,lastSave=t;
 let dpr=Math.min(devicePixelRatio,quality.dpr);
 const targetPath=file=>location.pathname.includes('/works/space/')?'../terra_incognita/'+file:file;
@@ -22,7 +23,7 @@ function arrive(){if(leaving)return;leaving=true;audio.pause();if(transfer){tran
 function render(seconds){
   t=THREE.MathUtils.clamp(seconds,0,DURATION);pose(camera,surveyor.group,t,passage);surveyor.update(t,response);
   voidScene.stars.position.copy(camera.position);keyLight.target.position.copy(surveyor.group.position);keyLight.position.copy(surveyor.group.position).add(lightOffset);
-  const blackout=Math.max(1-THREE.MathUtils.smoothstep(t,0,2),THREE.MathUtils.smoothstep(t,61.5,64),...cuts.map(c=>1-THREE.MathUtils.smoothstep(Math.abs(t-c),0,.7)));
+  const blackout=passageEdit(t,cuts).veil;
   veil.style.opacity=String(blackout);audio.update(t);renderer.render(scene,camera);
 }
 function resize(width,height,left=0,top=0){camera.aspect=width/height;renderer.setSize(width,height);Object.assign(renderer.domElement.style,{left:`${left}px`,top:`${top}px`});render(t);}

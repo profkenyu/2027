@@ -1,0 +1,1803 @@
+{
+  "checks": [
+    {
+      "number": "01",
+      "departure": [
+        {
+          "phase": "lift",
+          "veil": 0.999,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 0.999,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        }
+      ],
+      "tail": {
+        "veil": 1,
+        "audio": {
+          "enabled": true,
+          "state": "running",
+          "toneHz": 41.747614897469305,
+          "gain": 0
+        }
+      },
+      "arrival": [
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 0.998,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 0.998,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 0.994,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 0.994,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 0.988,
+          "audio": 4.8850029050895196e-9
+        },
+        {
+          "phase": "descent",
+          "veil": 0.988,
+          "audio": 4.8850029050895196e-9
+        },
+        {
+          "phase": "descent",
+          "veil": 0.976,
+          "audio": 0.00009560390760895549
+        },
+        {
+          "phase": "descent",
+          "veil": 0.976,
+          "audio": 0.00009560390760895549
+        },
+        {
+          "phase": "descent",
+          "veil": 0.961,
+          "audio": 0.0006774734320058801
+        },
+        {
+          "phase": "descent",
+          "veil": 0.961,
+          "audio": 0.0006774734320058801
+        },
+        {
+          "phase": "descent",
+          "veil": 0.941,
+          "audio": 0.0021548555807986113
+        },
+        {
+          "phase": "descent",
+          "veil": 0.941,
+          "audio": 0.0021548555807986113
+        },
+        {
+          "phase": "descent",
+          "veil": 0.916,
+          "audio": 0.004868051370131507
+        },
+        {
+          "phase": "descent",
+          "veil": 0.916,
+          "audio": 0.004868051370131507
+        },
+        {
+          "phase": "descent",
+          "veil": 0.886,
+          "audio": 0.009131148745192294
+        },
+        {
+          "phase": "descent",
+          "veil": 0.886,
+          "audio": 0.009131148745192294
+        },
+        {
+          "phase": "descent",
+          "veil": 0.852,
+          "audio": 0.015144108826519629
+        },
+        {
+          "phase": "descent",
+          "veil": 0.852,
+          "audio": 0.015144108826519629
+        },
+        {
+          "phase": "descent",
+          "veil": 0.813,
+          "audio": 0.02315134156268158
+        },
+        {
+          "phase": "descent",
+          "veil": 0.813,
+          "audio": 0.02315134156268158
+        },
+        {
+          "phase": "descent",
+          "veil": 0.77,
+          "audio": 0.03332463216586392
+        },
+        {
+          "phase": "descent",
+          "veil": 0.77,
+          "audio": 0.03332463216586392
+        },
+        {
+          "phase": "descent",
+          "veil": 0.724,
+          "audio": 0.045754582290970736
+        },
+        {
+          "phase": "descent",
+          "veil": 0.724,
+          "audio": 0.045754582290970736
+        },
+        {
+          "phase": "descent",
+          "veil": 0.675,
+          "audio": 0.06041663643325002
+        },
+        {
+          "phase": "descent",
+          "veil": 0.675,
+          "audio": 0.06041663643325002
+        },
+        {
+          "phase": "descent",
+          "veil": 0.623,
+          "audio": 0.07746516910414875
+        },
+        {
+          "phase": "descent",
+          "veil": 0.623,
+          "audio": 0.07746516910414875
+        },
+        {
+          "phase": "descent",
+          "veil": 0.57,
+          "audio": 0.0969181816650676
+        },
+        {
+          "phase": "descent",
+          "veil": 0.57,
+          "audio": 0.0969181816650676
+        },
+        {
+          "phase": "descent",
+          "veil": 0.516,
+          "audio": 0.11862294491959602
+        },
+        {
+          "phase": "descent",
+          "veil": 0.516,
+          "audio": 0.11862294491959602
+        },
+        {
+          "phase": "descent",
+          "veil": 0.462,
+          "audio": 0.1425673700908636
+        },
+        {
+          "phase": "descent",
+          "veil": 0.462,
+          "audio": 0.1425673700908636
+        },
+        {
+          "phase": "descent",
+          "veil": 0.408,
+          "audio": 0.16881936038119366
+        },
+        {
+          "phase": "descent",
+          "veil": 0.408,
+          "audio": 0.16881936038119366
+        },
+        {
+          "phase": "descent",
+          "veil": 0.355,
+          "audio": 0.19685659728239285
+        },
+        {
+          "phase": "descent",
+          "veil": 0.355,
+          "audio": 0.19685659728239285
+        },
+        {
+          "phase": "descent",
+          "veil": 0.305,
+          "audio": 0.22685441285621008
+        },
+        {
+          "phase": "descent",
+          "veil": 0.305,
+          "audio": 0.22685441285621008
+        },
+        {
+          "phase": "descent",
+          "veil": 0.257,
+          "audio": 0.25856606518078123
+        },
+        {
+          "phase": "descent",
+          "veil": 0.257,
+          "audio": 0.25856606518078123
+        },
+        {
+          "phase": "descent",
+          "veil": 0.212,
+          "audio": 0.29190966088836967
+        },
+        {
+          "phase": "descent",
+          "veil": 0.212,
+          "audio": 0.29190966088836967
+        },
+        {
+          "phase": "descent",
+          "veil": 0.17,
+          "audio": 0.3266962901031223
+        },
+        {
+          "phase": "descent",
+          "veil": 0.17,
+          "audio": 0.3266962901031223
+        },
+        {
+          "phase": "descent",
+          "veil": 0.133,
+          "audio": 0.36228471540655327
+        },
+        {
+          "phase": "descent",
+          "veil": 0.133,
+          "audio": 0.36228471540655327
+        },
+        {
+          "phase": "descent",
+          "veil": 0.101,
+          "audio": 0.3988686656129156
+        },
+        {
+          "phase": "descent",
+          "veil": 0.101,
+          "audio": 0.3988686656129156
+        },
+        {
+          "phase": "descent",
+          "veil": 0.073,
+          "audio": 0.4366714306031175
+        },
+        {
+          "phase": "descent",
+          "veil": 0.073,
+          "audio": 0.4366714306031175
+        },
+        {
+          "phase": "descent",
+          "veil": 0.05,
+          "audio": 0.4738771757943564
+        },
+        {
+          "phase": "descent",
+          "veil": 0.05,
+          "audio": 0.4738771757943564
+        },
+        {
+          "phase": "descent",
+          "veil": 0.032,
+          "audio": 0.5118169298362198
+        },
+        {
+          "phase": "descent",
+          "veil": 0.032,
+          "audio": 0.5118169298362198
+        },
+        {
+          "phase": "descent",
+          "veil": 0.019,
+          "audio": 0.5495662804820354
+        },
+        {
+          "phase": "descent",
+          "veil": 0.019,
+          "audio": 0.5495662804820354
+        },
+        {
+          "phase": "descent",
+          "veil": 0.009,
+          "audio": 0.5869931798123457
+        },
+        {
+          "phase": "descent",
+          "veil": 0.009,
+          "audio": 0.5869931798123457
+        },
+        {
+          "phase": "descent",
+          "veil": 0.004,
+          "audio": 0.6244032433100221
+        },
+        {
+          "phase": "descent",
+          "veil": 0.004,
+          "audio": 0.6244032433100221
+        },
+        {
+          "phase": "descent",
+          "veil": 0.001,
+          "audio": 0.6604499773721517
+        },
+        {
+          "phase": "descent",
+          "veil": 0.001,
+          "audio": 0.6604499773721517
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.6956697151352466
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.6956697151352466
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.7291247820795878
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.7291247820795878
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.7616224858575683
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.7616224858575683
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.792273627147077
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.792273627147077
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.821104396920141
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.821104396920141
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.8473414135720289
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.8473414135720289
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.8727891007362327
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.8727891007362327
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.8950731279871211
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.8950731279871211
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9152996060595823
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9152996060595823
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9335599502273396
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9335599502273396
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9489108810620137
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9489108810620137
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9622196172711193
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9622196172711193
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9733585583461443
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9733585583461443
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9820448223590804
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9820448223590804
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9888764401512734
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9888764401512734
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9937195140060925
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9937195140060925
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9970116454475869
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9970116454475869
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9989063119445748
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9989063119445748
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9997644270308204
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9997644270308204
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9999928801365622
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9999928801365622
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        }
+      ]
+    },
+    {
+      "number": "02",
+      "departure": [
+        {
+          "phase": "lift",
+          "veil": 0.997,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 0.997,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 0.999,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 0.999,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "lift",
+          "veil": 1,
+          "audio": 0
+        }
+      ],
+      "tail": {
+        "veil": 1,
+        "audio": {
+          "enabled": true,
+          "state": "running",
+          "toneHz": 46.06938939133708,
+          "gain": 0
+        }
+      },
+      "arrival": [
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 1,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 0.998,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 0.998,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 0.994,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 0.994,
+          "audio": 0
+        },
+        {
+          "phase": "descent",
+          "veil": 0.986,
+          "audio": 7.587076867836764e-7
+        },
+        {
+          "phase": "descent",
+          "veil": 0.986,
+          "audio": 7.587076867836764e-7
+        },
+        {
+          "phase": "descent",
+          "veil": 0.974,
+          "audio": 0.0001414502341826203
+        },
+        {
+          "phase": "descent",
+          "veil": 0.974,
+          "audio": 0.0001414502341826203
+        },
+        {
+          "phase": "descent",
+          "veil": 0.958,
+          "audio": 0.0008358243112392113
+        },
+        {
+          "phase": "descent",
+          "veil": 0.958,
+          "audio": 0.0008358243112392113
+        },
+        {
+          "phase": "descent",
+          "veil": 0.937,
+          "audio": 0.0024753920171436223
+        },
+        {
+          "phase": "descent",
+          "veil": 0.937,
+          "audio": 0.0024753920171436223
+        },
+        {
+          "phase": "descent",
+          "veil": 0.912,
+          "audio": 0.005401376090598284
+        },
+        {
+          "phase": "descent",
+          "veil": 0.912,
+          "audio": 0.005401376090598284
+        },
+        {
+          "phase": "descent",
+          "veil": 0.881,
+          "audio": 0.009885866960501413
+        },
+        {
+          "phase": "descent",
+          "veil": 0.881,
+          "audio": 0.009885866960501413
+        },
+        {
+          "phase": "descent",
+          "veil": 0.847,
+          "audio": 0.016019640364475826
+        },
+        {
+          "phase": "descent",
+          "veil": 0.847,
+          "audio": 0.016019640364475826
+        },
+        {
+          "phase": "descent",
+          "veil": 0.806,
+          "audio": 0.024562726840066145
+        },
+        {
+          "phase": "descent",
+          "veil": 0.806,
+          "audio": 0.024562726840066145
+        },
+        {
+          "phase": "descent",
+          "veil": 0.763,
+          "audio": 0.03507442033378995
+        },
+        {
+          "phase": "descent",
+          "veil": 0.763,
+          "audio": 0.03507442033378995
+        },
+        {
+          "phase": "descent",
+          "veil": 0.716,
+          "audio": 0.04781443232684106
+        },
+        {
+          "phase": "descent",
+          "veil": 0.716,
+          "audio": 0.04781443232684106
+        },
+        {
+          "phase": "descent",
+          "veil": 0.667,
+          "audio": 0.06287523048000732
+        },
+        {
+          "phase": "descent",
+          "veil": 0.667,
+          "audio": 0.06287523048000732
+        },
+        {
+          "phase": "descent",
+          "veil": 0.616,
+          "audio": 0.0799491780859113
+        },
+        {
+          "phase": "descent",
+          "veil": 0.616,
+          "audio": 0.0799491780859113
+        },
+        {
+          "phase": "descent",
+          "veil": 0.562,
+          "audio": 0.10003129536790127
+        },
+        {
+          "phase": "descent",
+          "veil": 0.562,
+          "audio": 0.10003129536790127
+        },
+        {
+          "phase": "descent",
+          "veil": 0.509,
+          "audio": 0.12145181889251462
+        },
+        {
+          "phase": "descent",
+          "veil": 0.509,
+          "audio": 0.12145181889251462
+        },
+        {
+          "phase": "descent",
+          "veil": 0.455,
+          "audio": 0.14574195215466446
+        },
+        {
+          "phase": "descent",
+          "veil": 0.455,
+          "audio": 0.14574195215466446
+        },
+        {
+          "phase": "descent",
+          "veil": 0.401,
+          "audio": 0.17225788960829225
+        },
+        {
+          "phase": "descent",
+          "veil": 0.401,
+          "audio": 0.17225788960829225
+        },
+        {
+          "phase": "descent",
+          "veil": 0.347,
+          "audio": 0.20124469938614295
+        },
+        {
+          "phase": "descent",
+          "veil": 0.347,
+          "audio": 0.20124469938614295
+        },
+        {
+          "phase": "descent",
+          "veil": 0.299,
+          "audio": 0.23066988304781913
+        },
+        {
+          "phase": "descent",
+          "veil": 0.299,
+          "audio": 0.23066988304781913
+        },
+        {
+          "phase": "descent",
+          "veil": 0.251,
+          "audio": 0.26267838006980976
+        },
+        {
+          "phase": "descent",
+          "veil": 0.251,
+          "audio": 0.26267838006980976
+        },
+        {
+          "phase": "descent",
+          "veil": 0.205,
+          "audio": 0.2968163865409521
+        },
+        {
+          "phase": "descent",
+          "veil": 0.205,
+          "audio": 0.2968163865409521
+        },
+        {
+          "phase": "descent",
+          "veil": 0.166,
+          "audio": 0.33082365730703045
+        },
+        {
+          "phase": "descent",
+          "veil": 0.166,
+          "audio": 0.33082365730703045
+        },
+        {
+          "phase": "descent",
+          "veil": 0.128,
+          "audio": 0.36827192718460444
+        },
+        {
+          "phase": "descent",
+          "veil": 0.128,
+          "audio": 0.36827192718460444
+        },
+        {
+          "phase": "descent",
+          "veil": 0.096,
+          "audio": 0.4049805434853551
+        },
+        {
+          "phase": "descent",
+          "veil": 0.096,
+          "audio": 0.4049805434853551
+        },
+        {
+          "phase": "descent",
+          "veil": 0.069,
+          "audio": 0.4427568234496764
+        },
+        {
+          "phase": "descent",
+          "veil": 0.069,
+          "audio": 0.4427568234496764
+        },
+        {
+          "phase": "descent",
+          "veil": 0.047,
+          "audio": 0.47955194497830367
+        },
+        {
+          "phase": "descent",
+          "veil": 0.047,
+          "audio": 0.47955194497830367
+        },
+        {
+          "phase": "descent",
+          "veil": 0.03,
+          "audio": 0.5179501556866395
+        },
+        {
+          "phase": "descent",
+          "veil": 0.03,
+          "audio": 0.5179501556866395
+        },
+        {
+          "phase": "descent",
+          "veil": 0.017,
+          "audio": 0.5553253278965425
+        },
+        {
+          "phase": "descent",
+          "veil": 0.017,
+          "audio": 0.5553253278965425
+        },
+        {
+          "phase": "descent",
+          "veil": 0.008,
+          "audio": 0.593683681683236
+        },
+        {
+          "phase": "descent",
+          "veil": 0.008,
+          "audio": 0.593683681683236
+        },
+        {
+          "phase": "descent",
+          "veil": 0.003,
+          "audio": 0.6299819255237296
+        },
+        {
+          "phase": "descent",
+          "veil": 0.003,
+          "audio": 0.6299819255237296
+        },
+        {
+          "phase": "descent",
+          "veil": 0.001,
+          "audio": 0.6660975681904027
+        },
+        {
+          "phase": "descent",
+          "veil": 0.001,
+          "audio": 0.6660975681904027
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.7014393027685222
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.7014393027685222
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.7348624071813494
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.7348624071813494
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.7667096556995477
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.7667096556995477
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.7974306805545419
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.7974306805545419
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.8257628778778596
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.8257628778778596
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.8525051943688282
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.8525051943688282
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.8767367213960302
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.8767367213960302
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.898961543644562
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.898961543644562
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9188769749968745
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9188769749968745
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.936391162773945
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.936391162773945
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.951473291505799
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.951473291505799
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9642953677391207
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9642953677391207
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9749555987470349
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9749555987470349
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9835643441181448
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9835643441181448
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9898869260109381
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9898869260109381
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9944765471368067
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9944765471368067
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9973883053298327
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9973883053298327
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9991168617263058
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9991168617263058
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9998344976211108
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9998344976211108
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9999973741415703
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 0.9999973741415703
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        },
+        {
+          "phase": "descent",
+          "veil": 0,
+          "audio": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "complete": true
+}

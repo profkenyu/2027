@@ -1,4 +1,5 @@
 {
+  "started": "2026-09-22T10:55:54.666Z",
   "events": [
     {
       "layout": {
@@ -79,7 +80,7 @@
           "prologue": "released",
           "mission": "water",
           "water": "searching",
-          "waterDistance": 114.08668202009741,
+          "waterDistance": 119.82406225812228,
           "geological": "inactive",
           "geologicalNode": 0,
           "docking": "idle",
@@ -173,7 +174,7 @@
           "prologue": "released",
           "mission": "water",
           "water": "searching",
-          "waterDistance": 111.54554479678461,
+          "waterDistance": 117.28919671770618,
           "geological": "inactive",
           "geologicalNode": 0,
           "docking": "idle",
@@ -227,7 +228,7 @@
             "y": 246.90625,
             "w": 48,
             "h": 44,
-            "opacity": 1,
+            "opacity": 0.959991,
             "hit": true,
             "display": "grid"
           },
@@ -267,7 +268,7 @@
           "prologue": "released",
           "mission": "water",
           "water": "searching",
-          "waterDistance": 109.0139119327504,
+          "waterDistance": 114.69121720021023,
           "geological": "inactive",
           "geologicalNode": 0,
           "docking": "idle",
@@ -361,7 +362,7 @@
           "prologue": "released",
           "mission": "water",
           "water": "searching",
-          "waterDistance": 106.5986495565092,
+          "waterDistance": 112.20014575462254,
           "geological": "inactive",
           "geologicalNode": 0,
           "docking": "idle",
@@ -377,7 +378,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-02.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-02.html?quality=low",
       "state": {
         "world": "desert",
         "planets": 3,
@@ -388,7 +389,7 @@
         "prologue": "released",
         "mission": "water",
         "water": "searching",
-        "waterDistance": 86.26790721394164,
+        "waterDistance": 91.80199361684544,
         "geological": "inactive",
         "geologicalNode": 0,
         "docking": "idle",
@@ -468,13 +469,34 @@
           ],
           "water": null
         },
+        "geology": {
+          "state": "inactive",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 0,
+          "current": 0,
+          "total": 0,
+          "records": [],
+          "target": null,
+          "sources": null,
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": false,
+            "particles": 0,
+            "dispatches": 0,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 92.3169037306164,
-            "z": 504.2672871462559
+            "x": 95.01856738344637,
+            "z": 509.09876011569605
           },
           "speed": 1.9999999999999991,
           "manualInput": false,
@@ -484,7 +506,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-02.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-02.html?quality=low",
       "state": {
         "world": "desert",
         "planets": 3,
@@ -495,7 +517,7 @@
         "prologue": "released",
         "mission": "water",
         "water": "searching",
-        "waterDistance": 66.2759370034749,
+        "waterDistance": 71.81153267369724,
         "geological": "inactive",
         "geologicalNode": 0,
         "docking": "idle",
@@ -575,13 +597,34 @@
           ],
           "water": null
         },
+        "geology": {
+          "state": "inactive",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 0,
+          "current": 0,
+          "total": 0,
+          "records": [],
+          "target": null,
+          "sources": null,
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": false,
+            "particles": 0,
+            "dispatches": 0,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 83.38819333598303,
-            "z": 486.37192085918986
+            "x": 86.1037847407729,
+            "z": 491.1967411446232
           },
           "speed": 1.9999999999999991,
           "manualInput": false,
@@ -591,7 +634,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-02.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-02.html?quality=low",
       "state": {
         "world": "desert",
         "planets": 3,
@@ -602,7 +645,7 @@
         "prologue": "released",
         "mission": "water",
         "water": "searching",
-        "waterDistance": 52.19632533009909,
+        "waterDistance": 57.867516318243105,
         "geological": "inactive",
         "geologicalNode": 0,
         "docking": "idle",
@@ -682,13 +725,34 @@
           ],
           "water": null
         },
+        "geology": {
+          "state": "inactive",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 0,
+          "current": 0,
+          "total": 0,
+          "records": [],
+          "target": null,
+          "sources": null,
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": false,
+            "particles": 0,
+            "dispatches": 0,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 77.16454439320127,
-            "z": 473.729663058546
+            "x": 79.969031418807,
+            "z": 478.6594781490682
           },
           "speed": 0,
           "manualInput": false,
@@ -698,7 +762,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-02.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-02.html?quality=low",
       "state": {
         "world": "desert",
         "planets": 3,
@@ -709,7 +773,7 @@
         "prologue": "released",
         "mission": "water",
         "water": "searching",
-        "waterDistance": 52.19632533009909,
+        "waterDistance": 57.867516318243105,
         "geological": "inactive",
         "geologicalNode": 0,
         "docking": "idle",
@@ -789,13 +853,34 @@
           ],
           "water": null
         },
+        "geology": {
+          "state": "inactive",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 0,
+          "current": 0,
+          "total": 0,
+          "records": [],
+          "target": null,
+          "sources": null,
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": false,
+            "particles": 0,
+            "dispatches": 0,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 77.16454439320127,
-            "z": 473.729663058546
+            "x": 79.969031418807,
+            "z": 478.6594781490682
           },
           "speed": 0,
           "manualInput": false,
@@ -805,7 +890,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-02.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-02.html?quality=low",
       "state": {
         "world": "desert",
         "planets": 3,
@@ -816,7 +901,7 @@
         "prologue": "released",
         "mission": "water",
         "water": "searching",
-        "waterDistance": 34.23489680757226,
+        "waterDistance": 39.84586001515222,
         "geological": "inactive",
         "geologicalNode": 0,
         "docking": "idle",
@@ -896,15 +981,36 @@
           ],
           "water": null
         },
+        "geology": {
+          "state": "inactive",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 0,
+          "current": 0,
+          "total": 0,
+          "records": [],
+          "target": null,
+          "sources": null,
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": false,
+            "particles": 0,
+            "dispatches": 0,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 69.02142338766531,
-            "z": 457.70352344896077
+            "x": 71.8573022086308,
+            "z": 462.5453341182599
           },
-          "speed": 1.9999999999999518,
+          "speed": 1.999999999999957,
           "manualInput": false,
           "idleFor": 0,
           "manualPersistent": true
@@ -912,7 +1018,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-02.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-02.html?quality=low",
       "state": {
         "world": "desert",
         "planets": 3,
@@ -923,7 +1029,7 @@
         "prologue": "released",
         "mission": "water",
         "water": "searching",
-        "waterDistance": 14.246023107862811,
+        "waterDistance": 19.86182653925898,
         "geological": "inactive",
         "geologicalNode": 0,
         "docking": "idle",
@@ -1003,13 +1109,34 @@
           ],
           "water": null
         },
+        "geology": {
+          "state": "inactive",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 0,
+          "current": 0,
+          "total": 0,
+          "records": [],
+          "target": null,
+          "sources": null,
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": false,
+            "particles": 0,
+            "dispatches": 0,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 59.38983555810598,
-            "z": 440.17947062946143
+            "x": 62.31490182970579,
+            "z": 444.97336011870203
           },
           "speed": 1.9999999999999991,
           "manualInput": false,
@@ -1019,7 +1146,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-02.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-02.html?quality=low",
       "state": {
         "world": "desert",
         "planets": 3,
@@ -1029,8 +1156,8 @@
         "simultaneous": false,
         "prologue": "released",
         "mission": "water",
-        "water": "scanning",
-        "waterDistance": 3.363088285961702,
+        "water": "searching",
+        "waterDistance": 4.2577242066861585,
         "geological": "inactive",
         "geologicalNode": 0,
         "docking": "idle",
@@ -1110,15 +1237,36 @@
           ],
           "water": null
         },
+        "geology": {
+          "state": "inactive",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 0,
+          "current": 0,
+          "total": 0,
+          "records": [],
+          "target": null,
+          "sources": null,
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": false,
+            "particles": 0,
+            "dispatches": 0,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 53.79626748136599,
-            "z": 430.843199949803
+            "x": 54.298698309521335,
+            "z": 431.5838807879176
           },
-          "speed": 0.0008635110977170395,
+          "speed": 0.8400012277230577,
           "manualInput": false,
           "idleFor": 0,
           "manualPersistent": true
@@ -1126,7 +1274,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-02.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-02.html?quality=low",
       "state": {
         "world": "desert",
         "planets": 3,
@@ -1137,10 +1285,10 @@
         "prologue": "released",
         "mission": "water",
         "water": "confirmed",
-        "waterDistance": 6.830871165927819,
+        "waterDistance": 2.1587936947261417,
         "geological": "inactive",
         "geologicalNode": 0,
-        "docking": "compress-out",
+        "docking": "idle",
         "voyage": "arrived",
         "matter": "inactive",
         "tableau": "idle",
@@ -1231,15 +1379,36 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "inactive",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 0,
+          "current": 0,
+          "total": 0,
+          "records": [],
+          "target": null,
+          "sources": null,
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": false,
+            "particles": 0,
+            "dispatches": 0,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
-          "auto": false,
+          "auto": true,
           "position": {
-            "x": 54.03937321656063,
-            "z": 421.48066278145706
+            "x": 53.32237591378912,
+            "z": 426.2936260201762
           },
-          "speed": 0.26239697865214556,
+          "speed": 1.9996977666245261,
           "manualInput": false,
           "idleFor": 0,
           "manualPersistent": true
@@ -1247,7 +1416,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-02.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-02.html?quality=low",
       "state": {
         "world": "desert",
         "planets": 3,
@@ -1258,7 +1427,7 @@
         "prologue": "released",
         "mission": "water",
         "water": "confirmed",
-        "waterDistance": 113.34052193831724,
+        "waterDistance": 116.53300627621049,
         "geological": "inactive",
         "geologicalNode": 0,
         "docking": "approach",
@@ -1352,15 +1521,36 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "inactive",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 0,
+          "current": 0,
+          "total": 0,
+          "records": [],
+          "target": null,
+          "sources": null,
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": false,
+            "particles": 0,
+            "dispatches": 0,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": false,
           "position": {
-            "x": 104.92339859736828,
-            "z": 528.2256843037464
+            "x": 106.1142921223661,
+            "z": 531.2065159758168
           },
-          "speed": 0.9399999997050966,
+          "speed": 0.9399969366596642,
           "manualInput": false,
           "idleFor": 0,
           "manualPersistent": true
@@ -1368,7 +1558,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-02.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-02.html?quality=low",
       "state": {
         "world": "desert",
         "planets": 3,
@@ -1379,7 +1569,7 @@
         "prologue": "released",
         "mission": "water",
         "water": "confirmed",
-        "waterDistance": 121.6785761649701,
+        "waterDistance": 125.65850174071498,
         "geological": "inactive",
         "geologicalNode": 0,
         "docking": "approach",
@@ -1473,15 +1663,36 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "inactive",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 0,
+          "current": 0,
+          "total": 0,
+          "records": [],
+          "target": null,
+          "sources": null,
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": false,
+            "particles": 0,
+            "dispatches": 0,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": false,
           "position": {
-            "x": 111.39920515443973,
-            "z": 534.19515207652
+            "x": 112.41164097012818,
+            "z": 538.1839039742993
           },
-          "speed": 0.4818300537398862,
+          "speed": 0.9399999999999995,
           "manualInput": false,
           "idleFor": 0,
           "manualPersistent": true
@@ -1489,7 +1700,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-02.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-02.html?quality=low",
       "state": {
         "world": "desert",
         "planets": 3,
@@ -1500,7 +1711,7 @@
         "prologue": "released",
         "mission": "water",
         "water": "confirmed",
-        "waterDistance": 124.81079974251763,
+        "waterDistance": 130.48523731836,
         "geological": "inactive",
         "geologicalNode": 0,
         "docking": "approach",
@@ -1594,15 +1805,36 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "inactive",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 0,
+          "current": 0,
+          "total": 0,
+          "records": [],
+          "target": null,
+          "sources": null,
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": false,
+            "particles": 0,
+            "dispatches": 0,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": false,
           "position": {
-            "x": 113.81901490969972,
-            "z": 536.4257585998879
+            "x": 115.7317024327935,
+            "z": 541.8624927842641
           },
-          "speed": 0.06669669165115641,
+          "speed": 0.17949311810879745,
           "manualInput": false,
           "idleFor": 0,
           "manualPersistent": true
@@ -1610,7 +1842,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-02.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-02.html?quality=low",
       "state": {
         "world": "desert",
         "planets": 3,
@@ -1621,18 +1853,160 @@
         "prologue": "released",
         "mission": "water",
         "water": "confirmed",
-        "waterDistance": 124.98735692492454,
+        "waterDistance": 130.97140557498523,
+        "geological": "inactive",
+        "geologicalNode": 0,
+        "docking": "closing",
+        "voyage": "arrived",
+        "matter": "inactive",
+        "tableau": "idle",
+        "observed": "idle",
+        "landerPresent": true,
+        "roverVisible": true,
+        "experience": "observer",
+        "cameraShot": "return",
+        "memory": {
+          "version": 3,
+          "ready": true,
+          "samplesReady": true,
+          "waterReady": true,
+          "journey": {
+            "distance": 0,
+            "dwell": 0,
+            "turn": 0
+          },
+          "samples": [
+            {
+              "index": 0,
+              "sample": "FE–NI ALLOY",
+              "module": "FOUNDATION",
+              "sign": "METALLIC REFLECTANCE",
+              "color": 14189621,
+              "x": 231.6,
+              "z": 543.4
+            },
+            {
+              "index": 1,
+              "sample": "SILICATE CERAMIC",
+              "module": "LOAD PATHS",
+              "sign": "SPECTRAL SPLIT",
+              "color": 13219211,
+              "x": 199.1,
+              "z": 516.1
+            },
+            {
+              "index": 2,
+              "sample": "CARBON COMPOSITE",
+              "module": "SERVICE / PRESSURE",
+              "sign": "LOW ALBEDO DENSITY",
+              "color": 9414317,
+              "x": 209.9,
+              "z": 471.4
+            },
+            {
+              "index": 3,
+              "sample": "CONDUCTIVE LATTICE",
+              "module": "TRANSFER / VISOR",
+              "sign": "METALLIC LATTICE",
+              "color": 14854475,
+              "x": 168.5,
+              "z": 445.3
+            },
+            {
+              "index": 4,
+              "sample": "N₂ FEEDSTOCK",
+              "module": "ATMOSPHERIC FEEDSTOCK",
+              "sign": "RAMAN N₂ BAND",
+              "color": 12175812,
+              "x": 173.9,
+              "z": 391.9
+            },
+            {
+              "index": 5,
+              "sample": "ALCOHOL FEEDSTOCK · C₂H₅OH",
+              "module": "CHEMICAL FEEDSTOCK",
+              "sign": "C–O / O–H SPECTRUM",
+              "color": 16757276,
+              "x": 127.7,
+              "z": 352.8
+            }
+          ],
+          "water": {
+            "id": "BODY02-H2O-01",
+            "confirmed": true,
+            "x": 52,
+            "z": 428,
+            "phase": "SUBSURFACE PORE ICE / HYDRATED SILICA",
+            "thermalDeltaK": -16,
+            "absorptionBandsMicron": [
+              1.4,
+              1.9,
+              2.9
+            ],
+            "particleDensity": 0.28,
+            "spectrumRingMicron": 1.9
+          }
+        },
+        "geology": {
+          "state": "inactive",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 0,
+          "current": 0,
+          "total": 0,
+          "records": [],
+          "target": null,
+          "sources": null,
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": false,
+            "particles": 0,
+            "dispatches": 0,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
+        "drive": {
+          "mode": "observer",
+          "driveMode": "auto",
+          "auto": false,
+          "position": {
+            "x": 116.06574674788872,
+            "z": 542.2326099322022
+          },
+          "speed": 0,
+          "manualInput": false,
+          "idleFor": 0,
+          "manualPersistent": true
+        }
+      }
+    },
+    {
+      "url": "http://127.0.0.1:54439/planet-02.html?quality=low",
+      "state": {
+        "world": "desert",
+        "planets": 3,
+        "restoration": 6,
+        "structure": 4,
+        "rawMaterials": 2,
+        "simultaneous": false,
+        "prologue": "released",
+        "mission": "water",
+        "water": "confirmed",
+        "waterDistance": 135.96417757885058,
         "geological": "inactive",
         "geologicalNode": 0,
         "docking": "docked",
-        "voyage": "arrived",
+        "voyage": "lift",
         "matter": "inactive",
         "tableau": "idle",
         "observed": "idle",
         "landerPresent": true,
-        "roverVisible": true,
+        "roverVisible": false,
         "experience": "observer",
-        "cameraShot": "return",
+        "cameraShot": "ascent",
         "memory": {
           "version": 3,
           "ready": true,
@@ -1715,13 +2089,34 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "inactive",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 0,
+          "current": 0,
+          "total": 0,
+          "records": [],
+          "target": null,
+          "sources": null,
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": false,
+            "particles": 0,
+            "dispatches": 0,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": false,
           "position": {
-            "x": 113.95522726568808,
-            "z": 536.551320607054
+            "x": 124.00822517098045,
+            "z": 543.3302782985396
           },
           "speed": 0,
           "manualInput": false,
@@ -1731,10 +2126,10 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/space-02.html?quality=low",
+      "url": "http://127.0.0.1:54439/space-02.html?quality=low",
       "state": {
         "passage": 2,
-        "seconds": 0.2999,
+        "seconds": 6.866400000000027,
         "duration": 64,
         "shot": "keel",
         "tier": "low",
@@ -1744,20 +2139,20 @@
         "paused": false,
         "independent": true,
         "response": {
-          "thermal": 0.3050212387599603,
-          "radiator": 0.3982638051939742,
-          "toneHz": 46.03725563220614,
-          "signalGain": 0.02894063282250853,
+          "thermal": 0.3049084321830614,
+          "radiator": 0.3981904809189899,
+          "toneHz": 46.03536298423087,
+          "signalGain": 0.0289380041447651,
           "energy": 1
         },
         "environment": {
-          "temperature": 229.82638051939742,
-          "radiation": 0.5576253129003412,
+          "temperature": 229.819048091899,
+          "radiation": 0.557520165790604,
           "energy": 1,
-          "terrainHeight": -0.9944915566774805,
+          "terrainHeight": -2.0379182849804565,
           "water": 1,
-          "elapsed": 129.58189999999797,
-          "observations": 127,
+          "elapsed": 132.42819999999878,
+          "observations": 130,
           "provenance": "authored environmental estimate"
         },
         "radiators": [
@@ -1767,55 +2162,55 @@
         "audio": {
           "enabled": false,
           "state": "locked",
-          "toneHz": 46.03725563220614,
+          "toneHz": 46.03536298423087,
           "gain": 0
         },
         "position": [
           0,
           0,
-          -0.044970005
+          -23.573724480000187
         ],
         "cameraPosition": [
-          30.999924588992705,
-          -9.999788849179572,
-          -37.04398966190516
+          30.40533320894745,
+          -8.334932985052859,
+          -52.843056196317036
         ],
         "cameraFov": 66,
         "cameraFocus": [
           0,
           2,
-          -0.044970005
+          -23.573724480000187
         ]
       }
     },
     {
-      "url": "http://127.0.0.1:49890/space-02.html?quality=low",
+      "url": "http://127.0.0.1:54439/space-02.html?quality=low",
       "state": {
         "passage": 2,
-        "seconds": 10.316199999999997,
+        "seconds": 16.882699999999925,
         "duration": 64,
         "shot": "keel",
         "tier": "low",
-        "triangles": 22074,
-        "calls": 43,
+        "triangles": 34170,
+        "calls": 44,
         "dpr": 1,
         "paused": false,
         "independent": true,
         "response": {
-          "thermal": 0.3050212387599603,
-          "radiator": 0.3982638051939742,
-          "toneHz": 46.03725563220614,
-          "signalGain": 0.02894063282250853,
+          "thermal": 0.3049084321830614,
+          "radiator": 0.3981904809189899,
+          "toneHz": 46.03536298423087,
+          "signalGain": 0.0289380041447651,
           "energy": 1
         },
         "environment": {
-          "temperature": 229.82638051939742,
-          "radiation": 0.5576253129003412,
+          "temperature": 229.819048091899,
+          "radiation": 0.557520165790604,
           "energy": 1,
-          "terrainHeight": -0.9944915566774805,
+          "terrainHeight": -2.0379182849804565,
           "water": 1,
-          "elapsed": 129.58189999999797,
-          "observations": 127,
+          "elapsed": 132.42819999999878,
+          "observations": 130,
           "provenance": "authored environmental estimate"
         },
         "radiators": [
@@ -1825,90 +2220,32 @@
         "audio": {
           "enabled": false,
           "state": "locked",
-          "toneHz": 46.03725563220614,
+          "toneHz": 46.03536298423087,
           "gain": 0
         },
         "position": [
           0,
           0,
-          -50.529599999999974
+          -103.0615999999994
         ],
         "cameraPosition": [
-          29.44057185442056,
-          -5.633601192377573,
-          -67.25703410746728
+          27.181017074011173,
+          0.6931521927687161,
+          -90.41482196214466
         ],
         "cameraFov": 66,
         "cameraFocus": [
           0,
           2,
-          -50.529599999999974
+          -103.0615999999994
         ]
       }
     },
     {
-      "url": "http://127.0.0.1:49890/space-02.html?quality=low",
+      "url": "http://127.0.0.1:54439/space-02.html?quality=low",
       "state": {
         "passage": 2,
-        "seconds": 20.315799999999832,
-        "duration": 64,
-        "shot": "keel",
-        "tier": "low",
-        "triangles": 34170,
-        "calls": 44,
-        "dpr": 1,
-        "paused": false,
-        "independent": true,
-        "response": {
-          "thermal": 0.3050212387599603,
-          "radiator": 0.3982638051939742,
-          "toneHz": 46.03725563220614,
-          "signalGain": 0.02894063282250853,
-          "energy": 1
-        },
-        "environment": {
-          "temperature": 229.82638051939742,
-          "radiation": 0.5576253129003412,
-          "energy": 1,
-          "terrainHeight": -0.9944915566774805,
-          "water": 1,
-          "elapsed": 129.58189999999797,
-          "observations": 127,
-          "provenance": "authored environmental estimate"
-        },
-        "radiators": [
-          -1.249251503592449,
-          1.249251503592449
-        ],
-        "audio": {
-          "enabled": false,
-          "state": "locked",
-          "toneHz": 46.03725563220614,
-          "gain": 0
-        },
-        "position": [
-          0,
-          0,
-          -130.52639999999866
-        ],
-        "cameraPosition": [
-          26.366114381020807,
-          2.9748797331417407,
-          -107.28588695326914
-        ],
-        "cameraFov": 66,
-        "cameraFocus": [
-          0,
-          2,
-          -130.52639999999866
-        ]
-      }
-    },
-    {
-      "url": "http://127.0.0.1:49890/space-02.html?quality=low",
-      "state": {
-        "passage": 2,
-        "seconds": 30.315499999999638,
+        "seconds": 26.882299999999656,
         "duration": 64,
         "shot": "crossing",
         "tier": "low",
@@ -1918,55 +2255,55 @@
         "paused": false,
         "independent": true,
         "response": {
-          "thermal": 0.3050212387599603,
-          "radiator": 0.3982638051939742,
-          "toneHz": 46.03725563220614,
-          "signalGain": 0.02894063282250853,
+          "thermal": 0.3049084321830614,
+          "radiator": 0.3981904809189899,
+          "toneHz": 46.03536298423087,
+          "signalGain": 0.0289380041447651,
           "energy": 1
         },
         "environment": {
-          "temperature": 229.82638051939742,
-          "radiation": 0.5576253129003412,
+          "temperature": 229.819048091899,
+          "radiation": 0.557520165790604,
           "energy": 1,
-          "terrainHeight": -0.9944915566774805,
+          "terrainHeight": -2.0379182849804565,
           "water": 1,
-          "elapsed": 129.58189999999797,
-          "observations": 127,
+          "elapsed": 132.42819999999878,
+          "observations": 130,
           "provenance": "authored environmental estimate"
         },
         "radiators": [
-          -0.837464325423703,
-          0.837464325423703
+          -1.007407190879183,
+          1.007407190879183
         ],
         "audio": {
           "enabled": false,
           "state": "locked",
-          "toneHz": 46.03725563220614,
+          "toneHz": 46.03536298423087,
           "gain": 0
         },
         "position": [
           0,
           0,
-          -210.5239999999971
+          -183.05839999999725
         ],
         "cameraPosition": [
-          -62.20994512835902,
-          19.348987196617102,
-          -149.5939817094501
+          -64.96721603239413,
+          19.99235040755863,
+          -123.04747201079529
         ],
         "cameraFov": 61,
         "cameraFocus": [
           -2,
           3,
-          -210.5239999999971
+          -183.05839999999725
         ]
       }
     },
     {
-      "url": "http://127.0.0.1:49890/space-02.html?quality=low",
+      "url": "http://127.0.0.1:54439/space-02.html?quality=low",
       "state": {
         "passage": 2,
-        "seconds": 40.331700000000026,
+        "seconds": 36.881899999999845,
         "duration": 64,
         "shot": "crossing",
         "tier": "low",
@@ -1976,55 +2313,55 @@
         "paused": false,
         "independent": true,
         "response": {
-          "thermal": 0.3050212387599603,
-          "radiator": 0.3982638051939742,
-          "toneHz": 46.03725563220614,
-          "signalGain": 0.02894063282250853,
+          "thermal": 0.3049084321830614,
+          "radiator": 0.3981904809189899,
+          "toneHz": 46.03536298423087,
+          "signalGain": 0.0289380041447651,
           "energy": 1
         },
         "environment": {
-          "temperature": 229.82638051939742,
-          "radiation": 0.5576253129003412,
+          "temperature": 229.819048091899,
+          "radiation": 0.557520165790604,
           "energy": 1,
-          "terrainHeight": -0.9944915566774805,
+          "terrainHeight": -2.0379182849804565,
           "water": 1,
-          "elapsed": 129.58189999999797,
-          "observations": 127,
+          "elapsed": 132.42819999999878,
+          "observations": 130,
           "provenance": "authored environmental estimate"
         },
         "radiators": [
-          -0.7521702435075323,
-          0.7521702435075323
+          -0.7522618988512626,
+          0.7522618988512626
         ],
         "audio": {
           "enabled": false,
           "state": "locked",
-          "toneHz": 46.03725563220614,
+          "toneHz": 46.03536298423087,
           "gain": 0
         },
         "position": [
           0,
           0,
-          -290.6536000000002
+          -263.05519999999876
         ],
         "cameraPosition": [
-          -36.82626857041828,
-          13.426129333097599,
-          -221.26235619013966
+          -44.28823474299751,
+          15.167254773366086,
+          -196.1512782476646
         ],
         "cameraFov": 61,
         "cameraFocus": [
           -2,
           3,
-          -290.6536000000002
+          -263.05519999999876
         ]
       }
     },
     {
-      "url": "http://127.0.0.1:49890/space-02.html?quality=low",
+      "url": "http://127.0.0.1:54439/space-02.html?quality=low",
       "state": {
         "passage": 2,
-        "seconds": 50.33130000000072,
+        "seconds": 46.89820000000046,
         "duration": 64,
         "shot": "horizon",
         "tier": "low",
@@ -2034,55 +2371,55 @@
         "paused": false,
         "independent": true,
         "response": {
-          "thermal": 0.3050212387599603,
-          "radiator": 0.3982638051939742,
-          "toneHz": 46.03725563220614,
-          "signalGain": 0.02894063282250853,
+          "thermal": 0.3049084321830614,
+          "radiator": 0.3981904809189899,
+          "toneHz": 46.03536298423087,
+          "signalGain": 0.0289380041447651,
           "energy": 1
         },
         "environment": {
-          "temperature": 229.82638051939742,
-          "radiation": 0.5576253129003412,
+          "temperature": 229.819048091899,
+          "radiation": 0.557520165790604,
           "energy": 1,
-          "terrainHeight": -0.9944915566774805,
+          "terrainHeight": -2.0379182849804565,
           "water": 1,
-          "elapsed": 129.58189999999797,
-          "observations": 127,
+          "elapsed": 132.42819999999878,
+          "observations": 130,
           "provenance": "authored environmental estimate"
         },
         "radiators": [
-          -0.7521702435075323,
-          0.7521702435075323
+          -0.7522618988512626,
+          0.7522618988512626
         ],
         "audio": {
           "enabled": false,
           "state": "locked",
-          "toneHz": 46.03725563220614,
+          "toneHz": 46.03536298423087,
           "gain": 0
         },
         "position": [
           0,
           0,
-          -370.65040000000573
+          -343.18560000000366
         ],
         "cameraPosition": [
           -5,
-          17.22809662392941,
-          -268.0113017272312
+          15.29038317113534,
+          -255.88673322851554
         ],
         "cameraFov": 69,
         "cameraFocus": [
           -25,
           24,
-          -590.6504000000057
+          -563.1856000000037
         ]
       }
     },
     {
-      "url": "http://127.0.0.1:49890/space-02.html?quality=low",
+      "url": "http://127.0.0.1:54439/space-02.html?quality=low",
       "state": {
         "passage": 2,
-        "seconds": 60.3309000000014,
+        "seconds": 56.89770000000119,
         "duration": 64,
         "shot": "horizon",
         "tier": "low",
@@ -2092,52 +2429,52 @@
         "paused": false,
         "independent": true,
         "response": {
-          "thermal": 0.3050212387599603,
-          "radiator": 0.3982638051939742,
-          "toneHz": 46.03725563220614,
-          "signalGain": 0.02894063282250853,
+          "thermal": 0.3049084321830614,
+          "radiator": 0.3981904809189899,
+          "toneHz": 46.03536298423087,
+          "signalGain": 0.0289380041447651,
           "energy": 1
         },
         "environment": {
-          "temperature": 229.82638051939742,
-          "radiation": 0.5576253129003412,
+          "temperature": 229.819048091899,
+          "radiation": 0.557520165790604,
           "energy": 1,
-          "terrainHeight": -0.9944915566774805,
+          "terrainHeight": -2.0379182849804565,
           "water": 1,
-          "elapsed": 129.58189999999797,
-          "observations": 127,
+          "elapsed": 132.42819999999878,
+          "observations": 130,
           "provenance": "authored environmental estimate"
         },
         "radiators": [
-          -1.213022713989863,
-          1.213022713989863
+          -0.9934942240195855,
+          0.9934942240195855
         ],
         "audio": {
           "enabled": false,
           "state": "locked",
-          "toneHz": 46.03725563220614,
+          "toneHz": 46.03536298423087,
           "gain": 0
         },
         "position": [
           0,
           0,
-          -427.5125683966701
+          -415.18577823667226
         ],
         "cameraPosition": [
           -5,
-          26.44800828942965,
-          -251.88250277201865
+          24.082026609054992,
+          -258.2864009149869
         ],
         "cameraFov": 69,
         "cameraFocus": [
           -25,
           24,
-          -647.5125683966701
+          -635.1857782366723
         ]
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -2242,13 +2579,34 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "inactive",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 0,
+          "current": 0,
+          "total": 0,
+          "records": [],
+          "target": null,
+          "sources": null,
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": false,
+            "particles": 0,
+            "dispatches": 0,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": false,
           "position": {
-            "x": 126.6942790171576,
-            "z": 474.1999857939706
+            "x": 106.41226938102996,
+            "z": 496.7652455664432
           },
           "speed": 0,
           "manualInput": false,
@@ -2258,7 +2616,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -2363,15 +2721,36 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "inactive",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 0,
+          "current": 0,
+          "total": 0,
+          "records": [],
+          "target": null,
+          "sources": null,
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": false,
+            "particles": 0,
+            "dispatches": 0,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": false,
           "position": {
-            "x": 125.56146823364455,
-            "z": 471.79705382894343
+            "x": 109.23214454464694,
+            "z": 490.34213544668273
           },
-          "speed": 0.4599999992181537,
+          "speed": 0.45990262737941734,
           "manualInput": false,
           "idleFor": 0,
           "manualPersistent": true
@@ -2379,7 +2758,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -2484,15 +2863,36 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "inactive",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 0,
+          "current": 0,
+          "total": 0,
+          "records": [],
+          "target": null,
+          "sources": null,
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": false,
+            "particles": 0,
+            "dispatches": 0,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": false,
           "position": {
-            "x": 122.79100508061806,
-            "z": 465.92031380737177
+            "x": 111.14995394990785,
+            "z": 484.9380479775831
           },
-          "speed": 0.6799999999999772,
+          "speed": 0.6799999971445206,
           "manualInput": false,
           "idleFor": 0,
           "manualPersistent": true
@@ -2500,7 +2900,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -2605,15 +3005,45 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 0,
+          "total": 3,
+          "records": [],
+          "target": {
+            "id": "BODY03-MEM-01",
+            "x": 143.3664207016589,
+            "z": 397.2605659737993,
+            "objective": "MATERIAL PHASE",
+            "instruction": "ALIGN SIX RECOVERED MATERIAL HARMONICS"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 30,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 124.09451831468212,
-            "z": 457.426148763469
+            "x": 112.59644546944122,
+            "z": 481.00426740949393
           },
-          "speed": 1.9999995649144686,
+          "speed": 1.9350382096077094,
           "manualInput": false,
           "idleFor": 0,
           "manualPersistent": true
@@ -2621,7 +3051,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -2726,13 +3156,43 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 0,
+          "total": 3,
+          "records": [],
+          "target": {
+            "id": "BODY03-MEM-01",
+            "x": 143.3664207016589,
+            "z": 397.2605659737993,
+            "objective": "MATERIAL PHASE",
+            "instruction": "ALIGN SIX RECOVERED MATERIAL HARMONICS"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 330,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 130.52248195106392,
-            "z": 438.4892440861297
+            "x": 120.14829318421471,
+            "z": 462.50714783739477
           },
           "speed": 1.9999999999999991,
           "manualInput": false,
@@ -2742,7 +3202,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -2847,13 +3307,43 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 0,
+          "total": 3,
+          "records": [],
+          "target": {
+            "id": "BODY03-MEM-01",
+            "x": 143.3664207016589,
+            "z": 397.2605659737993,
+            "objective": "MATERIAL PHASE",
+            "instruction": "ALIGN SIX RECOVERED MATERIAL HARMONICS"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 630,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 136.4622974381647,
-            "z": 419.3941217310958
+            "x": 126.97546308270518,
+            "z": 443.7107960619284
           },
           "speed": 1.9999999999999991,
           "manualInput": false,
@@ -2863,7 +3353,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -2968,15 +3458,45 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 0,
+          "total": 3,
+          "records": [],
+          "target": {
+            "id": "BODY03-MEM-01",
+            "x": 143.3664207016589,
+            "z": 397.2605659737993,
+            "objective": "MATERIAL PHASE",
+            "instruction": "ALIGN SIX RECOVERED MATERIAL HARMONICS"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 930,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 141.04338063348723,
-            "z": 404.524788545203
+            "x": 133.4654609857607,
+            "z": 424.79374960272696
           },
-          "speed": 0.00042368086475240966,
+          "speed": 1.9999999999999991,
           "manualInput": false,
           "idleFor": 0,
           "manualPersistent": true
@@ -2984,7 +3504,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -3089,13 +3609,43 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 0,
+          "total": 3,
+          "records": [],
+          "target": {
+            "id": "BODY03-MEM-01",
+            "x": 143.3664207016589,
+            "z": 397.2605659737993,
+            "objective": "MATERIAL PHASE",
+            "instruction": "ALIGN SIX RECOVERED MATERIAL HARMONICS"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 1231,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 141.04340682874113,
-            "z": 404.52470482798253
+            "x": 134.29581093299805,
+            "z": 422.3739459857549
           },
           "speed": 0,
           "manualInput": false,
@@ -3105,7 +3655,158 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
+      "state": {
+        "world": "granite",
+        "planets": 3,
+        "restoration": 6,
+        "structure": 4,
+        "rawMaterials": 2,
+        "simultaneous": false,
+        "prologue": "released",
+        "mission": "searching",
+        "water": "inactive",
+        "waterDistance": null,
+        "geological": "searching",
+        "geologicalNode": 0,
+        "docking": "idle",
+        "voyage": "arrived",
+        "matter": "inactive",
+        "tableau": "idle",
+        "observed": "idle",
+        "landerPresent": true,
+        "roverVisible": true,
+        "experience": "observer",
+        "cameraShot": "wide",
+        "memory": {
+          "version": 3,
+          "ready": true,
+          "samplesReady": true,
+          "waterReady": true,
+          "journey": {
+            "distance": 0,
+            "dwell": 0,
+            "turn": 0
+          },
+          "samples": [
+            {
+              "index": 0,
+              "sample": "FE–NI ALLOY",
+              "module": "FOUNDATION",
+              "sign": "METALLIC REFLECTANCE",
+              "color": 14189621,
+              "x": 231.6,
+              "z": 543.4
+            },
+            {
+              "index": 1,
+              "sample": "SILICATE CERAMIC",
+              "module": "LOAD PATHS",
+              "sign": "SPECTRAL SPLIT",
+              "color": 13219211,
+              "x": 199.1,
+              "z": 516.1
+            },
+            {
+              "index": 2,
+              "sample": "CARBON COMPOSITE",
+              "module": "SERVICE / PRESSURE",
+              "sign": "LOW ALBEDO DENSITY",
+              "color": 9414317,
+              "x": 209.9,
+              "z": 471.4
+            },
+            {
+              "index": 3,
+              "sample": "CONDUCTIVE LATTICE",
+              "module": "TRANSFER / VISOR",
+              "sign": "METALLIC LATTICE",
+              "color": 14854475,
+              "x": 168.5,
+              "z": 445.3
+            },
+            {
+              "index": 4,
+              "sample": "N₂ FEEDSTOCK",
+              "module": "ATMOSPHERIC FEEDSTOCK",
+              "sign": "RAMAN N₂ BAND",
+              "color": 12175812,
+              "x": 173.9,
+              "z": 391.9
+            },
+            {
+              "index": 5,
+              "sample": "ALCOHOL FEEDSTOCK · C₂H₅OH",
+              "module": "CHEMICAL FEEDSTOCK",
+              "sign": "C–O / O–H SPECTRUM",
+              "color": 16757276,
+              "x": 127.7,
+              "z": 352.8
+            }
+          ],
+          "water": {
+            "id": "BODY02-H2O-01",
+            "confirmed": true,
+            "x": 52,
+            "z": 428,
+            "phase": "SUBSURFACE PORE ICE / HYDRATED SILICA",
+            "thermalDeltaK": -16,
+            "absorptionBandsMicron": [
+              1.4,
+              1.9,
+              2.9
+            ],
+            "particleDensity": 0.28,
+            "spectrumRingMicron": 1.9
+          }
+        },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 0,
+          "total": 3,
+          "records": [],
+          "target": {
+            "id": "BODY03-MEM-01",
+            "x": 143.3664207016589,
+            "z": 397.2605659737993,
+            "objective": "MATERIAL PHASE",
+            "instruction": "ALIGN SIX RECOVERED MATERIAL HARMONICS"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 1531,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
+        "drive": {
+          "mode": "observer",
+          "driveMode": "auto",
+          "auto": true,
+          "position": {
+            "x": 137.39702563988521,
+            "z": 413.4575091007786
+          },
+          "speed": 1.9999999100636203,
+          "manualInput": false,
+          "idleFor": 0,
+          "manualPersistent": true
+        }
+      }
+    },
+    {
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -3210,13 +3911,655 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "scanning",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 0,
+          "total": 3,
+          "records": [],
+          "target": {
+            "id": "BODY03-MEM-01",
+            "x": 143.3664207016589,
+            "z": 397.2605659737993,
+            "objective": "MATERIAL PHASE",
+            "instruction": "ALIGN SIX RECOVERED MATERIAL HARMONICS"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 1830,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 142.20858312655463,
-            "z": 400.8405876776575
+            "x": 142.01623729431205,
+            "z": 400.76751100079105
+          },
+          "speed": 0.031875754320156734,
+          "manualInput": false,
+          "idleFor": 0,
+          "manualPersistent": true
+        }
+      }
+    },
+    {
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
+      "state": {
+        "world": "granite",
+        "planets": 3,
+        "restoration": 6,
+        "structure": 4,
+        "rawMaterials": 2,
+        "simultaneous": false,
+        "prologue": "released",
+        "mission": "searching",
+        "water": "inactive",
+        "waterDistance": null,
+        "geological": "searching",
+        "geologicalNode": 1,
+        "docking": "idle",
+        "voyage": "arrived",
+        "matter": "inactive",
+        "tableau": "idle",
+        "observed": "idle",
+        "landerPresent": true,
+        "roverVisible": true,
+        "experience": "observer",
+        "cameraShot": "wide",
+        "memory": {
+          "version": 3,
+          "ready": true,
+          "samplesReady": true,
+          "waterReady": true,
+          "journey": {
+            "distance": 0,
+            "dwell": 0,
+            "turn": 0
+          },
+          "samples": [
+            {
+              "index": 0,
+              "sample": "FE–NI ALLOY",
+              "module": "FOUNDATION",
+              "sign": "METALLIC REFLECTANCE",
+              "color": 14189621,
+              "x": 231.6,
+              "z": 543.4
+            },
+            {
+              "index": 1,
+              "sample": "SILICATE CERAMIC",
+              "module": "LOAD PATHS",
+              "sign": "SPECTRAL SPLIT",
+              "color": 13219211,
+              "x": 199.1,
+              "z": 516.1
+            },
+            {
+              "index": 2,
+              "sample": "CARBON COMPOSITE",
+              "module": "SERVICE / PRESSURE",
+              "sign": "LOW ALBEDO DENSITY",
+              "color": 9414317,
+              "x": 209.9,
+              "z": 471.4
+            },
+            {
+              "index": 3,
+              "sample": "CONDUCTIVE LATTICE",
+              "module": "TRANSFER / VISOR",
+              "sign": "METALLIC LATTICE",
+              "color": 14854475,
+              "x": 168.5,
+              "z": 445.3
+            },
+            {
+              "index": 4,
+              "sample": "N₂ FEEDSTOCK",
+              "module": "ATMOSPHERIC FEEDSTOCK",
+              "sign": "RAMAN N₂ BAND",
+              "color": 12175812,
+              "x": 173.9,
+              "z": 391.9
+            },
+            {
+              "index": 5,
+              "sample": "ALCOHOL FEEDSTOCK · C₂H₅OH",
+              "module": "CHEMICAL FEEDSTOCK",
+              "sign": "C–O / O–H SPECTRUM",
+              "color": 16757276,
+              "x": 127.7,
+              "z": 352.8
+            }
+          ],
+          "water": {
+            "id": "BODY02-H2O-01",
+            "confirmed": true,
+            "x": 52,
+            "z": 428,
+            "phase": "SUBSURFACE PORE ICE / HYDRATED SILICA",
+            "thermalDeltaK": -16,
+            "absorptionBandsMicron": [
+              1.4,
+              1.9,
+              2.9
+            ],
+            "particleDensity": 0.28,
+            "spectrumRingMicron": 1.9
+          }
+        },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 1,
+          "total": 3,
+          "records": [
+            "BODY03-MEM-01 · MATERIAL PHASE · 100.0% COHERENCE"
+          ],
+          "target": {
+            "id": "BODY03-MEM-02",
+            "x": 138.17096324747874,
+            "z": 565.5535141151092,
+            "objective": "HYDRATION PHASE",
+            "instruction": "RESOLVE 1.9 µM ABSORPTION IN GRANITE"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 2130,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
+        "drive": {
+          "mode": "observer",
+          "driveMode": "auto",
+          "auto": true,
+          "position": {
+            "x": 150.7247607186474,
+            "z": 401.7429956421744
+          },
+          "speed": 1.9999999980577394,
+          "manualInput": false,
+          "idleFor": 0,
+          "manualPersistent": true
+        }
+      }
+    },
+    {
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
+      "state": {
+        "world": "granite",
+        "planets": 3,
+        "restoration": 6,
+        "structure": 4,
+        "rawMaterials": 2,
+        "simultaneous": false,
+        "prologue": "released",
+        "mission": "searching",
+        "water": "inactive",
+        "waterDistance": null,
+        "geological": "searching",
+        "geologicalNode": 1,
+        "docking": "idle",
+        "voyage": "arrived",
+        "matter": "inactive",
+        "tableau": "idle",
+        "observed": "idle",
+        "landerPresent": true,
+        "roverVisible": true,
+        "experience": "observer",
+        "cameraShot": "wide",
+        "memory": {
+          "version": 3,
+          "ready": true,
+          "samplesReady": true,
+          "waterReady": true,
+          "journey": {
+            "distance": 0,
+            "dwell": 0,
+            "turn": 0
+          },
+          "samples": [
+            {
+              "index": 0,
+              "sample": "FE–NI ALLOY",
+              "module": "FOUNDATION",
+              "sign": "METALLIC REFLECTANCE",
+              "color": 14189621,
+              "x": 231.6,
+              "z": 543.4
+            },
+            {
+              "index": 1,
+              "sample": "SILICATE CERAMIC",
+              "module": "LOAD PATHS",
+              "sign": "SPECTRAL SPLIT",
+              "color": 13219211,
+              "x": 199.1,
+              "z": 516.1
+            },
+            {
+              "index": 2,
+              "sample": "CARBON COMPOSITE",
+              "module": "SERVICE / PRESSURE",
+              "sign": "LOW ALBEDO DENSITY",
+              "color": 9414317,
+              "x": 209.9,
+              "z": 471.4
+            },
+            {
+              "index": 3,
+              "sample": "CONDUCTIVE LATTICE",
+              "module": "TRANSFER / VISOR",
+              "sign": "METALLIC LATTICE",
+              "color": 14854475,
+              "x": 168.5,
+              "z": 445.3
+            },
+            {
+              "index": 4,
+              "sample": "N₂ FEEDSTOCK",
+              "module": "ATMOSPHERIC FEEDSTOCK",
+              "sign": "RAMAN N₂ BAND",
+              "color": 12175812,
+              "x": 173.9,
+              "z": 391.9
+            },
+            {
+              "index": 5,
+              "sample": "ALCOHOL FEEDSTOCK · C₂H₅OH",
+              "module": "CHEMICAL FEEDSTOCK",
+              "sign": "C–O / O–H SPECTRUM",
+              "color": 16757276,
+              "x": 127.7,
+              "z": 352.8
+            }
+          ],
+          "water": {
+            "id": "BODY02-H2O-01",
+            "confirmed": true,
+            "x": 52,
+            "z": 428,
+            "phase": "SUBSURFACE PORE ICE / HYDRATED SILICA",
+            "thermalDeltaK": -16,
+            "absorptionBandsMicron": [
+              1.4,
+              1.9,
+              2.9
+            ],
+            "particleDensity": 0.28,
+            "spectrumRingMicron": 1.9
+          }
+        },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 1,
+          "total": 3,
+          "records": [
+            "BODY03-MEM-01 · MATERIAL PHASE · 100.0% COHERENCE"
+          ],
+          "target": {
+            "id": "BODY03-MEM-02",
+            "x": 138.17096324747874,
+            "z": 565.5535141151092,
+            "objective": "HYDRATION PHASE",
+            "instruction": "RESOLVE 1.9 µM ABSORPTION IN GRANITE"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 2431,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
+        "drive": {
+          "mode": "observer",
+          "driveMode": "auto",
+          "auto": true,
+          "position": {
+            "x": 150.75847967352166,
+            "z": 421.79243951578763
+          },
+          "speed": 1.9999999999999991,
+          "manualInput": false,
+          "idleFor": 0,
+          "manualPersistent": true
+        }
+      }
+    },
+    {
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
+      "state": {
+        "world": "granite",
+        "planets": 3,
+        "restoration": 6,
+        "structure": 4,
+        "rawMaterials": 2,
+        "simultaneous": false,
+        "prologue": "released",
+        "mission": "searching",
+        "water": "inactive",
+        "waterDistance": null,
+        "geological": "searching",
+        "geologicalNode": 1,
+        "docking": "idle",
+        "voyage": "arrived",
+        "matter": "inactive",
+        "tableau": "idle",
+        "observed": "idle",
+        "landerPresent": true,
+        "roverVisible": true,
+        "experience": "observer",
+        "cameraShot": "wide",
+        "memory": {
+          "version": 3,
+          "ready": true,
+          "samplesReady": true,
+          "waterReady": true,
+          "journey": {
+            "distance": 0,
+            "dwell": 0,
+            "turn": 0
+          },
+          "samples": [
+            {
+              "index": 0,
+              "sample": "FE–NI ALLOY",
+              "module": "FOUNDATION",
+              "sign": "METALLIC REFLECTANCE",
+              "color": 14189621,
+              "x": 231.6,
+              "z": 543.4
+            },
+            {
+              "index": 1,
+              "sample": "SILICATE CERAMIC",
+              "module": "LOAD PATHS",
+              "sign": "SPECTRAL SPLIT",
+              "color": 13219211,
+              "x": 199.1,
+              "z": 516.1
+            },
+            {
+              "index": 2,
+              "sample": "CARBON COMPOSITE",
+              "module": "SERVICE / PRESSURE",
+              "sign": "LOW ALBEDO DENSITY",
+              "color": 9414317,
+              "x": 209.9,
+              "z": 471.4
+            },
+            {
+              "index": 3,
+              "sample": "CONDUCTIVE LATTICE",
+              "module": "TRANSFER / VISOR",
+              "sign": "METALLIC LATTICE",
+              "color": 14854475,
+              "x": 168.5,
+              "z": 445.3
+            },
+            {
+              "index": 4,
+              "sample": "N₂ FEEDSTOCK",
+              "module": "ATMOSPHERIC FEEDSTOCK",
+              "sign": "RAMAN N₂ BAND",
+              "color": 12175812,
+              "x": 173.9,
+              "z": 391.9
+            },
+            {
+              "index": 5,
+              "sample": "ALCOHOL FEEDSTOCK · C₂H₅OH",
+              "module": "CHEMICAL FEEDSTOCK",
+              "sign": "C–O / O–H SPECTRUM",
+              "color": 16757276,
+              "x": 127.7,
+              "z": 352.8
+            }
+          ],
+          "water": {
+            "id": "BODY02-H2O-01",
+            "confirmed": true,
+            "x": 52,
+            "z": 428,
+            "phase": "SUBSURFACE PORE ICE / HYDRATED SILICA",
+            "thermalDeltaK": -16,
+            "absorptionBandsMicron": [
+              1.4,
+              1.9,
+              2.9
+            ],
+            "particleDensity": 0.28,
+            "spectrumRingMicron": 1.9
+          }
+        },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 1,
+          "total": 3,
+          "records": [
+            "BODY03-MEM-01 · MATERIAL PHASE · 100.0% COHERENCE"
+          ],
+          "target": {
+            "id": "BODY03-MEM-02",
+            "x": 138.17096324747874,
+            "z": 565.5535141151092,
+            "objective": "HYDRATION PHASE",
+            "instruction": "RESOLVE 1.9 µM ABSORPTION IN GRANITE"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 2731,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
+        "drive": {
+          "mode": "observer",
+          "driveMode": "auto",
+          "auto": true,
+          "position": {
+            "x": 149.62870633870784,
+            "z": 441.75365175164853
+          },
+          "speed": 1.9999999999999991,
+          "manualInput": false,
+          "idleFor": 0,
+          "manualPersistent": true
+        }
+      }
+    },
+    {
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
+      "state": {
+        "world": "granite",
+        "planets": 3,
+        "restoration": 6,
+        "structure": 4,
+        "rawMaterials": 2,
+        "simultaneous": false,
+        "prologue": "released",
+        "mission": "searching",
+        "water": "inactive",
+        "waterDistance": null,
+        "geological": "searching",
+        "geologicalNode": 1,
+        "docking": "idle",
+        "voyage": "arrived",
+        "matter": "inactive",
+        "tableau": "idle",
+        "observed": "idle",
+        "landerPresent": true,
+        "roverVisible": true,
+        "experience": "observer",
+        "cameraShot": "wide",
+        "memory": {
+          "version": 3,
+          "ready": true,
+          "samplesReady": true,
+          "waterReady": true,
+          "journey": {
+            "distance": 0,
+            "dwell": 0,
+            "turn": 0
+          },
+          "samples": [
+            {
+              "index": 0,
+              "sample": "FE–NI ALLOY",
+              "module": "FOUNDATION",
+              "sign": "METALLIC REFLECTANCE",
+              "color": 14189621,
+              "x": 231.6,
+              "z": 543.4
+            },
+            {
+              "index": 1,
+              "sample": "SILICATE CERAMIC",
+              "module": "LOAD PATHS",
+              "sign": "SPECTRAL SPLIT",
+              "color": 13219211,
+              "x": 199.1,
+              "z": 516.1
+            },
+            {
+              "index": 2,
+              "sample": "CARBON COMPOSITE",
+              "module": "SERVICE / PRESSURE",
+              "sign": "LOW ALBEDO DENSITY",
+              "color": 9414317,
+              "x": 209.9,
+              "z": 471.4
+            },
+            {
+              "index": 3,
+              "sample": "CONDUCTIVE LATTICE",
+              "module": "TRANSFER / VISOR",
+              "sign": "METALLIC LATTICE",
+              "color": 14854475,
+              "x": 168.5,
+              "z": 445.3
+            },
+            {
+              "index": 4,
+              "sample": "N₂ FEEDSTOCK",
+              "module": "ATMOSPHERIC FEEDSTOCK",
+              "sign": "RAMAN N₂ BAND",
+              "color": 12175812,
+              "x": 173.9,
+              "z": 391.9
+            },
+            {
+              "index": 5,
+              "sample": "ALCOHOL FEEDSTOCK · C₂H₅OH",
+              "module": "CHEMICAL FEEDSTOCK",
+              "sign": "C–O / O–H SPECTRUM",
+              "color": 16757276,
+              "x": 127.7,
+              "z": 352.8
+            }
+          ],
+          "water": {
+            "id": "BODY02-H2O-01",
+            "confirmed": true,
+            "x": 52,
+            "z": 428,
+            "phase": "SUBSURFACE PORE ICE / HYDRATED SILICA",
+            "thermalDeltaK": -16,
+            "absorptionBandsMicron": [
+              1.4,
+              1.9,
+              2.9
+            ],
+            "particleDensity": 0.28,
+            "spectrumRingMicron": 1.9
+          }
+        },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 1,
+          "total": 3,
+          "records": [
+            "BODY03-MEM-01 · MATERIAL PHASE · 100.0% COHERENCE"
+          ],
+          "target": {
+            "id": "BODY03-MEM-02",
+            "x": 138.17096324747874,
+            "z": 565.5535141151092,
+            "objective": "HYDRATION PHASE",
+            "instruction": "RESOLVE 1.9 µM ABSORPTION IN GRANITE"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 3031,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
+        "drive": {
+          "mode": "observer",
+          "driveMode": "auto",
+          "auto": true,
+          "position": {
+            "x": 149.42121664042534,
+            "z": 444.3037296648705
           },
           "speed": 0,
           "manualInput": false,
@@ -3226,7 +4569,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -3331,15 +4674,47 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 1,
+          "total": 3,
+          "records": [
+            "BODY03-MEM-01 · MATERIAL PHASE · 100.0% COHERENCE"
+          ],
+          "target": {
+            "id": "BODY03-MEM-02",
+            "x": 138.17096324747874,
+            "z": 565.5535141151092,
+            "objective": "HYDRATION PHASE",
+            "instruction": "RESOLVE 1.9 µM ABSORPTION IN GRANITE"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 3331,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 151.40509271677485,
-            "z": 407.1393560716716
+            "x": 148.53715356018736,
+            "z": 453.7037389158359
           },
-          "speed": 1.9999999999998936,
+          "speed": 1.9999999102509718,
           "manualInput": false,
           "idleFor": 0,
           "manualPersistent": true
@@ -3347,7 +4722,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -3452,13 +4827,45 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 1,
+          "total": 3,
+          "records": [
+            "BODY03-MEM-01 · MATERIAL PHASE · 100.0% COHERENCE"
+          ],
+          "target": {
+            "id": "BODY03-MEM-02",
+            "x": 138.17096324747874,
+            "z": 565.5535141151092,
+            "objective": "HYDRATION PHASE",
+            "instruction": "RESOLVE 1.9 µM ABSORPTION IN GRANITE"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 3632,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 151.4290815771816,
-            "z": 427.13716298797027
+            "x": 146.11824115643472,
+            "z": 473.62336514975505
           },
           "speed": 1.9999999999999991,
           "manualInput": false,
@@ -3468,7 +4875,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -3573,13 +4980,45 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 1,
+          "total": 3,
+          "records": [
+            "BODY03-MEM-01 · MATERIAL PHASE · 100.0% COHERENCE"
+          ],
+          "target": {
+            "id": "BODY03-MEM-02",
+            "x": 138.17096324747874,
+            "z": 565.5535141151092,
+            "objective": "HYDRATION PHASE",
+            "instruction": "RESOLVE 1.9 µM ABSORPTION IN GRANITE"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 3932,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 150.59527022219035,
-            "z": 447.1823320914533
+            "x": 143.39035439956575,
+            "z": 493.43483120825425
           },
           "speed": 1.9999999999999991,
           "manualInput": false,
@@ -3589,7 +5028,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -3694,15 +5133,47 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 1,
+          "total": 3,
+          "records": [
+            "BODY03-MEM-01 · MATERIAL PHASE · 100.0% COHERENCE"
+          ],
+          "target": {
+            "id": "BODY03-MEM-02",
+            "x": 138.17096324747874,
+            "z": 565.5535141151092,
+            "objective": "HYDRATION PHASE",
+            "instruction": "RESOLVE 1.9 µM ABSORPTION IN GRANITE"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 4232,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 149.31749789935355,
-            "z": 462.7552075791633
+            "x": 140.89390930693742,
+            "z": 513.2755126372291
           },
-          "speed": 0.0004743590467974888,
+          "speed": 1.9999999999999991,
           "manualInput": false,
           "idleFor": 0,
           "manualPersistent": true
@@ -3710,7 +5181,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -3815,13 +5286,198 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 1,
+          "total": 3,
+          "records": [
+            "BODY03-MEM-01 · MATERIAL PHASE · 100.0% COHERENCE"
+          ],
+          "target": {
+            "id": "BODY03-MEM-02",
+            "x": 138.17096324747874,
+            "z": 565.5535141151092,
+            "objective": "HYDRATION PHASE",
+            "instruction": "RESOLVE 1.9 µM ABSORPTION IN GRANITE"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 4532,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 149.31748794337076,
-            "z": 462.7553089619537
+            "x": 139.06199443821149,
+            "z": 533.1899605216524
+          },
+          "speed": 1.9999999999999991,
+          "manualInput": false,
+          "idleFor": 0,
+          "manualPersistent": true
+        }
+      }
+    },
+    {
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
+      "state": {
+        "world": "granite",
+        "planets": 3,
+        "restoration": 6,
+        "structure": 4,
+        "rawMaterials": 2,
+        "simultaneous": false,
+        "prologue": "released",
+        "mission": "searching",
+        "water": "inactive",
+        "waterDistance": null,
+        "geological": "searching",
+        "geologicalNode": 1,
+        "docking": "idle",
+        "voyage": "arrived",
+        "matter": "inactive",
+        "tableau": "idle",
+        "observed": "idle",
+        "landerPresent": true,
+        "roverVisible": true,
+        "experience": "observer",
+        "cameraShot": "wide",
+        "memory": {
+          "version": 3,
+          "ready": true,
+          "samplesReady": true,
+          "waterReady": true,
+          "journey": {
+            "distance": 0,
+            "dwell": 0,
+            "turn": 0
+          },
+          "samples": [
+            {
+              "index": 0,
+              "sample": "FE–NI ALLOY",
+              "module": "FOUNDATION",
+              "sign": "METALLIC REFLECTANCE",
+              "color": 14189621,
+              "x": 231.6,
+              "z": 543.4
+            },
+            {
+              "index": 1,
+              "sample": "SILICATE CERAMIC",
+              "module": "LOAD PATHS",
+              "sign": "SPECTRAL SPLIT",
+              "color": 13219211,
+              "x": 199.1,
+              "z": 516.1
+            },
+            {
+              "index": 2,
+              "sample": "CARBON COMPOSITE",
+              "module": "SERVICE / PRESSURE",
+              "sign": "LOW ALBEDO DENSITY",
+              "color": 9414317,
+              "x": 209.9,
+              "z": 471.4
+            },
+            {
+              "index": 3,
+              "sample": "CONDUCTIVE LATTICE",
+              "module": "TRANSFER / VISOR",
+              "sign": "METALLIC LATTICE",
+              "color": 14854475,
+              "x": 168.5,
+              "z": 445.3
+            },
+            {
+              "index": 4,
+              "sample": "N₂ FEEDSTOCK",
+              "module": "ATMOSPHERIC FEEDSTOCK",
+              "sign": "RAMAN N₂ BAND",
+              "color": 12175812,
+              "x": 173.9,
+              "z": 391.9
+            },
+            {
+              "index": 5,
+              "sample": "ALCOHOL FEEDSTOCK · C₂H₅OH",
+              "module": "CHEMICAL FEEDSTOCK",
+              "sign": "C–O / O–H SPECTRUM",
+              "color": 16757276,
+              "x": 127.7,
+              "z": 352.8
+            }
+          ],
+          "water": {
+            "id": "BODY02-H2O-01",
+            "confirmed": true,
+            "x": 52,
+            "z": 428,
+            "phase": "SUBSURFACE PORE ICE / HYDRATED SILICA",
+            "thermalDeltaK": -16,
+            "absorptionBandsMicron": [
+              1.4,
+              1.9,
+              2.9
+            ],
+            "particleDensity": 0.28,
+            "spectrumRingMicron": 1.9
+          }
+        },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 1,
+          "total": 3,
+          "records": [
+            "BODY03-MEM-01 · MATERIAL PHASE · 100.0% COHERENCE"
+          ],
+          "target": {
+            "id": "BODY03-MEM-02",
+            "x": 138.17096324747874,
+            "z": 565.5535141151092,
+            "objective": "HYDRATION PHASE",
+            "instruction": "RESOLVE 1.9 µM ABSORPTION IN GRANITE"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 4833,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
+        "drive": {
+          "mode": "observer",
+          "driveMode": "auto",
+          "auto": true,
+          "position": {
+            "x": 138.89140941243525,
+            "z": 535.7423582483973
           },
           "speed": 0,
           "manualInput": false,
@@ -3831,7 +5487,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -3936,15 +5592,47 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 1,
+          "total": 3,
+          "records": [
+            "BODY03-MEM-01 · MATERIAL PHASE · 100.0% COHERENCE"
+          ],
+          "target": {
+            "id": "BODY03-MEM-02",
+            "x": 138.17096324747874,
+            "z": 565.5535141151092,
+            "objective": "HYDRATION PHASE",
+            "instruction": "RESOLVE 1.9 µM ABSORPTION IN GRANITE"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 5133,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 147.4457291554653,
-            "z": 478.95518344550095
+            "x": 138.40365126506327,
+            "z": 545.1707818523727
           },
-          "speed": 1.999999999999192,
+          "speed": 1.9999999101860342,
           "manualInput": false,
           "idleFor": 0,
           "manualPersistent": true
@@ -3952,7 +5640,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -3965,611 +5653,6 @@
         "water": "inactive",
         "waterDistance": null,
         "geological": "searching",
-        "geologicalNode": 1,
-        "docking": "idle",
-        "voyage": "arrived",
-        "matter": "inactive",
-        "tableau": "idle",
-        "observed": "idle",
-        "landerPresent": true,
-        "roverVisible": true,
-        "experience": "observer",
-        "cameraShot": "wide",
-        "memory": {
-          "version": 3,
-          "ready": true,
-          "samplesReady": true,
-          "waterReady": true,
-          "journey": {
-            "distance": 0,
-            "dwell": 0,
-            "turn": 0
-          },
-          "samples": [
-            {
-              "index": 0,
-              "sample": "FE–NI ALLOY",
-              "module": "FOUNDATION",
-              "sign": "METALLIC REFLECTANCE",
-              "color": 14189621,
-              "x": 231.6,
-              "z": 543.4
-            },
-            {
-              "index": 1,
-              "sample": "SILICATE CERAMIC",
-              "module": "LOAD PATHS",
-              "sign": "SPECTRAL SPLIT",
-              "color": 13219211,
-              "x": 199.1,
-              "z": 516.1
-            },
-            {
-              "index": 2,
-              "sample": "CARBON COMPOSITE",
-              "module": "SERVICE / PRESSURE",
-              "sign": "LOW ALBEDO DENSITY",
-              "color": 9414317,
-              "x": 209.9,
-              "z": 471.4
-            },
-            {
-              "index": 3,
-              "sample": "CONDUCTIVE LATTICE",
-              "module": "TRANSFER / VISOR",
-              "sign": "METALLIC LATTICE",
-              "color": 14854475,
-              "x": 168.5,
-              "z": 445.3
-            },
-            {
-              "index": 4,
-              "sample": "N₂ FEEDSTOCK",
-              "module": "ATMOSPHERIC FEEDSTOCK",
-              "sign": "RAMAN N₂ BAND",
-              "color": 12175812,
-              "x": 173.9,
-              "z": 391.9
-            },
-            {
-              "index": 5,
-              "sample": "ALCOHOL FEEDSTOCK · C₂H₅OH",
-              "module": "CHEMICAL FEEDSTOCK",
-              "sign": "C–O / O–H SPECTRUM",
-              "color": 16757276,
-              "x": 127.7,
-              "z": 352.8
-            }
-          ],
-          "water": {
-            "id": "BODY02-H2O-01",
-            "confirmed": true,
-            "x": 52,
-            "z": 428,
-            "phase": "SUBSURFACE PORE ICE / HYDRATED SILICA",
-            "thermalDeltaK": -16,
-            "absorptionBandsMicron": [
-              1.4,
-              1.9,
-              2.9
-            ],
-            "particleDensity": 0.28,
-            "spectrumRingMicron": 1.9
-          }
-        },
-        "drive": {
-          "mode": "observer",
-          "driveMode": "auto",
-          "auto": true,
-          "position": {
-            "x": 144.7126877403189,
-            "z": 498.7658080528417
-          },
-          "speed": 1.9999999999999991,
-          "manualInput": false,
-          "idleFor": 0,
-          "manualPersistent": true
-        }
-      }
-    },
-    {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
-      "state": {
-        "world": "granite",
-        "planets": 3,
-        "restoration": 6,
-        "structure": 4,
-        "rawMaterials": 2,
-        "simultaneous": false,
-        "prologue": "released",
-        "mission": "searching",
-        "water": "inactive",
-        "waterDistance": null,
-        "geological": "searching",
-        "geologicalNode": 1,
-        "docking": "idle",
-        "voyage": "arrived",
-        "matter": "inactive",
-        "tableau": "idle",
-        "observed": "idle",
-        "landerPresent": true,
-        "roverVisible": true,
-        "experience": "observer",
-        "cameraShot": "wide",
-        "memory": {
-          "version": 3,
-          "ready": true,
-          "samplesReady": true,
-          "waterReady": true,
-          "journey": {
-            "distance": 0,
-            "dwell": 0,
-            "turn": 0
-          },
-          "samples": [
-            {
-              "index": 0,
-              "sample": "FE–NI ALLOY",
-              "module": "FOUNDATION",
-              "sign": "METALLIC REFLECTANCE",
-              "color": 14189621,
-              "x": 231.6,
-              "z": 543.4
-            },
-            {
-              "index": 1,
-              "sample": "SILICATE CERAMIC",
-              "module": "LOAD PATHS",
-              "sign": "SPECTRAL SPLIT",
-              "color": 13219211,
-              "x": 199.1,
-              "z": 516.1
-            },
-            {
-              "index": 2,
-              "sample": "CARBON COMPOSITE",
-              "module": "SERVICE / PRESSURE",
-              "sign": "LOW ALBEDO DENSITY",
-              "color": 9414317,
-              "x": 209.9,
-              "z": 471.4
-            },
-            {
-              "index": 3,
-              "sample": "CONDUCTIVE LATTICE",
-              "module": "TRANSFER / VISOR",
-              "sign": "METALLIC LATTICE",
-              "color": 14854475,
-              "x": 168.5,
-              "z": 445.3
-            },
-            {
-              "index": 4,
-              "sample": "N₂ FEEDSTOCK",
-              "module": "ATMOSPHERIC FEEDSTOCK",
-              "sign": "RAMAN N₂ BAND",
-              "color": 12175812,
-              "x": 173.9,
-              "z": 391.9
-            },
-            {
-              "index": 5,
-              "sample": "ALCOHOL FEEDSTOCK · C₂H₅OH",
-              "module": "CHEMICAL FEEDSTOCK",
-              "sign": "C–O / O–H SPECTRUM",
-              "color": 16757276,
-              "x": 127.7,
-              "z": 352.8
-            }
-          ],
-          "water": {
-            "id": "BODY02-H2O-01",
-            "confirmed": true,
-            "x": 52,
-            "z": 428,
-            "phase": "SUBSURFACE PORE ICE / HYDRATED SILICA",
-            "thermalDeltaK": -16,
-            "absorptionBandsMicron": [
-              1.4,
-              1.9,
-              2.9
-            ],
-            "particleDensity": 0.28,
-            "spectrumRingMicron": 1.9
-          }
-        },
-        "drive": {
-          "mode": "observer",
-          "driveMode": "auto",
-          "auto": true,
-          "position": {
-            "x": 141.99321016018408,
-            "z": 518.5790861113303
-          },
-          "speed": 1.9999999999999991,
-          "manualInput": false,
-          "idleFor": 0,
-          "manualPersistent": true
-        }
-      }
-    },
-    {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
-      "state": {
-        "world": "granite",
-        "planets": 3,
-        "restoration": 6,
-        "structure": 4,
-        "rawMaterials": 2,
-        "simultaneous": false,
-        "prologue": "released",
-        "mission": "searching",
-        "water": "inactive",
-        "waterDistance": null,
-        "geological": "searching",
-        "geologicalNode": 1,
-        "docking": "idle",
-        "voyage": "arrived",
-        "matter": "inactive",
-        "tableau": "idle",
-        "observed": "idle",
-        "landerPresent": true,
-        "roverVisible": true,
-        "experience": "observer",
-        "cameraShot": "wide",
-        "memory": {
-          "version": 3,
-          "ready": true,
-          "samplesReady": true,
-          "waterReady": true,
-          "journey": {
-            "distance": 0,
-            "dwell": 0,
-            "turn": 0
-          },
-          "samples": [
-            {
-              "index": 0,
-              "sample": "FE–NI ALLOY",
-              "module": "FOUNDATION",
-              "sign": "METALLIC REFLECTANCE",
-              "color": 14189621,
-              "x": 231.6,
-              "z": 543.4
-            },
-            {
-              "index": 1,
-              "sample": "SILICATE CERAMIC",
-              "module": "LOAD PATHS",
-              "sign": "SPECTRAL SPLIT",
-              "color": 13219211,
-              "x": 199.1,
-              "z": 516.1
-            },
-            {
-              "index": 2,
-              "sample": "CARBON COMPOSITE",
-              "module": "SERVICE / PRESSURE",
-              "sign": "LOW ALBEDO DENSITY",
-              "color": 9414317,
-              "x": 209.9,
-              "z": 471.4
-            },
-            {
-              "index": 3,
-              "sample": "CONDUCTIVE LATTICE",
-              "module": "TRANSFER / VISOR",
-              "sign": "METALLIC LATTICE",
-              "color": 14854475,
-              "x": 168.5,
-              "z": 445.3
-            },
-            {
-              "index": 4,
-              "sample": "N₂ FEEDSTOCK",
-              "module": "ATMOSPHERIC FEEDSTOCK",
-              "sign": "RAMAN N₂ BAND",
-              "color": 12175812,
-              "x": 173.9,
-              "z": 391.9
-            },
-            {
-              "index": 5,
-              "sample": "ALCOHOL FEEDSTOCK · C₂H₅OH",
-              "module": "CHEMICAL FEEDSTOCK",
-              "sign": "C–O / O–H SPECTRUM",
-              "color": 16757276,
-              "x": 127.7,
-              "z": 352.8
-            }
-          ],
-          "water": {
-            "id": "BODY02-H2O-01",
-            "confirmed": true,
-            "x": 52,
-            "z": 428,
-            "phase": "SUBSURFACE PORE ICE / HYDRATED SILICA",
-            "thermalDeltaK": -16,
-            "absorptionBandsMicron": [
-              1.4,
-              1.9,
-              2.9
-            ],
-            "particleDensity": 0.28,
-            "spectrumRingMicron": 1.9
-          }
-        },
-        "drive": {
-          "mode": "observer",
-          "driveMode": "auto",
-          "auto": true,
-          "position": {
-            "x": 139.764174158668,
-            "z": 538.4526454883388
-          },
-          "speed": 1.9999999999999991,
-          "manualInput": false,
-          "idleFor": 0,
-          "manualPersistent": true
-        }
-      }
-    },
-    {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
-      "state": {
-        "world": "granite",
-        "planets": 3,
-        "restoration": 6,
-        "structure": 4,
-        "rawMaterials": 2,
-        "simultaneous": false,
-        "prologue": "released",
-        "mission": "searching",
-        "water": "inactive",
-        "waterDistance": null,
-        "geological": "searching",
-        "geologicalNode": 1,
-        "docking": "idle",
-        "voyage": "arrived",
-        "matter": "inactive",
-        "tableau": "idle",
-        "observed": "idle",
-        "landerPresent": true,
-        "roverVisible": true,
-        "experience": "observer",
-        "cameraShot": "wide",
-        "memory": {
-          "version": 3,
-          "ready": true,
-          "samplesReady": true,
-          "waterReady": true,
-          "journey": {
-            "distance": 0,
-            "dwell": 0,
-            "turn": 0
-          },
-          "samples": [
-            {
-              "index": 0,
-              "sample": "FE–NI ALLOY",
-              "module": "FOUNDATION",
-              "sign": "METALLIC REFLECTANCE",
-              "color": 14189621,
-              "x": 231.6,
-              "z": 543.4
-            },
-            {
-              "index": 1,
-              "sample": "SILICATE CERAMIC",
-              "module": "LOAD PATHS",
-              "sign": "SPECTRAL SPLIT",
-              "color": 13219211,
-              "x": 199.1,
-              "z": 516.1
-            },
-            {
-              "index": 2,
-              "sample": "CARBON COMPOSITE",
-              "module": "SERVICE / PRESSURE",
-              "sign": "LOW ALBEDO DENSITY",
-              "color": 9414317,
-              "x": 209.9,
-              "z": 471.4
-            },
-            {
-              "index": 3,
-              "sample": "CONDUCTIVE LATTICE",
-              "module": "TRANSFER / VISOR",
-              "sign": "METALLIC LATTICE",
-              "color": 14854475,
-              "x": 168.5,
-              "z": 445.3
-            },
-            {
-              "index": 4,
-              "sample": "N₂ FEEDSTOCK",
-              "module": "ATMOSPHERIC FEEDSTOCK",
-              "sign": "RAMAN N₂ BAND",
-              "color": 12175812,
-              "x": 173.9,
-              "z": 391.9
-            },
-            {
-              "index": 5,
-              "sample": "ALCOHOL FEEDSTOCK · C₂H₅OH",
-              "module": "CHEMICAL FEEDSTOCK",
-              "sign": "C–O / O–H SPECTRUM",
-              "color": 16757276,
-              "x": 127.7,
-              "z": 352.8
-            }
-          ],
-          "water": {
-            "id": "BODY02-H2O-01",
-            "confirmed": true,
-            "x": 52,
-            "z": 428,
-            "phase": "SUBSURFACE PORE ICE / HYDRATED SILICA",
-            "thermalDeltaK": -16,
-            "absorptionBandsMicron": [
-              1.4,
-              1.9,
-              2.9
-            ],
-            "particleDensity": 0.28,
-            "spectrumRingMicron": 1.9
-          }
-        },
-        "drive": {
-          "mode": "observer",
-          "driveMode": "auto",
-          "auto": true,
-          "position": {
-            "x": 138.59347783876737,
-            "z": 554.1669479446243
-          },
-          "speed": 0.0005938415823413354,
-          "manualInput": false,
-          "idleFor": 0,
-          "manualPersistent": true
-        }
-      }
-    },
-    {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
-      "state": {
-        "world": "granite",
-        "planets": 3,
-        "restoration": 6,
-        "structure": 4,
-        "rawMaterials": 2,
-        "simultaneous": false,
-        "prologue": "released",
-        "mission": "searching",
-        "water": "inactive",
-        "waterDistance": null,
-        "geological": "searching",
-        "geologicalNode": 1,
-        "docking": "idle",
-        "voyage": "arrived",
-        "matter": "inactive",
-        "tableau": "idle",
-        "observed": "idle",
-        "landerPresent": true,
-        "roverVisible": true,
-        "experience": "observer",
-        "cameraShot": "wide",
-        "memory": {
-          "version": 3,
-          "ready": true,
-          "samplesReady": true,
-          "waterReady": true,
-          "journey": {
-            "distance": 0,
-            "dwell": 0,
-            "turn": 0
-          },
-          "samples": [
-            {
-              "index": 0,
-              "sample": "FE–NI ALLOY",
-              "module": "FOUNDATION",
-              "sign": "METALLIC REFLECTANCE",
-              "color": 14189621,
-              "x": 231.6,
-              "z": 543.4
-            },
-            {
-              "index": 1,
-              "sample": "SILICATE CERAMIC",
-              "module": "LOAD PATHS",
-              "sign": "SPECTRAL SPLIT",
-              "color": 13219211,
-              "x": 199.1,
-              "z": 516.1
-            },
-            {
-              "index": 2,
-              "sample": "CARBON COMPOSITE",
-              "module": "SERVICE / PRESSURE",
-              "sign": "LOW ALBEDO DENSITY",
-              "color": 9414317,
-              "x": 209.9,
-              "z": 471.4
-            },
-            {
-              "index": 3,
-              "sample": "CONDUCTIVE LATTICE",
-              "module": "TRANSFER / VISOR",
-              "sign": "METALLIC LATTICE",
-              "color": 14854475,
-              "x": 168.5,
-              "z": 445.3
-            },
-            {
-              "index": 4,
-              "sample": "N₂ FEEDSTOCK",
-              "module": "ATMOSPHERIC FEEDSTOCK",
-              "sign": "RAMAN N₂ BAND",
-              "color": 12175812,
-              "x": 173.9,
-              "z": 391.9
-            },
-            {
-              "index": 5,
-              "sample": "ALCOHOL FEEDSTOCK · C₂H₅OH",
-              "module": "CHEMICAL FEEDSTOCK",
-              "sign": "C–O / O–H SPECTRUM",
-              "color": 16757276,
-              "x": 127.7,
-              "z": 352.8
-            }
-          ],
-          "water": {
-            "id": "BODY02-H2O-01",
-            "confirmed": true,
-            "x": 52,
-            "z": 428,
-            "phase": "SUBSURFACE PORE ICE / HYDRATED SILICA",
-            "thermalDeltaK": -16,
-            "absorptionBandsMicron": [
-              1.4,
-              1.9,
-              2.9
-            ],
-            "particleDensity": 0.28,
-            "spectrumRingMicron": 1.9
-          }
-        },
-        "drive": {
-          "mode": "observer",
-          "driveMode": "auto",
-          "auto": true,
-          "position": {
-            "x": 138.5934702430303,
-            "z": 554.1670829600815
-          },
-          "speed": 0,
-          "manualInput": false,
-          "idleFor": 0,
-          "manualPersistent": true
-        }
-      }
-    },
-    {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
-      "state": {
-        "world": "granite",
-        "planets": 3,
-        "restoration": 6,
-        "structure": 4,
-        "rawMaterials": 2,
-        "simultaneous": false,
-        "prologue": "released",
-        "mission": "scanning",
-        "water": "inactive",
-        "waterDistance": null,
-        "geological": "scanning",
         "geologicalNode": 1,
         "docking": "idle",
         "voyage": "arrived",
@@ -4662,15 +5745,47 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 1,
+          "total": 3,
+          "records": [
+            "BODY03-MEM-01 · MATERIAL PHASE · 100.0% COHERENCE"
+          ],
+          "target": {
+            "id": "BODY03-MEM-02",
+            "x": 138.17096324747874,
+            "z": 565.5535141151092,
+            "objective": "HYDRATION PHASE",
+            "instruction": "RESOLVE 1.9 µM ABSORPTION IN GRANITE"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 5433,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 138.26021067441152,
-            "z": 561.7992786679241
+            "x": 138.1145418211208,
+            "z": 561.0820387064213
           },
-          "speed": 0.0007709659409447106,
+          "speed": 0.8400030209363446,
           "manualInput": false,
           "idleFor": 0,
           "manualPersistent": true
@@ -4678,7 +5793,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -4783,15 +5898,48 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 2,
+          "total": 3,
+          "records": [
+            "BODY03-MEM-01 · MATERIAL PHASE · 100.0% COHERENCE",
+            "BODY03-MEM-02 · HYDRATION PHASE · 100.0% COHERENCE"
+          ],
+          "target": {
+            "id": "BODY03-MEM-03",
+            "x": 290.13969563915026,
+            "z": 411.8185697601207,
+            "objective": "CONCORDANCE",
+            "instruction": "FIX THE GEOLOGICAL MEMORY INTERSECTION"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 5733,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 148.37805204757305,
-            "z": 562.8186720687343
+            "x": 144.38133621102733,
+            "z": 565.8136919914402
           },
-          "speed": 1.999999999953087,
+          "speed": 1.999999689149958,
           "manualInput": false,
           "idleFor": 0,
           "manualPersistent": true
@@ -4799,7 +5947,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -4904,13 +6052,46 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 2,
+          "total": 3,
+          "records": [
+            "BODY03-MEM-01 · MATERIAL PHASE · 100.0% COHERENCE",
+            "BODY03-MEM-02 · HYDRATION PHASE · 100.0% COHERENCE"
+          ],
+          "target": {
+            "id": "BODY03-MEM-03",
+            "x": 290.13969563915026,
+            "z": 411.8185697601207,
+            "objective": "CONCORDANCE",
+            "instruction": "FIX THE GEOLOGICAL MEMORY INTERSECTION"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 6034,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 161.74427283008535,
-            "z": 547.9450518896734
+            "x": 157.8942060818743,
+            "z": 551.0994953549276
           },
           "speed": 1.9999999999999991,
           "manualInput": false,
@@ -4920,7 +6101,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -5025,13 +6206,46 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 2,
+          "total": 3,
+          "records": [
+            "BODY03-MEM-01 · MATERIAL PHASE · 100.0% COHERENCE",
+            "BODY03-MEM-02 · HYDRATION PHASE · 100.0% COHERENCE"
+          ],
+          "target": {
+            "id": "BODY03-MEM-03",
+            "x": 290.13969563915026,
+            "z": 411.8185697601207,
+            "objective": "CONCORDANCE",
+            "instruction": "FIX THE GEOLOGICAL MEMORY INTERSECTION"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 6334,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 174.59146820263618,
-            "z": 532.620730374454
+            "x": 170.47525875703784,
+            "z": 535.5511476735973
           },
           "speed": 1.9999999999999991,
           "manualInput": false,
@@ -5041,7 +6255,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -5146,125 +6360,37 @@
             "spectrumRingMicron": 1.9
           }
         },
-        "drive": {
-          "mode": "observer",
-          "driveMode": "auto",
-          "auto": true,
-          "position": {
-            "x": 184.50947701347056,
-            "z": 520.2907423882591
-          },
-          "speed": 0.0006613819779259687,
-          "manualInput": false,
-          "idleFor": 0,
-          "manualPersistent": true
-        }
-      }
-    },
-    {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
-      "state": {
-        "world": "granite",
-        "planets": 3,
-        "restoration": 6,
-        "structure": 4,
-        "rawMaterials": 2,
-        "simultaneous": false,
-        "prologue": "released",
-        "mission": "searching",
-        "water": "inactive",
-        "waterDistance": null,
-        "geological": "searching",
-        "geologicalNode": 2,
-        "docking": "idle",
-        "voyage": "arrived",
-        "matter": "inactive",
-        "tableau": "idle",
-        "observed": "idle",
-        "landerPresent": true,
-        "roverVisible": true,
-        "experience": "observer",
-        "cameraShot": "wide",
-        "memory": {
-          "version": 3,
-          "ready": true,
-          "samplesReady": true,
-          "waterReady": true,
-          "journey": {
-            "distance": 0,
-            "dwell": 0,
-            "turn": 0
-          },
-          "samples": [
-            {
-              "index": 0,
-              "sample": "FE–NI ALLOY",
-              "module": "FOUNDATION",
-              "sign": "METALLIC REFLECTANCE",
-              "color": 14189621,
-              "x": 231.6,
-              "z": 543.4
-            },
-            {
-              "index": 1,
-              "sample": "SILICATE CERAMIC",
-              "module": "LOAD PATHS",
-              "sign": "SPECTRAL SPLIT",
-              "color": 13219211,
-              "x": 199.1,
-              "z": 516.1
-            },
-            {
-              "index": 2,
-              "sample": "CARBON COMPOSITE",
-              "module": "SERVICE / PRESSURE",
-              "sign": "LOW ALBEDO DENSITY",
-              "color": 9414317,
-              "x": 209.9,
-              "z": 471.4
-            },
-            {
-              "index": 3,
-              "sample": "CONDUCTIVE LATTICE",
-              "module": "TRANSFER / VISOR",
-              "sign": "METALLIC LATTICE",
-              "color": 14854475,
-              "x": 168.5,
-              "z": 445.3
-            },
-            {
-              "index": 4,
-              "sample": "N₂ FEEDSTOCK",
-              "module": "ATMOSPHERIC FEEDSTOCK",
-              "sign": "RAMAN N₂ BAND",
-              "color": 12175812,
-              "x": 173.9,
-              "z": 391.9
-            },
-            {
-              "index": 5,
-              "sample": "ALCOHOL FEEDSTOCK · C₂H₅OH",
-              "module": "CHEMICAL FEEDSTOCK",
-              "sign": "C–O / O–H SPECTRUM",
-              "color": 16757276,
-              "x": 127.7,
-              "z": 352.8
-            }
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 2,
+          "total": 3,
+          "records": [
+            "BODY03-MEM-01 · MATERIAL PHASE · 100.0% COHERENCE",
+            "BODY03-MEM-02 · HYDRATION PHASE · 100.0% COHERENCE"
           ],
-          "water": {
-            "id": "BODY02-H2O-01",
-            "confirmed": true,
-            "x": 52,
-            "z": 428,
-            "phase": "SUBSURFACE PORE ICE / HYDRATED SILICA",
-            "thermalDeltaK": -16,
-            "absorptionBandsMicron": [
-              1.4,
-              1.9,
-              2.9
-            ],
-            "particleDensity": 0.28,
-            "spectrumRingMicron": 1.9
+          "target": {
+            "id": "BODY03-MEM-03",
+            "x": 290.13969563915026,
+            "z": 411.8185697601207,
+            "objective": "CONCORDANCE",
+            "instruction": "FIX THE GEOLOGICAL MEMORY INTERSECTION"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 6634,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
           }
         },
         "drive": {
@@ -5272,8 +6398,8 @@
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 184.50957308602463,
-            "z": 520.2906216494797
+            "x": 172.06527601502057,
+            "z": 533.546304125546
           },
           "speed": 0,
           "manualInput": false,
@@ -5283,7 +6409,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -5388,15 +6514,48 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 2,
+          "total": 3,
+          "records": [
+            "BODY03-MEM-01 · MATERIAL PHASE · 100.0% COHERENCE",
+            "BODY03-MEM-02 · HYDRATION PHASE · 100.0% COHERENCE"
+          ],
+          "target": {
+            "id": "BODY03-MEM-03",
+            "x": 290.13969563915026,
+            "z": 411.8185697601207,
+            "objective": "CONCORDANCE",
+            "instruction": "FIX THE GEOLOGICAL MEMORY INTERSECTION"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 6934,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 194.549042059933,
-            "z": 507.60878419535294
+            "x": 177.8708363486779,
+            "z": 526.1836891433924
           },
-          "speed": 1.9999999999989875,
+          "speed": 1.9999998997478292,
           "manualInput": false,
           "idleFor": 0,
           "manualPersistent": true
@@ -5404,7 +6563,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -5509,13 +6668,46 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 2,
+          "total": 3,
+          "records": [
+            "BODY03-MEM-01 · MATERIAL PHASE · 100.0% COHERENCE",
+            "BODY03-MEM-02 · HYDRATION PHASE · 100.0% COHERENCE"
+          ],
+          "target": {
+            "id": "BODY03-MEM-03",
+            "x": 290.13969563915026,
+            "z": 411.8185697601207,
+            "objective": "CONCORDANCE",
+            "instruction": "FIX THE GEOLOGICAL MEMORY INTERSECTION"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 7234,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 207.07520625994195,
-            "z": 491.9326262556489
+            "x": 190.24593900328088,
+            "z": 510.472803517927
           },
           "speed": 1.9999999999999991,
           "manualInput": false,
@@ -5525,7 +6717,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -5630,13 +6822,46 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 2,
+          "total": 3,
+          "records": [
+            "BODY03-MEM-01 · MATERIAL PHASE · 100.0% COHERENCE",
+            "BODY03-MEM-02 · HYDRATION PHASE · 100.0% COHERENCE"
+          ],
+          "target": {
+            "id": "BODY03-MEM-03",
+            "x": 290.13969563915026,
+            "z": 411.8185697601207,
+            "objective": "CONCORDANCE",
+            "instruction": "FIX THE GEOLOGICAL MEMORY INTERSECTION"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 7535,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 219.89739023782053,
-            "z": 476.5855231326864
+            "x": 202.8683926369032,
+            "z": 494.87542578666046
           },
           "speed": 1.9999999999999991,
           "manualInput": false,
@@ -5646,7 +6871,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -5751,13 +6976,46 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 2,
+          "total": 3,
+          "records": [
+            "BODY03-MEM-01 · MATERIAL PHASE · 100.0% COHERENCE",
+            "BODY03-MEM-02 · HYDRATION PHASE · 100.0% COHERENCE"
+          ],
+          "target": {
+            "id": "BODY03-MEM-03",
+            "x": 290.13969563915026,
+            "z": 411.8185697601207,
+            "objective": "CONCORDANCE",
+            "instruction": "FIX THE GEOLOGICAL MEMORY INTERSECTION"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 7835,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 233.45932776188388,
-            "z": 461.89367657280354
+            "x": 215.89743281914576,
+            "z": 479.704677172967
           },
           "speed": 1.9999999999999991,
           "manualInput": false,
@@ -5767,7 +7025,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -5872,15 +7130,48 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 2,
+          "total": 3,
+          "records": [
+            "BODY03-MEM-01 · MATERIAL PHASE · 100.0% COHERENCE",
+            "BODY03-MEM-02 · HYDRATION PHASE · 100.0% COHERENCE"
+          ],
+          "target": {
+            "id": "BODY03-MEM-03",
+            "x": 290.13969563915026,
+            "z": 411.8185697601207,
+            "objective": "CONCORDANCE",
+            "instruction": "FIX THE GEOLOGICAL MEMORY INTERSECTION"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 8135,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 244.77815466257027,
-            "z": 450.8358238061625
+            "x": 229.64607299111125,
+            "z": 465.18416582309374
           },
-          "speed": 0.000665650639589221,
+          "speed": 1.9999999999999991,
           "manualInput": false,
           "idleFor": 0,
           "manualPersistent": true
@@ -5888,7 +7179,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -5993,13 +7284,46 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 2,
+          "total": 3,
+          "records": [
+            "BODY03-MEM-01 · MATERIAL PHASE · 100.0% COHERENCE",
+            "BODY03-MEM-02 · HYDRATION PHASE · 100.0% COHERENCE"
+          ],
+          "target": {
+            "id": "BODY03-MEM-03",
+            "x": 290.13969563915026,
+            "z": 411.8185697601207,
+            "objective": "CONCORDANCE",
+            "instruction": "FIX THE GEOLOGICAL MEMORY INTERSECTION"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 8435,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 244.77826778871912,
-            "z": 450.83571747998616
+            "x": 231.51267509497248,
+            "z": 463.33963907699473
           },
           "speed": 0,
           "manualInput": false,
@@ -6009,7 +7333,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -6114,15 +7438,48 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 2,
+          "total": 3,
+          "records": [
+            "BODY03-MEM-01 · MATERIAL PHASE · 100.0% COHERENCE",
+            "BODY03-MEM-02 · HYDRATION PHASE · 100.0% COHERENCE"
+          ],
+          "target": {
+            "id": "BODY03-MEM-03",
+            "x": 290.13969563915026,
+            "z": 411.8185697601207,
+            "objective": "CONCORDANCE",
+            "instruction": "FIX THE GEOLOGICAL MEMORY INTERSECTION"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 8735,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 256.72400696305783,
-            "z": 440.033354641332
+            "x": 238.23562231264435,
+            "z": 456.90399635223304
           },
-          "speed": 1.9999999999988631,
+          "speed": 1.9999998873103244,
           "manualInput": false,
           "idleFor": 0,
           "manualPersistent": true
@@ -6130,7 +7487,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -6235,13 +7592,46 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 2,
+          "total": 3,
+          "records": [
+            "BODY03-MEM-01 · MATERIAL PHASE · 100.0% COHERENCE",
+            "BODY03-MEM-02 · HYDRATION PHASE · 100.0% COHERENCE"
+          ],
+          "target": {
+            "id": "BODY03-MEM-03",
+            "x": 290.13969563915026,
+            "z": 411.8185697601207,
+            "objective": "CONCORDANCE",
+            "instruction": "FIX THE GEOLOGICAL MEMORY INTERSECTION"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 9036,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
           "auto": true,
           "position": {
-            "x": 271.9413903791714,
-            "z": 427.05776214952897
+            "x": 253.16841541015683,
+            "z": 443.5021605178657
           },
           "speed": 1.9999999999999991,
           "manualInput": false,
@@ -6251,7 +7641,7 @@
       }
     },
     {
-      "url": "http://127.0.0.1:49890/planet-03.html?quality=low",
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
       "state": {
         "world": "granite",
         "planets": 3,
@@ -6265,6 +7655,314 @@
         "waterDistance": null,
         "geological": "searching",
         "geologicalNode": 2,
+        "docking": "idle",
+        "voyage": "arrived",
+        "matter": "inactive",
+        "tableau": "idle",
+        "observed": "idle",
+        "landerPresent": true,
+        "roverVisible": true,
+        "experience": "observer",
+        "cameraShot": "wide",
+        "memory": {
+          "version": 3,
+          "ready": true,
+          "samplesReady": true,
+          "waterReady": true,
+          "journey": {
+            "distance": 0,
+            "dwell": 0,
+            "turn": 0
+          },
+          "samples": [
+            {
+              "index": 0,
+              "sample": "FE–NI ALLOY",
+              "module": "FOUNDATION",
+              "sign": "METALLIC REFLECTANCE",
+              "color": 14189621,
+              "x": 231.6,
+              "z": 543.4
+            },
+            {
+              "index": 1,
+              "sample": "SILICATE CERAMIC",
+              "module": "LOAD PATHS",
+              "sign": "SPECTRAL SPLIT",
+              "color": 13219211,
+              "x": 199.1,
+              "z": 516.1
+            },
+            {
+              "index": 2,
+              "sample": "CARBON COMPOSITE",
+              "module": "SERVICE / PRESSURE",
+              "sign": "LOW ALBEDO DENSITY",
+              "color": 9414317,
+              "x": 209.9,
+              "z": 471.4
+            },
+            {
+              "index": 3,
+              "sample": "CONDUCTIVE LATTICE",
+              "module": "TRANSFER / VISOR",
+              "sign": "METALLIC LATTICE",
+              "color": 14854475,
+              "x": 168.5,
+              "z": 445.3
+            },
+            {
+              "index": 4,
+              "sample": "N₂ FEEDSTOCK",
+              "module": "ATMOSPHERIC FEEDSTOCK",
+              "sign": "RAMAN N₂ BAND",
+              "color": 12175812,
+              "x": 173.9,
+              "z": 391.9
+            },
+            {
+              "index": 5,
+              "sample": "ALCOHOL FEEDSTOCK · C₂H₅OH",
+              "module": "CHEMICAL FEEDSTOCK",
+              "sign": "C–O / O–H SPECTRUM",
+              "color": 16757276,
+              "x": 127.7,
+              "z": 352.8
+            }
+          ],
+          "water": {
+            "id": "BODY02-H2O-01",
+            "confirmed": true,
+            "x": 52,
+            "z": 428,
+            "phase": "SUBSURFACE PORE ICE / HYDRATED SILICA",
+            "thermalDeltaK": -16,
+            "absorptionBandsMicron": [
+              1.4,
+              1.9,
+              2.9
+            ],
+            "particleDensity": 0.28,
+            "spectrumRingMicron": 1.9
+          }
+        },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 2,
+          "total": 3,
+          "records": [
+            "BODY03-MEM-01 · MATERIAL PHASE · 100.0% COHERENCE",
+            "BODY03-MEM-02 · HYDRATION PHASE · 100.0% COHERENCE"
+          ],
+          "target": {
+            "id": "BODY03-MEM-03",
+            "x": 290.13969563915026,
+            "z": 411.8185697601207,
+            "objective": "CONCORDANCE",
+            "instruction": "FIX THE GEOLOGICAL MEMORY INTERSECTION"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 9336,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
+        "drive": {
+          "mode": "observer",
+          "driveMode": "auto",
+          "auto": true,
+          "position": {
+            "x": 268.3876698175903,
+            "z": 430.5295735984049
+          },
+          "speed": 1.9999999999999991,
+          "manualInput": false,
+          "idleFor": 0,
+          "manualPersistent": true
+        }
+      }
+    },
+    {
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
+      "state": {
+        "world": "granite",
+        "planets": 3,
+        "restoration": 6,
+        "structure": 4,
+        "rawMaterials": 2,
+        "simultaneous": false,
+        "prologue": "released",
+        "mission": "searching",
+        "water": "inactive",
+        "waterDistance": null,
+        "geological": "searching",
+        "geologicalNode": 2,
+        "docking": "idle",
+        "voyage": "arrived",
+        "matter": "inactive",
+        "tableau": "idle",
+        "observed": "idle",
+        "landerPresent": true,
+        "roverVisible": true,
+        "experience": "observer",
+        "cameraShot": "wide",
+        "memory": {
+          "version": 3,
+          "ready": true,
+          "samplesReady": true,
+          "waterReady": true,
+          "journey": {
+            "distance": 0,
+            "dwell": 0,
+            "turn": 0
+          },
+          "samples": [
+            {
+              "index": 0,
+              "sample": "FE–NI ALLOY",
+              "module": "FOUNDATION",
+              "sign": "METALLIC REFLECTANCE",
+              "color": 14189621,
+              "x": 231.6,
+              "z": 543.4
+            },
+            {
+              "index": 1,
+              "sample": "SILICATE CERAMIC",
+              "module": "LOAD PATHS",
+              "sign": "SPECTRAL SPLIT",
+              "color": 13219211,
+              "x": 199.1,
+              "z": 516.1
+            },
+            {
+              "index": 2,
+              "sample": "CARBON COMPOSITE",
+              "module": "SERVICE / PRESSURE",
+              "sign": "LOW ALBEDO DENSITY",
+              "color": 9414317,
+              "x": 209.9,
+              "z": 471.4
+            },
+            {
+              "index": 3,
+              "sample": "CONDUCTIVE LATTICE",
+              "module": "TRANSFER / VISOR",
+              "sign": "METALLIC LATTICE",
+              "color": 14854475,
+              "x": 168.5,
+              "z": 445.3
+            },
+            {
+              "index": 4,
+              "sample": "N₂ FEEDSTOCK",
+              "module": "ATMOSPHERIC FEEDSTOCK",
+              "sign": "RAMAN N₂ BAND",
+              "color": 12175812,
+              "x": 173.9,
+              "z": 391.9
+            },
+            {
+              "index": 5,
+              "sample": "ALCOHOL FEEDSTOCK · C₂H₅OH",
+              "module": "CHEMICAL FEEDSTOCK",
+              "sign": "C–O / O–H SPECTRUM",
+              "color": 16757276,
+              "x": 127.7,
+              "z": 352.8
+            }
+          ],
+          "water": {
+            "id": "BODY02-H2O-01",
+            "confirmed": true,
+            "x": 52,
+            "z": 428,
+            "phase": "SUBSURFACE PORE ICE / HYDRATED SILICA",
+            "thermalDeltaK": -16,
+            "absorptionBandsMicron": [
+              1.4,
+              1.9,
+              2.9
+            ],
+            "particleDensity": 0.28,
+            "spectrumRingMicron": 1.9
+          }
+        },
+        "geology": {
+          "state": "searching",
+          "complete": false,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 2,
+          "total": 3,
+          "records": [
+            "BODY03-MEM-01 · MATERIAL PHASE · 100.0% COHERENCE",
+            "BODY03-MEM-02 · HYDRATION PHASE · 100.0% COHERENCE"
+          ],
+          "target": {
+            "id": "BODY03-MEM-03",
+            "x": 290.13969563915026,
+            "z": 411.8185697601207,
+            "objective": "CONCORDANCE",
+            "instruction": "FIX THE GEOLOGICAL MEMORY INTERSECTION"
+          },
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 9636,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
+        "drive": {
+          "mode": "observer",
+          "driveMode": "auto",
+          "auto": true,
+          "position": {
+            "x": 283.61420115684365,
+            "z": 417.5627273326111
+          },
+          "speed": 1.9999999999999991,
+          "manualInput": false,
+          "idleFor": 0,
+          "manualPersistent": true
+        }
+      }
+    },
+    {
+      "url": "http://127.0.0.1:54439/planet-03.html?quality=low",
+      "state": {
+        "world": "granite",
+        "planets": 3,
+        "restoration": 6,
+        "structure": 4,
+        "rawMaterials": 2,
+        "simultaneous": false,
+        "prologue": "released",
+        "mission": "complete",
+        "water": "inactive",
+        "waterDistance": null,
+        "geological": "complete",
+        "geologicalNode": 3,
         "docking": "idle",
         "voyage": "arrived",
         "matter": "inactive",
@@ -6356,22 +8054,54 @@
             "spectrumRingMicron": 1.9
           }
         },
+        "geology": {
+          "state": "complete",
+          "complete": true,
+          "finale": 0,
+          "retainedMinerals": 3,
+          "current": 3,
+          "total": 3,
+          "records": [
+            "BODY03-MEM-01 · MATERIAL PHASE · 100.0% COHERENCE",
+            "BODY03-MEM-02 · HYDRATION PHASE · 100.0% COHERENCE",
+            "BODY03-MEM-03 · CONCORDANCE · 100.0% COHERENCE"
+          ],
+          "target": null,
+          "sources": {
+            "samples": 6,
+            "water": "BODY02-H2O-01"
+          },
+          "gpu": {
+            "backend": "webgpu-storage-compute",
+            "enabled": true,
+            "particles": 495,
+            "dispatches": 9936,
+            "fields": [
+              "BODY01_MATERIAL_PHASE",
+              "BODY02_HYDRATION_PHASE"
+            ]
+          }
+        },
         "drive": {
           "mode": "observer",
           "driveMode": "auto",
-          "auto": true,
+          "auto": false,
           "position": {
-            "x": 285.69421377854655,
-            "z": 415.575103838708
+            "x": 287.32936964960226,
+            "z": 414.3181749524223
           },
-          "speed": 0.8408510757974988,
+          "speed": 0,
           "manualInput": false,
           "idleFor": 0,
           "manualPersistent": true
         }
       }
+    },
+    {
+      "url": "http://127.0.0.1:54439/ending.html",
+      "state": null
     }
   ],
   "errors": [],
-  "complete": false
+  "complete": true
 }

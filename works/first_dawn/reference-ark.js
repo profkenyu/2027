@@ -13,10 +13,13 @@ export function createReferenceArk(tier) {
   {
     const ship = new THREE.Group();
     ship.name = "sf-migration-ark";
-    const batches = mats.map(() => []), matrix = new THREE.Matrix4();
+    const batches = mats.map(() => []), batchParts=mats.map(()=>[]), batchFine=mats.map(()=>[]), matrix = new THREE.Matrix4();
+    let blueprintPart=4;
     function block(mat, x, y, z, w, h, d, q) {
       matrix.compose(new THREE.Vector3(x, y, z), q || new THREE.Quaternion(), new THREE.Vector3(w, h, d));
       batches[mat].push(matrix.clone());
+      batchParts[mat].push(blueprintPart);
+      batchFine[mat].push(Math.min(w,h,d)<=3);
     }
     function beam(a, b, r = 3, mat = 2) {
       const av2 = new THREE.Vector3(...a), bv2 = new THREE.Vector3(...b), delta = bv2.clone().sub(av2);
@@ -26,6 +29,8 @@ export function createReferenceArk(tier) {
       const m = new THREE.Mesh(geo, mats[mat]);
       m.position.set(x, y, z);
       m.castShadow = m.receiveShadow = mat !== 4;
+      m.userData.blueprintPart=blueprintPart;
+      m.userData.blueprintOmit=mat===4;
       ship.add(m);
       return m;
     }
@@ -45,6 +50,7 @@ export function createReferenceArk(tier) {
     }
     block(1, 0, 48, 437, 65, 7, 26);
     block(4, 0, 49, 451, 43, 2, 1);
+    blueprintPart=1;
     for (const side of [-1, 1]) for (let j = 0; j < 5; j++) {
       const z = -205 + j * 117, x = side * 86;
       beam([side * 27, 0, z], [x, 0, z], 9);
@@ -61,6 +67,7 @@ export function createReferenceArk(tier) {
       for (let k = 0; k < 5; k++) block(4, x + side * 28.6, 7, z - 30 + k * 14, 1, 2, 5);
       block(5, x, 30, z - 23, 18, 1, 8);
     }
+    blueprintPart=0;
     for (const z of [-175, 85]) {
       mesh(new THREE.TorusGeometry(176, 10, 6, detail), 1, 0, 0, z);
       mesh(new THREE.TorusGeometry(193, 3, 5, detail), 2, 0, 0, z);
@@ -76,6 +83,7 @@ export function createReferenceArk(tier) {
         beam([32 * Math.cos(a), 32 * Math.sin(a), z], [170 * Math.cos(a), 170 * Math.sin(a), z], 7);
       }
     }
+    blueprintPart=3;
     block(1, 0, 0, -401, 130, 110, 163);
     block(0, 0, 60, -403, 104, 10, 139);
     const jets = [];
@@ -98,12 +106,14 @@ export function createReferenceArk(tier) {
     const deployables = [];
     for (const side of [-1, 1]) {
       const pivot = new THREE.Group();
+      pivot.name='radiator-wing';
       pivot.position.set(side * 83, -28, -323);
       ship.add(pivot);
       const panel = new THREE.Mesh(new THREE.BoxGeometry(156, 3, 165), mats[1]);
       panel.position.x = side * 85;
       pivot.add(panel);
       const ribs = new THREE.InstancedMesh(box, mats[2], 9);
+      ribs.userData.blueprintOmit=true;
       for (let k = 0; k < 9; k++) {
         matrix.makeScale(149, 2, 2);
         matrix.setPosition(side * 85, 2, -75 + k * 18.75);
@@ -113,6 +123,7 @@ export function createReferenceArk(tier) {
       pivot.add(ribs);
       deployables.push({ pivot, side });
     }
+    blueprintPart=4;
     block(2, 0, 72, 285, 19, 92, 24);
     block(3, 0, 115, 285, 51, 12, 33);
     block(1, 0, 115, 303, 45, 5, 2);
@@ -120,6 +131,10 @@ export function createReferenceArk(tier) {
     beam([0, 120, 280], [0, 153, 280], 1.3);
     batches.forEach((arr, k) => {
       const inst = new THREE.InstancedMesh(box, mats[k], arr.length);
+      inst.userData.blueprintParts=batchParts[k];
+      inst.userData.blueprintFine=batchFine[k];
+      inst.userData.blueprintBox=true;
+      inst.userData.blueprintOmit=k===4;
       arr.forEach((m, j) => inst.setMatrixAt(j, m));
       inst.instanceMatrix.needsUpdate = true;
       inst.castShadow = inst.receiveShadow = k !== 4;

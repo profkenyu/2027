@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { cfg } from "../config.js";
 import { flightProfile } from "./flight-profiles.js";
+import { surfaceEdit } from "./flight-edit.js";
 const clamp01 = (value) => Math.max(0, Math.min(1, value));
 const smooth = (value) => {
   const p = clamp01(value);
@@ -197,6 +198,7 @@ export class VoyageSequence {
     this.baseY=this.lander.site.y;this.flightOrigin.copy(this.lander.group.position);this.onCue?.('descent',now,destination);
   }
   resumeSurface(destination) {
+    this.ambient?.setFlightEdit?.(1);
     this.destination=destination;
     this.arrivalProfile=flightProfile(destination.key);
     this.departureProfile=this.arrivalProfile;
@@ -207,6 +209,8 @@ export class VoyageSequence {
     if (!this.active) return;
     this.lander.setFlightThrust?.(0);
     const elapsed = now - this.t0;
+    const edit=surfaceEdit(this.phase,elapsed/1000,this.phase==='lift'?this.departureProfile:this.arrivalProfile);
+    this.ambient?.setFlightEdit?.(edit.audio);
     this.rover.scriptedDrive = { throttle: 0, steer: 0 };
     if (this.phase === "hold") {
       if (elapsed >= 1500) {
@@ -440,6 +444,7 @@ export class VoyageSequence {
     }, now, this.destination, (1 - altitude / 7) * intensity * 0.16);
   }
   reset() {
+    this.ambient?.setFlightEdit?.(1);
     this.passage?.finish();
     this.phase = "idle";
     this.destination = null;

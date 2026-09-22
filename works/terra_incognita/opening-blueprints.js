@@ -534,10 +534,10 @@ const LANDER_CALLOUTS = Object.freeze([
   { name: "VISOR / BRIDGE / SIGNAL", detail: "CLEAR BAY + 4 WHEEL HOLD-DOWNS" }
 ]);
 const SHIP_CALLOUTS=Object.freeze([
-  {name:'SHIELD HULL',detail:'FACETED MIGRATION CARRIER'},
+  {name:'TWIN HABITAT RINGS',detail:'TWO ANNULAR HABITAT STRUCTURES'},
   {name:'PRESSURE MODULES',detail:'LONG-DURATION HABITATION'},
   {name:'THERMAL WINGS',detail:'DEPLOYABLE RADIATORS'},
-  {name:'PROPULSION',detail:'THREE AFT NOZZLES'},
+  {name:'PROPULSION',detail:'FOUR AFT NOZZLES'},
   {name:'SERVICE STRUCTURE',detail:'KEEL + OBSERVATION BRIDGE'}
 ]);
 const ROVER_PARTS = ROVER_CALLOUTS.map((part) => part.name);
@@ -825,13 +825,14 @@ export class OpeningBlueprintSequence {
       renderDotMatrix(this.signal, "--/--", { label: "PLATE TRANSFER" });
       return;
     }
+    this.el.querySelector('.bp-foot > span').textContent=current.startsWith('ship')?'SOURCE GEOMETRY · SIMPLIFIED FITTINGS / BEVELS':'ACTUAL PRODUCTION GEOMETRY · NOT ILLUSTRATION';
     if(current.startsWith('ship')){
       const model=this.models.ship,d=model.dimensions;
       this.counter.textContent='PLATE 03 / 03 · MIGRATION ARK';
-      this.index.textContent='INTERPLANETARY MIGRATION / ARK–01';
-      this.title.textContent='Migration Ark / Assembly Study';
-      this.summary.textContent='Actual fleet geometry, separated by system: shielding, habitation, heat rejection and propulsion. Orthographic views retain the assembled envelope.';
-      this.metrics.innerHTML=[['Envelope',`${d.x.toFixed(1)} W × ${d.z.toFixed(1)} L × ${d.y.toFixed(1)} H`],['Scale','Scene units / conceptual spacecraft'],['Habitation','10 pressure modules'],['Thermal','2 deployable radiator wings'],['Propulsion','3 aft nozzles'],['Geometry',`${model.meshes} meshes / ${model.segments} lines`]].map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+      this.index.textContent='INTERPLANETARY MIGRATION / TWIN-RING ARK';
+      this.title.textContent='Migration Ark / Twin-Ring Study';
+      this.summary.textContent='The twin-ring vessel encountered in the epilogue. An assembled reverse axonometric reveals the axial keel, pressure modules, radiators and propulsion. Conceptual architecture; artificial gravity is not simulated.';
+      this.metrics.innerHTML=[['Envelope',`${d.x.toFixed(1)} W × ${d.z.toFixed(1)} L × ${d.y.toFixed(1)} H`],['Scale','Scene units / conceptual spacecraft'],['Habitation','2 rings / 10 pressure modules'],['Thermal','2 deployable radiator wings'],['Propulsion','4 aft nozzles'],['Geometry',`${model.meshes} meshes / ${model.segments} lines`]].map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
       this.parts.textContent=SHIP_CALLOUTS.map(p=>p.name).join(' · ');
       renderDotMatrix(this.signal,'ARK/03',{label:'MIGRATION ARK PLATE 03'});
       this.resolution.textContent=`${model.sourceSegments.toLocaleString()} SOURCE EDGES → ${model.segments.toLocaleString()} DISPLAY LINES`;
@@ -950,7 +951,7 @@ export class OpeningBlueprintSequence {
     drawPlate(ctx, model.views.side, side, detail, 0.48, false);
     drawPlate(ctx, model.views.top, top, detail, 0.48, false);
     const shipPlate = this.current.startsWith('ship');
-    drawViewLabel(ctx, main, shipPlate ? "EXPLODED AXONOMETRIC / SYSTEM SEPARATION" : "AXONOMETRIC / ACTUAL MESH EDGES");
+    drawViewLabel(ctx, main, shipPlate ? "REVERSE AXONOMETRIC / TWIN-RING ARK" : "AXONOMETRIC / ACTUAL MESH EDGES");
     if (shipPlate && detail > .6) {
       drawDimension(ctx, side, model.views.side, model.dimensions.z, 'L');
       drawDimension(ctx, top, model.views.top, model.dimensions.z, 'L');
@@ -1123,21 +1124,11 @@ function createViews(coords, parts, partCount) {
     top: project(coords, parts, "top")
   };
 }
-// Exploded offsets communicate assembly; orthographic dimensions are unmodified.
+// Assembled rings retain their relationship to the keel. The reverse view is
+// unique to the ark; rover and lander keep their approved orientation.
 function createShipViews(coords, parts, partCount, dimensions) {
-  const exploded = new Float32Array(coords);
-  for (let i = 0; i < parts.length; i++) {
-    const kind = parts[i];
-    for (let end = 0; end < 2; end++) {
-      const j = i * 6 + end * 3;
-      if (kind === 1) exploded[j + 1] += dimensions.y * .85;
-      if (kind === 2) exploded[j] += Math.sign(coords[j]) * dimensions.x * .13;
-      if (kind === 3) exploded[j + 2] -= dimensions.z * .13;
-      if (kind === 4) exploded[j + 1] -= dimensions.y * .38;
-    }
-  }
   const views = createViews(coords, parts, partCount);
-  views.axon = project(exploded, parts, 'axon');
+  views.axon = project(coords, parts, 'ship-axon');
   views.axon.anchors = partAnchors(views.axon, partCount);
   views.top = project(coords, parts, 'ship-plan');
   return views;
@@ -1184,6 +1175,7 @@ function partAnchors(view, partCount) {
 }
 function project(coords, parts, mode) {
   const points = new Float32Array(parts.length * 4);
+  const depth=mode==='ship-axon'?new Float32Array(parts.length):null;
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   for (let i = 0; i < parts.length; i++) {
     for (let endpoint = 0; endpoint < 2; endpoint++) {
@@ -1201,9 +1193,10 @@ function project(coords, parts, mode) {
         px = z;
         py = -y;
       } else {
-        const yaw = -0.66, pitch = -0.36;
+        const yaw = mode==='ship-axon'?0.78:-0.66, pitch = -0.36;
         const xr = x * Math.cos(yaw) - z * Math.sin(yaw);
         const zr = x * Math.sin(yaw) + z * Math.cos(yaw);
+        if(depth)depth[i]+=(y*Math.sin(pitch)+zr*Math.cos(pitch))*.5;
         px = xr;
         py = -(y * Math.cos(pitch) - zr * Math.sin(pitch));
       }
@@ -1215,7 +1208,13 @@ function project(coords, parts, mode) {
       maxY = Math.max(maxY, py);
     }
   }
-  return { points, parts, bounds: { minX, minY, maxX, maxY } };
+  let depthBands=null;
+  if(depth){
+    let lo=Infinity,hi=-Infinity;for(const d of depth){lo=Math.min(lo,d);hi=Math.max(hi,d);}
+    depthBands=new Uint8Array(depth.length);
+    for(let i=0;i<depth.length;i++)depthBands[i]=Math.min(2,Math.floor((depth[i]-lo)/Math.max(1e-6,hi-lo)*3));
+  }
+  return { points, parts, depthBands, bounds: { minX, minY, maxX, maxY } };
 }
 function drawGrid(ctx, w, h) {
   const minor = Math.max(18, Math.min(30, w / 26));
@@ -1277,15 +1276,23 @@ function drawPlate(ctx, view, rect, reveal, alpha, primary) {
   }
 }
 function strokeSegments(ctx, view, end, scale, ox, oy, colour, width, start = 0) {
+  ctx.save();
   ctx.strokeStyle = colour;
   ctx.lineWidth = width;
-  ctx.beginPath();
-  for (let i = start; i < end; i++) {
-    const j = i * 4;
-    ctx.moveTo(ox + view.points[j] * scale, oy + view.points[j + 1] * scale);
-    ctx.lineTo(ox + view.points[j + 2] * scale, oy + view.points[j + 3] * scale);
+  // Depth hierarchy, not a claim of exact hidden-line removal. It preserves
+  // assembly context without giving every rear fitting equal visual weight.
+  for(let band=0;band<(view.depthBands?3:1);band++){
+    ctx.globalAlpha=view.depthBands?[.28,.55,1][band]:1;
+    ctx.beginPath();
+    for (let i = start; i < end; i++) {
+      if(view.depthBands&&view.depthBands[i]!==band)continue;
+      const j = i * 4;
+      ctx.moveTo(ox + view.points[j] * scale, oy + view.points[j + 1] * scale);
+      ctx.lineTo(ox + view.points[j + 2] * scale, oy + view.points[j + 3] * scale);
+    }
+    ctx.stroke();
   }
-  ctx.stroke();
+  ctx.restore();
 }
 function drawViewLabel(ctx, rect, label) {
   ctx.fillStyle = "rgba(217,221,226,.34)";
@@ -1417,10 +1424,15 @@ export function extractShip(root,limit=6200){
   let meshes=0,sourceSegments=0;
   const instance=new THREE.Matrix4();
   root.traverse(object=>{
-    if(!object.isMesh||!object.geometry||!object.visible||object.material?.transparent)return;
-    const kind=object.name==='shield-hull'?0:object.name==='pressure-module'?1:object.parent?.name==='radiator-wing'?2:/nozzle|engine/.test(object.name)?3:4;
-    const edges=new THREE.EdgesGeometry(object.geometry,22),position=edges.getAttribute('position'),count=Math.floor(position.count/2);
+    if(!object.isMesh||!object.geometry||!object.visible||object.material?.transparent||object.userData.blueprintOmit)return;
+    const defaultKind=object.userData.blueprintPart??(object.name==='shield-hull'?0:object.name==='pressure-module'?1:object.parent?.name==='radiator-wing'?2:/nozzle|engine/.test(object.name)?3:4);
+    // Bevel micro-edges obscure the assembly at plate scale. Use each real
+    // block's measured envelope, not thousands of truncated bevel fragments.
+    const outline=object.userData.blueprintBox?new THREE.BoxGeometry(1,1,1):object.geometry;
+    const edges=new THREE.EdgesGeometry(outline,22),position=edges.getAttribute('position'),count=Math.floor(position.count/2);
     for(let i=0;i<(object.isInstancedMesh?object.count:1);i++){
+      if(object.userData.blueprintFine?.[i])continue;
+      const kind=object.userData.blueprintParts?.[i]??defaultKind;
       const matrix=new THREE.Matrix4().multiplyMatrices(inverse,object.matrixWorld);
       if(object.isInstancedMesh){object.getMatrixAt(i,instance);matrix.multiply(instance);}
       expandGeometryBounds(bounds,object.geometry,matrix);sourceSegments+=count;meshes++;
@@ -1428,6 +1440,7 @@ export function extractShip(root,limit=6200){
       for(let j=0;j<count;j+=stride){_a.fromBufferAttribute(position,j*2).applyMatrix4(matrix);_b.fromBufferAttribute(position,j*2+1).applyMatrix4(matrix);coords.push(..._a.toArray(),..._b.toArray());parts.push(kind);}
     }
     edges.dispose();
+    if(outline!==object.geometry)outline.dispose();
   });
   return finaliseModel(coords,parts,bounds,meshes,sourceSegments,limit,SHIP_CALLOUTS.length);
 }

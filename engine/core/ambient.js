@@ -17,6 +17,7 @@ export class Ambient {
     this.unlockCount = 0;
     this.lastError = "";
     this.powerLevel = 1;
+    this.flightEdit = 1;
     this.audioSessionType = "default";
     this.control = null;
     this.silenceUntil = 0;
@@ -78,7 +79,9 @@ export class Ambient {
     }
     this.master = ctx.createGain();
     this.master.gain.value = this.muted ? 0 : this.powerLevel;
-    this.master.connect(ctx.destination);
+    this.editGain=ctx.createGain();
+    this.editGain.gain.value=this.flightEdit;
+    this.master.connect(this.editGain).connect(ctx.destination);
     this.worldGain = ctx.createGain();
     this.worldGain.gain.value = 1;
     this.worldGain.connect(this.master);
@@ -197,7 +200,7 @@ export class Ambient {
     this.started = false;
     this.graphReady = false;
     this.unlocked = false;
-    this.master = this.worldGain = this.noiseGain = this.droneGain = this.voyageGain = null;
+    this.master = this.editGain = this.worldGain = this.noiseGain = this.droneGain = this.voyageGain = null;
   }
   bindControl(button) {
     this.control = button;
@@ -299,6 +302,10 @@ export class Ambient {
     if (!this.master || this.muted) return;
     this.master.gain.setTargetAtTime(this.powerLevel, this.ctx.currentTime, 0.6);
   }
+  setFlightEdit(value) {
+    this.flightEdit=Math.max(0,Math.min(1,value));
+    if(this.ctx&&this.editGain)this.editGain.gain.setTargetAtTime(this.flightEdit,this.ctx.currentTime,.025);
+  }
   transferCue(kind = "charge") {
     if (!this.ctx || this.muted || !this.master) return;
     const ctx = this.ctx, t = ctx.currentTime;
@@ -391,7 +398,8 @@ export class Ambient {
       unlockCount: this.unlockCount,
       resumeAttempts: this.resumeAttempts,
       audioSession: this.audioSessionType,
-      lastError: this.lastError
+      lastError: this.lastError,
+      flightEdit: this.flightEdit
     };
   }
 }

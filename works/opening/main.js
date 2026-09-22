@@ -3,6 +3,7 @@ import {AnimeRituals} from '../terra_incognita/anime-rituals.js';
 import preparedModels from './blueprints.json' with {type:'json'};
 import {readCheckpoint, clearCheckpoint, PLANET_PAGES} from '../../engine/core/checkpoint.js';
 import {readTransfer,resetPlanetState,transferPage} from '../../engine/core/planet-state.js';
+import {readPostMission,clearPostMission,POST_PHASES} from '../shared/post-mission-state.js';
 
 const params=new URLSearchParams(location.search);
 const tier=['high','mid','low'].includes(params.get('quality'))?params.get('quality'):innerWidth<900?'low':'high';
@@ -13,11 +14,13 @@ const buttons=[...document.querySelectorAll('#ti-start,#ti-mobile-start')];
 const restart=document.getElementById('ti-restart');
 let checkpoint=readCheckpoint();
 let transfer=readTransfer();
+let post=readPostMission();
 function syncResume(){
   checkpoint=readCheckpoint();
   transfer=readTransfer();
-  buttons.forEach(button=>{button.querySelector('span').textContent=checkpoint||transfer?'RESUME':'START';button.setAttribute('aria-label',checkpoint||transfer?'저장된 지점에서 탐사 재개':'새 탐사 시작');});
-  restart.hidden=!(checkpoint||transfer);restart.disabled=phase!=='start';
+  post=readPostMission();
+  buttons.forEach(button=>{button.querySelector('span').textContent=post||checkpoint||transfer?'RESUME':'START';button.setAttribute('aria-label',post||checkpoint||transfer?'저장된 지점에서 탐사 재개':'새 탐사 시작');});
+  restart.hidden=!(post||checkpoint||transfer);restart.disabled=phase!=='start';
 }
 syncResume();
 const rituals=new AnimeRituals();
@@ -32,10 +35,10 @@ function start(fresh=false){
   if(phase!=='start'||leaving)return;
   leaving=true;buttons.forEach(button=>button.disabled=true);
   document.getElementById('depart').style.opacity='1';
-  if(fresh){clearCheckpoint();resetPlanetState();}
-  const page=!fresh&&checkpoint?PLANET_PAGES[checkpoint.world]:!fresh&&transfer?transferPage(transfer):'planet-01.html';
+  if(fresh){clearCheckpoint();resetPlanetState();clearPostMission();}
+  const page=!fresh&&post?POST_PHASES[post.phase].file:!fresh&&checkpoint?PLANET_PAGES[checkpoint.world]:!fresh&&transfer?transferPage(transfer):'planet-01.html';
   const target=new URL((location.pathname.includes('/works/opening/')?'../terra_incognita/':'')+page,location.href);
-  if(fresh||(!checkpoint&&!transfer))target.searchParams.set('fresh','1');
+  if(fresh||(!post&&!checkpoint&&!transfer))target.searchParams.set('fresh','1');
   for(const key of ['quality','terminal','full','test'])if(params.has(key))target.searchParams.set(key,params.get(key));
   setTimeout(()=>location.assign(target.href),650);
 }

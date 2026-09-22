@@ -1,11 +1,12 @@
 // Sound is heard from an imagined instrument cabin, not through a vacuum.
+import {passageEdit} from '../../engine/core/flight-edit.js';
 export function createCabinAudio(response){
   let context,master,oscillator,gate,analyser,enabled=false,paused=false;
   function update(t){if(!context)return;const now=context.currentTime;
-    const silence=t>=34&&t<42,fade=Math.min(1,t/5,Math.max(0,(64-t)/5));
-    master.gain.setTargetAtTime(enabled&&!paused&&!silence?fade*.32:0,now,.12);
+    const edit=passageEdit(t,[]);
+    master.gain.setTargetAtTime(enabled&&!paused?edit.audio*.32:0,now,.06);
     oscillator.frequency.setTargetAtTime(response.toneHz,now,.3);
-    gate.gain.setTargetAtTime(t<12||t>48?.16:.04,now,.3);
+    gate.gain.setTargetAtTime(.04+edit.thrust*.12,now,.3);
   }
   async function enable(){
     if(!context){context=new AudioContext();master=context.createGain();master.gain.value=0;master.connect(context.destination);analyser=context.createAnalyser();master.connect(analyser);

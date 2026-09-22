@@ -278,9 +278,11 @@ for (const folder of [ROOT, `${ROOT}/dist`, `${ROOT}/works/terra_incognita`]) {
 ok('three planet pages share the same engine', 'root / dist / works');
 const expectedDeployment = [
   'SHA256SUMS',
+  'arrival.html',
   'ending.html',
   'field-archive.html',
   'index.html',
+  'migration.html',
   'planet-01.html',
   'planet-02.html',
   'planet-03.html',

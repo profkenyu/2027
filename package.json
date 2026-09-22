@@ -13,6 +13,8 @@
     "smoke:mobile:portrait": "MOBILE=1 VIEWPORT=390x844 node tools/smoke.mjs",
     "smoke:mobile:narrow": "MOBILE=1 VIEWPORT=320x568 node tools/smoke.mjs",
     "qa:cinema": "node tools/cinema-ui.mjs",
+    "qa:flight-edit": "node tools/flight-edit.mjs && node tools/flight-edit-browser.mjs",
+    "qa:ten-pages": "node tools/possibility-model.mjs && node tools/ending.mjs && node tools/ending-audio.mjs && node tools/cinema-ui.mjs && node tools/post-mission-route.mjs",
     "qa:missions": "node tools/mission-arrival.mjs && node tools/mobile-missions.mjs",
     "smoke:completion": "node tools/completion.mjs",
     "smoke:sequence": "SEQUENCE=1 node tools/smoke.mjs",

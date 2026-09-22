@@ -21,7 +21,7 @@ export function soundScore(t,distance=12000){
 export function createDeepSpaceAudio(tier,onState,{inspect=false}={}){
   const config=TIERS[tier]||TIERS.low;
   let graph=null,wanted=false,blocked=false,disposed=false,pending=null,epoch=0,suspendTimer;
-  let time=0,distance=12000,lastUpdate=-Infinity,nextEvent=40+Math.random()*50,eventStart=-Infinity,eventCount=0;
+  let time=0,distance=12000,envelope=1,lastUpdate=-Infinity,nextEvent=40+Math.random()*50,eventStart=-Infinity,eventCount=0;
   const notify=()=>onState(wanted && !!graph);
   function destroy(){
     clearTimeout(suspendTimer);suspendTimer=null;
@@ -80,9 +80,9 @@ export function createDeepSpaceAudio(tier,onState,{inspect=false}={}){
     graph={nodes,master,gates,sub,meter,voices,reverb};
     try{await reverb.ready;}catch(error){destroy();throw error;}
   }
-  function update(t,d){
+  function update(t,d,level=1){
     if(t<time-.1){nextEvent=40+Math.random()*50;eventStart=-Infinity;eventCount=0;}
-    time=t;distance=d;
+    time=t;distance=d;envelope=Math.max(0,Math.min(1,level));
     if(!graph)return;
     const now=Tone.now();
     if(Math.abs(t-lastUpdate)<.08 && t!==DURATION)return;
@@ -101,7 +101,7 @@ export function createDeepSpaceAudio(tier,onState,{inspect=false}={}){
       param.linearRampToValueAtTime(targets[name],now+.08);
     }
     graph.master.gain.cancelAndHoldAtTime(now);
-    graph.master.gain.linearRampToValueAtTime(wanted&&!blocked&&t<DURATION?.65+score.proximity*.2:0,now+.08);
+    graph.master.gain.linearRampToValueAtTime(wanted&&!blocked&&t<DURATION?(.65+score.proximity*.2)*envelope:0,now+.08);
     if(!wanted||t>=DURATION){
       if(!suspendTimer)suspendTimer=setTimeout(()=>{
         suspendTimer=null;
@@ -109,8 +109,9 @@ export function createDeepSpaceAudio(tier,onState,{inspect=false}={}){
       },160);
     }else{clearTimeout(suspendTimer);suspendTimer=null;}
   }
-  function refresh(){lastUpdate=-Infinity;update(time,distance);}
+  function refresh(){lastUpdate=-Infinity;update(time,distance,envelope);}
   function enable(){
+    try{sessionStorage.setItem('ti_audio_muted','0');}catch{}
     if(disposed)return Promise.resolve();
     clearTimeout(suspendTimer);suspendTimer=null;wanted=true;notify();
     // Called synchronously from pointer/keyboard/click, before any await.
@@ -130,7 +131,7 @@ export function createDeepSpaceAudio(tier,onState,{inspect=false}={}){
     })();
     return pending;
   }
-  function mute(){wanted=false;refresh();notify();}
+  function mute(){wanted=false;try{sessionStorage.setItem('ti_audio_muted','1');}catch{}refresh();notify();}
   function pause(){blocked=true;refresh();if(graph)Tone.getContext().rawContext.suspend().catch(()=>{});}
   function resume(){
     blocked=false;

@@ -13,6 +13,10 @@ for(const tier of ['high','mid','low']){
  for(const passage of [1,2])for(const aspect of [1.6,390/844]){
   const scene=new Scene(),environment=createVoid(scene,tier,passage),camera=new PerspectiveCamera(45,aspect,.25,30000);
   const radius=environment.planet.geometry.parameters.radius;assert.equal(radius,passage===1?3300:3700);
+  assert.equal(environment.stars.children[0].geometry.attributes.position.count,{high:1800,mid:1200,low:700}[tier]);
+  assert.equal(!!environment.atmosphere,passage===1,'Only planet 2 has the requested gas layer');
+  assert(environment.planet.material.uniforms.sun.value.z>0,'Destination lit hemisphere must face the arrival observer');
+  if(environment.atmosphere){assert.equal(environment.atmosphere.geometry,environment.planet.geometry);assert.equal(environment.atmosphere.material.depthWrite,false);}
   for(let t=0;t<=DURATION;t+=.25){pose(camera,ship.group,t,passage);assert(camera.position.distanceTo(environment.planet.position)>radius+100);assert(ship.group.position.distanceTo(environment.planet.position)>radius+100);}
   pose(camera,ship.group,60,passage);const angle=2*Math.asin(radius/camera.position.distanceTo(environment.planet.position))*180/Math.PI;assert(angle>camera.fov,'Destination must exceed the vertical frame');
  }

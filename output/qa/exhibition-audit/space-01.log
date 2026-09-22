@@ -1,4 +1,18 @@
-PASS high: first passage rendering / lifecycle / audio / self-contained
-PASS mid: first passage rendering / lifecycle / audio / self-contained
-PASS low: first passage rendering / lifecycle / audio / self-contained
-PASS: opening RESUME preserves flight state / NEW MISSION clears it
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+
+  assert(s.triangles>5000&&s.triangles<100000)
+
+    at file:///Users/kenyu/Desktop/20th_codex/tools/space-qa.mjs:19:171 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v26.0.0

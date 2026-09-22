@@ -1,29 +1,29 @@
 ══ TERRA INCOGNITA — surface report ══
 
-  relief, r 200–800 m      -9.5 … 23.5 m
+  relief, r 200–800 m      -9.3 … 18.9 m
 
   slope across ONE CELL (0.88 m) — what the eye sees
-    mean 7.6°   p50 5.9°   p95 20.3°   max 36.0°
+    mean 7.7°   p50 6.1°   p95 20.2°   max 37.0°
 
   DRIVABILITY — slope across the rover, 1.96 m × 1.24 m
-    pitch  mean 7.4°   p50 5.9°   p95 19.6°
-    roll   mean 7.6°   p50 6.1°   p95 19.8°
+    pitch  mean 7.4°   p50 5.9°   p95 19.7°
+    roll   mean 7.8°   p50 6.3°   p95 20.2°
     traction gate opens at 27.5°, closes at 40°
-    ground above 27.5° pitch:  0.8 %   ← the probe starts to slip
+    ground above 27.5° pitch:  0.7 %   ← the probe starts to slip
 
   eye-scale detail, 24 m transect
     relief 4.54 m
 
   destination geology — yardangs / sintered crust / glass wadi
-    relief -2.3 … 16.1 m
-    pitch  mean 4.7°   p95 16.3°
-    roll   mean 4.7°   p95 15.9°
-    ground above 27.5° pitch: 0.3 %
+    relief -2.4 … 15.5 m
+    pitch  mean 4.7°   p95 15.6°
+    roll   mean 4.7°   p95 16.1°
+    ground above 27.5° pitch: 0.1 %
 
   BODY 03 geology — granite swell / exfoliation domes / weathered plain
-    relief -2.4 … 5.2 m
-    pitch  mean 1.7°   p95 7.4°
-    roll   mean 1.6°   p95 7.3°
+    relief -2.4 … 5.8 m
+    pitch  mean 1.6°   p95 7.1°
+    roll   mean 1.6°   p95 7.2°
     ground above 27.5° pitch: 0.0 %
 
   derived landforms

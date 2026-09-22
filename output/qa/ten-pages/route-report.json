@@ -1,0 +1,64 @@
+{
+  "started": "2026-09-22T11:45:14.275Z",
+  "events": [
+    {
+      "handoff": {
+        "version": 1,
+        "phase": "migration",
+        "elapsed": 0,
+        "seed": "D02A29",
+        "evidence": {
+          "samples": 6,
+          "water": true,
+          "nodes": 3,
+          "temperature": 235.65424114583152,
+          "energy": 1,
+          "radiation": 0.20995834132775731,
+          "distance": 0
+        },
+        "outcome": null
+      }
+    },
+    {
+      "possibility": {
+        "steps": 300,
+        "mass": 8.79868691911496,
+        "peak": 0.11303863674402237,
+        "status": "persisting",
+        "conditions": {
+          "resource": 0.8,
+          "growth": 0.5176695035807235,
+          "decay": 0.23547708773026654,
+          "diffusion": 0.32,
+          "water": 1
+        }
+      }
+    },
+    {
+      "ending": {
+        "phase": "ending",
+        "seconds": 18,
+        "duration": 18,
+        "paused": false,
+        "independent": true,
+        "preview": false,
+        "outcome": {
+          "steps": 480,
+          "mass": 26.97388680258092,
+          "peak": 0.1632634997367859,
+          "status": "persisting",
+          "conditions": {
+            "resource": 0.8,
+            "growth": 0.5176695035807235,
+            "decay": 0.23547708773026654,
+            "diffusion": 0.32,
+            "water": 1
+          }
+        }
+      }
+    }
+  ],
+  "errors": [],
+  "complete": false,
+  "finished": "2026-09-22T11:49:34.486Z"
+}

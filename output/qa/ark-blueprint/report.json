@@ -1,0 +1,315 @@
+{
+  "cases": [
+    {
+      "tier": "high",
+      "width": 1440,
+      "height": 1000,
+      "motion": "no-preference",
+      "state": {
+        "active": true,
+        "suspended": true,
+        "seen": true,
+        "current": "ship-hold",
+        "reveal": 1,
+        "scan": 0,
+        "scanDirection": 0,
+        "scanSpeed": 0,
+        "progress": 0.9613899613899614,
+        "annotationCount": 5,
+        "shown": [
+          "ship"
+        ],
+        "reduced": false,
+        "draws": 3,
+        "duration": 25900,
+        "models": {
+          "rover": {
+            "source": "production-mesh-snapshot",
+            "meshes": 152,
+            "segments": 6200,
+            "sourceSegments": 27220,
+            "dimensions": {
+              "x": 1.8663999843597412,
+              "y": 1.7305000138282776,
+              "z": 2.6325204681314807
+            },
+            "parts": 6
+          },
+          "lander": {
+            "source": "production-mesh-snapshot",
+            "meshes": 191,
+            "segments": 6200,
+            "sourceSegments": 21008,
+            "dimensions": {
+              "x": 12.65999994277954,
+              "y": 7.063093250915399,
+              "z": 14.266441057247542
+            },
+            "parts": 4
+          },
+          "ship": {
+            "source": "production-mesh-snapshot",
+            "meshes": 183,
+            "segments": 6200,
+            "sourceSegments": 6708,
+            "dimensions": {
+              "x": 492,
+              "y": 392,
+              "z": 1121.7320507764816
+            },
+            "parts": 5
+          }
+        }
+      }
+    },
+    {
+      "tier": "mid",
+      "width": 1180,
+      "height": 820,
+      "motion": "no-preference",
+      "state": {
+        "active": true,
+        "suspended": true,
+        "seen": true,
+        "current": "ship-hold",
+        "reveal": 1,
+        "scan": 0,
+        "scanDirection": 0,
+        "scanSpeed": 0,
+        "progress": 0.9613899613899614,
+        "annotationCount": 5,
+        "shown": [
+          "ship"
+        ],
+        "reduced": false,
+        "draws": 3,
+        "duration": 25900,
+        "models": {
+          "rover": {
+            "source": "production-mesh-snapshot",
+            "meshes": 152,
+            "segments": 4600,
+            "sourceSegments": 27220,
+            "dimensions": {
+              "x": 1.8663999843597412,
+              "y": 1.7305000138282776,
+              "z": 2.6325204681314807
+            },
+            "parts": 6
+          },
+          "lander": {
+            "source": "production-mesh-snapshot",
+            "meshes": 191,
+            "segments": 4600,
+            "sourceSegments": 21008,
+            "dimensions": {
+              "x": 12.65999994277954,
+              "y": 7.063093250915399,
+              "z": 14.266441057247542
+            },
+            "parts": 4
+          },
+          "ship": {
+            "source": "production-mesh-snapshot",
+            "meshes": 183,
+            "segments": 4600,
+            "sourceSegments": 6708,
+            "dimensions": {
+              "x": 492,
+              "y": 392,
+              "z": 1121.7320507764816
+            },
+            "parts": 5
+          }
+        }
+      }
+    },
+    {
+      "tier": "low",
+      "width": 820,
+      "height": 1180,
+      "motion": "reduce",
+      "state": {
+        "active": true,
+        "suspended": true,
+        "seen": true,
+        "current": "ship-hold",
+        "reveal": 1,
+        "scan": 0,
+        "scanDirection": 0,
+        "scanSpeed": 0,
+        "progress": 0.961028838659392,
+        "annotationCount": 5,
+        "shown": [
+          "ship"
+        ],
+        "reduced": true,
+        "draws": 3,
+        "duration": 25660,
+        "models": {
+          "rover": {
+            "source": "production-mesh-snapshot",
+            "meshes": 152,
+            "segments": 2700,
+            "sourceSegments": 27220,
+            "dimensions": {
+              "x": 1.8663999843597412,
+              "y": 1.7305000138282776,
+              "z": 2.6325204681314807
+            },
+            "parts": 6
+          },
+          "lander": {
+            "source": "production-mesh-snapshot",
+            "meshes": 191,
+            "segments": 2700,
+            "sourceSegments": 21008,
+            "dimensions": {
+              "x": 12.65999994277954,
+              "y": 7.063093250915399,
+              "z": 14.266441057247542
+            },
+            "parts": 4
+          },
+          "ship": {
+            "source": "production-mesh-snapshot",
+            "meshes": 183,
+            "segments": 2700,
+            "sourceSegments": 6708,
+            "dimensions": {
+              "x": 492,
+              "y": 392,
+              "z": 1121.7320507764816
+            },
+            "parts": 5
+          }
+        }
+      }
+    },
+    {
+      "tier": "low",
+      "width": 390,
+      "height": 844,
+      "motion": "no-preference",
+      "state": {
+        "active": true,
+        "suspended": true,
+        "seen": true,
+        "current": "ship-hold",
+        "reveal": 1,
+        "scan": 0,
+        "scanDirection": 0,
+        "scanSpeed": 0,
+        "progress": 0.9613899613899614,
+        "annotationCount": 5,
+        "shown": [
+          "ship"
+        ],
+        "reduced": false,
+        "draws": 3,
+        "duration": 25900,
+        "models": {
+          "rover": {
+            "source": "production-mesh-snapshot",
+            "meshes": 152,
+            "segments": 2700,
+            "sourceSegments": 27220,
+            "dimensions": {
+              "x": 1.8663999843597412,
+              "y": 1.7305000138282776,
+              "z": 2.6325204681314807
+            },
+            "parts": 6
+          },
+          "lander": {
+            "source": "production-mesh-snapshot",
+            "meshes": 191,
+            "segments": 2700,
+            "sourceSegments": 21008,
+            "dimensions": {
+              "x": 12.65999994277954,
+              "y": 7.063093250915399,
+              "z": 14.266441057247542
+            },
+            "parts": 4
+          },
+          "ship": {
+            "source": "production-mesh-snapshot",
+            "meshes": 183,
+            "segments": 2700,
+            "sourceSegments": 6708,
+            "dimensions": {
+              "x": 492,
+              "y": 392,
+              "z": 1121.7320507764816
+            },
+            "parts": 5
+          }
+        }
+      }
+    },
+    {
+      "tier": "low",
+      "width": 568,
+      "height": 320,
+      "motion": "reduce",
+      "state": {
+        "active": true,
+        "suspended": true,
+        "seen": true,
+        "current": "ship-hold",
+        "reveal": 1,
+        "scan": 0,
+        "scanDirection": 0,
+        "scanSpeed": 0,
+        "progress": 0.961028838659392,
+        "annotationCount": 5,
+        "shown": [
+          "ship"
+        ],
+        "reduced": true,
+        "draws": 3,
+        "duration": 25660,
+        "models": {
+          "rover": {
+            "source": "production-mesh-snapshot",
+            "meshes": 152,
+            "segments": 2700,
+            "sourceSegments": 27220,
+            "dimensions": {
+              "x": 1.8663999843597412,
+              "y": 1.7305000138282776,
+              "z": 2.6325204681314807
+            },
+            "parts": 6
+          },
+          "lander": {
+            "source": "production-mesh-snapshot",
+            "meshes": 191,
+            "segments": 2700,
+            "sourceSegments": 21008,
+            "dimensions": {
+              "x": 12.65999994277954,
+              "y": 7.063093250915399,
+              "z": 14.266441057247542
+            },
+            "parts": 4
+          },
+          "ship": {
+            "source": "production-mesh-snapshot",
+            "meshes": 183,
+            "segments": 2700,
+            "sourceSegments": 6708,
+            "dimensions": {
+              "x": 492,
+              "y": 392,
+              "z": 1121.7320507764816
+            },
+            "parts": 5
+          }
+        }
+      }
+    }
+  ],
+  "errors": []
+}

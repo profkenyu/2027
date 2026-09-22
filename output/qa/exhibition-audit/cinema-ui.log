@@ -1,0 +1,5 @@
+PASS space-01: six viewport sizes / 44px targets / footer hit-testing / contracted visual viewport
+PASS space-02: six viewport sizes / 44px targets / footer hit-testing / contracted visual viewport
+PASS migration: six viewport sizes / 44px targets / footer hit-testing / contracted visual viewport
+PASS arrival: six viewport sizes / 44px targets / footer hit-testing / contracted visual viewport
+PASS ending: six viewport sizes / 44px targets / footer hit-testing / contracted visual viewport

@@ -6,14 +6,14 @@ const out='output/qa/cinema-ui';await mkdir(out,{recursive:true});
 const server=await startPreviewServer(),report={cases:[],errors:[]};let browser;
 try{
  browser=await chromium.launch({channel:'chrome',headless:true});
- for(const file of ['space-01','space-02','ending']){
+ for(const file of ['space-01','space-02','migration','arrival','ending']){
   const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
   page.on('pageerror',e=>report.errors.push(String(e)));
   await page.goto(`${server.url}/${file}.html?test&quality=low`);
-  await page.waitForFunction(()=>window.BTK_SPACE||window.FIRST_DAWN);await page.waitForTimeout(1400);
+  await page.waitForFunction(()=>window.BTK_SPACE||window.FIRST_DAWN||window.BTK_ENDING);await page.waitForTimeout(1400);
   for(const [width,height] of [[1600,1000],[390,844],[320,568],[568,320],[844,390],[820,1180]]){
    await page.setViewportSize({width,height});
-   await page.evaluate(()=>window.FIRST_DAWN?FIRST_DAWN.seek(108):BTK_SPACE.seek(30));await page.waitForTimeout(180);
+   await page.evaluate(()=>window.BTK_ENDING?BTK_ENDING.seek(18):window.FIRST_DAWN?FIRST_DAWN.seek(FIRST_DAWN.snapshot().phase==='arrival'?130:54):BTK_SPACE.seek(30));await page.waitForTimeout(180);
    const layout=await page.evaluate(()=>{
     const footer=document.querySelector('footer');
     return {text:footer.innerText,overflow:document.documentElement.scrollWidth>innerWidth+1,buttons:[...footer.querySelectorAll('button,a')].filter(e=>!e.hidden).map(e=>{const r=e.getBoundingClientRect();return{id:e.id,x:r.x,y:r.y,w:r.width,h:r.height,hit:e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))};})};

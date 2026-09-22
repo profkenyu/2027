@@ -1,4 +1,4 @@
-high: 108s / five original arks + one reference ark / ring passage / acceleration / atmosphere / audio / replay PASS
-mid: 108s / five original arks + one reference ark / ring passage / acceleration / atmosphere / audio / replay PASS
-low: 108s / five original arks + one reference ark / ring passage / acceleration / atmosphere / audio / replay PASS
-autonomous playback / live pause / isolated file:// PASS
+PASS high: preserved six-ship sequence / surface clearance / deterministic possibility / final caption / replay
+PASS mid: preserved six-ship sequence / surface clearance / deterministic possibility / final caption / replay
+PASS low: preserved six-ship sequence / surface clearance / deterministic possibility / final caption / replay
+PASS direct preview without fabricated evidence / standalone file pages / no runtime errors

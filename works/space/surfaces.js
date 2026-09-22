@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+// One authored solar direction shared by hull, reflection and destination.
+export const flightSun=passage=>new THREE.Vector3(passage===2?-28:28,24,26);
 
 // The source geometry remains the surface lander. These are close-view optical
 // approximations: no painted lighting, glow, or moving noise on the hull.
@@ -44,7 +46,7 @@ export function sourceMaterial(batch){
 export function createFlightEnvironment(renderer,tier,passage,directions={}){
   // A sparse solar/planetary radiance map, not an indoor studio HDRI.
   const width=tier==='high'?512:256,height=width/2,data=new Float32Array(width*height*4);
-  const sun=(directions.sun?.clone()??new THREE.Vector3(passage===2?28:-28,24,-14)).normalize();
+  const sun=(directions.sun?.clone()??flightSun(passage)).normalize();
   const planet=(directions.planet?.clone()??new THREE.Vector3(passage===2?-1650:1450,-250,-5700)).normalize();
   const direction=new THREE.Vector3(),planetColor=passage===2?[.095,.12,.14]:[.13,.095,.06];
   for(let y=0;y<height;y++)for(let x=0;x<width;x++){

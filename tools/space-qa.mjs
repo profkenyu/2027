@@ -16,7 +16,10 @@ try{
  for(const [tier,width,height] of [['high',1600,1000],['mid',1180,820],['low',390,844]]){
   const page=await browser.newPage({viewport:{width,height}}),errors=[],requests=[];page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});page.on('request',r=>requests.push(r.url()));
   await page.goto(`${server.url}/space-01.html?test&quality=${tier}`);await page.waitForFunction(()=>window.BTK_SPACE);
-  const frames=[];for(const t of [1,10,19,21,30,39,41,50,60,64]){const s=await page.evaluate(t=>{BTK_SPACE.seek(t);return BTK_SPACE.snapshot();},t);assert(s.independent);assert(s.triangles>5000&&s.triangles<100000);assert.equal(s.tier,tier);frames.push(s);if([10,30,50].includes(t))await page.screenshot({path:`output/qa/space-01/${tier}-${t}.png`});}
+  // The requested gas shell adds one draw of the existing planet mesh.
+  // Keep the earlier budget plus that exact, tier-dependent triangle cost.
+  const atmosphereTriangles=tier==='low'?2*96*(64-1):2*144*(88-1);
+  const frames=[];for(const t of [1,10,19,21,30,39,41,50,60,64]){const s=await page.evaluate(t=>{BTK_SPACE.seek(t);return BTK_SPACE.snapshot();},t);assert(s.independent);assert(s.triangles>5000&&s.triangles<100000+atmosphereTriangles);assert.equal(s.tier,tier);frames.push(s);if([10,30,50].includes(t))await page.screenshot({path:`output/qa/space-01/${tier}-${t}.png`});}
   await page.locator('#sound').click();await page.evaluate(()=>BTK_SPACE.seek(25));assert.equal((await page.evaluate(()=>BTK_SPACE.snapshot())).audio.state,'running');
   await page.evaluate(()=>dispatchEvent(new PageTransitionEvent('pagehide')));assert((await page.evaluate(()=>BTK_SPACE.snapshot())).paused);await page.evaluate(()=>dispatchEvent(new PageTransitionEvent('pageshow')));
   assert.deepEqual(errors,[]);assert(requests.every(url=>url.startsWith(server.url+'/space-01.html')));

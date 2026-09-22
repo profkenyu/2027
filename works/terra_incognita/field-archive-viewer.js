@@ -1,5 +1,6 @@
 import { archiveCaptureProfile as captureFor, archiveEnglish, archiveImage, readFieldArchive } from '../../engine/core/field-archive.js';
 import {createArchiveExport,archiveCSV} from '../../engine/core/archive-export.js';
+import {readPostMission,POST_PHASES} from '../shared/post-mission-state.js';
 
 (() => {
   const FALLBACK = [
@@ -186,6 +187,7 @@ import {createArchiveExport,archiveCSV} from '../../engine/core/archive-export.j
     if (/^planet-0[123]\.html$/.test(saved)) returnPage = saved;
   } catch {}
   if (returnLink) returnLink.href = returnPage;
+  const post=readPostMission();if(post&&returnLink)returnLink.href=POST_PHASES[post.phase].file;
   returnLink?.addEventListener("click", (event) => {
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || history.length <= 1) return;
     event.preventDefault();

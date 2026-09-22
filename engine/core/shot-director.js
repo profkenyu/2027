@@ -1,4 +1,5 @@
 import { flightProfile } from "./flight-profiles.js";
+import { surfaceEdit } from "./flight-edit.js";
 import * as THREE from "three";
 const clamp01 = (value) => Math.max(0, Math.min(1, value));
 const smooth = (value) => {
@@ -232,7 +233,9 @@ export class ShotDirector {
         veil = 0;
       }
     }
-    this.veil.style.opacity = veil.toFixed(3);
+    const edit=surfaceEdit(this.voyage.phase,(now-this.voyage.t0)/1000,
+      (this.voyage.phase==='lift'?this.voyage.departureProfile:this.voyage.arrivalProfile)??flightProfile('terra'));
+    this.veil.style.opacity = Math.max(veil,edit.veil).toFixed(3);
     this.rendered = shot;
     this.apply(shot, now);
     return shot;
@@ -375,6 +378,11 @@ export class ShotDirector {
       else this._camera.y = (this.voyage.baseY ?? this.lander.site?.y ?? 0) + y + altitude * .3;
       this._camera.y = Math.max(this._camera.y, this.heightAt(this._camera.x, this._camera.z) + 1.2);
       this._aim.copy(this.lander.dockingPoint(.25, 0, 1));
+      // Ease into the landing along the same viewing axis, without orbiting
+      // across the travel direction or changing the touchdown datum.
+      const approach=surfaceEdit(this.voyage.phase,(now-this.voyage.t0)/1000,profile).approach;
+      this._camera.sub(this._aim).multiplyScalar(1+approach*.16).add(this._aim);
+      this._camera.y=Math.max(this._camera.y,this.heightAt(this._camera.x,this._camera.z)+1.2);
       this.camera.fov = profile.fov - (descent && profile.key === 'granite' ? reveal * 9 : 0);
       return;
     }

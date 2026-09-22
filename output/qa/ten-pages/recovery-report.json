@@ -1,0 +1,11 @@
+{
+  "errors": [],
+  "checks": [
+    "mobile RESUME retained actual mission outcome",
+    "archive return",
+    "REPLAY and reload",
+    "NEW MISSION clears post-mission state",
+    "storage denied: visible preview, no fabricated observations"
+  ],
+  "complete": true
+}

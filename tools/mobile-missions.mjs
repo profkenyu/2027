@@ -29,15 +29,15 @@ try{
  await page.setViewportSize({width:390,height:844});
  await page.locator('#ti-light').tap();await page.locator('#ti-light').tap();
  const end=Date.now()+900000;
- while(Date.now()<end&&!page.url().includes('/ending.html')){
+ while(Date.now()<end&&!page.url().includes('/migration.html')){
   await page.waitForTimeout(10000);
   const state=await page.evaluate(()=>window.TI_SEQUENCE?{...TI_SEQUENCE(),memory:TI_MEMORY().ledger,geology:TI_MEMORY().geological,drive:TI_EXPERIENCE()}:window.BTK_SPACE?.snapshot()??null);
   report.events.push({url:page.url(),state});
   await writeFile(`${out}/report.json`,JSON.stringify(report,null,2));
   console.log(JSON.stringify(state&&{world:state.world,water:state.water,distance:state.world==='granite'?state.geology?.distance:state.waterDistance,node:state.geologicalNode,mission:state.mission,docking:state.docking,voyage:state.voyage,seconds:state.seconds}));
  }
- assert(page.url().includes('/ending.html'),'Natural missions timed out');
- await page.waitForFunction(()=>window.FIRST_DAWN);await page.screenshot({path:`${out}/ending.png`});
+ assert(page.url().includes('/migration.html'),'Natural missions timed out');
+ await page.waitForFunction(()=>window.FIRST_DAWN);await page.screenshot({path:`${out}/migration.png`});
  assert.deepEqual(report.errors,[]);report.complete=true;
- console.log('PASS mobile: natural water scan → docking → flight → three natural geological scans → ending');
+ console.log('PASS mobile: natural water scan → docking → flight → three natural geological scans → migration');
 }finally{await writeFile(`${out}/report.json`,JSON.stringify(report,null,2));await browser?.close();await server.close();}
