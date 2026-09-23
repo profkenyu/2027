@@ -12,6 +12,7 @@ export function possibilityConditions(evidence){
 export class PossibilityModel{
  constructor(evidence,seed='000000'){
   this.conditions=possibilityConditions(evidence);this.seed=parseInt(seed||'000000',16)||0;
+  this.signatures=evidence?.sampleSignatures??null;
   this.field=new Float32Array(GRID*GRID);this.next=new Float32Array(GRID*GRID);this.resource=new Float32Array(GRID*GRID);this.substrate=new Float32Array(GRID*GRID);this.steps=0;
   // Authored fracture graph: geometry is a boundary condition, not geological evidence.
   let state=this.seed;const random=()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296;};
@@ -33,7 +34,12 @@ export class PossibilityModel{
  reset(){this.steps=0;this.field.fill(0);this.next.fill(0);
   for(let y=0;y<GRID;y++)for(let x=0;x<GRID;x++){
    const i=y*GRID+x;
-   this.resource[i]=(this.conditions?.resource??0)*this.substrate[i];
+   // Six recorded material identities modulate six spatial sectors. These
+   // are artistic substrate weights, never invented chemical measurements.
+   const angle=Math.atan2(y-32,x-32)+Math.PI;
+   const channel=Math.min(5,Math.floor(angle/(Math.PI*2)*6));
+   const weight=this.signatures?.length===6?.55+.45*this.signatures[channel]:1;
+   this.resource[i]=(this.conditions?.resource??0)*this.substrate[i]*weight;
   }
   if(this.conditions){this.field[32*GRID+32]=.8;this.field[32*GRID+33]=.3;}
  }

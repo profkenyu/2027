@@ -9,18 +9,29 @@ export function flightMaterial(rgb,kind){
   const [roughness,metalness]=properties[kind];
   const material=new THREE.MeshStandardMaterial({color:new THREE.Color(...rgb),roughness,metalness,envMapIntensity:kind==='glass'?.65:.4,side:THREE.DoubleSide});
   material.name=`flight-${kind}`;
+  const exposure={value:0};material.userData.exposure=exposure;
   material.onBeforeCompile=shader=>{
+    shader.uniforms.flightExposure=exposure;
     shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vHullPosition;').replace('#include <begin_vertex>','#include <begin_vertex>\nvHullPosition=position;');
     shader.fragmentShader=shader.fragmentShader.replace('#include <common>',`#include <common>
       varying vec3 vHullPosition;
+      uniform float flightExposure;
       float hullGrain(vec3 p){return sin(p.x*139.+p.z*91.+sin(p.y*31.))*sin(p.y*157.-p.z*69.+sin(p.x*43.));}
     `).replace('#include <color_fragment>',`#include <color_fragment>
       float grain=hullGrain(vHullPosition);
       float resolved=1.-smoothstep(.02,.12,length(fwidth(vHullPosition)));
       diffuseColor.rgb*=1.+grain*resolved*.006;
+      // Fixed to the hull, never crawling noise. Thin-film staining is an
+      // authored optical approximation, not a plume deposition simulation.
+      float stainField=.5+.5*sin(vHullPosition.x*4.7+sin(vHullPosition.z*3.1))*sin(vHullPosition.y*5.3+vHullPosition.z*2.);
+      float lowerHull=1.-smoothstep(1.,4.5,vHullPosition.y);
+      float deposit=flightExposure*(.12+lowerHull*.58)*smoothstep(.28,.78,stainField);
+      ${kind==='glass'?'deposit*=.08;':''}
+      diffuseColor.rgb*=mix(vec3(1.),vec3(.53,.46,.37),deposit);
       ${kind==='metal'?'diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.225,.24,.255),smoothstep(2.8,3.4,vHullPosition.y)*.7);':''}
     `).replace('#include <roughnessmap_fragment>',`#include <roughnessmap_fragment>
       roughnessFactor=clamp(roughnessFactor+grain*resolved*.012,.12,.95);
+      roughnessFactor=min(.95,roughnessFactor+deposit*.18);
       ${kind==='metal'?'roughnessFactor=mix(roughnessFactor,.53,smoothstep(2.8,3.4,vHullPosition.y));':''}
     `).replace('#include <metalnessmap_fragment>',`#include <metalnessmap_fragment>
       ${kind==='metal'?'metalnessFactor=mix(metalnessFactor,.28,smoothstep(2.8,3.4,vHullPosition.y));':''}
@@ -33,7 +44,7 @@ export function flightMaterial(rgb,kind){
       normal=normalize(abs(det)*normal-sign(det)*(dFdx(relief)*rx+dFdy(relief)*ry));
     `);
   };
-  material.customProgramCacheKey=()=>`flight-surface-v2-${kind}`;
+  material.customProgramCacheKey=()=>`flight-surface-v3-${kind}`;
   return material;
 }
 

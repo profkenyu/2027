@@ -1,0 +1,425 @@
+{
+  "frames": [
+    {
+      "tier": "high",
+      "passage": 1,
+      "t": 0,
+      "amount": 0,
+      "materials": 13
+    },
+    {
+      "tier": "high",
+      "passage": 1,
+      "t": 19,
+      "amount": 0.1484375,
+      "materials": 13
+    },
+    {
+      "tier": "high",
+      "passage": 1,
+      "t": 20,
+      "amount": 0.15625,
+      "materials": 13
+    },
+    {
+      "tier": "high",
+      "passage": 1,
+      "t": 21,
+      "amount": 0.1640625,
+      "materials": 13
+    },
+    {
+      "tier": "high",
+      "passage": 1,
+      "t": 30,
+      "amount": 0.234375,
+      "materials": 13
+    },
+    {
+      "tier": "high",
+      "passage": 1,
+      "t": 39,
+      "amount": 0.3046875,
+      "materials": 13
+    },
+    {
+      "tier": "high",
+      "passage": 1,
+      "t": 40,
+      "amount": 0.3125,
+      "materials": 13
+    },
+    {
+      "tier": "high",
+      "passage": 1,
+      "t": 41,
+      "amount": 0.3203125,
+      "materials": 13
+    },
+    {
+      "tier": "high",
+      "passage": 1,
+      "t": 60,
+      "amount": 0.46875,
+      "materials": 13
+    },
+    {
+      "tier": "high",
+      "passage": 1,
+      "t": 64,
+      "amount": 0.5,
+      "materials": 13
+    },
+    {
+      "tier": "high",
+      "passage": 2,
+      "t": 0,
+      "amount": 0.5,
+      "materials": 13
+    },
+    {
+      "tier": "high",
+      "passage": 2,
+      "t": 19,
+      "amount": 0.6484375,
+      "materials": 13
+    },
+    {
+      "tier": "high",
+      "passage": 2,
+      "t": 20,
+      "amount": 0.65625,
+      "materials": 13
+    },
+    {
+      "tier": "high",
+      "passage": 2,
+      "t": 21,
+      "amount": 0.6640625,
+      "materials": 13
+    },
+    {
+      "tier": "high",
+      "passage": 2,
+      "t": 30,
+      "amount": 0.734375,
+      "materials": 13
+    },
+    {
+      "tier": "high",
+      "passage": 2,
+      "t": 39,
+      "amount": 0.8046875,
+      "materials": 13
+    },
+    {
+      "tier": "high",
+      "passage": 2,
+      "t": 40,
+      "amount": 0.8125,
+      "materials": 13
+    },
+    {
+      "tier": "high",
+      "passage": 2,
+      "t": 41,
+      "amount": 0.8203125,
+      "materials": 13
+    },
+    {
+      "tier": "high",
+      "passage": 2,
+      "t": 60,
+      "amount": 0.96875,
+      "materials": 13
+    },
+    {
+      "tier": "high",
+      "passage": 2,
+      "t": 64,
+      "amount": 1,
+      "materials": 13
+    },
+    {
+      "tier": "mid",
+      "passage": 1,
+      "t": 0,
+      "amount": 0,
+      "materials": 13
+    },
+    {
+      "tier": "mid",
+      "passage": 1,
+      "t": 19,
+      "amount": 0.1484375,
+      "materials": 13
+    },
+    {
+      "tier": "mid",
+      "passage": 1,
+      "t": 20,
+      "amount": 0.15625,
+      "materials": 13
+    },
+    {
+      "tier": "mid",
+      "passage": 1,
+      "t": 21,
+      "amount": 0.1640625,
+      "materials": 13
+    },
+    {
+      "tier": "mid",
+      "passage": 1,
+      "t": 30,
+      "amount": 0.234375,
+      "materials": 13
+    },
+    {
+      "tier": "mid",
+      "passage": 1,
+      "t": 39,
+      "amount": 0.3046875,
+      "materials": 13
+    },
+    {
+      "tier": "mid",
+      "passage": 1,
+      "t": 40,
+      "amount": 0.3125,
+      "materials": 13
+    },
+    {
+      "tier": "mid",
+      "passage": 1,
+      "t": 41,
+      "amount": 0.3203125,
+      "materials": 13
+    },
+    {
+      "tier": "mid",
+      "passage": 1,
+      "t": 60,
+      "amount": 0.46875,
+      "materials": 13
+    },
+    {
+      "tier": "mid",
+      "passage": 1,
+      "t": 64,
+      "amount": 0.5,
+      "materials": 13
+    },
+    {
+      "tier": "mid",
+      "passage": 2,
+      "t": 0,
+      "amount": 0.5,
+      "materials": 13
+    },
+    {
+      "tier": "mid",
+      "passage": 2,
+      "t": 19,
+      "amount": 0.6484375,
+      "materials": 13
+    },
+    {
+      "tier": "mid",
+      "passage": 2,
+      "t": 20,
+      "amount": 0.65625,
+      "materials": 13
+    },
+    {
+      "tier": "mid",
+      "passage": 2,
+      "t": 21,
+      "amount": 0.6640625,
+      "materials": 13
+    },
+    {
+      "tier": "mid",
+      "passage": 2,
+      "t": 30,
+      "amount": 0.734375,
+      "materials": 13
+    },
+    {
+      "tier": "mid",
+      "passage": 2,
+      "t": 39,
+      "amount": 0.8046875,
+      "materials": 13
+    },
+    {
+      "tier": "mid",
+      "passage": 2,
+      "t": 40,
+      "amount": 0.8125,
+      "materials": 13
+    },
+    {
+      "tier": "mid",
+      "passage": 2,
+      "t": 41,
+      "amount": 0.8203125,
+      "materials": 13
+    },
+    {
+      "tier": "mid",
+      "passage": 2,
+      "t": 60,
+      "amount": 0.96875,
+      "materials": 13
+    },
+    {
+      "tier": "mid",
+      "passage": 2,
+      "t": 64,
+      "amount": 1,
+      "materials": 13
+    },
+    {
+      "tier": "low",
+      "passage": 1,
+      "t": 0,
+      "amount": 0,
+      "materials": 13
+    },
+    {
+      "tier": "low",
+      "passage": 1,
+      "t": 19,
+      "amount": 0.1484375,
+      "materials": 13
+    },
+    {
+      "tier": "low",
+      "passage": 1,
+      "t": 20,
+      "amount": 0.15625,
+      "materials": 13
+    },
+    {
+      "tier": "low",
+      "passage": 1,
+      "t": 21,
+      "amount": 0.1640625,
+      "materials": 13
+    },
+    {
+      "tier": "low",
+      "passage": 1,
+      "t": 30,
+      "amount": 0.234375,
+      "materials": 13
+    },
+    {
+      "tier": "low",
+      "passage": 1,
+      "t": 39,
+      "amount": 0.3046875,
+      "materials": 13
+    },
+    {
+      "tier": "low",
+      "passage": 1,
+      "t": 40,
+      "amount": 0.3125,
+      "materials": 13
+    },
+    {
+      "tier": "low",
+      "passage": 1,
+      "t": 41,
+      "amount": 0.3203125,
+      "materials": 13
+    },
+    {
+      "tier": "low",
+      "passage": 1,
+      "t": 60,
+      "amount": 0.46875,
+      "materials": 13
+    },
+    {
+      "tier": "low",
+      "passage": 1,
+      "t": 64,
+      "amount": 0.5,
+      "materials": 13
+    },
+    {
+      "tier": "low",
+      "passage": 2,
+      "t": 0,
+      "amount": 0.5,
+      "materials": 13
+    },
+    {
+      "tier": "low",
+      "passage": 2,
+      "t": 19,
+      "amount": 0.6484375,
+      "materials": 13
+    },
+    {
+      "tier": "low",
+      "passage": 2,
+      "t": 20,
+      "amount": 0.65625,
+      "materials": 13
+    },
+    {
+      "tier": "low",
+      "passage": 2,
+      "t": 21,
+      "amount": 0.6640625,
+      "materials": 13
+    },
+    {
+      "tier": "low",
+      "passage": 2,
+      "t": 30,
+      "amount": 0.734375,
+      "materials": 13
+    },
+    {
+      "tier": "low",
+      "passage": 2,
+      "t": 39,
+      "amount": 0.8046875,
+      "materials": 13
+    },
+    {
+      "tier": "low",
+      "passage": 2,
+      "t": 40,
+      "amount": 0.8125,
+      "materials": 13
+    },
+    {
+      "tier": "low",
+      "passage": 2,
+      "t": 41,
+      "amount": 0.8203125,
+      "materials": 13
+    },
+    {
+      "tier": "low",
+      "passage": 2,
+      "t": 60,
+      "amount": 0.96875,
+      "materials": 13
+    },
+    {
+      "tier": "low",
+      "passage": 2,
+      "t": 64,
+      "amount": 1,
+      "materials": 13
+    }
+  ],
+  "errors": []
+}

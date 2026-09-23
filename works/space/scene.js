@@ -10,7 +10,7 @@ const travel=(a,b,t)=>THREE.MathUtils.clamp((t-a)/(b-a),0,1);
 // Finite acceleration, inertial coast, finite braking. Exhibition time/length units.
 export function displacement(t){t=THREE.MathUtils.clamp(t,0,DURATION);return t<8?.5*t*t:t<52?32+8*(t-8):384+8*(t-52)-(t-52)**2/3;}
 export function shotAt(t,passage=1){return passage===2?(t<26?'keel':t<44?'crossing':'horizon'):t<20?'departure':t<40?'structure':'destination';}
-export function pose(camera,ship,t,passage=1){
+function shotPose(camera,ship,t,passage=1){
   t=THREE.MathUtils.clamp(t,0,DURATION);
   ship.position.set(0,0,-displacement(t));ship.rotation.set(.045,-.24+smooth(40,48,t)*.09,.06);
   const portrait=camera.aspect<1,shot=shotAt(t);
@@ -62,6 +62,28 @@ export function pose(camera,ship,t,passage=1){
   camera.lookAt(target);camera.updateProjectionMatrix();camera.updateMatrixWorld();
   camera.userData.focus??=new THREE.Vector3();camera.userData.focus.copy(target);
   return shot;
+}
+// Six-second Hermite bridges join position, focus and FOV with matched endpoint
+// velocities. No black frame, no orbit around the vessel, no stop/restart ease.
+const probes=Array.from({length:4},()=>new THREE.PerspectiveCamera());
+const probeShip=new THREE.Group();
+const axes=['x','y','z'];let bridgeKey='';
+function hermite(a,b,va,vb,u,d){const u2=u*u,u3=u2*u;return (2*u3-3*u2+1)*a+(u3-2*u2+u)*d*va+(-2*u3+3*u2)*b+(u3-u2)*d*vb;}
+export function pose(camera,ship,t,passage=1){
+ const shot=shotPose(camera,ship,t,passage),cut=(passage===2?[26,44]:CUTS).find(c=>Math.abs(t-c)<3);
+ if(cut===undefined)return shot;
+ const a=cut-3,b=cut+3,e=.001,u=(t-a)/6;
+ const key=`${passage}:${cut}:${camera.aspect}`;
+ if(key!==bridgeKey){for(let i=0;i<4;i++){probes[i].aspect=camera.aspect;shotPose(probes[i],probeShip,[a,a+e,b-e,b][i],passage);}bridgeKey=key;}
+ for(const axis of axes){
+  camera.position[axis]=hermite(probes[0].position[axis],probes[3].position[axis],(probes[1].position[axis]-probes[0].position[axis])/e,(probes[3].position[axis]-probes[2].position[axis])/e,u,6);
+  camera.userData.focus[axis]=hermite(probes[0].userData.focus[axis],probes[3].userData.focus[axis],(probes[1].userData.focus[axis]-probes[0].userData.focus[axis])/e,(probes[3].userData.focus[axis]-probes[2].userData.focus[axis])/e,u,6);
+ }
+ camera.fov=hermite(probes[0].fov,probes[3].fov,(probes[1].fov-probes[0].fov)/e,(probes[3].fov-probes[2].fov)/e,u,6);
+ // While the narrow frame opens toward the destination, keep the vessel as
+ // the visual anchor. The correction and its velocity vanish at both ends.
+ if(camera.aspect<1)camera.userData.focus.lerp(target.copy(ship.position).add(offset.set(0,3,0)),.65*Math.sin(Math.PI*u)**2);
+ camera.lookAt(camera.userData.focus);camera.updateProjectionMatrix();camera.updateMatrixWorld();return shot;
 }
 export function createVoid(scene,tier,passage=1){
   const stars=new THREE.Group();const count={high:1800,mid:1200,low:700}[tier];let seed=4917;

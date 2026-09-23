@@ -17,8 +17,8 @@ export function surfaceEdit(phase,elapsed,profile){
 export function passageEdit(t,cuts){
   const enter=1-easeEdit((t-.12)/1.65),exit=easeEdit((t-61.7)/2.05);
   return {
-    // Brief cut cover, not a fade-to-black pause between moving shots.
-    veil:Math.max(enter,exit,...cuts.map(c=>1-easeEdit(Math.abs(t-c)/.09))),
+    // Interior shots now share continuous camera bridges; only page boundaries fade.
+    veil:Math.max(enter,exit),
     // A quiet coast separates propulsion cues; tails reach zero before navigation.
     audio:easeEdit(t/3)*(1-easeEdit((t-60)/3.6))*(1-easeEdit((t-32)/2)+easeEdit((t-42)/2)),
     thrust:1-easeEdit((t-8)/4)+easeEdit((t-48)/4)

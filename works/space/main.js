@@ -38,10 +38,11 @@ try{
   // One directional sun and restrained planet return. Darkness separates the
   // far hull from the small sunlit bevels; no bloom or lens-flare overlay.
   const fill=new THREE.DirectionalLight(passage===2?0x91adc4:0xb9a18a,.13);fill.position.set(10,-6,-20);scene.add(fill);
-  surveyor=createSurveyor(tier);scene.add(surveyor.group);voidScene=createVoid(scene,tier,passage);render(t);document.getElementById('loading').hidden=true;
+  surveyor=createSurveyor(tier,passage);scene.add(surveyor.group);voidScene=createVoid(scene,tier,passage);render(t);document.getElementById('loading').hidden=true;
   window.BTK_SPACE={snapshot:()=>({passage,seconds:t,duration:DURATION,shot:shotAt(t,passage),tier,triangles:renderer.info.render.triangles,calls:renderer.info.render.calls,dpr,paused,independent:!window.TI_WORLD,response,environment:transfer?.environment??baseline(source),radiators:surveyor.radiators.map(r=>r.pivot.rotation.z),audio:audio.snapshot(),position:surveyor.group.position.toArray(),cameraPosition:camera.position.toArray(),cameraFov:camera.fov,cameraFocus:camera.userData.focus.toArray()}),...(test?{seek:render,arrive}:{})};
   sound.addEventListener('click',async()=>{if(audio.enabled)audio.mute();else await audio.enable();sound.setAttribute('aria-pressed',String(audio.enabled));sound.setAttribute('aria-label',audio.enabled?'기내 사운드 끄기':'기내 사운드 켜기');audio.update(t);});
   // Browser audio permission remains a deliberate gesture on this document.
+  window.BTK_SPACE.exposure=surveyor.exposure;
   installCinemaFrame(resize);addEventListener('pagehide',pause);addEventListener('pageshow',resume);document.addEventListener('visibilitychange',()=>document.hidden?pause():resume());
   renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();pause();const error=document.getElementById('error');error.hidden=false;error.textContent='화면 연결이 중단되었습니다. 새로고침하면 저장된 항해 지점에서 재개합니다.';});
   requestAnimationFrame(tick);

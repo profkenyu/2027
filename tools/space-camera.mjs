@@ -28,7 +28,7 @@ try{
   for(const t of [3,10,19,21,26,30,35,39,41,50,60]){await page.evaluate(t=>BTK_SPACE.seek(t),t);await page.screenshot({path:`output/qa/space-camera/${tier}-${t}.png`});}
   // Seeking is deterministic; cuts remain covered, and the final landing exit remains available.
   const a=await page.evaluate(()=>{BTK_SPACE.seek(30);return BTK_SPACE.snapshot().cameraPosition;});await page.evaluate(()=>BTK_SPACE.seek(52));const b=await page.evaluate(()=>{BTK_SPACE.seek(30);return BTK_SPACE.snapshot().cameraPosition;});assert.deepEqual(a,b);
-  for(const cut of CUTS){assert.equal(await page.evaluate(t=>{BTK_SPACE.seek(t);return Number(document.getElementById('veil').style.opacity);},cut),1);}
+  for(const cut of CUTS){assert.equal(await page.evaluate(t=>{BTK_SPACE.seek(t);return Number(document.getElementById('veil').style.opacity);},cut),0);}
   assert.deepEqual(errors,[]);console.log(`PASS ${tier}: approach / hull passage / release / camera clearance / deterministic seek`);await page.close();
  }
  await writeFile('output/qa/space-camera/report.json',JSON.stringify(reports,null,2));

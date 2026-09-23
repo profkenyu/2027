@@ -11,10 +11,12 @@ import {installCinemaFrame} from '../shared/cinema-frame.js';
 import {createFlightEnvironment} from '../space/surfaces.js';
 import {POST_PHASES,enterPostMission,savePostMission,readPostMission} from '../shared/post-mission-state.js';
 import {createPossibility} from './possibility.js';
+import {migrationResponse} from './mission-response.js';
 
 const params=new URLSearchParams(location.search), requested=params.get('quality');
 const phase=document.body.dataset.phase==='arrival'?'arrival':'migration',segment=POST_PHASES[phase];
 const state=enterPostMission(phase),endTime=segment.start+segment.duration;
+const response=migrationResponse(state.evidence);
 const targetPath=file=>location.pathname.includes('/works/first_dawn/')?'../terra_incognita/'+file:file;
 let leaving=false,lastSaved=-1,possibility;
 const tier=['high','mid','low'].includes(requested)?requested:innerWidth<700?'low':navigator.hardwareConcurrency>=8?'high':'mid';
@@ -25,7 +27,7 @@ const motion=schedule.map(()=>({approach:0,deploy:0}));
 const choreography=createTimeline({autoplay:false});
 schedule.forEach((s,i)=>{
   choreography.add(motion[i],{approach:[0,1],duration:s.duration*1000,ease:'linear'},s.start*1000);
-  choreography.add(motion[i],{deploy:[0,1],duration:16000,ease:'inOutSine'},(45+i*3)*1000);
+  choreography.add(motion[i],{deploy:[0,response.opening],duration:response.duration*1000,ease:'inOutSine'},(45+i*3)*1000);
 });
 let currentShot='arrival';
 let renderer,scene,camera,fleet,environment,keyLight,seconds=segment.start+(params.has('test')?0:state.elapsed),paused=false,last=performance.now(),frame=0,frameTime=16,pixelRatio=Math.min(devicePixelRatio,quality.dpr);
@@ -124,5 +126,6 @@ try{
   addEventListener('pointerdown',firstInput);addEventListener('keydown',firstInput);
   window.FIRST_DAWN={snapshot:()=>({phase,seconds,elapsed:seconds-segment.start,duration:segment.duration,endTime,preview:!state.evidence,possibility:possibility.snapshot(),tier,shot:currentShot,cameraPosition:camera.position.toArray(),cameraFov:camera.fov,surfaceHeight:environment.surfaceHeightAt(camera.position.x,camera.position.z),ships:fleet.filter(s=>s.visible).length,total:fleet.length,referenceArks:fleet.filter(s=>s.name==='sf-migration-ark').length,originalArks:fleet.filter(s=>s.name.startsWith('ark-')).length,paused,triangles:renderer.info.render.triangles,calls:renderer.info.render.calls,pixelRatio,independent:!window.TI_WORLD,animation:'anime.js',motion:'restrained-distant / accelerating-approach / finite-braking',deployment:motion.map(s=>s.deploy)}),...(params.has('test')?{seek:render,next,positions:()=>fleet.map(s=>s.position.toArray())}:{})};
   if(params.has('test'))window.FIRST_DAWN.audio=audio.snapshot;
+  window.FIRST_DAWN.missionResponse=()=>({...response,resourceLinked:!!state.evidence?.sampleSignatures,angles:fleet.map(ship=>ship.userData.deployables.map(({pivot})=>pivot.rotation.z))});
   requestAnimationFrame(tick);
 }catch(error){document.getElementById('loading').hidden=true;const box=document.getElementById('error');box.hidden=false;box.textContent='3D 화면을 시작할 수 없습니다. WebGL을 지원하는 브라우저에서 다시 열어주세요.';console.error(error);}

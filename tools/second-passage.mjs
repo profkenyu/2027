@@ -21,7 +21,7 @@ try{
   const page=await browser.newPage({viewport:{width,height}}),requests=[];page.on('pageerror',e=>report.errors.push(String(e)));page.on('request',r=>requests.push(r.url()));
   await page.goto(`${server.url}/space-02.html?test&quality=${tier}`);await page.waitForFunction(()=>window.BTK_SPACE);
   for(const t of [3,13,24,30,40,46,60]){const s=await page.evaluate(t=>{BTK_SPACE.seek(t);return BTK_SPACE.snapshot();},t);assert.equal(s.passage,2);assert.equal(s.environment.temperature,218);assert(s.independent);report.frames.push(s);await page.screenshot({path:`${out}/${tier}-${t}.png`});}
-  for(const t of [26,44])assert.equal(await page.evaluate(t=>{BTK_SPACE.seek(t);return +document.querySelector('#veil').style.opacity;},t),1);
+  for(const t of [26,44])assert.equal(await page.evaluate(t=>{BTK_SPACE.seek(t);return +document.querySelector('#veil').style.opacity;},t),0);
   await page.locator('#sound').click();assert.equal((await page.evaluate(()=>BTK_SPACE.snapshot())).audio.state,'running');
   assert(requests.every(u=>u.startsWith(server.url+'/space-02.html')));await page.close();console.log(`PASS ${tier}: second passage camera / independent rendering / audio`);
  }

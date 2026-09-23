@@ -399,6 +399,8 @@
       const s = JSON.parse(sessionStorage.getItem(POST_KEY) || "null");
       if (s?.version !== 1 || !POST_PHASES[s.phase] || !Number.isFinite(s.elapsed) || s.elapsed < 0 || s.elapsed > POST_PHASES[s.phase].duration) return null;
       if (s.evidence && (!/^[0-9a-f]{6}$/i.test(s.seed) || !Number.isFinite(s.evidence.temperature) || !Number.isFinite(s.evidence.energy) || !Number.isFinite(s.evidence.radiation) || s.evidence.samples !== 6 || s.evidence.water !== true || s.evidence.nodes !== 3)) return null;
+      const signatures = s.evidence?.sampleSignatures;
+      if (signatures != null && (!Array.isArray(signatures) || signatures.length !== 6 || signatures.some((v) => !Number.isFinite(v) || v < 0 || v > 1))) return null;
       return s;
     } catch {
       return null;
