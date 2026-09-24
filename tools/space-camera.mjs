@@ -16,7 +16,7 @@ for(const [width,height] of [[1600,1000],[1180,820],[390,844],[844,390]]){
  }
  pose(camera,ship,1);const start=camera.position.distanceTo(ship.position);pose(camera,ship,19);const near=camera.position.distanceTo(ship.position);assert(start>near*2,'Missing actual distant approach');
  pose(camera,ship,21);const fore=camera.position.z-ship.position.z;pose(camera,ship,39);const aft=camera.position.z-ship.position.z;assert(fore<-20&&aft>25,'Camera did not pass the hull');
- pose(camera,ship,41);const release=camera.position.distanceTo(ship.position);pose(camera,ship,61);assert(camera.position.distanceTo(ship.position)>release*1.8,'Missing camera release');
+ pose(camera,ship,46);const release=camera.position.distanceTo(ship.position);pose(camera,ship,61);const releaseRatio=camera.position.distanceTo(ship.position)/release;assert(releaseRatio>1.2&&releaseRatio<1.8,'Final release must retain its restored tracking rate');
  reports.push({width,height,minClearance,maxFrameStep:maxStep,approachRatio:start/near,fore,aft});
 }
 const server=await startPreviewServer();let browser;

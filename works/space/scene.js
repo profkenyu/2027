@@ -26,9 +26,9 @@ function shotPose(camera,ship,t,passage=1){
       camera.position.copy(ship.position).add(offset.set(-65+p*30,20-p*7,60+p*10));
       target.copy(ship.position).add(offset.set(portrait?-2:-10,3,0));camera.fov=portrait?61:39;
     }else{
-      const p=travel(44,64,t);
-      camera.position.copy(ship.position).add(offset.set(portrait?-5:-22,15+p*12,85+p*95));
-      target.copy(ship.position).add(offset.set(portrait?-25:-70,24,-220));camera.fov=portrait?69:44;
+      const p=travel(44,64,t)*.5;
+      camera.position.copy(ship.position).add(offset.set(portrait?-5:-22,15+p*12,75+p*95));
+      target.copy(ship.position).add(offset.set(portrait?-18:-46,19,-150));camera.fov=portrait?69:44;
     }
     camera.lookAt(target);camera.updateProjectionMatrix();camera.updateMatrixWorld();
     camera.userData.focus??=new THREE.Vector3();camera.userData.focus.copy(target);
@@ -52,37 +52,44 @@ function shotPose(camera,ship,t,passage=1){
     target.copy(ship.position).add(offset.set(0,3.2-p*.8,-2+p*5));
     camera.fov=(portrait?64:45)-p*4;
   }else{
-    const p=travel(40,64,t);
+    const p=travel(40,64,t)*.5;
     // Fall behind the ship as it leaves for the planet. Its shrinking scale
     // against a persistent large limb creates depth without star streaks.
-    camera.position.copy(ship.position).add(offset.set(portrait?5-p*5:28-p*16,12+p*8,72+p*88));
-    target.copy(ship.position).add(offset.set(portrait?24+p*8:40+p*55,14,-150-p*110));
+    camera.position.copy(ship.position).add(offset.set(portrait?5-p*5:28-p*16,12+p*8,52+p*88));
+    target.copy(ship.position).add(offset.set(portrait?14+p*8:14+p*35,10,-90-p*110));
     camera.fov=(portrait?70:43)-p*(portrait?6:5);
   }
   camera.lookAt(target);camera.updateProjectionMatrix();camera.updateMatrixWorld();
   camera.userData.focus??=new THREE.Vector3();camera.userData.focus.copy(target);
   return shot;
 }
-// Six-second Hermite bridges join position, focus and FOV with matched endpoint
+// Planet-reveal bridges take twelve seconds; the first hull pass stays six.
+export const bridgeRadius=(passage,cut)=>passage===2||cut===40?6:3;
+// Hermite bridges join position, focus and FOV with matched endpoint
 // velocities. No black frame, no orbit around the vessel, no stop/restart ease.
 const probes=Array.from({length:4},()=>new THREE.PerspectiveCamera());
 const probeShip=new THREE.Group();
 const axes=['x','y','z'];let bridgeKey='';
-function hermite(a,b,va,vb,u,d){const u2=u*u,u3=u2*u;return (2*u3-3*u2+1)*a+(u3-2*u2+u)*d*va+(-2*u3+3*u2)*b+(u3-u2)*d*vb;}
+function hermite(a,b,va,vb,u,d){
+ // Quintic bridge: match position/velocity and zero endpoint acceleration
+ // of the adjoining linear observer paths (C2, rather than only C1).
+ const delta=b-a,m0=va*d,m1=vb*d;
+ return a+m0*u+(10*delta-6*m0-4*m1)*u**3+(-15*delta+8*m0+7*m1)*u**4+(6*delta-3*m0-3*m1)*u**5;
+}
 export function pose(camera,ship,t,passage=1){
- const shot=shotPose(camera,ship,t,passage),cut=(passage===2?[26,44]:CUTS).find(c=>Math.abs(t-c)<3);
+ const shot=shotPose(camera,ship,t,passage),cut=(passage===2?[26,44]:CUTS).find(c=>Math.abs(t-c)<bridgeRadius(passage,c));
  if(cut===undefined)return shot;
- const a=cut-3,b=cut+3,e=.001,u=(t-a)/6;
+ const radius=bridgeRadius(passage,cut),duration=radius*2,a=cut-radius,b=cut+radius,e=.001,u=(t-a)/duration;
  const key=`${passage}:${cut}:${camera.aspect}`;
  if(key!==bridgeKey){for(let i=0;i<4;i++){probes[i].aspect=camera.aspect;shotPose(probes[i],probeShip,[a,a+e,b-e,b][i],passage);}bridgeKey=key;}
  for(const axis of axes){
-  camera.position[axis]=hermite(probes[0].position[axis],probes[3].position[axis],(probes[1].position[axis]-probes[0].position[axis])/e,(probes[3].position[axis]-probes[2].position[axis])/e,u,6);
-  camera.userData.focus[axis]=hermite(probes[0].userData.focus[axis],probes[3].userData.focus[axis],(probes[1].userData.focus[axis]-probes[0].userData.focus[axis])/e,(probes[3].userData.focus[axis]-probes[2].userData.focus[axis])/e,u,6);
+  camera.position[axis]=hermite(probes[0].position[axis],probes[3].position[axis],(probes[1].position[axis]-probes[0].position[axis])/e,(probes[3].position[axis]-probes[2].position[axis])/e,u,duration);
+  camera.userData.focus[axis]=hermite(probes[0].userData.focus[axis],probes[3].userData.focus[axis],(probes[1].userData.focus[axis]-probes[0].userData.focus[axis])/e,(probes[3].userData.focus[axis]-probes[2].userData.focus[axis])/e,u,duration);
  }
- camera.fov=hermite(probes[0].fov,probes[3].fov,(probes[1].fov-probes[0].fov)/e,(probes[3].fov-probes[2].fov)/e,u,6);
+ camera.fov=hermite(probes[0].fov,probes[3].fov,(probes[1].fov-probes[0].fov)/e,(probes[3].fov-probes[2].fov)/e,u,duration);
  // While the narrow frame opens toward the destination, keep the vessel as
  // the visual anchor. The correction and its velocity vanish at both ends.
- if(camera.aspect<1)camera.userData.focus.lerp(target.copy(ship.position).add(offset.set(0,3,0)),.65*Math.sin(Math.PI*u)**2);
+ if(camera.aspect<1)camera.userData.focus.lerp(target.copy(ship.position).add(offset.set(0,3,0)),.65*Math.sin(Math.PI*u)**4);
  camera.lookAt(camera.userData.focus);camera.updateProjectionMatrix();camera.updateMatrixWorld();return shot;
 }
 export function createVoid(scene,tier,passage=1){
@@ -117,11 +124,12 @@ export function createVoid(scene,tier,passage=1){
     // Paired oblique fracture families expose a dry jointed world. Static
     // directional relief is an artistic approximation, not measured geology.
     planetMaterial.fragmentShader=planetMaterial.fragmentShader.replace('vec3 color=ground*(.055+light*2.1);',`
-      float joint=abs(terrain(N*12.+vec3(strata*3.))-.46);
-      float fracture=(1.-smoothstep(.0015,.008,joint))*smoothstep(.30,.53,detail);
-      float shoulder=(1.-smoothstep(.008,.019,joint))*(1.-fracture);
-      ground*=1.-fracture*.32;
-      ground+=vec3(.017,.022,.025)*shoulder*light;
+      vec3 warp=vec3(field(N*7.+3.),field(N*7.+17.),field(N*7.+31.))-.5;
+      float joint=abs(terrain(N*10.+warp*2.2)-(.43+field(N*3.+9.)*.08));
+      float width=.014+field(N*16.+5.)*.02;
+      float fracture=(1.-smoothstep(.002,width,joint))*smoothstep(.35,.60,detail);
+      // Broad low-contrast erosion margins, no bright contour-line shoulder.
+      ground*=1.-fracture*.16;
       vec3 color=ground*(.055+light*2.1);`);
   }else{
     // Gas veils erase surface information in broad strata; the second transit
@@ -135,7 +143,7 @@ export function createVoid(scene,tier,passage=1){
   // not a peer of a conveniently framed globe. Spatial scale is exhibition-authored.
   const planet=new THREE.Mesh(new THREE.SphereGeometry(passage===2?3700:3300,tier==='low'?96:144,tier==='low'?64:88),planetMaterial);planet.position.set(passage===2?-1650:1450,passage===2?-100:-430,-5700);scene.add(planet);
   let atmosphere=null;
-  if(passage===1){
+  {
     // Single shell: tangent optical depth and broad stratification, not a
     // volumetric gas simulation. No animation/noise added to the void.
     atmosphere=new THREE.Mesh(planet.geometry,new THREE.ShaderMaterial({
@@ -145,14 +153,14 @@ export function createVoid(scene,tier,passage=1){
       fragmentShader:`uniform vec3 sun;varying vec3 worldN;varying vec3 viewN;varying vec3 viewPos;
         void main(){vec3 N=normalize(worldN);float mu=clamp(dot(normalize(viewN),normalize(-viewPos)),0.,1.);
           float rim=pow(1.-mu,2.5);float day=smoothstep(-.2,.6,dot(N,sun));
-          float strata=.82+.18*sin(N.y*33.+N.x*3.);
-          float alpha=(.055+rim*.48)*(.22+day*.78)*strata*smoothstep(0.,.12,mu);
-          vec3 haze=mix(vec3(.19,.23,.25),vec3(.68,.46,.23),day);
+          float strata=${passage===2?'.68+.18*sin(N.y*13.+sin(N.x*9.)*2.)+.14*sin(N.z*19.+N.x*7.)':'.82+.18*sin(N.y*33.+N.x*3.)'};
+          float alpha=(${passage===2?'.10+rim*.34':'.055+rim*.48'})*(.22+day*.78)*strata*smoothstep(0.,.12,mu);
+          vec3 haze=${passage===2?'mix(vec3(.15,.19,.23),vec3(.40,.49,.54),day)':'mix(vec3(.19,.23,.25),vec3(.68,.46,.23),day)'};
           gl_FragColor=vec4(haze,alpha);
           #include <tonemapping_fragment>
           #include <colorspace_fragment>
         }`
-    }));atmosphere.scale.setScalar(1.026);atmosphere.position.copy(planet.position);scene.add(atmosphere);
+    }));atmosphere.scale.setScalar(passage===2?1.018:1.026);atmosphere.position.copy(planet.position);scene.add(atmosphere);
   }
   return {stars,planet,atmosphere};
 }
