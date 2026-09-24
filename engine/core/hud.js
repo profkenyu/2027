@@ -314,7 +314,7 @@ export class Hud {
     const el = document.createElement("div");
     el.id = "fh-hud";
     el.innerHTML = `
-      <div class="eyebrow">BEYOND THE KNOWN - A Terrafoming Project</div>
+      <div class="eyebrow">BEYOND THE KNOWN - A Terraforming Project</div>
       <div class="rule"></div>
       ${diagnostic ? `<div class="g">
         <div class="gt">Frame</div>

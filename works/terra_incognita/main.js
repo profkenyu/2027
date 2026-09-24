@@ -355,7 +355,7 @@ const off = (name) => SAFE || OFF.has("no" + name);
 addEventListener("error", (e) => fatal(e.error ?? e.message, "window"));
 addEventListener("unhandledrejection", (e) => fatal(e.reason, "promise"));
 if (!navigator.gpu) {
-  unsupported("api", "BEYOND THE KNOWN - A Terrafoming Project");
+  unsupported("api", "BEYOND THE KNOWN - A Terraforming Project");
   await HALT();
 }
 window.TI_BOOT?.beat("device");

@@ -90,7 +90,7 @@ async function main() {
     for (const folder of [ROOT, `${ROOT}/dist`, `${ROOT}/works/${WORK}`]) {
       await writeFile(`${folder}/planet-engine.js`, js);
       for (const number of ['01', '02', '03']) {
-        await writeFile(`${folder}/planet-${number}.html`, html.replace(/<title>[^<]*<\/title>/, `<title>BEYOND THE KNOWN - A Terrafoming Project · Planet ${number}</title>`));
+        await writeFile(`${folder}/planet-${number}.html`, html.replace(/<title>[^<]*<\/title>/, `<title>BEYOND THE KNOWN - A Terraforming Project · Planet ${number}</title>`));
       }
     }
     await writeFile(`${ROOT}/dist/field-archive.html`, archive);

@@ -41,7 +41,7 @@ export function fatal(err, where = "") {
   window.TI_READY = true;
   const msg = err && (err.message || String(err)) || "unknown error";
   const stack = err && err.stack ? String(err.stack).split("\n").slice(0, 6).join("\n") : "";
-  console.error("[BEYOND THE KNOWN - A Terrafoming Project]", where, err);
+  console.error("[BEYOND THE KNOWN - A Terraforming Project]", where, err);
   const esc = (t) => String(t).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
   document.body.innerHTML = `
     <div class="bar t"></div><div class="bar b"></div>
