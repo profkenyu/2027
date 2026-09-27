@@ -394,7 +394,7 @@
 
   // works/shared/post-mission-state.js
   var POST_KEY = "beyond-known:post-mission:v1";
-  var POST_PHASES = Object.freeze({ migration: { file: "migration.html", start: 0, duration: 68, next: "arrival" }, arrival: { file: "arrival.html", start: 68, duration: 70, next: "ending" }, ending: { file: "ending.html", start: 0, duration: 18, next: null } });
+  var POST_PHASES = Object.freeze({ migration: { file: "migration.html", start: 0, duration: 69, next: "arrival" }, arrival: { file: "arrival.html", start: 68, duration: 60, next: "ending" }, ending: { file: "ending.html", start: 0, duration: 18, next: null } });
   function readPostMission() {
     try {
       const s = JSON.parse(sessionStorage.getItem(POST_KEY) || "null");
