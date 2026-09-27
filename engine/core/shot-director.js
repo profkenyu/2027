@@ -1,7 +1,9 @@
 import { flightProfile } from "./flight-profiles.js";
 import { surfaceEdit } from "./flight-edit.js";
+import { approachFrame } from "./arrival-framing.js";
 import * as THREE from "three";
 const clamp01 = (value) => Math.max(0, Math.min(1, value));
+const arrivalUp = new THREE.Vector3(0, 1, 0);
 const smooth = (value) => {
   const p = clamp01(value);
   return p * p * (3 - 2 * p);
@@ -258,6 +260,9 @@ export class ShotDirector {
     this.camera.up.set(0, 1, 0);
     this.camera.lookAt(this._aim);
     this.focus.copy(this._aim);
+    // The match-cut look target is far ahead of the hull, but optical focus
+    // belongs to the vessel, not that compositional vanishing point.
+    if (shot === 'ascent' && this.voyage.phase === 'descent') this.focus.copy(this.lander.group.position);
     this.camera.updateProjectionMatrix();
   }
   mast() {
@@ -338,6 +343,8 @@ export class ShotDirector {
     this.camera.fov = 39;
   }
   applyPortraitSafeFrame(shot) {
+    // The matched arrival frame already has its own portrait lens/composition.
+    if (shot === 'ascent' && this.voyage.phase === 'descent' && this.voyage.arrivalProfile?.key !== 'terra') return;
     const aspect = this.camera.aspect || 16 / 9;
     if (aspect >= 1) return;
     const scale = Math.min(1.66, 0.88 / Math.max(0.42, aspect));
@@ -369,6 +376,19 @@ export class ShotDirector {
       const profile = (this.voyage.phase === 'lift' ? this.voyage.departureProfile : this.voyage.arrivalProfile) ?? flightProfile('terra');
       const [z, x, y] = profile.camera;
       const descent = this.voyage.phase === 'descent';
+      if (descent && profile.key !== 'terra') {
+        // Preserve the incoming observer side, lens and initial apparent hull
+        // scale. Align flight yaw (-.15) to the surveyed landing-site yaw.
+        // A restrained straight dolly resolves the ground; no reverse orbit.
+        this.camera.fov = approachFrame(this._camera, this._aim, this.camera.aspect, profile.key === 'granite' ? 2 : 1);
+        const elapsed = clamp01((now - this.voyage.t0) / profile.descentMs);
+        const dolly = 1 - .22 * smooth(elapsed);
+        const yaw = this.lander.group.rotation.y + .15;
+        this._camera.multiplyScalar(dolly).applyAxisAngle(arrivalUp, yaw).add(this.lander.group.position);
+        this._aim.multiplyScalar(dolly).applyAxisAngle(arrivalUp, yaw).add(this.lander.group.position);
+        this._camera.y = Math.max(this._camera.y, this.heightAt(this._camera.x, this._camera.z) + 1.2);
+        return;
+      }
       const reveal = 1 - Math.min(1, altitude / profile.height);
       this._camera.copy(this.lander.dockingPoint(z, x, y));
       // Desert: ground-side witness to the lateral wind corridor.

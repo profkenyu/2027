@@ -1,4 +1,42 @@
 {
+  "cameraMetrics": [
+    {
+      "passage": 1,
+      "aspect": 1.6,
+      "maxDegreesPerSecond": 7.017504608776421,
+      "minDistance": 28.118016762685567
+    },
+    {
+      "passage": 1,
+      "aspect": 0.46208530805687204,
+      "maxDegreesPerSecond": 8.944276916017126,
+      "minDistance": 34.50318936797728
+    },
+    {
+      "passage": 1,
+      "aspect": 2.164102564102564,
+      "maxDegreesPerSecond": 7.017504608776421,
+      "minDistance": 28.118016762685567
+    },
+    {
+      "passage": 2,
+      "aspect": 1.6,
+      "maxDegreesPerSecond": 5.382415579981875,
+      "minDistance": 27.118096575146538
+    },
+    {
+      "passage": 2,
+      "aspect": 0.46208530805687204,
+      "maxDegreesPerSecond": 5.422767868143267,
+      "minDistance": 33.088048814624514
+    },
+    {
+      "passage": 2,
+      "aspect": 2.164102564102564,
+      "maxDegreesPerSecond": 5.382415579981875,
+      "minDistance": 27.118096575146538
+    }
+  ],
   "frames": [
     {
       "tier": "high",

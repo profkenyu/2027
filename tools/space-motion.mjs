@@ -9,7 +9,7 @@ for(const passage of [1,2])for(const aspect of [1.6,390/844,844/390]){
  for(let i=0;i<3;i++){
   const a=bounds[i],b=bounds[i+1];
   for(const t of [a+.01,a+.1,a+.5,b-.5,b-.1,b-.01])assert(speed(t)>(i===2?.4:.5),`Relative camera stopped at passage ${passage}, ${t}`);
-  if(passage===2||i===1){const reference=speed((a+b)/2);assert(Math.abs(speed(a+6.1)-reference)<.001);assert(Math.abs(speed(b-6.1)-reference)<.001);}
+  if(passage===2||i===1){const left=a+(i?bridgeRadius(passage,a):0)+.1,right=b-(i<2?bridgeRadius(passage,b):0)-.1;const reference=speed((left+right)/2);assert(Math.abs(speed(left)-reference)<.001);assert(Math.abs(speed(right)-reference)<.001);}
  }
  for(const cut of cuts){
   for(const t of [cut-.1,cut,cut+.1])assert(Math.abs((displacement(t+.001)-displacement(t))/.001-8)<1e-6,'Ship velocity changed at cut');

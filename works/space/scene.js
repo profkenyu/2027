@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {flightSun} from './surfaces.js';
+import {approachFrame} from '../../engine/core/arrival-framing.js';
 export const DURATION=64;
 export const CUTS=[20,40];
 const target=new THREE.Vector3(),offset=new THREE.Vector3();
@@ -19,17 +20,17 @@ function shotPose(camera,ship,t,passage=1){
     // Separation, not object scaling, produces the change in apparent size.
     if(t<26){
       const p=travel(0,26,t);
-      camera.position.copy(ship.position).add(offset.set(-(portrait?31:22)+p*5,-10+p*14,-37+p*65));
-      target.copy(ship.position).add(offset.set(0,2,0));camera.fov=portrait?66:46;
+      camera.position.copy(ship.position).add(offset.set(-(portrait?36:30)+p*5,-10+p*14,-37+p*65));
+      target.copy(ship.position).add(offset.set(0,2,0));
     }else if(t<44){
       const p=travel(26,44,t);
       camera.position.copy(ship.position).add(offset.set(-65+p*30,20-p*7,60+p*10));
-      target.copy(ship.position).add(offset.set(portrait?-2:-10,3,0));camera.fov=portrait?61:39;
+      target.copy(ship.position).add(offset.set(portrait?-2:-10,3,0));
     }else{
-      const p=travel(44,64,t)*.5;
-      camera.position.copy(ship.position).add(offset.set(portrait?-5:-22,15+p*12,75+p*95));
-      target.copy(ship.position).add(offset.set(portrait?-18:-46,19,-150));camera.fov=portrait?69:44;
+      approachFrame(camera.position,target,camera.aspect,passage,t);
+      camera.position.add(ship.position);target.add(ship.position);
     }
+    camera.fov=portrait?66:46;
     camera.lookAt(target);camera.updateProjectionMatrix();camera.updateMatrixWorld();
     camera.userData.focus??=new THREE.Vector3();camera.userData.focus.copy(target);
     return shotAt(t,passage);
@@ -42,32 +43,31 @@ function shotPose(camera,ship,t,passage=1){
     // approaches an almost stationary viewpoint instead of being glued to it.
     camera.position.set((portrait?38:58)-p*7,21-p*3,-215+t*.6);
     target.copy(ship.position).add(offset.set(portrait?-4:-18,-4+p*2,0));
-    camera.fov=(portrait?57:44)-p*4;
   }else if(shot==='structure'){
     const p=travel(20,40,t);
     // Match the ending's hull passage: a foreground-to-aft translation,
     // lowering the observer to expose fittings, landing struts and the keel.
     // Stay on the departure side of the flight axis across all three shots.
-    camera.position.copy(ship.position).add(offset.set(portrait?26-p*4:17-p*5,10-p*8,-25+p*53));
+    camera.position.copy(ship.position).add(offset.set(portrait?36-p*4:30-p*5,10-p*8,-25+p*53));
     target.copy(ship.position).add(offset.set(0,3.2-p*.8,-2+p*5));
-    camera.fov=(portrait?64:45)-p*4;
   }else{
-    const p=travel(40,64,t)*.5;
     // Fall behind the ship as it leaves for the planet. Its shrinking scale
     // against a persistent large limb creates depth without star streaks.
-    camera.position.copy(ship.position).add(offset.set(portrait?5-p*5:28-p*16,12+p*8,52+p*88));
-    target.copy(ship.position).add(offset.set(portrait?14+p*8:14+p*35,10,-90-p*110));
-    camera.fov=(portrait?70:43)-p*(portrait?6:5);
+    approachFrame(camera.position,target,camera.aspect,passage,t);
+    camera.position.add(ship.position);target.add(ship.position);
   }
+  camera.fov=portrait?66:46;
   camera.lookAt(target);camera.updateProjectionMatrix();camera.updateMatrixWorld();
   camera.userData.focus??=new THREE.Vector3();camera.userData.focus.copy(target);
   return shot;
 }
-// Planet-reveal bridges take twelve seconds; the first hull pass stays six.
-export const bridgeRadius=(passage,cut)=>passage===2||cut===40?6:3;
+// Longer observer transitions keep the near-to-far reveal below a fast pan.
+export const bridgeRadius=(passage,cut)=>passage===1&&cut===40?8:6;
 // Hermite bridges join position, focus and FOV with matched endpoint
 // velocities. No black frame, no orbit around the vessel, no stop/restart ease.
 const probes=Array.from({length:4},()=>new THREE.PerspectiveCamera());
+const directions=Array.from({length:4},()=>new THREE.Vector3());
+const sightline=new THREE.Vector3();
 const probeShip=new THREE.Group();
 const axes=['x','y','z'];let bridgeKey='';
 function hermite(a,b,va,vb,u,d){
@@ -81,15 +81,15 @@ export function pose(camera,ship,t,passage=1){
  if(cut===undefined)return shot;
  const radius=bridgeRadius(passage,cut),duration=radius*2,a=cut-radius,b=cut+radius,e=.001,u=(t-a)/duration;
  const key=`${passage}:${cut}:${camera.aspect}`;
- if(key!==bridgeKey){for(let i=0;i<4;i++){probes[i].aspect=camera.aspect;shotPose(probes[i],probeShip,[a,a+e,b-e,b][i],passage);}bridgeKey=key;}
+ if(key!==bridgeKey){for(let i=0;i<4;i++){probes[i].aspect=camera.aspect;shotPose(probes[i],probeShip,[a,a+e,b-e,b][i],passage);probes[i].getWorldDirection(directions[i]);}bridgeKey=key;}
  for(const axis of axes){
   camera.position[axis]=hermite(probes[0].position[axis],probes[3].position[axis],(probes[1].position[axis]-probes[0].position[axis])/e,(probes[3].position[axis]-probes[2].position[axis])/e,u,duration);
-  camera.userData.focus[axis]=hermite(probes[0].userData.focus[axis],probes[3].userData.focus[axis],(probes[1].userData.focus[axis]-probes[0].userData.focus[axis])/e,(probes[3].userData.focus[axis]-probes[2].userData.focus[axis])/e,u,duration);
+  sightline[axis]=hermite(directions[0][axis],directions[3][axis],(directions[1][axis]-directions[0][axis])/e,(directions[3][axis]-directions[2][axis])/e,u,duration);
  }
  camera.fov=hermite(probes[0].fov,probes[3].fov,(probes[1].fov-probes[0].fov)/e,(probes[3].fov-probes[2].fov)/e,u,duration);
- // While the narrow frame opens toward the destination, keep the vessel as
- // the visual anchor. The correction and its velocity vanish at both ends.
- if(camera.aspect<1)camera.userData.focus.lerp(target.copy(ship.position).add(offset.set(0,3,0)),.65*Math.sin(Math.PI*u)**4);
+ // Interpolate viewing direction, independent of the distant focus distance.
+ // This avoids a rapid pan when near-field attention moves toward the planet.
+ camera.userData.focus.copy(camera.position).addScaledVector(sightline.normalize(),100);
  camera.lookAt(camera.userData.focus);camera.updateProjectionMatrix();camera.updateMatrixWorld();return shot;
 }
 export function createVoid(scene,tier,passage=1){

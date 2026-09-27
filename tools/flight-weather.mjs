@@ -10,16 +10,19 @@ for(const tier of ['high','mid','low']){
  const model=createSurveyor(tier,2);model.update(32,{radiator:.5});assert.equal(model.exposure().amount,.75);assert(model.exposure().materials>0);
  model.update(0,{radiator:.5});model.update(32,{radiator:.5});assert.equal(model.exposure().amount,.75);
 }
+const cameraMetrics=[];
 for(const passage of [1,2])for(const aspect of [1.6,390/844,844/390]){
  const camera=new PerspectiveCamera(45,aspect,.25,30000),ship=new Group();let prev=null,maxAngle=0,minDistance=Infinity;
  for(let i=1;i<64*120;i++){
   pose(camera,ship,i/120,passage);const direction=camera.getWorldDirection(new Vector3());
-  if(prev){maxAngle=Math.max(maxAngle,direction.angleTo(prev));assert(direction.angleTo(prev)<.025,'Abrupt camera angular jump');}
+  if(prev){maxAngle=Math.max(maxAngle,direction.angleTo(prev));assert(direction.angleTo(prev)*120<10*Math.PI/180,'Observer turn exceeds 10 degrees per second');}
+  assert.equal(camera.fov,aspect<1?66:46,'Observer lens must stay fixed');
   minDistance=Math.min(minDistance,camera.position.distanceTo(ship.position));prev=direction;
  }
  assert(minDistance>11);
+ cameraMetrics.push({passage,aspect,maxDegreesPerSecond:maxAngle*120*180/Math.PI,minDistance});
 }
-const server=await startPreviewServer(),report={frames:[],errors:[]};let browser;
+const server=await startPreviewServer(),report={cameraMetrics,frames:[],errors:[]};let browser;
 await mkdir('output/qa/flight-weather',{recursive:true});
 try{
  browser=await chromium.launch({channel:'chrome',headless:true});
