@@ -8,7 +8,7 @@ export function createArchiveExport({stations=[],records=[],seed=null},now=new D
     return {
       id:String(station.id),planet:archiveEnglish(station.planet),world:archiveEnglish(station.world),
       label:archiveEnglish(station.label),x:number(station.x),z:number(station.z),
-      status:record?'ACQUIRED':station.archiveRole==='potential'?'RESOLVED POTENTIAL':'UNRESOLVED',
+      status:record?'FRAME RECORDED':station.archiveRole==='potential'?'MODEL CANDIDATE':'UNRESOLVED',
       capture:record?{lens:capture.lens,viewpoint:capture.viewpoint,projection:capture.projection,aspect:capture.aspect,
         frame:number(record.frame),pageElapsedMs:number(record.capturedAt),image:archiveImage(record.image)}:null
     };

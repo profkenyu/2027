@@ -583,11 +583,11 @@ export class OpeningBlueprintSequence {
     }
     this.el = document.createElement("section");
     this.el.id = "ti-opening-blueprints";
-    this.el.setAttribute("aria-label", "Vehicle production blueprints");
+    this.el.setAttribute("aria-label", "Mission vehicle concept studies");
     this.el.setAttribute("aria-hidden", "true");
     this.el.innerHTML = `
       <div class="bp-frame">
-        <header class="bp-head"><span>TI\u201301 / PRODUCTION GEOMETRY</span><span class="bp-counter">PLATE 01 / 02</span></header>
+        <header class="bp-head"><span>TI\u201301 / MISSION VEHICLE STUDY</span><span class="bp-counter">PLATE 01 / 02</span></header>
         <div class="bp-work">
           <div class="bp-drawing"><canvas aria-hidden="true"></canvas><span class="bp-view-label">AXONOMETRIC / ELEVATION / PLAN</span></div>
           <aside class="bp-spec">
@@ -595,7 +595,7 @@ export class OpeningBlueprintSequence {
             <p class="bp-summary"></p><dl></dl><p class="bp-parts"></p>
           </aside>
         </div>
-        <footer class="bp-foot"><span>ACTUAL PRODUCTION GEOMETRY \xB7 NOT ILLUSTRATION</span><span class="bp-signal"></span><span class="bp-resolution"></span></footer>
+        <footer class="bp-foot"><span>SIMULATED VEHICLE GEOMETRY \xB7 CONCEPT STUDY</span><span class="bp-signal"></span><span class="bp-resolution"></span></footer>
       </div>
       <div class="bp-noise" aria-hidden="true"><canvas class="bp-noise-canvas"></canvas></div>`;
     document.body.appendChild(this.el);
@@ -825,7 +825,7 @@ export class OpeningBlueprintSequence {
       renderDotMatrix(this.signal, "--/--", { label: "PLATE TRANSFER" });
       return;
     }
-    this.el.querySelector('.bp-foot > span').textContent=current.startsWith('ship')?'SOURCE GEOMETRY · SIMPLIFIED FITTINGS / BEVELS':'ACTUAL PRODUCTION GEOMETRY · NOT ILLUSTRATION';
+    this.el.querySelector('.bp-foot > span').textContent=current.startsWith('ship')?'CONCEPT GEOMETRY · SIMPLIFIED FITTINGS / BEVELS':'SIMULATED VEHICLE GEOMETRY · CONCEPT STUDY';
     if(current.startsWith('ship')){
       const model=this.models.ship,d=model.dimensions;
       this.counter.textContent='PLATE 03 / 03 · MIGRATION ARK';
@@ -857,7 +857,7 @@ export class OpeningBlueprintSequence {
       ["Restoration", `4 structural systems / ${model.segments} lines`]
     ];
     this.counter.textContent = rover ? `PLATE 01 / ${this.hasShip?"03":"02"} · ROVER` : `PLATE 02 / ${this.hasShip?"03":"02"} · LANDER`;
-    this.index.textContent = rover ? "SURFACE EXPLORATION UNIT / RVR\u201301" : "AUTONOMOUS DESCENT HABITAT / LDR\u201301";
+    this.index.textContent = rover ? "SURFACE EXPLORATION ROVER / RVR\u201301" : "AUTONOMOUS LANDER / LDR\u201301";
     this.title.textContent = rover ? "Rover Blueprint" : "Lander Blueprint";
     this.summary.textContent = rover ? "Eight terrain contacts, fixed suspension links, telescopic dampers and the hinged solar field are resolved from the current mission model." : "Six jointed legs, terrain pads and the clear transfer bay are resolved directly from the posed mission meshes; restoration state is unchanged.";
     this.metrics.innerHTML = rows.map(([term, value]) => `<div><dt>${term}</dt><dd>${value}</dd></div>`).join("");

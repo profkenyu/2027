@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import {CUTS} from './timeline.js';
 import {surfaceProgress,surfaceTrackX,surfaceTrackZ} from './surface-flight.js';
 export {CUTS};
-export const shotAt=t=>t<CUTS[0]?'arrival':t<CUTS[1]?'hull':t<CUTS[2]?'ring-passage':'surface';
+export const shotAt=t=>t<CUTS[0]?'arrival':t<CUTS[1]?'hull':t<CUTS[2]?'ring-passage':t<CUTS[3]?'orbital-arrival':'surface';
 const target=new THREE.Vector3();
 
 // The close encounter travels alongside the keel and then lets the aft ring pass.
@@ -13,11 +13,11 @@ export function directCamera(camera,t,lead,surfaceHeightAt,referenceArk){
   camera.near=shot==='surface'?.5:2;
   if(shot==='arrival'){
     const progress=THREE.MathUtils.smoothstep(t,0,CUTS[0]);
-    camera.fov=(portrait?56:42)-progress*2;
-    camera.position.set((portrait?260:560)-progress*130,285,(portrait?2000:1000)-progress*400);
-    // Observe the actual distant formation, not a nearby empty point that
-    // makes the fleet slide sideways as the lens and camera move.
-    target.copy(lead.position);target.x-=200;target.y-=1000-progress*350;
+    // A long off-axis approach moves from the full formation to the lead hull.
+    // Relative distance, not a lens zoom, makes the limb crossing grow in frame.
+    camera.fov=portrait?48:34;
+    camera.position.set((portrait?3200:4100)-progress*260,5000-progress*110,-3600-progress*4800);
+    target.copy(lead.position);target.x-=portrait?260:360;target.y+=(portrait?1700:1400)-progress*(portrait?2420:1820);
   }else if(shot==='hull'){
     const progress=Math.pow(THREE.MathUtils.clamp((t-CUTS[0])/(CUTS[1]-CUTS[0]),0,1),1.7);
     camera.fov=(portrait?58:48)-progress*5;
@@ -34,6 +34,13 @@ export function directCamera(camera,t,lead,surfaceHeightAt,referenceArk){
       1900-progress*3800
     ));
     target.copy(referenceArk.position);target.y+=30;target.z+=460-progress*900;
+  }else if(shot==='orbital-arrival'){
+    const progress=THREE.MathUtils.smoothstep(t,CUTS[2],CUTS[3]);
+    // An establishing view, not a simulated orbital transfer. Maintain the
+    // fleet's screen direction before the motivated cut to the surface.
+    camera.fov=portrait?54:43;
+    camera.position.set((portrait?4900:6700)-progress*600,3500-progress*260,7800-progress*520);
+    target.set(portrait?-180:-500,-2100+progress*120,-4200-progress*400);
   }else{
     // Translate through real foreground geometry; the sky retains a quiet horizon.
     const progress=surfaceProgress(t);

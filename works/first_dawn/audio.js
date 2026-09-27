@@ -1,5 +1,5 @@
 import * as Tone from 'tone';
-import {DURATION,CUTS} from './timeline.js';
+import {DURATION,SURFACE_AT} from './timeline.js';
 
 // Deep Space Resonance: an authored acoustic interpretation, not sound in vacuum.
 // Visual time owns the score; Web Audio owns continuous oscillation and envelopes.
@@ -10,11 +10,11 @@ export function soundScore(t,distance=12000){
   return {
     high:smooth((t-12)/20)*fade(t,64,70),
     mid:smooth((t-8)/18)*fade(t,66,74),
-    drone:smooth((t-1)/18)*fade(t,68,78),
-    wind:smooth((t-CUTS[2])/5)*fade(t,98,108)*(.36+.64*Math.sin(Math.PI*Math.max(0,Math.min(1,(t-68)/40)))),
-    floor:smooth(t/20)*fade(t,103,DURATION)*(1-.75*smooth((t-68)/8)),
+    drone:smooth((t-1)/18)*fade(t,SURFACE_AT-8,SURFACE_AT),
+    wind:smooth((t-SURFACE_AT)/5)*fade(t,98,108)*(.36+.64*Math.sin(Math.PI*Math.max(0,Math.min(1,(t-SURFACE_AT)/(DURATION-SURFACE_AT))))),
+    floor:smooth(t/20)*fade(t,103,DURATION)*(1-.75*smooth((t-SURFACE_AT)/8)),
     proximity:1/(1+Math.max(0,distance)/4500),
-    phase:t>=DURATION?'silence':t>=68?'surface-wind':t>=64?'surface-crossfade':'resonance'
+    phase:t>=DURATION?'silence':t>=SURFACE_AT?'surface-wind':t>=SURFACE_AT-4?'surface-crossfade':t>=68?'orbital-arrival':'resonance'
   };
 }
 

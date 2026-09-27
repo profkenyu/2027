@@ -100,13 +100,13 @@ export const BODY02_WATER_SITE = Object.freeze({
   acquireRadius: 3.8,
   scanHoldMs: 4200,
   signature: Object.freeze({
-    phase: "SUBSURFACE PORE ICE / HYDRATED SILICA",
+    phase: "HYDRATED-MINERAL CANDIDATE / WATER PHASE UNDETERMINED",
     thermalDeltaK: -16,
     absorptionBandsMicron: Object.freeze([1.4, 1.9, 2.9]),
     evidence: Object.freeze([
       "THERMAL INERTIA ANOMALY",
       "1.9 \xB5m ABSORPTION",
-      "HYDRATED SILICA DARKENING"
+      "HYDRATED-MINERAL CANDIDATE"
     ])
   }),
   visual: Object.freeze({

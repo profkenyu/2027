@@ -8,7 +8,6 @@ import {
   smoothstep,
   mix,
   max,
-  min,
   saturate,
   dot,
   abs,
@@ -17,7 +16,7 @@ import {
   uniform,
   exp
 } from "three/tsl";
-import { fbm, ridge, grain } from "../../engine/tsl/noise.js";
+import { fbm, ridge, grain, vnoise, fbmNorm } from "../../engine/tsl/noise.js";
 import { cfg } from "../../engine/config.js";
 import { T, D, G, BH, BODY02_WATER_SITE } from "./spec.js";
 import { heightCPU, normalCPU, veff, solarAccessCPU, setCPUWorldMix } from "./surface.cpu.js";
@@ -33,7 +32,23 @@ const veffGPU = Fn(([r]) => {
   const rc = max(r, float(BH.rs));
   return float(-BH.M).div(rc).add(float(BH.L2 * 0.5).div(rc.mul(rc))).sub(float(BH.M * BH.L2).div(rc.mul(rc).mul(rc)));
 });
+// Rotate each octave independently so lattice axes do not accumulate into
+// square shelves. The same field drives visible relief and wheel contact.
+function geologyNoise(p, oct, ridged = false) {
+  const {lacunarity,gain} = cfg().lattice;
+  let q = vec2(p.x.mul(.8).sub(p.y.mul(.6)), p.x.mul(.6).add(p.y.mul(.8)));
+  let sum = float(0), amp = .5;
+  for(let i=0;i<oct;i++) {
+    const n = vnoise(q);
+    const r = float(1).sub(abs(n.mul(2).sub(1)));
+    sum = sum.add((ridged ? r.mul(r) : n).mul(amp));
+    q = vec2(q.x.mul(.8).sub(q.y.mul(.6)),q.x.mul(.6).add(q.y.mul(.8))).mul(lacunarity).add(19.7);
+    amp *= gain;
+  }
+  return sum.div(fbmNorm(oct,gain));
+}
 const desertGPU = (p) => {
+  const fbm = (q,n) => geologyNoise(q,n), ridge = (q,n) => geologyNoise(q,n,true);
   const u = p.x.mul(D.windCos).add(p.y.mul(D.windSin)).toVar();
   const v = p.x.mul(-D.windSin).add(p.y.mul(D.windCos)).toVar();
   const regional = fbm(p.mul(D.macroFreq).add(93.7), 3).toVar();
@@ -56,11 +71,6 @@ const desertGPU = (p) => {
   const rock = smoothstep(float(0.72), float(0.89), strata.add(wadi.mul(0.1))).toVar();
   const dune = wave.mul(amp).mul(float(1).sub(wadi.mul(0.88))).mul(float(1).sub(rock.mul(0.65)));
   const yardang = pow(strata, D.yardangExp).mul(D.yardangAmp).mul(float(1).sub(wadi.mul(0.72)));
-  const crustA = abs(sin(u.mul(D.crustU).add(sin(v.mul(D.crustWarpV)).mul(D.crustWarpAmp))));
-  const crustB = abs(sin(v.mul(D.crustV).add(sin(u.mul(D.crustWarpU)).mul(D.crustWarpAmp))));
-  const crustLine = float(1).sub(smoothstep(float(0.025), float(0.115), min(crustA, crustB)));
-  const crustBed = max(bed, wadi.mul(0.6));
-  const crustCut = crustLine.mul(crustBed).mul(float(1).sub(rock.mul(0.8))).mul(0.12);
   const a = D.mesaA, b = D.mesaB;
   const ellA = length(vec2(
     p.x.sub(a[0]).add(warpN.sub(0.5).mul(22)).div(a[2]),
@@ -78,21 +88,26 @@ const desertGPU = (p) => {
     float(BODY02_WATER_SITE.visual.haloRadius),
     waterDistance
   ));
-  return regional.sub(0.5).mul(5.5).add(dune).sub(wadi).sub(bed.mul(0.65)).add(yardang).sub(crustCut).add(rock.mul(skin.mul(1.35).add(0.45))).add(mesaA).add(mesaB).sub(waterLens.mul(BODY02_WATER_SITE.visual.reliefDepth)).add(skin.sub(0.5).mul(0.18).mul(float(1).sub(rock.mul(0.75))));
+  return regional.sub(0.5).mul(5.5).add(dune).sub(wadi).sub(bed.mul(0.65)).add(yardang).add(rock.mul(skin.mul(1.35).add(0.45))).add(mesaA).add(mesaB).sub(waterLens.mul(BODY02_WATER_SITE.visual.reliefDepth)).add(skin.sub(0.5).mul(0.18).mul(float(1).sub(rock.mul(0.75))));
 };
 const graniteGPU = (p) => {
+  const fbm = (q,n) => geologyNoise(q,n), ridge = (q,n) => geologyNoise(q,n,true);
   const macro = fbm(p.mul(G.macroFreq).add(141.7), G.macroOct).sub(0.5).mul(G.macroAmp);
   const shelf = pow(ridge(p.mul(G.shelfFreq).add(26.3), G.shelfOct), G.shelfExp).mul(G.shelfAmp).sub(G.shelfAmp * 0.3);
   const domeSource = fbm(p.mul(G.domeFreq).add(219.4), G.domeOct);
   const dome = smoothstep(float(G.domeLo), float(G.domeHi), domeSource);
   const weather = fbm(p.mul(G.weatherFreq).add(57.8), G.weatherOct).sub(0.5).mul(G.weatherAmp).mul(dome.mul(0.45).add(0.55));
-  const jointWarp = fbm(p.mul(G.jointWarp).add(311.8), 2).sub(0.5).mul(G.jointWarpAmp);
-  const jointA = abs(sin(p.x.mul(G.jointAFreq).add(p.y.mul(9e-3)).add(jointWarp)));
-  const jointB = abs(sin(p.x.mul(-0.014).add(p.y.mul(G.jointBFreq)).sub(jointWarp.mul(0.73))));
-  const joints = float(1).sub(smoothstep(float(G.jointLo), float(G.jointHi), min(jointA, jointB)));
+  const joints = graniteFracture(p);
   const torSource = fbm(p.mul(G.torFreq).add(404.2), G.torOct);
   const tor = smoothstep(float(G.torLo), float(G.torHi), torSource).mul(dome.mul(0.62).add(0.38));
   return macro.add(shelf).add(dome.mul(G.domeAmp)).add(weather).add(tor.mul(G.torAmp)).sub(joints.mul(G.jointDepth));
+};
+// Non-periodic, interrupted fracture traces. NASA imagery informs morphology,
+// not mineral identification; this is an authored real-time terrain field.
+const graniteFracture = (p) => {
+  const field = geologyNoise(p.mul(.026).add(311.8), 3);
+  const exposure = smoothstep(float(.44), float(.64), geologyNoise(p.mul(.011).add(73.2), 2));
+  return float(1).sub(smoothstep(float(.006), float(.042), abs(field.sub(.49)))).mul(exposure).mul(.38);
 };
 export const heightGPU = Fn(([p]) => {
   const wa = fbm(p.mul(T.warpFreq).add(T.warpOffA), T.warpOct).sub(0.5);
@@ -143,23 +158,20 @@ export const albedoGround = (C) => ({ slope, worldPos }) => {
   const terra = coldVein.mul(float(0.72).add(sediment.mul(0.18)).add(grain(worldPos.xz).mul(0.2)));
   const u = p.x.mul(D.windCos).add(p.y.mul(D.windSin));
   const v = p.x.mul(-D.windSin).add(p.y.mul(D.windCos));
-  const strata = ridge(vec2(u.mul(D.yardangU), v.mul(D.yardangV)).add(63.4), 2);
+  const strata = geologyNoise(vec2(u.mul(D.yardangU), v.mul(D.yardangV)).add(63.4), 2, true);
   const exposure = smoothstep(float(0.72), float(0.89), strata.add(slope.mul(0.1)));
   const windBand = sin(u.mul(6.283185307 / 8.8)).mul(0.5).add(0.5);
   const sandTone = mix(
-    vec3(0.072, 0.05, 0.077),
-    vec3(0.215, 0.128, 0.06),
+    vec3(0.12, 0.085, 0.052),
+    vec3(0.25, 0.19, 0.12),
     saturate(slope.mul(0.95).add(sediment.mul(0.34)))
   );
-  const rockTone = mix(vec3(0.021, 0.032, 0.037), vec3(0.08, 0.1, 0.086), strata);
+  const rockTone = mix(vec3(0.08, 0.07, 0.055), vec3(0.17, 0.15, 0.12), strata);
   const dryBed = float(1).sub(smoothstep(float(-0.8), float(1), worldPos.y)).mul(float(1).sub(smoothstep(float(0.03), float(0.12), slope)));
-  const paleBed = mix(vec3(0.105, 0.14, 0.13), vec3(0.195, 0.235, 0.18), sediment);
+  const paleBed = mix(vec3(0.16, 0.13, 0.09), vec3(0.25, 0.21, 0.16), geologyNoise(p.mul(.023).add(57.8), 3));
   const desertBase = mix(mix(sandTone, rockTone, exposure), paleBed, dryBed);
   const glassPatch = smoothstep(float(0.78), float(0.92), sediment.add(strata.mul(0.1))).mul(float(1).sub(smoothstep(float(0.08), float(0.26), slope)));
-  const crustA = abs(sin(u.mul(D.crustU).add(sin(v.mul(D.crustWarpV)).mul(D.crustWarpAmp))));
-  const crustB = abs(sin(v.mul(D.crustV).add(sin(u.mul(D.crustWarpU)).mul(D.crustWarpAmp))));
-  const crustLine = float(1).sub(smoothstep(float(0.025), float(0.115), min(crustA, crustB))).mul(float(1).sub(smoothstep(float(0.1), float(0.3), slope)));
-  const fused = mix(desertBase, vec3(0.012, 0.025, 0.045), glassPatch.mul(0.82));
+  const fused = mix(desertBase, vec3(0.09, 0.078, 0.062), glassPatch.mul(0.15));
   const waterDistance = length(p.sub(vec2(BODY02_WATER_SITE.x, BODY02_WATER_SITE.z)));
   const waterCore = float(1).sub(smoothstep(
     float(BODY02_WATER_SITE.visual.coreRadius * 0.42),
@@ -174,23 +186,20 @@ export const albedoGround = (C) => ({ slope, worldPos }) => {
   const waterHalo = waterHaloOuter.mul(float(1).sub(waterCore));
   const hydrated = mix(fused, vec3(...BODY02_WATER_SITE.visual.thermalTint), waterCore.mul(0.78));
   const hydratedCrust = mix(hydrated, vec3(...BODY02_WATER_SITE.visual.saltTint), waterHalo.mul(0.48));
-  const desert = mix(hydratedCrust, vec3(0.07, 0.245, 0.225), crustLine.mul(0.64)).mul(float(0.975).add(windBand.mul(0.025))).mul(float(0.88).add(grain(p.mul(0.72)).mul(0.1)));
-  const granitePattern = fbm(p.mul(0.033).add(122.6), 3);
+  const desert = hydratedCrust.mul(float(0.975).add(windBand.mul(0.025))).mul(float(0.94).add(grain(p.mul(0.72)).mul(0.06)));
+  const granitePattern = geologyNoise(p.mul(0.033).add(122.6), 3);
   const quartz = smoothstep(float(0.69), float(0.9), granitePattern);
   const feldspar = smoothstep(float(0.58), float(0.84), grain(p.mul(0.48).add(17.2)));
   const mica = pow(grain(p.mul(1.74).add(63.9)), 9).mul(float(1).sub(smoothstep(float(0.2), float(0.56), slope)));
-  const jointWarp = fbm(p.mul(G.jointWarp).add(311.8), 2).sub(0.5).mul(G.jointWarpAmp);
-  const jointA = abs(sin(p.x.mul(G.jointAFreq).add(p.y.mul(9e-3)).add(jointWarp)));
-  const jointB = abs(sin(p.x.mul(-0.014).add(p.y.mul(G.jointBFreq)).sub(jointWarp.mul(0.73))));
-  const jointStain = float(1).sub(smoothstep(float(G.jointLo), float(G.jointHi * 2.2), min(jointA, jointB)));
+  const jointStain = graniteFracture(p);
   const graniteBase = mix(
     vec3(0.042, 0.05, 0.058),
-    vec3(0.185, 0.176, 0.194),
+    vec3(0.185, 0.178, 0.166),
     saturate(slope.mul(0.76).add(granitePattern.mul(0.48)))
   );
   const quartzFace = mix(graniteBase, vec3(0.285, 0.31, 0.315), quartz.mul(0.52));
-  const feldsparFace = mix(quartzFace, vec3(0.19, 0.135, 0.205), feldspar.mul(0.18));
-  const oxidisedJoint = mix(feldsparFace, vec3(0.075, 0.041, 0.03), jointStain.mul(0.58));
+  const feldsparFace = mix(quartzFace, vec3(0.19, 0.16, 0.135), feldspar.mul(0.12));
+  const oxidisedJoint = mix(feldsparFace, vec3(0.09, 0.084, 0.075), jointStain.mul(0.32));
   const granite = oxidisedJoint.add(vec3(0.31, 0.34, 0.39).mul(mica.mul(0.23))).mul(float(0.91).add(grain(p.mul(0.92)).mul(0.11)));
   return mix(mix(terra, desert, uWorldMix), granite, uWorldGranite);
 };
@@ -221,7 +230,7 @@ export const shadeSky = ({ dir, elev, sunDot }) => {
   const terra = mix(vec3(.0014,.002,.0038), vec3(.032,.060,.080), thin)
     .add(vec3(.024,.045,.068).mul(rayleigh).mul(thin))
     .add(vec3(.72,.65,.57).mul(smoothstep(float(.9997),float(.99996),sunDot)));
-  const dustColumn = float(1).sub(exp(airMass.mul(-.085)));
+  const dustColumn = float(1).sub(exp(airMass.mul(-.155)));
   const windAxis = dir.x.mul(D.windCos).add(dir.z.mul(D.windSin));
   const strata = exp(abs(elev.sub(.055).sub(windAxis.mul(.018))).mul(-38))
     .add(exp(abs(elev.sub(.13).sub(windAxis.mul(.028))).mul(-55)).mul(.28));

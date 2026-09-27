@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {CUTS} from './timeline.js';
+import {SURFACE_AT} from './timeline.js';
 import {SURFACE_TRAVEL,surfaceTrackX,surfaceTrackZ} from './surface-flight.js';
 
 // Authored dry basin: relief is a procedural interpretation, not Mars DEM data.
@@ -61,7 +61,7 @@ export function createSurface(scene,tier){
   rocks.computeBoundingSphere();group.add(rocks);
   // Slant optical depth and a broad forward-scattering lobe organize the sky.
   // The faint inherited colour veil remains an artistic atmospheric layer.
-  const skyUniforms={elapsed:{value:CUTS[2]},surfaceStart:{value:CUTS[2]}};
+  const skyUniforms={elapsed:{value:SURFACE_AT},surfaceStart:{value:SURFACE_AT}};
   const sky=new THREE.Mesh(new THREE.SphereGeometry(39000,32,20),new THREE.ShaderMaterial({
     uniforms:skyUniforms,side:THREE.BackSide,depthWrite:false,
     vertexShader:`varying vec3 skyDirection;void main(){skyDirection=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,

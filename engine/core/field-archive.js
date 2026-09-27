@@ -4,7 +4,7 @@ export const FIELD_ARCHIVE_CAPACITY = 24;
 
 const finite = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-const RESOURCE_LABEL_SUFFIX = /\s*\xB7\s*(?:FIELD\s*\d+|EVIDENCE|RESOLVED POTENTIAL.*|조사 지점\s*\d+|관측 증거|후보 지점.*)$/i;
+const RESOURCE_LABEL_SUFFIX = /\s*\xB7\s*(?:FIELD\s*\d+|EVIDENCE|RESOLVED POTENTIAL.*|SAMPLE RECORD|MODEL CANDIDATE.*|조사 지점\s*\d+|관측 증거|후보 지점.*)$/i;
 const ARCHIVE_TRANSLATIONS = Object.freeze([
   ["철-니켈 합금 시료", "IRON–NICKEL ALLOY SAMPLE"],
   ["규산염 세라믹 시료", "SILICATE CERAMIC SAMPLE"],
@@ -12,11 +12,12 @@ const ARCHIVE_TRANSLATIONS = Object.freeze([
   ["전도성 격자 시료", "CONDUCTIVE LATTICE SAMPLE"],
   ["분자 질소(N₂) 서리층", "MOLECULAR NITROGEN (N₂) FROST"],
   ["에탄올 결정상", "ETHANOL CRYSTALLINE PHASE"],
-  ["조사 지점", "FIELD"], ["관측 증거", "EVIDENCE"], ["후보 지점", "RESOLVED POTENTIAL"]
+  ["조사 지점", "SITE"], ["관측 증거", "SAMPLE RECORD"], ["후보 지점", "MODEL CANDIDATE"]
 ]);
 export function archiveEnglish(value, fallback = "UNRESOLVED DATUM") {
   let text = String(value ?? fallback);
   for (const [ko, en] of ARCHIVE_TRANSLATIONS) text = text.replaceAll(ko, en);
+  text = text.replace(/\bFIELD (\d+)\b/g, "SITE $1").replace(/\bRESOLVED POTENTIAL\b/g, "MODEL CANDIDATE");
   return /[\uac00-\ud7a3]/.test(text) ? fallback : text;
 }
 // Only locally captured raster images are accepted; archived strings cannot fetch URLs.
@@ -256,7 +257,7 @@ export class FieldArchive {
       ...evidenceSlot,
       x: finite(site.x),
       z: finite(site.z),
-      label: `${baseLabel} \xB7 EVIDENCE`,
+      label: `${baseLabel} \xB7 SAMPLE RECORD`,
       resourceVariant: Math.max(0, Math.floor(finite(site.variant))),
       archiveRole: "evidence",
       potentialCount: 0,
@@ -266,7 +267,7 @@ export class FieldArchive {
       ...potentialSlot,
       x: potentialCount ? centroid.x / potentialCount : potentialSlot.x,
       z: potentialCount ? centroid.z / potentialCount : potentialSlot.z,
-      label: `${baseLabel} \xB7 RESOLVED POTENTIAL \xD7${potentialCount}`,
+      label: `${baseLabel} \xB7 MODEL CANDIDATE \xD7${potentialCount}`,
       archiveRole: "potential",
       potentialCount,
       resolved: true

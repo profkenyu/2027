@@ -241,10 +241,10 @@ async function build() {
   const archive = await readFile(`${ROOT}/field-archive.html`, "utf8").catch(() => null);
   if (!archive) {
     bad("field archive output", "missing \u2014 run npm run build");
-  } else if (!archive.includes("FIELD ARCHIVE / COORDINATE RECORDS") || !archive.includes("SIGNAL NOT ACQUIRED")) {
+  } else if (!archive.includes("FIELD ARCHIVE / COORDINATE RECORDS") || !archive.includes("FRAME NOT CAPTURED")) {
     bad("field archive output", "missing coordinate record UI");
-  } else if (!archive.includes("terra-incognita:field-archive:v4") || !archive.includes("FISHEYE 8MM") || !archive.includes("RESOLVED POTENTIAL") || !archive.includes('data-role="')) {
-    bad("field archive output", "missing capture profiles or selected-evidence / resolved-potential states");
+  } else if (!archive.includes("terra-incognita:field-archive:v4") || !archive.includes("FISHEYE 8MM") || !archive.includes("MODEL CANDIDATE") || !archive.includes('data-role="')) {
+    bad("field archive output", "missing capture profiles or sample-record / model-candidate states");
   } else if (!archive.includes("history.back()") || !archive.includes("data-return")) {
     bad("field archive output", "RETURN does not prefer the previous screen");
   } else if (["P01", "P02", "P03"].some((planet, index) => (archive.match(new RegExp(`\\[\\"${planet}-`, "g")) ?? []).length !== [12, 7, 5][index])) {

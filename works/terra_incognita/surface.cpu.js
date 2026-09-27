@@ -1,5 +1,18 @@
 import * as CPU from "../../engine/cpu/noise.js";
 import { T, D, G, BH, BODY02_WATER_SITE } from "./spec.js";
+import { cfg } from "../../engine/config.js";
+function geologyNoise(x,z,oct,ridged=false) {
+  const {lacunarity,gain}=cfg().lattice;
+  let qx=.8*x-.6*z,qz=.6*x+.8*z,sum=0,amp=.5;
+  for(let i=0;i<oct;i++) {
+    const n=CPU.vnoise(qx,qz),r=1-Math.abs(n*2-1);
+    sum+=(ridged?r*r:n)*amp;
+    const nx=(.8*qx-.6*qz)*lacunarity+19.7;
+    qz=(.6*qx+.8*qz)*lacunarity+19.7;qx=nx;amp*=gain;
+  }
+  return sum/CPU.fbmNorm(oct,gain);
+}
+const geologyCPU={...CPU,fbm:(x,z,n)=>geologyNoise(x,z,n),ridge:(x,z,n)=>geologyNoise(x,z,n,true)};
 let worldMix = 0;
 let graniteMix = 0;
 export function setCPUWorldMix(value) {
@@ -8,6 +21,7 @@ export function setCPUWorldMix(value) {
   graniteMix = mode === "granite" ? 1 : 0;
 }
 export function desertHeightCPU(x, z) {
+  const CPU = geologyCPU;
   const u = x * D.windCos + z * D.windSin;
   const v = x * -D.windSin + z * D.windCos;
   const regional = CPU.fbm(x * D.macroFreq + 93.7, z * D.macroFreq + 93.7, 3);
@@ -30,11 +44,6 @@ export function desertHeightCPU(x, z) {
   const rock = CPU.smoothstep(0.72, 0.89, strata + wadi * 0.1);
   const dune = wave * amp * (1 - 0.88 * wadi) * (1 - 0.65 * rock);
   const yardang = Math.pow(strata, D.yardangExp) * D.yardangAmp * (1 - 0.72 * wadi);
-  const crustA = Math.abs(Math.sin(u * D.crustU + Math.sin(v * D.crustWarpV) * D.crustWarpAmp));
-  const crustB = Math.abs(Math.sin(v * D.crustV + Math.sin(u * D.crustWarpU) * D.crustWarpAmp));
-  const crustLine = 1 - CPU.smoothstep(0.025, 0.115, Math.min(crustA, crustB));
-  const crustBed = Math.max(bed, wadi * 0.6);
-  const crustCut = crustLine * crustBed * (1 - 0.8 * rock) * 0.12;
   const [ax, az, arx, arz, ah] = D.mesaA;
   const [bx, bz, brx, brz, bh] = D.mesaB;
   const ellA = Math.hypot(
@@ -53,9 +62,10 @@ export function desertHeightCPU(x, z) {
     BODY02_WATER_SITE.visual.haloRadius,
     waterDistance
   );
-  return (regional - 0.5) * 5.5 + dune - wadi - bed * 0.65 + yardang - crustCut + rock * (0.45 + 1.35 * skin) + mesaA + mesaB - waterLens * BODY02_WATER_SITE.visual.reliefDepth + (skin - 0.5) * 0.18 * (1 - 0.75 * rock);
+  return (regional - 0.5) * 5.5 + dune - wadi - bed * 0.65 + yardang + rock * (0.45 + 1.35 * skin) + mesaA + mesaB - waterLens * BODY02_WATER_SITE.visual.reliefDepth + (skin - 0.5) * 0.18 * (1 - 0.75 * rock);
 }
 export function graniteHeightCPU(x, z) {
+  const CPU = geologyCPU;
   const macro = (CPU.fbm(x * G.macroFreq + 141.7, z * G.macroFreq + 141.7, G.macroOct) - 0.5) * G.macroAmp;
   const shelf = Math.pow(CPU.ridge(
     x * G.shelfFreq + 26.3,
@@ -69,14 +79,9 @@ export function graniteHeightCPU(x, z) {
     z * G.weatherFreq + 57.8,
     G.weatherOct
   ) - 0.5) * G.weatherAmp * (0.55 + dome * 0.45);
-  const jointWarp = (CPU.fbm(
-    x * G.jointWarp + 311.8,
-    z * G.jointWarp + 311.8,
-    2
-  ) - 0.5) * G.jointWarpAmp;
-  const jointA = Math.abs(Math.sin(x * G.jointAFreq + z * 9e-3 + jointWarp));
-  const jointB = Math.abs(Math.sin(x * -0.014 + z * G.jointBFreq - jointWarp * 0.73));
-  const joints = 1 - CPU.smoothstep(G.jointLo, G.jointHi, Math.min(jointA, jointB));
+  const fractureField = CPU.fbm(x * .026 + 311.8, z * .026 + 311.8, 3);
+  const exposure = CPU.smoothstep(.44, .64, CPU.fbm(x * .011 + 73.2, z * .011 + 73.2, 2));
+  const joints = (1 - CPU.smoothstep(.006, .042, Math.abs(fractureField - .49))) * exposure * .38;
   const torSource = CPU.fbm(x * G.torFreq + 404.2, z * G.torFreq + 404.2, G.torOct);
   const tor = CPU.smoothstep(G.torLo, G.torHi, torSource) * (0.38 + dome * 0.62);
   return macro + shelf + dome * G.domeAmp + weather + tor * G.torAmp - joints * G.jointDepth;

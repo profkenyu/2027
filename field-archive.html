@@ -136,16 +136,16 @@
       <button class="filter" type="button" data-filter="desert" aria-pressed="false">Planet 02</button>
       <button class="filter" type="button" data-filter="granite" aria-pressed="false">Planet 03</button>
     </nav>
-    <span id="fa-count" class="sr-only" aria-live="polite">00 / 00 signals acquired</span>
+    <span id="fa-count" class="sr-only" aria-live="polite">00 / 00 observations recorded</span>
     <a class="back" href="planet-01.html" data-return>Return to Mission</a>
   </header>
   <section class="archive" aria-label="Coordinate observation records">
-    <div class="ledger-head" aria-hidden="true"><span>No.</span><span>Planet</span><span>Field</span><span>Status</span></div>
+    <div class="ledger-head" aria-hidden="true"><span>No.</span><span>Planet</span><span>Site</span><span>Status</span></div>
     <section class="ledger" aria-label="Coordinate ledger"><div id="fa-ledger"></div></section>
     <section id="fa-preview" class="preview" aria-live="polite">
       <div class="frame empty">
         <img id="fa-image" alt="Field observation captured by the rover">
-        <div id="fa-empty" class="no-image"><i></i><b>NO IMAGE</b><span>SIGNAL NOT ACQUIRED</span></div>
+        <div id="fa-empty" class="no-image"><i></i><b>NO IMAGE</b><span>FRAME NOT CAPTURED</span></div>
       </div>
     </section>
     <div id="fa-selection" class="selection-line" aria-hidden="true"></div>
@@ -167,13 +167,14 @@
     ["전도성 격자 시료", "CONDUCTIVE LATTICE SAMPLE"],
     ["분자 질소(N₂) 서리층", "MOLECULAR NITROGEN (N₂) FROST"],
     ["에탄올 결정상", "ETHANOL CRYSTALLINE PHASE"],
-    ["조사 지점", "FIELD"],
-    ["관측 증거", "EVIDENCE"],
-    ["후보 지점", "RESOLVED POTENTIAL"]
+    ["조사 지점", "SITE"],
+    ["관측 증거", "SAMPLE RECORD"],
+    ["후보 지점", "MODEL CANDIDATE"]
   ]);
   function archiveEnglish(value, fallback = "UNRESOLVED DATUM") {
     let text = String(value ?? fallback);
     for (const [ko, en] of ARCHIVE_TRANSLATIONS) text = text.replaceAll(ko, en);
+    text = text.replace(/\bFIELD (\d+)\b/g, "SITE $1").replace(/\bRESOLVED POTENTIAL\b/g, "MODEL CANDIDATE");
     return /[\uac00-\ud7a3]/.test(text) ? fallback : text;
   }
   function archiveImage(value) {
@@ -344,7 +345,7 @@
         label: archiveEnglish(station.label),
         x: number(station.x),
         z: number(station.z),
-        status: record ? "ACQUIRED" : station.archiveRole === "potential" ? "RESOLVED POTENTIAL" : "UNRESOLVED",
+        status: record ? "FRAME RECORDED" : station.archiveRole === "potential" ? "MODEL CANDIDATE" : "UNRESOLVED",
         capture: record ? {
           lens: capture.lens,
           viewpoint: capture.viewpoint,
@@ -410,30 +411,30 @@
   // works/terra_incognita/field-archive-viewer.js
   (() => {
     const FALLBACK = [
-      ["P01-001", "terra", "PLANET 01", "SHEAR WORLD", "IRON–NICKEL ALLOY SAMPLE · FIELD 1", 231.6, 543.4, 0],
-      ["P01-002", "terra", "PLANET 01", "SHEAR WORLD", "IRON–NICKEL ALLOY SAMPLE · FIELD 2", 247, 519, 1],
-      ["P01-003", "terra", "PLANET 01", "SHEAR WORLD", "SILICATE CERAMIC SAMPLE · FIELD 1", 199.1, 516.1, 2],
-      ["P01-004", "terra", "PLANET 01", "SHEAR WORLD", "SILICATE CERAMIC SAMPLE · FIELD 2", 185, 536, 3],
-      ["P01-005", "terra", "PLANET 01", "SHEAR WORLD", "CARBON COMPOSITE SAMPLE · FIELD 1", 209.9, 471.4, 4],
-      ["P01-006", "terra", "PLANET 01", "SHEAR WORLD", "CARBON COMPOSITE SAMPLE · FIELD 2", 190, 484, 5],
-      ["P01-007", "terra", "PLANET 01", "SHEAR WORLD", "CONDUCTIVE LATTICE SAMPLE · FIELD 1", 168.5, 445.3, 6],
-      ["P01-008", "terra", "PLANET 01", "SHEAR WORLD", "CONDUCTIVE LATTICE SAMPLE · FIELD 2", 151, 466, 7],
-      ["P01-009", "terra", "PLANET 01", "SHEAR WORLD", "MOLECULAR NITROGEN (N₂) FROST · FIELD 1", 173.9, 391.9, 8],
-      ["P01-010", "terra", "PLANET 01", "SHEAR WORLD", "MOLECULAR NITROGEN (N₂) FROST · FIELD 2", 153, 403, 9],
-      ["P01-011", "terra", "PLANET 01", "SHEAR WORLD", "ETHANOL CRYSTALLINE PHASE · FIELD 1", 127.7, 352.8, 10],
-      ["P01-012", "terra", "PLANET 01", "SHEAR WORLD", "ETHANOL CRYSTALLINE PHASE · FIELD 2", 111, 371, 11],
+      ["P01-001", "terra", "PLANET 01", "SHEAR WORLD", "IRON–NICKEL ALLOY SAMPLE · SITE 1", 231.6, 543.4, 0],
+      ["P01-002", "terra", "PLANET 01", "SHEAR WORLD", "IRON–NICKEL ALLOY SAMPLE · SITE 2", 247, 519, 1],
+      ["P01-003", "terra", "PLANET 01", "SHEAR WORLD", "SILICATE CERAMIC SAMPLE · SITE 1", 199.1, 516.1, 2],
+      ["P01-004", "terra", "PLANET 01", "SHEAR WORLD", "SILICATE CERAMIC SAMPLE · SITE 2", 185, 536, 3],
+      ["P01-005", "terra", "PLANET 01", "SHEAR WORLD", "CARBON COMPOSITE SAMPLE · SITE 1", 209.9, 471.4, 4],
+      ["P01-006", "terra", "PLANET 01", "SHEAR WORLD", "CARBON COMPOSITE SAMPLE · SITE 2", 190, 484, 5],
+      ["P01-007", "terra", "PLANET 01", "SHEAR WORLD", "CONDUCTIVE LATTICE SAMPLE · SITE 1", 168.5, 445.3, 6],
+      ["P01-008", "terra", "PLANET 01", "SHEAR WORLD", "CONDUCTIVE LATTICE SAMPLE · SITE 2", 151, 466, 7],
+      ["P01-009", "terra", "PLANET 01", "SHEAR WORLD", "MOLECULAR NITROGEN (N₂) FROST · SITE 1", 173.9, 391.9, 8],
+      ["P01-010", "terra", "PLANET 01", "SHEAR WORLD", "MOLECULAR NITROGEN (N₂) FROST · SITE 2", 153, 403, 9],
+      ["P01-011", "terra", "PLANET 01", "SHEAR WORLD", "ETHANOL CRYSTALLINE PHASE · SITE 1", 127.7, 352.8, 10],
+      ["P01-012", "terra", "PLANET 01", "SHEAR WORLD", "ETHANOL CRYSTALLINE PHASE · SITE 2", 111, 371, 11],
       ["P02-001", "desert", "PLANET 02", "YARDANG FIELD", "LANDING DATUM", 96, 520, 0],
       ["P02-002", "desert", "PLANET 02", "YARDANG FIELD", "YARDANG INGRESS", 88, 503, 1],
-      ["P02-003", "desert", "PLANET 02", "YARDANG FIELD", "SINTERED PASSAGE", 79, 486, 2],
+      ["P02-003", "desert", "PLANET 02", "YARDANG FIELD", "ERODED PASSAGE", 79, 486, 2],
       ["P02-004", "desert", "PLANET 02", "YARDANG FIELD", "WIND-SHADOW CUT", 70, 468, 3],
-      ["P02-005", "desert", "PLANET 02", "YARDANG FIELD", "HYDRATION GRADIENT", 62, 450, 4],
-      ["P02-006", "desert", "PLANET 02", "YARDANG FIELD", "PORE-ICE APPROACH", 56, 438, 5],
-      ["P02-007", "desert", "PLANET 02", "YARDANG FIELD", "HYDRATION RETURN", 52, 428, 6],
+      ["P02-005", "desert", "PLANET 02", "YARDANG FIELD", "HYDRATION-SIGNAL TRANSECT", 62, 450, 4],
+      ["P02-006", "desert", "PLANET 02", "YARDANG FIELD", "SPECTRAL TARGET APPROACH", 56, 438, 5],
+      ["P02-007", "desert", "PLANET 02", "YARDANG FIELD", "HYDRATION-SIGNAL SITE", 52, 428, 6],
       ["P03-001", "granite", "PLANET 03", "JOINTED GRANITE", "LANDING DATUM", 120, 460, 0],
-      ["P03-002", "granite", "PLANET 03", "JOINTED GRANITE", "MATERIAL PHASE", 107, 431, 1],
-      ["P03-003", "granite", "PLANET 03", "JOINTED GRANITE", "MEMORY TRANSIT", 124, 402, 2],
-      ["P03-004", "granite", "PLANET 03", "JOINTED GRANITE", "HYDRATION PHASE", 150, 383, 3],
-      ["P03-005", "granite", "PLANET 03", "JOINTED GRANITE", "CONCORDANCE", 170, 345, 4]
+      ["P03-002", "granite", "PLANET 03", "JOINTED GRANITE", "REFLECTANCE SITE", 107, 431, 1],
+      ["P03-003", "granite", "PLANET 03", "JOINTED GRANITE", "SURVEY TRANSECT", 124, 402, 2],
+      ["P03-004", "granite", "PLANET 03", "JOINTED GRANITE", "HYDRATION COMPARISON", 150, 383, 3],
+      ["P03-005", "granite", "PLANET 03", "JOINTED GRANITE", "CORRELATION SITE", 170, 345, 4]
     ].map(([id, body, planet, world, label, x, z, order]) => ({
       id,
       body,
@@ -546,8 +547,8 @@
         empty.hidden = false;
         frameSurface.classList.add("empty");
         const potential = station.archiveRole === "potential";
-        emptyTitle.textContent = potential ? "RESOLVED POTENTIAL" : "NO IMAGE";
-        emptyStatus.textContent = potential ? "FIELD SUBTRACTED" : "SIGNAL NOT ACQUIRED";
+        emptyTitle.textContent = potential ? "MODEL CANDIDATE" : "NO IMAGE";
+        emptyStatus.textContent = potential ? "NO FRAME RECORDED" : "FRAME NOT CAPTURED";
       }
       preview.classList.add("on");
       positionPreview(node);
@@ -571,8 +572,8 @@
         const acquired = recordsById.has(station.id);
         const role = station.archiveRole === "evidence" ? "evidence" : station.archiveRole === "potential" ? "potential" : "unresolved";
         const number2 = stationNumbers.get(station.id);
-        const status = role === "evidence" ? "EVIDENCE" : role === "potential" ? "POTENTIAL" : acquired ? "ACQUIRED" : "—";
-        const spoken = role === "evidence" ? "selected evidence" : role === "potential" ? `resolved potential ${station.potentialCount || 0}` : acquired ? "acquired" : "signal not acquired";
+        const status = role === "evidence" ? "SAMPLE" : role === "potential" ? "CANDIDATE" : acquired ? "RECORDED" : "—";
+        const spoken = role === "evidence" ? "sample record" : role === "potential" ? `model candidate ${station.potentialCount || 0}` : acquired ? "frame recorded" : "frame not captured";
         return `<button class="record" type="button" data-id="${escape(station.id)}" data-role="${role}" aria-label="${escape(`${number2} ${station.planet} ${station.label} ${coord(station)} ${spoken}`)}" aria-pressed="false"><span class="record-number">${number2}</span><span class="record-planet">${escape(station.planet)}</span><span class="record-label">${escape(station.label)}</span><span class="status ${role}">${status}</span></button>`;
       }).join("") || `<p class="empty-ledger">NO COORDINATE RECORDS</p>`;
       recordNodes = new Map([...ledger.querySelectorAll(".record")].map((node) => [node.dataset.id, node]));
@@ -584,8 +585,8 @@
         node.addEventListener("focus", () => select(station, node));
         node.addEventListener("click", () => select(station, node));
       }
-      count.textContent = `${String(records.length).padStart(2, "0")} / ${String(stations.length).padStart(2, "0")} SIGNALS ACQUIRED`;
-      document.getElementById("fa-footer").textContent = records.length ? `${records.length} camera return${records.length === 1 ? "" : "s"} retained for this session.` : "No field observations in this session.";
+      count.textContent = `${String(records.length).padStart(2, "0")} / ${String(stations.length).padStart(2, "0")} OBSERVATIONS RECORDED`;
+      document.getElementById("fa-footer").textContent = records.length ? `${records.length} camera frame${records.length === 1 ? "" : "s"} retained for this session.` : "No field observations in this session.";
       if (selected) select(selected, recordNodes.get(selected.id));
       else clearPreview();
     }

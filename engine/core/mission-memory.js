@@ -61,7 +61,7 @@ function cleanWater(source) {
     confirmed: source.confirmed !== false && source.complete !== false,
     x: finite(site.x),
     z: finite(site.z),
-    phase: String(signature.phase ?? source.phase ?? "HYDRATED SILICA / PORE ICE"),
+    phase: String(signature.phase ?? source.phase ?? "HYDRATED-MINERAL CANDIDATE"),
     thermalDeltaK: finite(signature.thermalDeltaK ?? source.thermalDeltaK, -16),
     absorptionBandsMicron: bands.length ? bands : [1.4, 1.9, 2.9],
     particleDensity: clamp01(finite(visual.particleDensity ?? source.particleDensity, 0.28)),
@@ -149,9 +149,9 @@ function chooseSites(model, start) {
   }
   selected.sort((a, b) => a.radius - b.radius);
   const objectives = [
-    ["MATERIAL PHASE", "ALIGN SIX RECOVERED MATERIAL HARMONICS"],
-    ["HYDRATION PHASE", "RESOLVE 1.9 \xB5M ABSORPTION IN GRANITE"],
-    ["CONCORDANCE", "FIX THE GEOLOGICAL MEMORY INTERSECTION"]
+    ["MATERIAL REFLECTANCE", "COMPARE SIX MATERIAL SPECTRAL RECORDS"],
+    ["HYDRATION COMPARISON", "COMPARE 1.9 \xB5M HYDRATION SIGNATURE"],
+    ["SURVEY CORRELATION", "RECORD MODELLED SITE CORRELATION"]
   ];
   return selected.map((site, index) => ({
     ...site,

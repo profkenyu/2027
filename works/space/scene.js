@@ -154,13 +154,13 @@ export function createVoid(scene,tier,passage=1){
         void main(){vec3 N=normalize(worldN);float mu=clamp(dot(normalize(viewN),normalize(-viewPos)),0.,1.);
           float rim=pow(1.-mu,2.5);float day=smoothstep(-.2,.6,dot(N,sun));
           float strata=${passage===2?'.68+.18*sin(N.y*13.+sin(N.x*9.)*2.)+.14*sin(N.z*19.+N.x*7.)':'.82+.18*sin(N.y*33.+N.x*3.)'};
-          float alpha=(${passage===2?'.10+rim*.34':'.055+rim*.48'})*(.22+day*.78)*strata*smoothstep(0.,.12,mu);
+          float alpha=(${passage===2?'.10+rim*.34':'.14+rim*.68'})*(.22+day*.78)*strata*smoothstep(0.,.12,mu);
           vec3 haze=${passage===2?'mix(vec3(.15,.19,.23),vec3(.40,.49,.54),day)':'mix(vec3(.19,.23,.25),vec3(.68,.46,.23),day)'};
           gl_FragColor=vec4(haze,alpha);
           #include <tonemapping_fragment>
           #include <colorspace_fragment>
         }`
-    }));atmosphere.scale.setScalar(passage===2?1.018:1.026);atmosphere.position.copy(planet.position);scene.add(atmosphere);
+    }));atmosphere.scale.setScalar(passage===2?1.018:1.055);atmosphere.position.copy(planet.position);scene.add(atmosphere);
   }
   return {stars,planet,atmosphere};
 }

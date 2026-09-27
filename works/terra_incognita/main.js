@@ -122,13 +122,13 @@ const LINES = [
   },
   {
     r: 312.97,
-    ko: "\uC911\uB825 \uD37C\uD150\uC15C \uAD6D\uC18C \uADF9\uAC12 \xB7 r = 312.97 m",
-    en: "GRAVITY \xB7 LOCAL EXTREMUM / R 312.97 M"
+    ko: "퍼텐셜 모형의 국소 극값 \xB7 r = 312.97 m",
+    en: "EFFECTIVE POTENTIAL MODEL \xB7 LOCAL EXTREMUM / R 312.97 M"
   },
   {
     r: 250,
-    ko: "생명 징후 미검출 \xB7 수동 응답 채널 무입력",
-    en: "BIOSCAN \xB7 LOCAL SIGNALS 0 / MANUAL CHANNEL IDLE"
+    ko: "생명 징후 관측 자료 없음 \xB7 확인 불가",
+    en: "ASTROBIOLOGY \xB7 NO BIOSIGNATURE DATA / INCONCLUSIVE"
   },
   {
     r: 150,
@@ -137,78 +137,78 @@ const LINES = [
   },
   {
     r: 74.23,
-    ko: "\uAC01\uC6B4\uB3D9\uB7C9 \uC7A5\uBCBD \uAC80\uCD9C \xB7 \uBD88\uC548\uC815 \uC6D0\uADA4\uB3C4 r = 74.23 m",
-    en: "GRAVITY \xB7 UNSTABLE ORBIT / R 74.23 M"
+    ko: "퍼텐셜 모형 \xB7 불안정 원궤도 r = 74.23 m",
+    en: "EFFECTIVE POTENTIAL MODEL \xB7 UNSTABLE CIRCULAR ORBIT / R 74.23 M"
   },
   {
     r: 60,
-    ko: "원형 광자 궤도 \xB7 광자구 r = 60.00 m",
-    en: "OPTICS \xB7 CLOSED NULL PATH / R 60.00 M"
+    ko: "광자구 모형 반경 \xB7 r = 60.00 m",
+    en: "OPTICS \xB7 PHOTON SPHERE / MODEL RADIUS 60.00 M"
   },
   {
     r: 45,
-    ko: "\uAD00\uCE21 \uAD11\uB3C4 1.4% \xB7 \uC801\uC0C9\uD3B8\uC774 \uBCF4\uC815 \uD55C\uACC4 \uC811\uADFC",
-    en: "OPTICS \xB7 OBSERVED LUMINANCE 1.4% / CORRECTION LIMIT"
+    ko: "모형 광도 1.4% \xB7 중력 적색편이 증가",
+    en: "OPTICS \xB7 MODELLED BRIGHTNESS 1.4% / GRAVITATIONAL REDSHIFT"
   },
   {
     r: 41,
-    ko: "좌표시간 발산 \xB7 원거리 관측자의 시간 지연",
-    en: "METRIC \xB7 COORDINATE TIME DIVERGENT / ARRIVAL UNDEFINED"
+    ko: "원거리 관측자 기준 시간 지연 \xB7 모형 경계 접근",
+    en: "RELATIVITY \xB7 DISTANT-OBSERVER TIME DILATION / MODEL LIMIT"
   }
 ];
 const TERRA_SURVEY = [
   [540, "COMMS \xB7 RETURN CARRIER / NOT ACQUIRED"],
   [500, "GEOLOGY \xB7 ANISOTROPIC SHEAR LAMINAE"],
   [380, "ATMOSPHERE \xB7 TRACE / BELOW THRESHOLD"],
-  [313, "GRAVITY \xB7 ORBITAL ANOMALY / LOCKED"],
-  [250, "BIOSCAN \xB7 LOCAL SIGNALS / 0"],
+  [313, "EFFECTIVE POTENTIAL \xB7 MODEL EXTREMUM"],
+  [250, "ASTROBIOLOGY \xB7 BIOSIGNATURE DATA / INCONCLUSIVE"],
   [150, "RADIATION \xB7 FLUX RISING"],
   [74.23, "GRAVITY \xB7 ANGULAR BARRIER"],
-  [60, "OPTICS \xB7 PHOTON SHELL"],
-  [45, "ATMOSPHERE \xB7 SIGNAL LOST"]
+  [60, "OPTICS \xB7 PHOTON SPHERE / MODEL"],
+  [45, "OPTICS \xB7 REDSHIFT INCREASING"]
 ];
 const DESERT_SURVEY = [
   [500, "COMMS \xB7 RETURN CARRIER / NOT ACQUIRED"],
-  [460, "ELECTROSTATIC \xB7 CHARGED SILICATE HOPS"],
-  [350, "THERMAL \xB7 NIGHT-SIDE INERTIA LOW"],
-  [245, "GROUND \xB7 YARDANG / SINTERED CRUST"],
-  [140, "MINERAL \xB7 GLASS PHASE / DISCONTINUOUS"],
-  [90, "BIOSCAN \xB7 LOCAL SIGNALS / 0"]
+  [460, "ELECTROSTATIC \xB7 DUST TRANSPORT"],
+  [350, "THERMAL \xB7 LOW SURFACE THERMAL INERTIA"],
+  [245, "GEOMORPHOLOGY \xB7 WIND-ERODED YARDANGS"],
+  [140, "SURFACE \xB7 PATCHY REFLECTANCE"],
+  [90, "ASTROBIOLOGY \xB7 BIOSIGNATURE DATA / INCONCLUSIVE"]
 ];
 const DESERT_LINES = [
   { r: 500, ko: "\uD1B5\uC2E0 \uBC18\uC1A1\uD30C \uBBF8\uAC80\uCD9C \xB7 \uC6D0\uACA9 \uC6B4\uC6A9 \uCC44\uB110 \uB300\uAE30", en: "COMMS \xB7 RETURN CARRIER NOT ACQUIRED" },
-  { r: 460, ko: "\uADDC\uC0B0\uC5FC \uD558\uC804 \uC785\uC790 \uAC80\uCD9C \xB7 \uC774\uB3D9 \uACBD\uB85C \uD655\uC778", en: "ELECTROSTATIC \xB7 CHARGED SILICATE HOPS" },
-  { r: 350, ko: "\uC57C\uAC04 \uC9C0\uD45C \uC5F4\uAD00\uC131 \uC800\uD558", en: "THERMAL \xB7 NIGHT-SIDE INERTIA LOW" },
-  { r: 245, ko: "\uC57C\uB974\uB2F9 \uB2A5\uC120\xB7\uC18C\uACB0 \uC9C0\uAC01 \uAD50\uCC28 \uAC80\uCD9C \xB7 \uD45C\uBA74 \uBAA8\uB378 \uAC31\uC2E0", en: "GROUND \xB7 YARDANG / SINTERED CRUST" },
-  { r: 140, ko: "\uC720\uB9AC\uC9C8 \uAD11\uBB3C\uC0C1 \uBD88\uC5F0\uC18D \uBD84\uD3EC \xB7 \uBC18\uC0AC\uC728 \uD3B8\uCC28 \uC99D\uAC00", en: "MINERAL \xB7 GLASS PHASE / ALBEDO VARIANCE" },
-  { r: 90, ko: "생명 징후 미검출 \xB7 응답 패킷 0", en: "BIOSCAN \xB7 LOCAL SIGNALS 0 / RETURN PACKETS 0" }
+  { r: 460, ko: "정전기성 분진 이동 신호 \xB7 표면 이동 경로 계산", en: "ELECTROSTATIC \xB7 DUST TRANSPORT SIGNATURE" },
+  { r: 350, ko: "표면 열관성 저하 \xB7 야간 열 방출 증가", en: "THERMAL \xB7 LOW SURFACE THERMAL INERTIA" },
+  { r: 245, ko: "풍향과 평행한 야르당 능선 \xB7 표면 모형 갱신", en: "GEOMORPHOLOGY \xB7 WIND-ERODED YARDANGS" },
+  { r: 140, ko: "지표 반사율 편차", en: "SURFACE \xB7 PATCHY REFLECTANCE" },
+  { r: 90, ko: "생명 징후 관측 자료 없음 \xB7 확인 불가", en: "ASTROBIOLOGY \xB7 NO BIOSIGNATURE DATA / INCONCLUSIVE" }
 ];
 const GRANITE_SURVEY = [
-  [520, "MEMORY \xB7 CROSS-PLANET FIELD SYNTHESIS"],
-  [410, "LITHOLOGY \xB7 QUARTZ / FELDSPAR / MICA"],
-  [300, "STRUCTURE \xB7 CONJUGATE JOINT SETS"],
+  [520, "SURVEY MODEL \xB7 PRIOR RECORDS CORRELATED"],
+  [410, "SPECTROSCOPY \xB7 REFLECTANCE FEATURES"],
+  [300, "BEDROCK \xB7 DISCONTINUOUS FRACTURES"],
   [190, "WEATHERING \xB7 EXFOLIATION DOMES"]
 ];
 const GRANITE_LINES = [
-  { r: 520, ko: "행성 간 탐사 자료 합성 \xB7 관측 지점 3곳 산출", en: "MEMORY SYNTHESIS \xB7 THREE CONCORDANCE NODES GENERATED" },
-  { r: 410, ko: "광물 반사 스펙트럼 분리", en: "LITHOLOGY \xB7 QUARTZ / FELDSPAR / MICA" },
-  { r: 300, ko: "\uB450 \uC808\uB9AC \uAD50\uCC28 \xB7 \uC0B0\uD654\uBA74 \uAC80\uCD9C", en: "STRUCTURE \xB7 CONJUGATE JOINT SETS" },
+  { r: 520, ko: "선행 탐사 기록 대조 \xB7 관측 후보지 3곳 선정", en: "SURVEY MODEL \xB7 THREE CANDIDATE SITES SELECTED" },
+  { r: 410, ko: "반사 스펙트럼의 차이 기록 \xB7 광물 종류 미확정", en: "SPECTROSCOPY \xB7 DISTINCT REFLECTANCE FEATURES" },
+  { r: 300, ko: "기반층 절리의 불연속 분포", en: "BEDROCK \xB7 DISCONTINUOUS FRACTURES" },
   { r: 190, ko: "\uD48D\uD654 \uAD6C\uC870 \uAC80\uCD9C", en: "WEATHERING \xB7 EXFOLIATION DOMES / TORS" }
 ];
 const DOCKING_LINES = Object.freeze({
-  recall: { r: 0, ko: "외피 구조재 4/4 \xB7 원료 2/2 \xB7 귀환 좌표 산출", en: "STRUCTURE 4/4 \xB7 RAW MATERIALS 2/2 \xB7 COORDINATE RECALL" },
-  ramp: { r: 0, ko: "\uCC29\uB959\uC120 \uACA9\uB0A9 \uACBD\uB85C \uAC1C\uBC29", en: "LANDER \xB7 STOW PATH OPENING" },
+  recall: { r: 0, ko: "외피 구조재 4/4 \xB7 원료 2/2 \xB7 귀환 경로 계산", en: "STRUCTURAL SAMPLES 4/4 \xB7 FEEDSTOCK 2/2 \xB7 RETURN ROUTE COMPUTED" },
+  ramp: { r: 0, ko: "착륙선 적재 경사로 전개", en: "LANDER \xB7 STOWAGE RAMP DEPLOYING" },
   approach: { r: 0, ko: "착륙선 최종 접근 \xB7 8륜 구동 유지", en: "FINAL APPROACH \xB7 EIGHT CONTACTS LIVE" },
-  secure: { r: 0, ko: "격납 위치 고정 \xB7 위치 유도등 소등", en: "ROVER SECURED \xB7 LOCATORS FALL SILENT" },
+  secure: { r: 0, ko: "탐사 로버 고정 \xB7 유도등 소등", en: "ROVER SECURED \xB7 GUIDANCE LIGHTS OFF" },
   docked: { r: 0, ko: "탐사 로버 격납 완료 \xB7 비행 잠금", en: "ROVER STOWED \xB7 FLIGHT INTERLOCK" }
 });
 const VOYAGE_LINES = Object.freeze({
   "flight-lock": { r: 0, ko: "탐사 로버 고정 \xB7 발사 안전 잠금 해제", en: "STOW MASS LOCKED \xB7 FLIGHT INTERLOCK RELEASED" },
-  fold: { r: 0, ko: "착륙 다리 6개 수납", en: "SIX LANDING LOAD PATHS \xB7 RETRACTING" },
-  lift: { r: 0, ko: "이륙 \xB7 저속 상승", en: "SURFACE DATUM RELEASED \xB7 LOW ASCENT" },
-  transit: { r: 0, ko: "관성항법 전환 \xB7 목표 좌표 설정", en: "INERTIAL FRAME \xB7 DESTINATION COORDINATES LOCKED" },
-  descent: { r: 0, ko: "착륙 지점 포착 \xB7 하강", en: "NEXT PLANET ACQUIRED \xB7 CONTROLLED DESCENT" },
-  touchdown: { r: 0, ko: "착륙 다리 6점 접촉 확인", en: "SIX-POINT GROUND CONTACT CONFIRMED" },
+  fold: { r: 0, ko: "착륙 다리 6개 수납", en: "SIX LANDING LEGS RETRACTING" },
+  lift: { r: 0, ko: "이륙 \xB7 제어 상승", en: "LIFTOFF \xB7 CONTROLLED ASCENT" },
+  transit: { r: 0, ko: "관성항법 가동 \xB7 행성 간 이동", en: "INERTIAL NAVIGATION ACTIVE \xB7 INTERPLANETARY CRUISE" },
+  descent: { r: 0, ko: "착륙 후보지 확인 \xB7 동력 하강", en: "LANDING SITE ACQUIRED \xB7 POWERED DESCENT" },
+  touchdown: { r: 0, ko: "착륙 확인 \xB7 착륙 다리 6개 지면 접촉", en: "TOUCHDOWN \xB7 SIX LANDING LEGS IN CONTACT" },
   egress: { r: 0, ko: "격납 해제 \xB7 탐사 로버 전개", en: "STOW RELEASE \xB7 ROVER REDEPLOYMENT" },
   epilogue: { r: 0, ko: "\uB450 \uBC88\uC9F8 \uD45C\uBA74\uC5D0 \uCCAB \uC88C\uD45C\uAC00 \uB0A8\uB294\uB2E4", en: "PLANET 02 \xB7 THE FIRST COORDINATE REMAINS" }
 });
@@ -278,11 +278,11 @@ const FIELD_ARCHIVE_STATIONS = Object.freeze({
   desert: Object.freeze([
     Object.freeze({ id: "P02-001", body: "desert", planet: "PLANET 02", world: "YARDANG FIELD", label: "LANDING DATUM", x: DESERT_START[0], z: DESERT_START[1], radius: 14, order: 0 }),
     Object.freeze({ id: "P02-002", body: "desert", planet: "PLANET 02", world: "YARDANG FIELD", label: "YARDANG INGRESS", x: 88, z: 503, radius: 13, order: 1 }),
-    Object.freeze({ id: "P02-003", body: "desert", planet: "PLANET 02", world: "YARDANG FIELD", label: "SINTERED PASSAGE", x: 79, z: 486, radius: 13, order: 2 }),
+    Object.freeze({ id: "P02-003", body: "desert", planet: "PLANET 02", world: "YARDANG FIELD", label: "ERODED PASSAGE", x: 79, z: 486, radius: 13, order: 2 }),
     Object.freeze({ id: "P02-004", body: "desert", planet: "PLANET 02", world: "YARDANG FIELD", label: "WIND-SHADOW CUT", x: 70, z: 468, radius: 13, order: 3 }),
-    Object.freeze({ id: "P02-005", body: "desert", planet: "PLANET 02", world: "YARDANG FIELD", label: "HYDRATION GRADIENT", x: 62, z: 450, radius: 13, order: 4 }),
-    Object.freeze({ id: "P02-006", body: "desert", planet: "PLANET 02", world: "YARDANG FIELD", label: "PORE-ICE APPROACH", x: 56, z: 438, radius: 12, order: 5 }),
-    Object.freeze({ id: "P02-007", body: "desert", planet: "PLANET 02", world: "YARDANG FIELD", label: "HYDRATION RETURN", x: BODY02_WATER_SITE.x, z: BODY02_WATER_SITE.z, radius: 12, order: 6 })
+    Object.freeze({ id: "P02-005", body: "desert", planet: "PLANET 02", world: "YARDANG FIELD", label: "HYDRATION-SIGNAL TRANSECT", x: 62, z: 450, radius: 13, order: 4 }),
+    Object.freeze({ id: "P02-006", body: "desert", planet: "PLANET 02", world: "YARDANG FIELD", label: "SPECTRAL TARGET APPROACH", x: 56, z: 438, radius: 12, order: 5 }),
+    Object.freeze({ id: "P02-007", body: "desert", planet: "PLANET 02", world: "YARDANG FIELD", label: "HYDRATION-SIGNAL SITE", x: BODY02_WATER_SITE.x, z: BODY02_WATER_SITE.z, radius: 12, order: 6 })
   ])
 });
 const COMPLETION_TABLEAU_MS = 5400;
@@ -528,7 +528,7 @@ try {
     camera,
     onCue: (phase, now) => {
       openingShot = null;
-      const line = world === "desert" && phase === "recall" ? { r: 0, ko: "물 존재 확인 \xB7 귀환 경로 계산", en: "H₂O CONFIRMED \xB7 COORDINATE RECALL" } : DOCKING_LINES[phase];
+      const line = world === "desert" && phase === "recall" ? { r: 0, ko: "수화광물 후보 신호 기록 \xB7 귀환 경로 계산", en: "HYDRATION SIGNATURE RECORDED \xB7 RETURN ROUTE COMPUTED" } : DOCKING_LINES[phase];
       if (line) captions.force(line, now, phase === "docked" ? 12e3 : 4600);
       if (phase === "recall") {
         kiosk.last = now;
@@ -712,8 +712,8 @@ function recordWaterConfirmation(_site, now) {
   missionMemory.recordWater({ complete: true, site: BODY02_WATER_SITE });
   captions.force({
     r: 0,
-    ko: "물 존재 확인 \xB7 수화 규산염 흡수대 확인",
-    en: "H\u2082O CONFIRMED \xB7 HYDRATED SILICA / PORE ICE MATCH"
+    ko: "수화광물과 일치하는 흡수대 기록 \xB7 물의 상태 미확정",
+    en: "HYDRATION SIGNATURE RECORDED \xB7 WATER PHASE UNCONFIRMED"
   }, now, 5200);
   kiosk.last = now;
 }
@@ -1028,7 +1028,7 @@ function activateArrivalMission(key, now) {
     captions.force({
       r: 0,
       ko: "단일 임무 \xB7 지표 수화물 분광 탐사",
-      en: "SINGLE OBJECTIVE \xB7 CONFIRM SURFACE WATER"
+      en: "SURVEY OBJECTIVE \xB7 MAP HYDRATION SIGNATURE"
     }, now, 5200);
   } else if (planet.mission === "geological-memory") {
     waterMission.reset();
@@ -1046,7 +1046,7 @@ function activateArrivalMission(key, now) {
       prior.textContent = '선행 탐사 기록 필요 · 행성 1에서 탐사 시작';
       document.body.append(prior);
     }
-    captions.force(activated ? { r: 0, ko: "PLANET 03 \xB7 광물·수화물 탐사 자료 대조", en: "PLANET 03 \xB7 TRACE THREE MEMORY CONCORDANCE NODES" } : { r: 0, ko: "PLANET 03 \xB7 선행 탐사 기록 필요", en: "PLANET 03 \xB7 PRIOR-PLANET EVIDENCE INCOMPLETE" }, now, 7200);
+    captions.force(activated ? { r: 0, ko: "PLANET 03 \xB7 선행 탐사 자료 대조 · 후보지 3곳", en: "PLANET 03 \xB7 SURVEY RECORDS CORRELATED / THREE CANDIDATE SITES" } : { r: 0, ko: "PLANET 03 \xB7 선행 탐사 기록 필요", en: "PLANET 03 \xB7 PRIOR SURVEY RECORDS REQUIRED" }, now, 7200);
   }
 }
 // Each numbered URL owns one planet; arrival continues after the transfer.
@@ -1246,11 +1246,11 @@ function missionObjectiveText() {
       : `착륙선 외피 \xB7 ${restoration.structuralCount} / 4`;
   }
   if (world === "desert") {
-    const state = waterMission.complete ? "CONFIRMED" : waterMission.state.toUpperCase();
-    return `H\u2082O EVIDENCE \xB7 ${state}`;
+    const state = waterMission.complete ? "RECORDED" : waterMission.state.toUpperCase();
+    return `HYDRATION SIGNATURE \xB7 ${state}`;
   }
   const total = geologicalMemory.model?.sites?.length ?? 3;
-  return `MEMORY CONCORDANCE \xB7 ${geologicalMemory.current} / ${total}`;
+  return `SURVEY CORRELATION \xB7 ${geologicalMemory.current} / ${total}`;
 }
 
 function reconStatusText() {
@@ -1258,11 +1258,11 @@ function reconStatusText() {
     return `외피 ${restoration.structuralCount}/4 \xB7 원료 ${restoration.rawCount}/2`;
   }
   if (world === "desert") {
-    const state = waterMission.complete ? "confirmed" : waterMission.state;
-    return `H\u2082O \xB7 ${state}`;
+    const state = waterMission.complete ? "recorded" : waterMission.state;
+    return `hydration signal \xB7 ${state}`;
   }
   const total = geologicalMemory.model?.sites?.length ?? 3;
-  return `memory nodes \xB7 ${geologicalMemory.current} / ${total}`;
+  return `survey sites \xB7 ${geologicalMemory.current} / ${total}`;
 }
 
 async function frame() {
@@ -1575,10 +1575,10 @@ function fieldArchiveStationsFor(body = world) {
   const transit = between(sites[0], sites[1]);
   return [
     { id: "P03-001", body: "granite", planet: "PLANET 03", world: "JOINTED GRANITE", label: "LANDING DATUM", ...start, radius: 14, order: 0 },
-    { id: "P03-002", body: "granite", planet: "PLANET 03", world: "JOINTED GRANITE", label: "MATERIAL PHASE", x: sites[0].x, z: sites[0].z, radius: 14, order: 1 },
-    { id: "P03-003", body: "granite", planet: "PLANET 03", world: "JOINTED GRANITE", label: "MEMORY TRANSIT", ...transit, radius: 16, order: 2 },
-    { id: "P03-004", body: "granite", planet: "PLANET 03", world: "JOINTED GRANITE", label: "HYDRATION PHASE", x: sites[1].x, z: sites[1].z, radius: 14, order: 3 },
-    { id: "P03-005", body: "granite", planet: "PLANET 03", world: "JOINTED GRANITE", label: "CONCORDANCE", x: sites[2].x, z: sites[2].z, radius: 14, order: 4 }
+    { id: "P03-002", body: "granite", planet: "PLANET 03", world: "JOINTED GRANITE", label: "REFLECTANCE SITE", x: sites[0].x, z: sites[0].z, radius: 14, order: 1 },
+    { id: "P03-003", body: "granite", planet: "PLANET 03", world: "JOINTED GRANITE", label: "SURVEY TRANSECT", ...transit, radius: 16, order: 2 },
+    { id: "P03-004", body: "granite", planet: "PLANET 03", world: "JOINTED GRANITE", label: "HYDRATION COMPARISON", x: sites[1].x, z: sites[1].z, radius: 14, order: 3 },
+    { id: "P03-005", body: "granite", planet: "PLANET 03", world: "JOINTED GRANITE", label: "CORRELATION SITE", x: sites[2].x, z: sites[2].z, radius: 14, order: 4 }
   ];
 }
 const archiveFrameCanvas = document.createElement("canvas");
