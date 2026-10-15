@@ -526,6 +526,45 @@
         gap: 18px;
         margin: 24px 0;
       }
+      .place-sequence {
+        max-width: 960px;
+        margin: 28px 0 !important;
+      }
+      .place-sequence-view {
+        position: relative;
+        aspect-ratio: 8 / 5;
+        overflow: hidden;
+        background: #151715;
+      }
+      .place-archive .place-sequence-view img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        object-fit: contain;
+      }
+      .place-archive .place-sequence-view img + img {
+        opacity: 0;
+      }
+      .place-sequence figcaption {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding-top: 12px;
+      }
+      .place-sequence figcaption span {
+        min-width: 0;
+      }
+      .place-sequence button {
+        flex: 0 0 auto;
+        font: inherit;
+      }
+      .place-sequence button:focus-visible {
+        outline: 2px solid #222;
+        outline-offset: 3px;
+      }
       .place-archive figure {
         margin: 0;
         min-width: 0;
@@ -567,7 +606,58 @@
         }
       }
     </style>
-  </head>
+    <style>
+      #vehicle-preview-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 8px 12px;
+        color: #b8c3cb;
+        font:
+          10px/1.4 Arial,
+          sans-serif;
+        letter-spacing: 0.12em;
+        text-decoration: none;
+        touch-action: manipulation;
+      }
+      #vehicle-preview-link:hover {
+        color: #fff;
+      }
+      #vehicle-preview-link:focus-visible {
+        outline: 1px solid #b8d2df;
+        outline-offset: 2px;
+      }
+      .preview-actions {
+        position: absolute;
+        top: 4px;
+        right: var(--pad);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .preview-actions .back {
+        position: static;
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+      }
+      .preview-actions #vehicle-preview-link {
+        color: #444;
+        padding-left: 0;
+      }
+      @media (max-width: 760px) {
+        .preview-actions {
+          top: max(2px, env(safe-area-inset-top));
+          gap: 8px;
+        }
+        .preview-actions .back,
+        .preview-actions #vehicle-preview-link {
+          font-size: 10px;
+        }
+      }
+    </style></head
+  >
   <body>
     <main>
       <header class="site-header">
@@ -588,7 +678,14 @@
           </button>
         </nav>
         <span id="fa-count" class="sr-only" aria-live="polite">00 / 00 observations recorded</span>
-        <a class="back" href="planet-01.html" data-return>Return to Mission</a>
+        <div class="preview-actions"
+          ><a
+            id="vehicle-preview-link"
+            href="preview.html?from=field-archive.html"
+            aria-label="로버 · 탐사선 · 이주선 외장 보기"
+            >PREVIEW</a
+          ><a class="back" href="planet-01.html" data-return>Return to Mission</a></div
+        >
       </header>
       <section class="archive" aria-label="Coordinate observation records">
         <div class="ledger-head" aria-hidden="true">
@@ -663,6 +760,183 @@
           });
         }
 
+        // works/shared/place-sequence.js
+        var recordTime = (seconds) => `${Math.floor(seconds / 60)}분 ${Math.floor(seconds % 60)}초`;
+        function cameraKey(record) {
+          const c = record.camera,
+            p = record.site;
+          if (
+            !c ||
+            !p ||
+            !Array.isArray(c.position) ||
+            c.position.length !== 3 ||
+            !Array.isArray(c.quaternion) ||
+            c.quaternion.length !== 4
+          )
+            return null;
+          const values = [...c.position, ...c.quaternion, c.fov, c.aspect, p.x, p.z, p.size];
+          return values.every(Number.isFinite) ? values.map((v) => v.toFixed(6)).join("/") : null;
+        }
+        function matchingSequence(records) {
+          const groups = /* @__PURE__ */ new Map();
+          for (const record of records) {
+            const key = cameraKey(record);
+            if (!key) continue;
+            if (!groups.has(key)) groups.set(key, []);
+            groups.get(key).push(record);
+          }
+          const sameView = [...groups.values()].sort((a, b) => b.length - a.length)[0] ?? [];
+          const chronological = sameView
+            .sort((a, b) => a.seconds - b.seconds)
+            .filter((r, i, a) => i === 0 || r.seconds !== a[i - 1].seconds);
+          if (chronological.length <= 8) return chronological;
+          return [
+            chronological[0],
+            chronological[1],
+            ...Array.from(
+              { length: 6 },
+              (_, i) => chronological[2 + Math.round((i * (chronological.length - 3)) / 5)],
+            ),
+          ];
+        }
+        function mountRecordSequence(parent, records) {
+          const frames = matchingSequence(records);
+          if (frames.length < 2) return;
+          const figure = document.createElement("figure");
+          figure.className = "place-sequence";
+          figure.setAttribute("aria-label", "같은 구도로 촬영한 장소의 변화");
+          const viewport = document.createElement("div");
+          viewport.className = "place-sequence-view";
+          const images = [new Image(), new Image()];
+          for (const img of images) {
+            img.width = 640;
+            img.height = 400;
+            img.alt = "";
+            viewport.append(img);
+          }
+          const caption = document.createElement("figcaption");
+          const label = document.createElement("span");
+          const button = document.createElement("button");
+          button.type = "button";
+          caption.append(label, button);
+          const note = document.createElement("p");
+          note.className = "place-sequence-note";
+          note.textContent =
+            "저장된 촬영 기록을 시간순으로 보여줍니다. 기록 사이의 전환은 실제 변화 속도와 다릅니다.";
+          figure.append(viewport, caption, note);
+          parent.append(figure);
+          const motion = matchMedia("(prefers-reduced-motion: reduce)");
+          let index = 0,
+            elapsed = 0,
+            last = 0,
+            raf = 0;
+          let paused = motion.matches,
+            visible = false,
+            hidden = document.hidden,
+            done = false;
+          const HOLD = 6e3,
+            FADE = 2400;
+          function show() {
+            images[0].src = frames[index].image;
+            images[1].src = frames[Math.min(index + 1, frames.length - 1)].image;
+            images[1].style.opacity = "0";
+            label.textContent = `${recordTime(frames[index].seconds)} · ${frames[index].status}`;
+            figure.dataset.index = String(index);
+            figure.dataset.seconds = String(frames[index].seconds);
+            figure.dataset.transition = "false";
+          }
+          function controls() {
+            button.textContent = motion.matches
+              ? done
+                ? "처음 기록 보기"
+                : "다음 기록 보기"
+              : done
+                ? "다시 보기"
+                : paused
+                  ? "이어서 보기"
+                  : "일시정지";
+            figure.dataset.playing = String(!paused && !done && visible && !hidden);
+          }
+          function tick(now) {
+            raf = 0;
+            if (paused || done || !visible || hidden) {
+              last = 0;
+              controls();
+              return;
+            }
+            if (last) elapsed += Math.min(100, now - last);
+            last = now;
+            if (elapsed >= HOLD && (!images[1].complete || !images[1].naturalWidth)) elapsed = HOLD;
+            const fraction = Math.max(0, Math.min(1, (elapsed - HOLD) / FADE));
+            if (fraction > 0)
+              images[1].style.opacity = String(fraction * fraction * (3 - 2 * fraction));
+            if (fraction > 0 && figure.dataset.transition !== "true") {
+              label.textContent = `${recordTime(frames[index].seconds)} · ${recordTime(frames[index + 1].seconds)} 기록 전환`;
+              figure.dataset.transition = "true";
+            }
+            if (elapsed >= HOLD + FADE) {
+              index++;
+              elapsed = 0;
+              done = index === frames.length - 1;
+              figure.dataset.transition = "false";
+              show();
+              controls();
+            }
+            if (!done) raf = requestAnimationFrame(tick);
+          }
+          function schedule() {
+            if (raf) cancelAnimationFrame(raf);
+            raf = 0;
+            last = 0;
+            controls();
+            if (!paused && !done && visible && !hidden) raf = requestAnimationFrame(tick);
+          }
+          button.addEventListener("click", () => {
+            if (motion.matches) {
+              index = done ? 0 : index + 1;
+              done = index === frames.length - 1;
+              paused = true;
+              elapsed = 0;
+              show();
+            } else if (done) {
+              index = 0;
+              elapsed = 0;
+              done = false;
+              paused = false;
+              show();
+            } else paused = !paused;
+            schedule();
+          });
+          motion.addEventListener("change", () => {
+            paused = true;
+            elapsed = 0;
+            show();
+            schedule();
+          });
+          const observer = new IntersectionObserver(
+            (entries) => {
+              visible = entries[0].isIntersecting;
+              schedule();
+            },
+            { threshold: 0.15 },
+          );
+          observer.observe(figure);
+          document.addEventListener("visibilitychange", () => {
+            hidden = document.hidden;
+            schedule();
+          });
+          window.addEventListener("pagehide", () => {
+            hidden = true;
+            schedule();
+          });
+          window.addEventListener("pageshow", () => {
+            hidden = document.hidden;
+            schedule();
+          });
+          show();
+          controls();
+        }
+
         // works/shared/place-archive-view.js
         var imageOK = (v) =>
           typeof v === "string" &&
@@ -696,6 +970,7 @@
               return;
             }
             document.body.classList.add("has-place-history");
+            mountRecordSequence(section, frames);
             const grid = el("div");
             grid.className = "place-comparison";
             const before = frames.find((r) => r.stage === "before"),
@@ -719,12 +994,12 @@
                 figure.append(
                   el(
                     "figcaption",
-                    `${r.status} · 장소 시간 ${Math.floor(r.seconds / 60)}분 ${Math.floor(r.seconds % 60)}초`,
+                    `${r.status} · 경과 시간 ${Math.floor(r.seconds / 60)}분 ${Math.floor(r.seconds % 60)}초`,
                   ),
                 );
                 const stats = el(
                   "p",
-                  `저장수 ${r.resources.stored.toFixed(1)} kg · 전력 여유 ${Math.round(r.resources.reserve * 100)}%`,
+                  `물 저장량 ${r.resources.stored.toFixed(1)} kg · 축전지 충전율 ${Math.round(r.resources.reserve * 100)}%`,
                 );
                 figure.append(stats);
               } else
@@ -737,9 +1012,33 @@
             const last = frames.at(-1);
             const regions = el(
               "p",
-              "기존 경계 지역과 회수 설비 주변을 함께 기록합니다. 휴지는 실패 판정이 아니며, 거주 가능성은 행성 전체가 아닌 설정된 밀폐 설비의 운용 조건입니다.",
+              "개입이 적은 경계 지역과 물 회수 설비 주변을 함께 기록합니다. 설비의 대기 상태는 고장이 아닙니다. 여기서 다루는 것은 밀폐된 거주 시설의 운전 조건이며, 행성 전체의 거주 가능성을 뜻하지 않습니다.",
             );
             section.append(regions);
+            if (last.resources?.operation?.source === "mission-record") {
+              const operation = last.resources.operation;
+              const detail = el("details");
+              detail.append(el("summary", "탐사 기록과 설비 운전"));
+              detail.append(
+                el(
+                  "p",
+                  "광물 식별 결과, 수분 관측 신호, 세 지점의 지질 비교 기록으로 운전 조건을 정했습니다. 연결 계수는 작품 내 가정이며 실제 설비의 성능 예측값은 아닙니다.",
+                ),
+              );
+              detail.append(
+                el(
+                  "p",
+                  `기준 운전 대비 가열기 소비 전력 ${Math.round(operation.heatCost * 100)}% · 회수 펌프 소비 전력 ${Math.round(operation.pumpCost * 100)}% · 최대 회수 유량 ${Math.round(operation.recoveryRate * 100)}%`,
+                ),
+              );
+              detail.append(
+                el(
+                  "p",
+                  `물 저장량·축전지 충전율·온도가 운전 조건을 ${operation.stableSeconds.toFixed(1)}초 동안 유지하면 유지 운전으로 전환합니다.`,
+                ),
+              );
+              section.append(detail);
+            }
             const history2 = el("details");
             history2.append(el("summary", `시간별 관찰 ${frames.length}건`));
             for (const r of [...frames].reverse()) {
@@ -756,7 +1055,7 @@
                 row.append(
                   el(
                     "p",
-                    `${zone.side < 0 ? "왼쪽" : zone.side > 0 ? "오른쪽" : "중앙"} ${zone.zone} · 얼음 ${zone.ice.toFixed(3)} / 액체 ${zone.liquid.toFixed(3)} kg/m²`,
+                    `${zone.side < 0 ? "왼쪽" : zone.side > 0 ? "오른쪽" : "중앙"} ${zone.zone} · 얼음 ${zone.ice.toFixed(3)} / 액체 물 ${zone.liquid.toFixed(3)} kg/m²${Number.isFinite(zone.deposited) && Number.isFinite(zone.eroded) ? ` · 퇴적 ${zone.deposited.toFixed(4)} / 침식 ${zone.eroded.toFixed(4)} kg/m²` : ""}`,
                   ),
                 );
               history2.append(row);
@@ -1237,6 +1536,32 @@
         var FLEET_FRONT_DURATION = 14;
         var MIGRATION_DURATION = MIGRATION_CUTS[3] + FLEET_FRONT_DURATION;
 
+        // works/first_dawn/habitat/conditions.js
+        function validSurvey(s) {
+          return (
+            s?.version === 1 &&
+            s.sampleCount === 6 &&
+            s.siteCount === 3 &&
+            [
+              "insulation",
+              "conduction",
+              "thermalDemand",
+              "fines",
+              "correlation",
+              "substrate",
+            ].every((k) => Number.isFinite(s[k]) && s[k] >= 0 && s[k] <= 1)
+          );
+        }
+        var BASE_OPERATION = Object.freeze({
+          version: 1,
+          source: "baseline",
+          heatCost: 1,
+          pumpCost: 1,
+          heatTransfer: 1,
+          recoveryRate: 1,
+          stableSeconds: 10,
+        });
+
         // works/shared/post-mission-state.js
         var POST_KEY = "beyond-known:post-mission:v1";
         var POST_PHASES = Object.freeze({
@@ -1287,6 +1612,8 @@
             )
               return null;
             const signatures = s.evidence?.sampleSignatures;
+            if (s.evidence?.settlementSurvey != null && !validSurvey(s.evidence.settlementSurvey))
+              return null;
             if (
               signatures != null &&
               (!Array.isArray(signatures) ||

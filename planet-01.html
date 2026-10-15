@@ -2082,7 +2082,44 @@
         }
       }
     </style>
-  </head>
+    <style>
+      #vehicle-preview-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 8px 12px;
+        color: #b8c3cb;
+        font:
+          10px/1.4 Arial,
+          sans-serif;
+        letter-spacing: 0.12em;
+        text-decoration: none;
+        touch-action: manipulation;
+      }
+      #vehicle-preview-link:hover {
+        color: #fff;
+      }
+      #vehicle-preview-link:focus-visible {
+        outline: 1px solid #b8d2df;
+        outline-offset: 2px;
+      }
+      #vehicle-preview-link {
+        position: fixed;
+        z-index: 91;
+        left: max(16px, env(safe-area-inset-left));
+        bottom: max(24px, calc(env(safe-area-inset-bottom) + 18px));
+        background: #0b1014b3;
+        border: 1px solid #35404a55;
+      }
+      @media (max-width: 600px) {
+        #vehicle-preview-link {
+          left: max(12px, env(safe-area-inset-left));
+          font-size: 9px;
+        }
+      }
+    </style></head
+  >
   <body>
     <canvas
       id="gl"
@@ -2312,5 +2349,11 @@
       })();
     </script>
     <script defer src="./planet-engine.js"></script>
-  </body>
+    <a
+      id="vehicle-preview-link"
+      href="preview.html?from=planet-01.html"
+      aria-label="로버 · 탐사선 · 이주선 외장 보기"
+      >PREVIEW</a
+    ></body
+  >
 </html>

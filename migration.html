@@ -237,6 +237,28 @@
       }
       #sound[aria-pressed="true"] .sound-muted {
         display: none;
+      }</style
+    ><style>
+      #vehicle-preview-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 8px 12px;
+        color: #b8c3cb;
+        font:
+          10px/1.4 Arial,
+          sans-serif;
+        letter-spacing: 0.12em;
+        text-decoration: none;
+        touch-action: manipulation;
+      }
+      #vehicle-preview-link:hover {
+        color: #fff;
+      }
+      #vehicle-preview-link:focus-visible {
+        outline: 1px solid #b8d2df;
+        outline-offset: 2px;
       }
     </style></head
   ><body data-phase="migration">
@@ -253,6 +275,11 @@
     <footer
       ><span id="credit">© 2026 KIM GUNWOO</span
       ><nav
+        ><a
+          id="vehicle-preview-link"
+          href="preview.html?from=migration.html"
+          aria-label="로버 · 탐사선 · 이주선 외장 보기"
+          >PREVIEW</a
         ><button id="sound" aria-label="사운드 켜기" title="사운드 켜기" aria-pressed="false"
           ><svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M11 5 6 9H3v6h3l5 4Z" />
@@ -35738,6 +35765,55 @@ void main() {
         });
       }
 
+      // works/first_dawn/habitat/conditions.js
+      function validSurvey(s) {
+        return (
+          s?.version === 1 &&
+          s.sampleCount === 6 &&
+          s.siteCount === 3 &&
+          ["insulation", "conduction", "thermalDemand", "fines", "correlation", "substrate"].every(
+            (k) => Number.isFinite(s[k]) && s[k] >= 0 && s[k] <= 1,
+          )
+        );
+      }
+      var BASE_OPERATION = Object.freeze({
+        version: 1,
+        source: "baseline",
+        heatCost: 1,
+        pumpCost: 1,
+        heatTransfer: 1,
+        recoveryRate: 1,
+        stableSeconds: 10,
+      });
+      function operationFromSurvey(s) {
+        if (!validSurvey(s)) return { ...BASE_OPERATION };
+        return {
+          version: 1,
+          source: "mission-record",
+          heatCost: 1.2 - 0.16 * s.insulation - 0.1 * s.conduction + 0.12 * s.thermalDemand,
+          pumpCost: 0.92 + 0.28 * s.fines + 0.18 * s.substrate,
+          heatTransfer: 1.06 + 0.08 * s.conduction - 0.02 * s.thermalDemand,
+          recoveryRate: 1.18 - 0.16 * s.fines - 0.08 * s.substrate,
+          stableSeconds: 10 + 3 * (1 - s.correlation),
+        };
+      }
+      function restoreOperation(saved, survey) {
+        if (!saved) return operationFromSurvey(survey);
+        const p = saved.operation ?? BASE_OPERATION;
+        if (
+          p.version !== 1 ||
+          !["baseline", "mission-record"].includes(p.source) ||
+          !["heatCost", "pumpCost", "heatTransfer", "recoveryRate"].every(
+            (k) => Number.isFinite(p[k]) && p[k] >= 0.7 && p[k] <= 1.6,
+          ) ||
+          !Number.isFinite(p.stableSeconds) ||
+          p.stableSeconds < 10 ||
+          p.stableSeconds > 13
+        )
+          throw Error("Invalid basin operating conditions");
+        return { ...p };
+      }
+
       // works/first_dawn/habitat/model.js
       var GRID = 64;
       var STEP = 0.1;
@@ -35749,13 +35825,16 @@ void main() {
       var CP = 4200;
       var SOIL = 3e4;
       var clamp2 = (x, a, b) => Math.max(a, Math.min(b, x));
-      function createBasinModel(heightAt, saved = null, { equipment = true } = {}) {
+      function createBasinModel(heightAt, saved = null, { equipment = true, survey = null } = {}) {
         const equipped = saved?.equipment ?? equipment;
+        const operation = Object.freeze(restoreOperation(saved, survey));
         const fields = {};
         for (const name of ["water", "enthalpy", "vapor", "vaporHeat", "sediment", "trace"])
           fields[name] = new Float64Array(COUNT);
         const { water, enthalpy, vapor, vaporHeat, sediment, trace } = fields;
         const height = new Float64Array(COUNT),
+          sedimentOrigin = new Float64Array(COUNT),
+          wetHistory = new Float64Array(COUNT),
           shelter = new Float64Array(COUNT),
           heater = new Float64Array(COUNT);
         const liquid = new Float64Array(COUNT),
@@ -35779,6 +35858,7 @@ void main() {
               );
             enthalpy[k] = (-3 - shelter[k] * 4) * (SOIL + water[k] * CP);
             sediment[k] = 0.2 + 0.1 * shelter[k];
+            sedimentOrigin[k] = sediment[k];
             heater[k] = Math.exp(-Math.pow((i - 32) / 8, 2) - Math.pow((j - 30) / 21, 4));
             initialHeat += enthalpy[k];
             initialWater += water[k];
@@ -35850,6 +35930,21 @@ void main() {
             throw new Error("Invalid basin resource balance");
           Object.assign(state2, saved.state);
           for (const name of Object.keys(fields)) fields[name].set(saved[name]);
+          if (saved.surfaceHistory) {
+            for (const key2 of ["sedimentOrigin", "wetHistory"]) {
+              const values = saved.surfaceHistory[key2];
+              if (
+                !Array.isArray(values) ||
+                values.length !== COUNT ||
+                values.some((v) => !Number.isFinite(v) || v < 0)
+              )
+                throw Error("Invalid basin surface history");
+            }
+            sedimentOrigin.set(saved.surfaceHistory.sedimentOrigin);
+            wetHistory.set(saved.surfaceHistory.wetHistory);
+          } else {
+            sedimentOrigin.set(sediment);
+          }
           if (saved.balance) {
             const { water: water2, sediment: sediment2, heat } = saved.balance;
             if (![water2, sediment2, heat].every(Number.isFinite) || water2 <= 0 || sediment2 <= 0)
@@ -35882,6 +35977,9 @@ void main() {
           }
         }
         phases();
+        function recordWetSurface() {
+          for (let k = 0; k < COUNT; k++) wetHistory[k] = Math.max(wetHistory[k], liquid[k]);
+        }
         function move(a, b, amount) {
           amount = Math.min(amount, liquid[a]);
           if (!(amount > 0)) return;
@@ -35925,8 +36023,8 @@ void main() {
           const heatRate = maintenance ? 0.65 : 1;
           const demand = active
             ? 6e-4 +
-              (state2.heating ? 48e-4 * heatRate : 0) +
-              (state2.pumping ? 11e-4 * pumpRate : 0)
+              (state2.heating ? 48e-4 * heatRate * operation.heatCost : 0) +
+              (state2.pumping ? 11e-4 * pumpRate * operation.pumpCost : 0)
             : 0;
           const used = Math.min(state2.reserve, demand * STEP),
             power = demand ? used / (demand * STEP) : 0;
@@ -35943,7 +36041,7 @@ void main() {
             const q =
               (sunlight * (1 - albedo) * (1 - 0.48 * shelter[k]) -
                 loss +
-                250 * heater[k] * state2.heatPower) *
+                250 * heater[k] * state2.heatPower * operation.heatTransfer) *
               dt;
             enthalpy[k] += q;
             state2.heatBoundary += q;
@@ -35973,7 +36071,7 @@ void main() {
               const take = Math.min(
                 Math.max(0, liquid[k] - evaporation),
                 water[k],
-                35e-5 * dt * state2.pumpPower * heater[k],
+                35e-5 * dt * state2.pumpPower * heater[k] * operation.recoveryRate,
               );
               const heat = take * (L + CP * Math.max(0, temperature[k]));
               water[k] -= take;
@@ -35993,6 +36091,7 @@ void main() {
             state2.waterOut += use;
           }
           phases();
+          recordWetSurface();
           const reverse = state2.steps % 2;
           for (let n = 0; n < COUNT; n++) {
             const a = reverse ? COUNT - 1 - n : n,
@@ -36016,6 +36115,7 @@ void main() {
             }
           }
           phases();
+          recordWetSurface();
           let mean = 0,
             weight = 0;
           for (let k = 0; k < COUNT; k++) {
@@ -36026,7 +36126,7 @@ void main() {
           const ready =
             active && state2.stored >= 18 && state2.reserve >= 0.28 && mean > -2 && mean < 12;
           state2.stableFor = ready ? state2.stableFor + STEP : 0;
-          if (state2.eventAt === null && state2.stableFor >= 10) {
+          if (state2.eventAt === null && state2.stableFor >= operation.stableSeconds) {
             state2.eventAt = t;
             state2.heating = false;
             state2.eventCount++;
@@ -36042,6 +36142,9 @@ void main() {
             minTemp = Infinity,
             maxTemp = -Infinity,
             changed = 0,
+            erosion = 0,
+            deposition = 0,
+            dryTrace = 0,
             heat = state2.storedHeat;
           for (let k = 0; k < COUNT; k++) {
             heat += enthalpy[k] + vaporHeat[k];
@@ -36050,6 +36153,10 @@ void main() {
             fluid += liquid[k];
             soil += sediment[k];
             changed += trace[k];
+            const delta = sediment[k] - sedimentOrigin[k];
+            erosion += Math.max(0, -delta);
+            deposition += Math.max(0, delta);
+            if (wetHistory[k] > 0.012 && liquid[k] < 3e-3) dryTrace++;
             minTemp = Math.min(minTemp, temperature[k]);
             maxTemp = Math.max(maxTemp, temperature[k]);
           }
@@ -36067,9 +36174,15 @@ void main() {
             minTemp,
             maxTemp,
             changed,
+            surfaceChange: {
+              erodedKilograms: erosion * (SITE.size / (GRID - 1)) ** 2,
+              depositedKilograms: deposition * (SITE.size / (GRID - 1)) ** 2,
+              dryTraceArea: dryTrace * (SITE.size / (GRID - 1)) ** 2,
+            },
             equipment: equipped,
             grid: GRID,
             localOnly: true,
+            operation: { ...operation },
             storedKilograms: state2.stored * (SITE.size / (GRID - 1)) ** 2,
             atmosphere: {
               pressurePa: 9e4,
@@ -36083,6 +36196,8 @@ void main() {
           state: state2,
           equipped,
           fields,
+          sedimentOrigin,
+          wetHistory,
           height,
           liquid,
           temperature,
@@ -36096,6 +36211,11 @@ void main() {
             const result = {
               version: 1,
               equipment: equipped,
+              operation: { ...operation },
+              surfaceHistory: {
+                sedimentOrigin: Array.from(sedimentOrigin),
+                wetHistory: Array.from(wetHistory),
+              },
               state: { ...state2 },
               balance: {
                 water: initialWater,
@@ -36696,6 +36816,8 @@ void main() {
           let ice = 0,
             liquid = 0,
             trace = 0,
+            deposited = 0,
+            eroded = 0,
             count = 0;
           for (let j = 0; j < GRID; j++)
             for (let i = 0; i < GRID; i++) {
@@ -36704,6 +36826,9 @@ void main() {
               ice += model.fields.water[k] - model.liquid[k];
               liquid += model.liquid[k];
               trace += model.fields.trace[k];
+              const delta = model.fields.sediment[k] - model.sedimentOrigin[k];
+              deposited += Math.max(0, delta);
+              eroded += Math.max(0, -delta);
               count++;
             }
           return {
@@ -36712,6 +36837,8 @@ void main() {
             ice: ice / count,
             liquid: liquid / count,
             trace: trace / count,
+            deposited: deposited / count,
+            eroded: eroded / count,
           };
         });
       }
@@ -36801,10 +36928,10 @@ void main() {
                 stage === "before"
                   ? "개입 이전"
                   : !s.heatPower && !s.pumpPower
-                    ? "설비 휴지"
+                    ? "설비 대기"
                     : s.eventAt === null
-                      ? "조건 형성 중"
-                      : "유지 운전 이후",
+                      ? "초기 운전"
+                      : "유지 운전",
               resources: {
                 stored: s.storedKilograms,
                 reserve: s.reserve,
@@ -36812,6 +36939,8 @@ void main() {
                 pumpPower: s.pumpPower,
                 eventAt: s.eventAt,
                 changed: s.changed,
+                operation: s.operation,
+                surfaceChange: s.surfaceChange,
               },
               regions: regions(habitat2.model),
             };
@@ -66196,6 +66325,8 @@ void main() {
           )
             return null;
           const signatures = s.evidence?.sampleSignatures;
+          if (s.evidence?.settlementSurvey != null && !validSurvey(s.evidence.settlementSurvey))
+            return null;
           if (
             signatures != null &&
             (!Array.isArray(signatures) ||
@@ -66276,18 +66407,24 @@ void main() {
       vec4 basinState=mix(texture2D(basinPrevious,siteUV),texture2D(basinCurrent,siteUV),basinMix)*insideSite;
       float frost=smoothstep(.012,.24,basinState.r);
       float wet=smoothstep(.001,.10,basinState.g);
-      float deposited=clamp(basinState.b,-.2,.2);
+      // Net solid displacement and observed wetting remain after the water recedes.
+      // Their locations come from transport history, never from decorative noise.
+      float deposited=smoothstep(.0002,.012,max(0.,basinState.b));
+      float eroded=smoothstep(.0002,.012,max(0.,-basinState.b));
+      float dryTrace=smoothstep(.012,.10,basinState.a)*(1.-wet)*(1.-frost);
+      diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(.86,.81,.76),dryTrace*.46);
+      diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(.77,.78,.8),eroded*.48*(1.-frost));
+      diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.34,.29,.24),deposited*.36*(1.-frost));
       diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*.27,wet);
       diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.49,.53,.54),frost*.82);
-      diffuseColor.rgb*=1.+deposited*.3;
       // Sub-metre aggregate`,
             )
             .replace(
               "roughnessFactor=clamp(mix(.97,.79,materialRock)+(basinStone(basinPosition,.17)-.5)*.045,.73,1.);",
-              "roughnessFactor=mix(clamp(mix(.97,.79,materialRock),.73,1.),.18,wet*(1.-frost));",
+              "roughnessFactor=mix(clamp(mix(.97,.79,materialRock)+deposited*.035-eroded*.045,.7,1.),.18,wet*(1.-frost));",
             );
         };
-        surface.material.customProgramCacheKey = () => `inhabited-basin-v1-${tier2}`;
+        surface.material.customProgramCacheKey = () => `inhabited-basin-v2-${tier2}`;
         surface.material.needsUpdate = true;
         const group = new Group();
         group.name = "sealed-first-settlement";
@@ -66418,8 +66555,8 @@ void main() {
           for (let k = 0; k < GRID * GRID; k++) {
             data[k * 4] = model.fields.water[k] - model.liquid[k];
             data[k * 4 + 1] = model.liquid[k];
-            data[k * 4 + 2] = model.fields.trace[k];
-            data[k * 4 + 3] = 1;
+            data[k * 4 + 2] = model.fields.sediment[k] - model.sedimentOrigin[k];
+            data[k * 4 + 3] = model.wetHistory[k];
           }
           textures[slot].needsUpdate = true;
           uniforms.basinPrevious.value = textures[1 - slot];
@@ -67574,7 +67711,9 @@ void main() {
           );
         if (phase === "arrival") {
           arrivalDrone = createArrivalDrone(environment.surfaceHeightAt);
-          habitat = createHabitatWorld(scene, environment.surface, tier, state.basin);
+          habitat = createHabitatWorld(scene, environment.surface, tier, state.basin, {
+            survey: state.evidence?.settlementSurvey,
+          });
           placeRecorder = createPlaceRecorder(
             renderer,
             scene,

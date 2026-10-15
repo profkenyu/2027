@@ -30073,15 +30073,15 @@ ${builder.flow.code}`;
       let distribution = texture(depthTexture).sample(shadowCoord.xy);
       (depthTexture.isArrayTexture && (distribution = distribution.depth(depthLayer)),
         (distribution = distribution.rg));
-      let mean = distribution.x,
+      let mean2 = distribution.x,
         variance = max$1(1e-7, distribution.y.mul(distribution.y)),
         hardShadow = builder.renderer.reversedDepthBuffer
-          ? step(mean, shadowCoord.z)
-          : step(shadowCoord.z, mean),
+          ? step(mean2, shadowCoord.z)
+          : step(shadowCoord.z, mean2),
         output3 = float(1).toVar();
       return (
         If(hardShadow.notEqual(1), () => {
-          let d = shadowCoord.z.sub(mean),
+          let d = shadowCoord.z.sub(mean2),
             p_max = variance.div(variance.add(d.mul(d)));
           ((p_max = clamp2(sub(p_max, 0.3).div(0.65))), output3.assign(max$1(hardShadow, p_max)));
         }),
@@ -30167,7 +30167,7 @@ ${builder.flow.code}`;
       );
     },
     VSMPassVertical = Fn(({ samples, radius, size, shadowPass, depthLayer }) => {
-      let mean = float(0).toVar("meanVertical"),
+      let mean2 = float(0).toVar("meanVertical"),
         squaredMean = float(0).toVar("squareMeanVertical"),
         uvStride = samples.lessThanEqual(float(1)).select(float(0), float(2).div(samples.sub(1))),
         uvStart = samples.lessThanEqual(float(1)).select(float(0), float(-1));
@@ -30178,16 +30178,16 @@ ${builder.flow.code}`;
           );
         (shadowPass.value.isArrayTexture && (depth3 = depth3.depth(depthLayer)),
           (depth3 = depth3.x),
-          mean.addAssign(depth3),
+          mean2.addAssign(depth3),
           squaredMean.addAssign(depth3.mul(depth3)));
       }),
-        mean.divAssign(samples),
+        mean2.divAssign(samples),
         squaredMean.divAssign(samples));
-      let std_dev = sqrt(squaredMean.sub(mean.mul(mean)).max(0));
-      return vec2(mean, std_dev);
+      let std_dev = sqrt(squaredMean.sub(mean2.mul(mean2)).max(0));
+      return vec2(mean2, std_dev);
     }),
     VSMPassHorizontal = Fn(({ samples, radius, size, shadowPass, depthLayer }) => {
-      let mean = float(0).toVar("meanHorizontal"),
+      let mean2 = float(0).toVar("meanHorizontal"),
         squaredMean = float(0).toVar("squareMeanHorizontal"),
         uvStride = samples.lessThanEqual(float(1)).select(float(0), float(2).div(samples.sub(1))),
         uvStart = samples.lessThanEqual(float(1)).select(float(0), float(-1));
@@ -30197,15 +30197,15 @@ ${builder.flow.code}`;
             add(screenCoordinate.xy, vec2(uvOffset, 0).mul(radius)).div(size),
           );
         (shadowPass.value.isArrayTexture && (distribution = distribution.depth(depthLayer)),
-          mean.addAssign(distribution.x),
+          mean2.addAssign(distribution.x),
           squaredMean.addAssign(
             add(distribution.y.mul(distribution.y), distribution.x.mul(distribution.x)),
           ));
       }),
-        mean.divAssign(samples),
+        mean2.divAssign(samples),
         squaredMean.divAssign(samples));
-      let std_dev = sqrt(squaredMean.sub(mean.mul(mean)).max(0));
-      return vec2(mean, std_dev);
+      let std_dev = sqrt(squaredMean.sub(mean2.mul(mean2)).max(0));
+      return vec2(mean2, std_dev);
     }),
     _shadowFilterLib = [BasicShadowFilter, PCFShadowFilter, PCFSoftShadowFilter, VSMShadowFilter],
     _rendererState,
@@ -60999,6 +60999,14 @@ body.ti-voyage #ti-transfer-trigger {
         current: this.current,
         total: this.model?.sites?.length ?? 0,
         records: [...this.records],
+        observations: (this.model?.sites ?? [])
+          .slice(0, this.current)
+          .map((site) => ({
+            id: site.id,
+            coherence: site.coherence,
+            density: site.density,
+            reflectance: site.reflectance,
+          })),
         target: this.target
           ? {
               id: this.target.id,
@@ -62781,12 +62789,12 @@ body.ti-voyage #ti-transfer-trigger {
         for (let wing of this.wings) wing.rotation.z = wing.userData.side * this.lidTilt * 0.78;
       let c = this.contacts(),
         rest = D.wheelR + D.clearance,
-        mean = (a) => a.reduce((t, i) => t + c[i].y, 0) / a.length,
-        front = mean([0, 1]),
-        rear = mean([6, 7]),
-        left = mean([0, 2, 4, 6]),
-        right = mean([1, 3, 5, 7]),
-        tDeck = mean([0, 1, 2, 3, 4, 5, 6, 7]) + rest,
+        mean2 = (a) => a.reduce((t, i) => t + c[i].y, 0) / a.length,
+        front = mean2([0, 1]),
+        rear = mean2([6, 7]),
+        left = mean2([0, 2, 4, 6]),
+        right = mean2([1, 3, 5, 7]),
+        tDeck = mean2([0, 1, 2, 3, 4, 5, 6, 7]) + rest,
         tPitch = Math.atan2(front - rear, D.wheelBase * 2),
         tRoll = Math.atan2(right - left, D.track * 2);
       if (!this.settled)
@@ -64433,7 +64441,7 @@ body.ti-voyage #ti-transfer-trigger {
         samples.push({ dx, dz, h: heightAt(cx + dx, cz + dz) });
       }
     }
-    let mean = samples.reduce((sum, p) => sum + p.h, 0) / samples.length,
+    let mean2 = samples.reduce((sum, p) => sum + p.h, 0) / samples.length,
       xx = 0,
       zz = 0,
       xh = 0,
@@ -64441,14 +64449,14 @@ body.ti-voyage #ti-transfer-trigger {
     for (let p of samples)
       ((xx += p.dx * p.dx),
         (zz += p.dz * p.dz),
-        (xh += p.dx * (p.h - mean)),
-        (zh += p.dz * (p.h - mean)));
+        (xh += p.dx * (p.h - mean2)),
+        (zh += p.dz * (p.h - mean2)));
     let ax = xh / Math.max(xx, 1e-6),
       az = zh / Math.max(zz, 1e-6),
       residual2 = 0,
       maxResidual = 0;
     for (let p of samples) {
-      let residual = Math.abs(p.h - (mean + ax * p.dx + az * p.dz));
+      let residual = Math.abs(p.h - (mean2 + ax * p.dx + az * p.dz));
       ((residual2 += residual * residual), (maxResidual = Math.max(maxResidual, residual)));
     }
     let feet = [];
@@ -64886,14 +64894,14 @@ body.ti-voyage #ti-transfer-trigger {
           this.core.add(sill),
           bayFrames.push(sill));
         for (let axle of [-C.vehicle.chassis.wheelBase, C.vehicle.chassis.wheelBase]) {
-          let clamp11 = new Mesh(new BoxGeometry(0.08, 0.18, 0.25), metal);
-          ((clamp11.position.y = this.dock.floorY + C.vehicle.chassis.wheelR),
-            (clamp11.userData.side = side),
-            (clamp11.userData.axle = axle),
-            (clamp11.userData.designRole = "wheel-hold-down"),
-            this.core.add(clamp11),
-            this.holdDowns.push(clamp11),
-            bayFrames.push(clamp11));
+          let clamp12 = new Mesh(new BoxGeometry(0.08, 0.18, 0.25), metal);
+          ((clamp12.position.y = this.dock.floorY + C.vehicle.chassis.wheelR),
+            (clamp12.userData.side = side),
+            (clamp12.userData.axle = axle),
+            (clamp12.userData.designRole = "wheel-hold-down"),
+            this.core.add(clamp12),
+            this.holdDowns.push(clamp12),
+            bayFrames.push(clamp12));
         }
       }
       (this.setHoldDown(0),
@@ -65533,9 +65541,9 @@ body.ti-voyage #ti-transfer-trigger {
     }
     setHoldDown(progress = 0, localZ = -0.58) {
       this.holdProgress = Math.max(0, Math.min(1, progress));
-      for (let clamp11 of this.holdDowns)
-        ((clamp11.position.x = clamp11.userData.side * (0.96 - this.holdProgress * 0.225)),
-          (clamp11.position.z = localZ + clamp11.userData.axle));
+      for (let clamp12 of this.holdDowns)
+        ((clamp12.position.x = clamp12.userData.side * (0.96 - this.holdProgress * 0.225)),
+          (clamp12.position.z = localZ + clamp12.userData.axle));
     }
     dockingPoint(localZ, localX = 0, localY = null, target = new Vector3()) {
       let yaw = this.group.rotation.y,
@@ -67829,6 +67837,45 @@ body.ti-voyage #ti-transfer-trigger {
   var MIGRATION_CUTS = Object.freeze([30, 50, 102, 111]),
     FLEET_FRONT_DURATION = 14,
     MIGRATION_DURATION = MIGRATION_CUTS[3] + FLEET_FRONT_DURATION;
+  var clamp10 = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v)),
+    mean = (rows, key3) => rows.reduce((sum, row) => sum + row[key3], 0) / rows.length;
+  function surveyConditions(ledger, geology) {
+    let samples = ledger?.samples,
+      water = ledger?.water,
+      sites = geology?.observations;
+    if (
+      !Array.isArray(samples) ||
+      samples.length !== 6 ||
+      !water?.confirmed ||
+      !Number.isFinite(water.thermalDeltaK) ||
+      !Number.isFinite(water.particleDensity) ||
+      !Array.isArray(sites) ||
+      sites.length !== 3 ||
+      sites.some((s) => ![s.coherence, s.density, s.reflectance].every(Number.isFinite))
+    )
+      return null;
+    let names = samples.map((s) => String(s.sample).toUpperCase());
+    return {
+      version: 1,
+      insulation: clamp10(names.filter((s) => /SILICATE|CARBON|CERAMIC/.test(s)).length / 2),
+      conduction: clamp10(names.filter((s) => /^FE[–-]|ALLOY|CONDUCTIVE|METAL/.test(s)).length / 2),
+      thermalDemand: clamp10(Math.abs(water.thermalDeltaK) / 32),
+      fines: clamp10(water.particleDensity),
+      correlation: clamp10(mean(sites, "coherence")),
+      substrate: clamp10(mean(sites, "density") * 0.65 + (1 - mean(sites, "reflectance")) * 0.35),
+      sampleCount: samples.length,
+      siteCount: sites.length,
+    };
+  }
+  var BASE_OPERATION = Object.freeze({
+    version: 1,
+    source: "baseline",
+    heatCost: 1,
+    pumpCost: 1,
+    heatTransfer: 1,
+    recoveryRate: 1,
+    stableSeconds: 10,
+  });
   var POST_KEY = "beyond-known:post-mission:v1",
     POST_PHASES = Object.freeze({
       migration: {
@@ -67840,7 +67887,7 @@ body.ti-voyage #ti-transfer-trigger {
       arrival: { file: "arrival.html", start: 68, duration: 180, openEnded: !0, next: "ending" },
       ending: { file: "ending.html", start: 0, duration: 18, openEnded: !0, next: null },
     }),
-    clamp10 = (x, a, b) => Math.max(a, Math.min(b, x));
+    clamp11 = (x, a, b) => Math.max(a, Math.min(b, x));
   function savePostMission(state) {
     try {
       return (sessionStorage.setItem(POST_KEY, JSON.stringify(state)), !0);
@@ -67871,11 +67918,12 @@ body.ti-voyage #ti-transfer-trigger {
         samples: 6,
         water: !0,
         nodes: 3,
-        temperature: clamp10(environment.temperature, 100, 500),
-        energy: clamp10(environment.energy, 0, 1),
-        radiation: clamp10(environment.radiation, 0, 1),
+        temperature: clamp11(environment.temperature, 100, 500),
+        energy: clamp11(environment.energy, 0, 1),
+        radiation: clamp11(environment.radiation, 0, 1),
         distance: Math.max(0, ledger.journey?.distance ?? 0),
         sampleSignatures: sampleSignatures(ledger.samples),
+        settlementSurvey: surveyConditions(ledger, geology),
       },
       outcome: null,
     };

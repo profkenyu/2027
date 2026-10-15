@@ -132,6 +132,28 @@
         .matte {
           height: 6vh;
         }
+      }</style
+    ><style>
+      #vehicle-preview-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 8px 12px;
+        color: #b8c3cb;
+        font:
+          10px/1.4 Arial,
+          sans-serif;
+        letter-spacing: 0.12em;
+        text-decoration: none;
+        touch-action: manipulation;
+      }
+      #vehicle-preview-link:hover {
+        color: #fff;
+      }
+      #vehicle-preview-link:focus-visible {
+        outline: 1px solid #b8d2df;
+        outline-offset: 2px;
       }
     </style></head
   ><body
@@ -141,6 +163,11 @@
     ><footer
       ><span id="credit">© 2026 KIM GUNWOO</span
       ><nav
+        ><a
+          id="vehicle-preview-link"
+          href="preview.html?from=space-01.html"
+          aria-label="로버 · 탐사선 · 이주선 외장 보기"
+          >PREVIEW</a
         ><button id="sound" aria-label="탐사선 사운드 켜기" aria-pressed="false"
           ><svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M11 5 6 9H3v6h3l5 4Z" />

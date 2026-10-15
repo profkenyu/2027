@@ -2262,6 +2262,42 @@
           bottom: calc(var(--frame-bottom) + 28px);
           margin: 0;
         }
+      }</style
+    ><style>
+      #vehicle-preview-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 8px 12px;
+        color: #b8c3cb;
+        font:
+          10px/1.4 Arial,
+          sans-serif;
+        letter-spacing: 0.12em;
+        text-decoration: none;
+        touch-action: manipulation;
+      }
+      #vehicle-preview-link:hover {
+        color: #fff;
+      }
+      #vehicle-preview-link:focus-visible {
+        outline: 1px solid #b8d2df;
+        outline-offset: 2px;
+      }
+      #vehicle-preview-link {
+        position: fixed;
+        z-index: 91;
+        left: max(16px, env(safe-area-inset-left));
+        bottom: max(24px, calc(env(safe-area-inset-bottom) + 18px));
+        background: #0b1014b3;
+        border: 1px solid #35404a55;
+      }
+      @media (max-width: 600px) {
+        #vehicle-preview-link {
+          left: max(12px, env(safe-area-inset-left));
+          font-size: 9px;
+        }
       }
     </style></head
   ><body
@@ -89069,6 +89105,27 @@ body.ti-prologue-out #ti-opening-blueprints.bp-residual-title {
       var FLEET_FRONT_DURATION = 14;
       var MIGRATION_DURATION = MIGRATION_CUTS[3] + FLEET_FRONT_DURATION;
 
+      // works/first_dawn/habitat/conditions.js
+      function validSurvey(s) {
+        return (
+          s?.version === 1 &&
+          s.sampleCount === 6 &&
+          s.siteCount === 3 &&
+          ["insulation", "conduction", "thermalDemand", "fines", "correlation", "substrate"].every(
+            (k) => Number.isFinite(s[k]) && s[k] >= 0 && s[k] <= 1,
+          )
+        );
+      }
+      var BASE_OPERATION = Object.freeze({
+        version: 1,
+        source: "baseline",
+        heatCost: 1,
+        pumpCost: 1,
+        heatTransfer: 1,
+        recoveryRate: 1,
+        stableSeconds: 10,
+      });
+
       // works/shared/post-mission-state.js
       var POST_KEY = "beyond-known:post-mission:v1";
       var POST_PHASES = Object.freeze({
@@ -89119,6 +89176,8 @@ body.ti-prologue-out #ti-opening-blueprints.bp-residual-title {
           )
             return null;
           const signatures = s.evidence?.sampleSignatures;
+          if (s.evidence?.settlementSurvey != null && !validSurvey(s.evidence.settlementSurvey))
+            return null;
           if (
             signatures != null &&
             (!Array.isArray(signatures) ||
@@ -89255,7 +89314,7 @@ body.ti-prologue-out #ti-opening-blueprints.bp-residual-title {
         box.hidden = false;
         box.textContent = "설계도를 시작할 수 없습니다. 페이지를 다시 열어주세요.";
         console.error(error2);
-      }
+      }</script
       /*! Bundled license information:
 
 three/build/three.core.js:
@@ -89344,6 +89403,11 @@ animejs/dist/modules/index.js:
    * @copyright 2026 - Julian Garnier
    *)
 */
-    </script></body
+    ><a
+      id="vehicle-preview-link"
+      href="preview.html?from=index.html"
+      aria-label="로버 · 탐사선 · 이주선 외장 보기"
+      >PREVIEW</a
+    ></body
   ></html
 >

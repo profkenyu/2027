@@ -1,3 +1,23 @@
+## 기체 외장 보기와 페이지 연결 — 2026-10-15
+
+- 배포용 `preview.html`은 로버, 탐사선, TR-X01~TR-X06의 외장 이미지 14장과 역할 설명을 포함합니다. 이미지를 HTML에 내장하므로 별도 이미지 폴더를 업로드할 필요가 없습니다.
+- 10개 작품 페이지의 PREVIEW 링크는 같은 폴더의 `preview.html?from=페이지명`으로 이동합니다. RETURN은 허용된 작품 페이지로만 연결하며, 직접 들어온 경우 `index.html`로 돌아갑니다.
+- 원본 `works/vehicle-preview/catalog.js`: 기체명, 작품 속 역할, 외장 설명. `assets/`: 현재 모델을 촬영한 JPEG 이미지.
+- `tools/capture-vehicle-preview.mjs`: 모델 변경 후 이미지를 다시 촬영합니다. `tools/build-vehicle-preview.mjs`: 독립 페이지와 각 페이지의 링크를 생성하며 기본 빌드에 포함됩니다.
+- 기존 `output/qa/aerospace-upgrade/preview.html`도 같은 내용으로 생성됩니다. 이 사본의 RETURN은 원본 프로젝트의 페이지로 연결됩니다.
+- 배포 파일은 HTML 11개와 `planet-engine.js` 1개입니다. `SHA256SUMS`는 이 12개 파일의 무결성 확인용 목록입니다.
+
+## 탐사와 정착, 시간별 기록 — 2026-10-15
+
+- `engine/core/geological-memory.js`: 완료한 지질 관측 지점의 수치 기록을 `observations`에 포함합니다.
+- `works/shared/post-mission-state.js`: 재료·수분·지질 기록을 `evidence.settlementSurvey`에 묶어 이주·도착 단계로 전달하고 검증합니다.
+- `works/first_dawn/habitat/conditions.js`: 기록으로부터 가열기·회수 펌프의 운전 계수를 정합니다. 대응 규칙은 작품 내 가정이며, 입력 범위와 저장 파일의 계수를 검증합니다. 기존 장소의 운전 조건은 유지됩니다.
+- `habitat/model.js`: `operation`은 해당 장소의 운전 조건입니다. `surfaceHistory.sedimentOrigin`은 표토량 비교 기준, `wetHistory`는 계산 중 액체 물이 있었던 이력입니다. 물·열·표토의 보존식은 유지됩니다.
+- `habitat/world.js`: 상태 텍스처의 R/G는 얼음·액체 물, B는 표토량 변화, A는 습윤 이력입니다. 색·표면 거칠기만 상태에 따라 변합니다. 두 텍스처를 번갈아 사용하며 기존 10Hz 계산 사이를 보간합니다.
+- `habitat/record.js`: 동일 카메라의 실제 촬영과 함께 운전 조건, 물 저장량, 표면 변화, 구역별 침식·퇴적을 기록합니다.
+- `works/shared/place-sequence.js`: 같은 카메라·장소의 원본 기록을 최대 8개 연결합니다. 6초 관찰 후 2.4초 전환, 한 차례 재생 후 정지. 동작 줄이기에서는 수동 사진 전환만 사용합니다. 숨겨진 탭과 화면 밖에서는 애니메이션을 멈춥니다.
+- `works/shared/place-archive-view.js`, `works/terra_incognita/field-archive.dev.html`: 아카이브의 기록 전환, 운전 조건 설명과 한국어 용어. 최신 검증 결과는 `AUDIT_REPORT.md`의 2026-10-15 항목을 참조합니다.
+
 ## 현재 제작·검증 경로 — 2026-10-14
 
 - 제작 원본: `../v38.0 (빌드도구포함)/`. 이 20th 폴더는 서버에 전달하는 읽기 쉬운 생성 파일입니다.
