@@ -147,13 +147,19 @@
         letter-spacing: 0.12em;
         text-decoration: none;
         touch-action: manipulation;
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+        border-radius: 0;
       }
       #vehicle-preview-link:hover {
         color: #fff;
+        text-decoration: underline;
       }
       #vehicle-preview-link:focus-visible {
-        outline: 1px solid #b8d2df;
-        outline-offset: 2px;
+        outline: none;
+        text-decoration: underline;
+        text-underline-offset: 4px;
       }
     </style></head
   ><body
@@ -163,16 +169,16 @@
     ><footer
       ><span id="credit">© 2026 KIM GUNWOO</span
       ><nav
-        ><a
-          id="vehicle-preview-link"
-          href="preview.html?from=space-01.html"
-          aria-label="로버 · 탐사선 · 이주선 외장 보기"
-          >PREVIEW</a
         ><button id="sound" aria-label="탐사선 사운드 켜기" aria-pressed="false"
           ><svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M11 5 6 9H3v6h3l5 4Z" />
             <g class="sound-waves"><path d="M15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14" /></g>
             <path class="sound-muted" d="m16 9 6 6m0-6-6 6" /></svg></button
+        ><a
+          id="vehicle-preview-link"
+          href="preview.html?from=space-01.html"
+          aria-label="로버 · 탐사선 · 이주선 외장 보기"
+          >PREVIEW</a
         ><a id="return" href="index.html">RETURN</a></nav
       ></footer
     ><script type="module">
@@ -33760,6 +33766,16 @@ void main() {
       ground*=1.-fracture*.16;
       vec3 color=ground*(.055+light*2.1);`,
           );
+        } else if (passage2 === 3) {
+          planetMaterial.fragmentShader = planetMaterial.fragmentShader
+            .replace(
+              "vec3 color=ground*(.055+light*2.1);",
+              `
+      float deposit=smoothstep(.36,.64,terrain(N*9.+vec3(3,7,11)))*(.6+.4*abs(N.y));
+      ground=mix(ground,vec3(.34,.35,.34),deposit*.78);
+      vec3 color=ground*(.055+light*2.1);`,
+            )
+            .replace("vec3(.15,.12,.075)", "vec3(.12,.14,.15)");
         } else {
           planetMaterial.fragmentShader = planetMaterial.fragmentShader.replace(
             "vec3 color=ground*(.055+light*2.1);",
@@ -33793,15 +33809,15 @@ void main() {
         void main(){vec3 N=normalize(worldN);float mu=clamp(dot(normalize(viewN),normalize(-viewPos)),0.,1.);
           float rim=pow(1.-mu,2.5);float day=smoothstep(-.2,.6,dot(N,sun));
           float strata=${passage2 === 2 ? ".68+.18*sin(N.y*13.+sin(N.x*9.)*2.)+.14*sin(N.z*19.+N.x*7.)" : ".82+.18*sin(N.y*33.+N.x*3.)"};
-          float alpha=(${passage2 === 2 ? ".10+rim*.34" : ".14+rim*.68"})*(.22+day*.78)*strata*smoothstep(0.,.12,mu);
-          vec3 haze=${passage2 === 2 ? "mix(vec3(.15,.19,.23),vec3(.40,.49,.54),day)" : "mix(vec3(.19,.23,.25),vec3(.68,.46,.23),day)"};
+          float alpha=(${passage2 === 2 || passage2 === 3 ? ".10+rim*.34" : ".14+rim*.68"})*(.22+day*.78)*strata*smoothstep(0.,.12,mu);
+          vec3 haze=${passage2 === 2 || passage2 === 3 ? "mix(vec3(.15,.19,.23),vec3(.40,.49,.54),day)" : "mix(vec3(.19,.23,.25),vec3(.68,.46,.23),day)"};
           gl_FragColor=vec4(haze,alpha);
           #include <tonemapping_fragment>
           #include <colorspace_fragment>
         }`,
             }),
           );
-          atmosphere.scale.setScalar(passage2 === 2 ? 1.018 : 1.055);
+          atmosphere.scale.setScalar(passage2 === 2 || passage2 === 3 ? 1.018 : 1.055);
           atmosphere.position.copy(planet.position);
           scene2.add(atmosphere);
         }
@@ -55934,6 +55950,7 @@ void main() {
         terra: { temperature: 246, radiation: 0.32 },
         desert: { temperature: 218, radiation: 0.56 },
         granite: { temperature: 233, radiation: 0.21 },
+        candidate: { temperature: 226, radiation: 0.27 },
       };
       function storage() {
         try {
@@ -55992,7 +56009,8 @@ void main() {
         const t2 = read(TRANSFER_KEY);
         return t2?.version === 1 &&
           ((t2.source === "terra" && t2.target === "desert") ||
-            (t2.source === "desert" && t2.target === "granite")) &&
+            (t2.source === "desert" && t2.target === "granite") ||
+            (t2.source === "granite" && t2.target === "candidate")) &&
           ["flight", "arrival"].includes(t2.stage) &&
           /^[0-9a-f]{6}$/i.test(t2.seed) &&
           Number.isFinite(t2.elapsed) &&
@@ -56020,9 +56038,10 @@ void main() {
       // works/space/main.js
       var params = new URLSearchParams(location.search);
       var test = params.has("test");
-      var passage = document.body.dataset.passage === "2" ? 2 : 1;
-      var source = passage === 2 ? "desert" : "terra";
-      var destination = passage === 2 ? "planet-03.html" : "planet-02.html";
+      var passage = Number(document.body.dataset.passage || 1);
+      var source = passage === 3 ? "granite" : passage === 2 ? "desert" : "terra";
+      var destination =
+        passage === 3 ? "planet-04.html" : passage === 2 ? "planet-03.html" : "planet-02.html";
       var cuts = passage === 2 ? [26, 44] : CUTS;
       var tier = ["high", "mid", "low"].includes(params.get("quality"))
         ? params.get("quality")

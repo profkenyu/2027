@@ -66,7 +66,7 @@
         --dim: #9a9a97;
         --signal: #c65d22;
         --green: #536e5b;
-        --pad: max(16px, 1.875vw);
+        --pad: max(16px, 1.875vw, env(safe-area-inset-left), env(safe-area-inset-right));
         --columns: 4.06vw 16.4vw 16.4vw minmax(84px, 1fr);
         --row: 20px;
       }
@@ -351,6 +351,7 @@
         font-size: 10px;
         cursor: pointer;
         white-space: nowrap;
+        min-height: 44px;
       }
       .exports button:focus-visible {
         outline: 1px solid var(--signal);
@@ -383,7 +384,7 @@
           font-size: 12px;
         }
         .site-header {
-          height: 82px;
+          height: calc(max(14px, env(safe-area-inset-top)) + 82px);
           grid-template-columns: 42px 72px minmax(0, 1fr);
           padding-top: max(14px, env(safe-area-inset-top));
         }
@@ -393,25 +394,30 @@
           line-height: 20px;
         }
         .filters {
+          grid-column: 1 / -1;
           position: absolute;
-          top: 46px;
+          top: calc(max(14px, env(safe-area-inset-top)) + 32px);
           left: var(--pad);
           right: var(--pad);
           display: flex;
-          overflow-x: auto;
-          scrollbar-width: none;
-        }
-        .filters::-webkit-scrollbar {
-          display: none;
+          justify-content: space-between;
         }
         .filter {
-          padding-right: 10px;
+          flex: 1 1 0;
+          min-width: 44px;
+          min-height: 44px;
+          padding: 0 2px 4px;
+          font-size: 11px;
+        }
+        .filter[aria-pressed="true"]::after {
+          right: 6px;
+          left: 6px;
         }
         .back {
           top: max(14px, env(safe-area-inset-top));
         }
         .archive {
-          padding-top: 92px;
+          padding-top: calc(max(14px, env(safe-area-inset-top)) + 94px);
         }
         .ledger-head {
           height: 34px;
@@ -443,7 +449,7 @@
           box-shadow: 0 0 0 5px var(--paper);
         }
         .footer {
-          bottom: 12px;
+          bottom: max(12px, env(safe-area-inset-bottom));
           font-size: 8px;
         }
         #fa-footer {
@@ -620,13 +626,19 @@
         letter-spacing: 0.12em;
         text-decoration: none;
         touch-action: manipulation;
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+        border-radius: 0;
       }
       #vehicle-preview-link:hover {
         color: #fff;
+        text-decoration: underline;
       }
       #vehicle-preview-link:focus-visible {
-        outline: 1px solid #b8d2df;
-        outline-offset: 2px;
+        outline: none;
+        text-decoration: underline;
+        text-underline-offset: 4px;
       }
       .preview-actions {
         position: absolute;
@@ -676,6 +688,9 @@
           <button class="filter" type="button" data-filter="granite" aria-pressed="false">
             Planet 03
           </button>
+          <button class="filter" type="button" data-filter="candidate" aria-pressed="false">
+            Planet 04
+          </button>
         </nav>
         <span id="fa-count" class="sr-only" aria-live="polite">00 / 00 observations recorded</span>
         <div class="preview-actions"
@@ -720,6 +735,95 @@
     </main>
     <script>
       (() => {
+        // works/shared/candidate-survey.js
+        var CANDIDATE_SITE = Object.freeze({
+          x: -1400,
+          z: 3300,
+          size: 640,
+          planet: "candidate",
+        });
+        var PRESERVE_X = -1310;
+        var INTERVENTION = Object.freeze({
+          minX: -1475,
+          maxX: -1325,
+          minZ: 3120,
+          maxZ: 3480,
+        });
+        var CANDIDATE_STATIONS = Object.freeze([
+          {
+            id: "P04-001",
+            body: "candidate",
+            planet: "PLANET 04",
+            world: "CANDIDATE BASIN",
+            label: "RESOURCE / PRESERVATION BOUNDARY",
+            ko: "자원 후보와 보존 경계",
+            x: -1320,
+            z: 3280,
+            radius: 8,
+            order: 0,
+            capture: {
+              profile: "wide",
+              lens: "FOLLOW CAMERA",
+              viewpoint: "ROVER FOLLOW / BOUNDARY",
+              aspect: 1.6,
+              zoom: 1,
+              projection: "rectilinear",
+            },
+          },
+          {
+            id: "P04-002",
+            body: "candidate",
+            planet: "PLANET 04",
+            world: "CANDIDATE BASIN",
+            label: "LIMITED INSTALLATION FOOTPRINT",
+            ko: "설비 설치 범위",
+            x: -1410,
+            z: 3300,
+            radius: 8,
+            order: 1,
+            capture: {
+              profile: "wide",
+              lens: "FOLLOW CAMERA",
+              viewpoint: "ROVER FOLLOW / FOOTPRINT",
+              aspect: 1.6,
+              zoom: 1,
+              projection: "rectilinear",
+            },
+          },
+          {
+            id: "P04-003",
+            body: "candidate",
+            planet: "PLANET 04",
+            world: "CANDIDATE BASIN",
+            label: "SURFACE REFERENCE / NO INTERVENTION",
+            ko: "개입 전 지표 기준 기록",
+            x: -1450,
+            z: 3220,
+            radius: 8,
+            order: 2,
+            capture: {
+              profile: "wide",
+              lens: "FOLLOW CAMERA",
+              viewpoint: "ROVER FOLLOW / REFERENCE",
+              aspect: 1.6,
+              zoom: 1,
+              projection: "rectilinear",
+            },
+          },
+        ]);
+        function validDecision(d) {
+          return (
+            d?.version === 1 &&
+            d.planet === "candidate" &&
+            d.status === "limited-settlement" &&
+            d.preserveX === PRESERVE_X &&
+            Object.keys(INTERVENTION).every((k) => d.intervention?.[k] === INTERVENTION[k]) &&
+            Array.isArray(d.observations) &&
+            d.observations.length === 3 &&
+            CANDIDATE_STATIONS.every((s) => d.observations.includes(s.id))
+          );
+        }
+
         // works/shared/exhibition-store.js
         var EXHIBITION_DB = "beyond-known-place-v1";
         var connection;
@@ -1099,6 +1203,7 @@
           "terra",
           "desert",
           "granite",
+          "candidate",
           "migration",
           "arrival",
         ]);
@@ -1107,7 +1212,7 @@
             const source = JSON.parse(storage.getItem(VEHICLE_ARCHIVE_KEY) || "null");
             if (source?.version !== 1) return [];
             return (Array.isArray(source.records) ? source.records : [])
-              .slice(0, 8)
+              .slice(0, 10)
               .filter(
                 (r) =>
                   r &&
@@ -1129,7 +1234,7 @@
         // engine/core/field-archive.js
         var FIELD_ARCHIVE_VERSION = 4;
         var DEFAULT_FIELD_ARCHIVE_KEY = "terra-incognita:field-archive:v4";
-        var FIELD_ARCHIVE_CAPACITY = 24;
+        var FIELD_ARCHIVE_CAPACITY = 32;
         var finite = (value, fallback = 0) =>
           Number.isFinite(Number(value)) ? Number(value) : fallback;
         var clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -1611,6 +1716,11 @@
                 s.evidence.nodes !== 3)
             )
               return null;
+            if (
+              s.evidence?.settlementDecision != null &&
+              !validDecision(s.evidence.settlementDecision)
+            )
+              return null;
             const signatures = s.evidence?.sampleSignatures;
             if (s.evidence?.settlementSurvey != null && !validSurvey(s.evidence.settlementSurvey))
               return null;
@@ -1814,6 +1924,14 @@
             resolved: false,
             capture: archiveCaptureProfile({ id, body, order }),
           }));
+          FALLBACK.push(
+            ...CANDIDATE_STATIONS.map((s) => ({
+              ...s,
+              archiveRole: "unresolved",
+              resolved: false,
+              capture: archiveCaptureProfile(s),
+            })),
+          );
           const byId = (items) => new Map(items.map((item) => [item.id, item]));
           const escape = (value) =>
             String(value ?? "").replace(
@@ -1827,7 +1945,7 @@
             storage = null;
           }
           const source = readFieldArchive(storage);
-          const bodyOrder = ["terra", "desert", "granite"];
+          const bodyOrder = ["terra", "desert", "granite", "candidate"];
           const fallbackById = byId(FALLBACK);
           const storedStations = source.stations
             .filter((station) => fallbackById.has(station.id))
@@ -2096,7 +2214,7 @@
           let returnPage = "planet-01.html";
           try {
             const saved = sessionStorage.getItem("terra-incognita:last-planet");
-            if (/^planet-0[123]\.html$/.test(saved)) returnPage = saved;
+            if (/^planet-0[1234]\.html$/.test(saved)) returnPage = saved;
           } catch {}
           if (returnLink) returnLink.href = returnPage;
           const post = readPostMission();

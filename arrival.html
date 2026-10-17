@@ -252,13 +252,19 @@
         letter-spacing: 0.12em;
         text-decoration: none;
         touch-action: manipulation;
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+        border-radius: 0;
       }
       #vehicle-preview-link:hover {
         color: #fff;
+        text-decoration: underline;
       }
       #vehicle-preview-link:focus-visible {
-        outline: 1px solid #b8d2df;
-        outline-offset: 2px;
+        outline: none;
+        text-decoration: underline;
+        text-underline-offset: 4px;
       }
     </style></head
   ><body data-phase="arrival">
@@ -275,16 +281,16 @@
     <footer
       ><span id="credit">© 2026 KIM GUNWOO</span
       ><nav
-        ><a
-          id="vehicle-preview-link"
-          href="preview.html?from=arrival.html"
-          aria-label="로버 · 탐사선 · 이주선 외장 보기"
-          >PREVIEW</a
         ><button id="sound" aria-label="사운드 켜기" title="사운드 켜기" aria-pressed="false"
           ><svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M11 5 6 9H3v6h3l5 4Z" />
             <g class="sound-waves"><path d="M15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14" /></g>
             <path class="sound-muted" d="m16 9 6 6m0-6-6 6" /></svg></button
+        ><a
+          id="vehicle-preview-link"
+          href="preview.html?from=arrival.html"
+          aria-label="로버 · 탐사선 · 이주선 외장 보기"
+          >PREVIEW</a
         ><button id="replay" hidden>REPLAY</button
         ><a id="archive" href="field-archive.html" hidden>FIELD ARCHIVE</a
         ><a id="return" href="index.html">RETURN</a></nav
@@ -35765,6 +35771,95 @@ void main() {
         });
       }
 
+      // works/shared/candidate-survey.js
+      var CANDIDATE_SITE = Object.freeze({
+        x: -1400,
+        z: 3300,
+        size: 640,
+        planet: "candidate",
+      });
+      var PRESERVE_X = -1310;
+      var INTERVENTION = Object.freeze({
+        minX: -1475,
+        maxX: -1325,
+        minZ: 3120,
+        maxZ: 3480,
+      });
+      var CANDIDATE_STATIONS = Object.freeze([
+        {
+          id: "P04-001",
+          body: "candidate",
+          planet: "PLANET 04",
+          world: "CANDIDATE BASIN",
+          label: "RESOURCE / PRESERVATION BOUNDARY",
+          ko: "자원 후보와 보존 경계",
+          x: -1320,
+          z: 3280,
+          radius: 8,
+          order: 0,
+          capture: {
+            profile: "wide",
+            lens: "FOLLOW CAMERA",
+            viewpoint: "ROVER FOLLOW / BOUNDARY",
+            aspect: 1.6,
+            zoom: 1,
+            projection: "rectilinear",
+          },
+        },
+        {
+          id: "P04-002",
+          body: "candidate",
+          planet: "PLANET 04",
+          world: "CANDIDATE BASIN",
+          label: "LIMITED INSTALLATION FOOTPRINT",
+          ko: "설비 설치 범위",
+          x: -1410,
+          z: 3300,
+          radius: 8,
+          order: 1,
+          capture: {
+            profile: "wide",
+            lens: "FOLLOW CAMERA",
+            viewpoint: "ROVER FOLLOW / FOOTPRINT",
+            aspect: 1.6,
+            zoom: 1,
+            projection: "rectilinear",
+          },
+        },
+        {
+          id: "P04-003",
+          body: "candidate",
+          planet: "PLANET 04",
+          world: "CANDIDATE BASIN",
+          label: "SURFACE REFERENCE / NO INTERVENTION",
+          ko: "개입 전 지표 기준 기록",
+          x: -1450,
+          z: 3220,
+          radius: 8,
+          order: 2,
+          capture: {
+            profile: "wide",
+            lens: "FOLLOW CAMERA",
+            viewpoint: "ROVER FOLLOW / REFERENCE",
+            aspect: 1.6,
+            zoom: 1,
+            projection: "rectilinear",
+          },
+        },
+      ]);
+      function validDecision(d) {
+        return (
+          d?.version === 1 &&
+          d.planet === "candidate" &&
+          d.status === "limited-settlement" &&
+          d.preserveX === PRESERVE_X &&
+          Object.keys(INTERVENTION).every((k) => d.intervention?.[k] === INTERVENTION[k]) &&
+          Array.isArray(d.observations) &&
+          d.observations.length === 3 &&
+          CANDIDATE_STATIONS.every((s) => d.observations.includes(s.id))
+        );
+      }
+
       // works/first_dawn/habitat/conditions.js
       function validSurvey(s) {
         return (
@@ -35825,8 +35920,17 @@ void main() {
       var CP = 4200;
       var SOIL = 3e4;
       var clamp2 = (x, a, b) => Math.max(a, Math.min(b, x));
-      function createBasinModel(heightAt, saved = null, { equipment = true, survey = null } = {}) {
+      function createBasinModel(
+        heightAt,
+        saved = null,
+        { equipment = true, survey = null, decision = null } = {},
+      ) {
         const equipped = saved?.equipment ?? equipment;
+        const policy = validDecision(decision)
+          ? decision
+          : validDecision(saved?.decision)
+            ? saved.decision
+            : null;
         const operation = Object.freeze(restoreOperation(saved, survey));
         const fields = {};
         for (const name of ["water", "enthalpy", "vapor", "vaporHeat", "sediment", "trace"])
@@ -35860,6 +35964,14 @@ void main() {
             sediment[k] = 0.2 + 0.1 * shelter[k];
             sedimentOrigin[k] = sediment[k];
             heater[k] = Math.exp(-Math.pow((i - 32) / 8, 2) - Math.pow((j - 30) / 21, 4));
+            if (
+              policy &&
+              (x < policy.intervention.minX ||
+                x > policy.intervention.maxX ||
+                z < policy.intervention.minZ ||
+                z > policy.intervention.maxZ)
+            )
+              heater[k] = 0;
             initialHeat += enthalpy[k];
             initialWater += water[k];
             initialSediment += sediment[k];
@@ -36180,6 +36292,8 @@ void main() {
               dryTraceArea: dryTrace * (SITE.size / (GRID - 1)) ** 2,
             },
             equipment: equipped,
+            settlementDecision: policy,
+            directInterventionCells: heater.reduce((count, h) => count + Number(h > 0), 0),
             grid: GRID,
             localOnly: true,
             operation: { ...operation },
@@ -36211,6 +36325,7 @@ void main() {
             const result = {
               version: 1,
               equipment: equipped,
+              ...(policy ? { decision: policy } : {}),
               operation: { ...operation },
               surfaceHistory: {
                 sedimentOrigin: Array.from(sedimentOrigin),
@@ -36986,6 +37101,17 @@ void main() {
         }
         return {
           update,
+          async captureBefore() {
+            try {
+              await writeExhibitionRecord(capture("before", "before"));
+              available = true;
+              completed.add("before");
+              return true;
+            } catch {
+              available = false;
+              return false;
+            }
+          },
           persist: durable,
           flush: async () => {
             await pending;
@@ -38398,6 +38524,7 @@ void main() {
         "terra",
         "desert",
         "granite",
+        "candidate",
         "migration",
         "arrival",
       ]);
@@ -38406,7 +38533,7 @@ void main() {
           const source = JSON.parse(storage.getItem(VEHICLE_ARCHIVE_KEY) || "null");
           if (source?.version !== 1) return [];
           return (Array.isArray(source.records) ? source.records : [])
-            .slice(0, 8)
+            .slice(0, 10)
             .filter(
               (r) =>
                 r &&
@@ -38483,7 +38610,7 @@ void main() {
                 width: canvas.width,
                 height: canvas.height,
               };
-              const next2 = [...records.filter((r) => r.id !== id), record].slice(-8);
+              const next2 = [...records.filter((r) => r.id !== id), record].slice(-10);
               storage.setItem(VEHICLE_ARCHIVE_KEY, JSON.stringify({ version: 1, records: next2 }));
               records = next2;
               void writeExhibitionRecord(record, "vehicles").catch(() => {});
@@ -38747,10 +38874,10 @@ void main() {
 
       // works/first_dawn/ring-motion.js
       var HABITAT_RING_Z = Object.freeze([87.5, -146.5]);
-      var HABITAT_RING_SCALE = Object.freeze([1, 1]);
+      var HABITAT_RING_SCALE = Object.freeze([1.2, 1.2]);
       var HABITAT_RING_RADIUS = Object.freeze(HABITAT_RING_SCALE.map((s) => 176 * s));
-      var HABITAT_RING_PERIOD = Object.freeze([80, 80]);
-      var HABITAT_RING_RATE = (Math.PI * 2) / 80;
+      var HABITAT_RING_PERIOD = Object.freeze([120, 120]);
+      var HABITAT_RING_RATE = (Math.PI * 2) / HABITAT_RING_PERIOD[0];
       var HABITAT_RING_RATES = Object.freeze(HABITAT_RING_PERIOD.map((t) => (Math.PI * 2) / t));
       function updateHabitatRings(ship, phase2, seconds2) {
         const elapsed = phase2 === "arrival" ? MIGRATION_DURATION + seconds2 - 68 : seconds2;
@@ -39656,14 +39783,16 @@ void main() {
       }
 
       // works/first_dawn/cruciform-tail.js
+      var TAIL_RCS_STATION = Object.freeze([-366, 215.5]);
       function addCruciformTail(ship, tier2) {
         const tail = new Group();
         tail.name = "cruciform-tail";
         tail.userData.blueprintPart = 3;
+        tail.userData.role = "fixed-equipment-and-rcs-support";
         ship.add(tail);
         const skin = shipMaterial("titanium", tier2, {
-          color: 6517118,
-          roughness: 0.67,
+          color: 8556698,
+          roughness: 0.64,
           metalness: 0.58,
         });
         const edge = shipMaterial("white", tier2, {
@@ -39674,6 +39803,7 @@ void main() {
           color: 5792620,
           roughness: 0.56,
         });
+        const insulation = shipMaterial("thermal", tier2, { color: 3160126 });
         const definitions = [
           {
             id: "dorsal",
@@ -39721,7 +39851,23 @@ void main() {
           },
         ];
         const size = 0.5;
-        const mounts = [];
+        const mounts = [],
+          fittings = [],
+          seals = [],
+          edgeCaps = [];
+        const paint2 = markingBatch(tail, tier2);
+        const radialSegments = { high: 12, mid: 8, low: 6 }[tier2];
+        const block2 = (parts, dimensions, position) =>
+          parts.push(new BoxGeometry(...dimensions).translate(...position));
+        const brace = (from, to, radius) => {
+          const delta = to.clone().sub(from);
+          const tube = new CylinderGeometry(radius, radius, delta.length(), radialSegments);
+          tube.applyQuaternion(
+            new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), delta.normalize()),
+          );
+          tube.translate(...from.clone().add(to).multiplyScalar(0.5).toArray());
+          fittings.push(tube);
+        };
         for (const d of definitions) {
           const anchor = new Vector3(...d.corners[0])
             .add(new Vector3(...d.corners[3]))
@@ -39740,6 +39886,18 @@ void main() {
             6 * size,
             1.05 * size,
           );
+          const span = d.span * size;
+          const radiusAt = (p) =>
+            d.normal[0] ? Math.abs(p.y - anchor.y) : Math.abs(p.x - anchor.x);
+          const halfThickness = (p) => MathUtils.lerp(3.5, 1, Math.min(1, radiusAt(p) / span));
+          const point = new Vector3(),
+            positions = geometry.attributes.position;
+          for (let i = 0; i < positions.count; i++) {
+            point.fromBufferAttribute(positions, i);
+            point.addScaledVector(n, point.dot(n) * (halfThickness(point) / (3 * size) - 1));
+            positions.setXYZ(i, point.x, point.y, point.z);
+          }
+          geometry.computeVertexNormals();
           const uv = [],
             pos = geometry.attributes.position;
           for (let i = 0; i < pos.count; i++)
@@ -39748,7 +39906,16 @@ void main() {
           const fin = new Mesh(geometry, skin);
           fin.name = `tail-fin-${d.id}`;
           fin.castShadow = fin.receiveShadow = true;
-          fin.userData = { blueprintPart: 3, span: d.span * size };
+          fin.userData = {
+            blueprintPart: 3,
+            span,
+            role:
+              d.id === "dorsal"
+                ? "sensor-support"
+                : d.id === "ventral"
+                  ? "service-keel"
+                  : "rcs-support",
+          };
           tail.add(fin);
           const a = new Vector3(...d.corners[0]),
             b = new Vector3(...d.corners[1]);
@@ -39756,14 +39923,26 @@ void main() {
             caps = [];
           for (const face of [-1, 1]) {
             const points = [a.clone(), b.clone(), b.clone().add(aft), a.clone().add(aft)].map((p) =>
-              p.addScaledVector(n, face * 3.025 * size),
+              p.addScaledVector(n, face * (halfThickness(p) + 0.035)),
             );
             const cross = points[1].clone().sub(points[0]).cross(points[3].clone().sub(points[0]));
             if (cross.dot(n) * face < 0) points.reverse();
             caps.push(fabricatedPanel(points, 0.12 * size, 0.025 * size));
           }
-          tail.add(mergedShipDetail(caps, edge, `tail-edge-${d.id}`, 3));
-          const paint2 = markingBatch(tail, tier2);
+          edgeCaps.push(...caps);
+          if (d.id !== "ventral") {
+            const outward = new Vector3(...d.corners[1]).sub(anchor);
+            outward.z = 0;
+            outward.normalize();
+            for (const face of [-1, 1]) {
+              const seat = anchor.clone().addScaledVector(n, face * 5.2);
+              seat.z += 7;
+              const end = anchor.clone().addScaledVector(outward, span * 0.3);
+              end.z += 2;
+              end.addScaledVector(n, face * (halfThickness(end) + 0.6));
+              brace(seat, end, d.id === "dorsal" ? 1.15 : 0.85);
+            }
+          }
           for (const face of [-1, 1]) {
             const vertical = d.normal[0] === 1,
               side = d.id === "port" ? -1 : 1;
@@ -39782,7 +39961,7 @@ void main() {
             paint2.project("TR-X06", [fin], scaledCentre, right, up, width, height, false, 0.055);
             const sub = scaledCentre.map((v, i) => v - up[i] * (height + 2 * size));
             paint2.project(
-              vertical ? "TAIL / 06" : side < 0 ? "W-L" : "W-R",
+              vertical ? "TAIL / 06" : "RCS / KEEP CLEAR",
               [fin],
               sub,
               right,
@@ -39793,15 +39972,34 @@ void main() {
               0.055,
             );
           }
-          paint2.finish();
         }
-        mounts.push(new BoxGeometry(15 * size, 8 * size, 124 * size).translate(0, 64, -409));
+        paint2.finish();
+        tail.add(mergedShipDetail(edgeCaps, edge, "tail-edge-strips", 3));
+        mounts.push(new BoxGeometry(13, 7, 64).translate(0, 64, -409));
         mounts.push(new BoxGeometry(12 * size, 7 * size, 68 * size).translate(0, -54.5, -419));
         for (const side of [-1, 1])
-          mounts.push(
-            new BoxGeometry(12 * size, 10 * size, 62 * size).translate(side * 181, 0, -362),
-          );
-        tail.add(mergedShipDetail(mounts, root, "tail-root-shoes", 3));
+          mounts.push(new BoxGeometry(10, 10, 33).translate(side * 181, 0, -362));
+        for (const side of [-1, 1]) {
+          block2(fittings, [6, 8, 14], [side * 213, 0, TAIL_RCS_STATION[0]]);
+          block2(seals, [1.3, 9, 15], [side * 209.5, 0, TAIL_RCS_STATION[0]]);
+          block2(seals, [1.2, 10.6, 30], [side * 185, 0, -362]);
+          if (tier2 !== "low")
+            for (const dz of [-12, 12])
+              for (const y of [-3.8, 3.8])
+                block2(fittings, [1.8, 1.2, 1.2], [side * 186.2, y, -362 + dz]);
+        }
+        block2(fittings, [9, 8, 16], [0, 149, -423]);
+        block2(seals, [9.6, 1.3, 16.6], [0, 145, -423]);
+        block2(seals, [6, 0.9, 10], [0, 153.2, -423]);
+        block2(fittings, [8, 1.5, 13], [0, 154.5, -423]);
+        block2(seals, [13.6, 1.1, 60], [0, 67, -409]);
+        if (tier2 !== "low")
+          for (const x of [-5, 5])
+            for (const z of [-434, -409, -384]) block2(fittings, [1.4, 1.2, 1.4], [x, 68, z]);
+        tail.add(
+          mergedShipDetail([...mounts, ...fittings], root, "tail-load-path-and-equipment", 3),
+        );
+        tail.add(mergedShipDetail(seals, insulation, "tail-thermal-breaks", 3));
         return tail;
       }
 
@@ -40160,8 +40358,8 @@ void main() {
             for (let j = 0; j < 6; j++) {
               const a = (j * Math.PI) / 3;
               const at = (r) => [r * Math.cos(a), r * Math.sin(a), z];
-              pipe(at(60), at(rim(170)), 4.2, 3.1);
-              for (const r of [63, rim(164)]) pipe(at(r - 6), at(r + 6), 9.2, 4.15);
+              pipe(at(60), at(rim(170)), 4.8, 3.5);
+              for (const r of [63, rim(164)]) pipe(at(r - 6), at(r + 6), 9.2, 4.75);
             }
             const tubularSpokes = mergedShipDetail(spokes, mats[2], "tubular-ring-spokes", 0);
             tubularSpokes.userData.spokeCount = 6;
@@ -40195,15 +40393,7 @@ void main() {
           blueprintPart = 3;
           block2(1, 0, 0, -401, 130, 110, 163);
           block2(0, 0, 60, -403, 104, 10, 139);
-          const jets = createAttitudeJets(
-            ship,
-            tier2,
-            [
-              [471, 51.5],
-              [-426, 181.5],
-            ],
-            "habitat",
-          );
+          const jets = createAttitudeJets(ship, tier2, [[471, 51.5], TAIL_RCS_STATION], "habitat");
           for (const side of [-1, 1]) {
             beam([side * 40, -16, -315], [side * 142, -16, -390], 18);
             beam([side * 40, 16, -460], [side * 142, 16, -465], 14);
@@ -66324,6 +66514,11 @@ void main() {
               s.evidence.nodes !== 3)
           )
             return null;
+          if (
+            s.evidence?.settlementDecision != null &&
+            !validDecision(s.evidence.settlementDecision)
+          )
+            return null;
           const signatures = s.evidence?.sampleSignatures;
           if (s.evidence?.settlementSurvey != null && !validSurvey(s.evidence.settlementSurvey))
             return null;
@@ -67331,10 +67526,13 @@ void main() {
       var pixelRatio = Math.min(devicePixelRatio, quality.dpr);
       var sunlightOffset = new Vector3(-1400, 2600, 1700);
       var title = document.getElementById("line");
+      var cut = document.getElementById("cut");
+      var loading = document.getElementById("loading");
       var arrivalIntro = document.getElementById("arrival-intro");
       var replay = document.getElementById("replay");
       var archive = document.getElementById("archive");
       var sound = document.getElementById("sound");
+      var cutTimes = phase === "arrival" ? [ARRIVAL_FLEET_AT] : MIGRATION_CUTS;
       var audio = createDeepSpaceAudio(
         tier,
         (on) => {
@@ -67400,8 +67598,8 @@ void main() {
         renderer.setSize(innerWidth, innerHeight);
       }
       var voyageClock = (t) => ((phase === "arrival" ? t + 7 : migrationClock(t)) * 68) / 75;
-      function transitionVeil(t, cut) {
-        const u = MathUtils.clamp((Math.abs(t - cut) - 0.1) / 0.42, 0, 1);
+      function transitionVeil(t, cut2) {
+        const u = MathUtils.clamp((Math.abs(t - cut2) - 0.1) / 0.42, 0, 1);
         return 1 - u * u * u * (u * (u * 6 - 15) + 10);
       }
       function render2(t) {
@@ -67554,10 +67752,9 @@ void main() {
         if (habitat) audio.setEnvironment(habitat.model.state);
         const enter = smooth5((seconds - segment.start) / 0.75),
           exit = 1 - smooth5((seconds - (endTime - 1.2)) / 0.9);
-        const cutTimes = phase === "arrival" ? [ARRIVAL_FLEET_AT] : MIGRATION_CUTS;
-        document.getElementById("cut").style.opacity = String(
-          Math.max(1 - enter, 1 - exit, ...cutTimes.map((at) => transitionVeil(seconds, at))),
-        );
+        let veil = Math.max(1 - enter, 1 - exit);
+        for (const at of cutTimes) veil = Math.max(veil, transitionVeil(seconds, at));
+        cut.style.opacity = String(veil);
         if (arrivalIntro && phase === "arrival") {
           const introTime = seconds - segment.start;
           arrivalIntro.style.opacity = String(
@@ -67586,7 +67783,7 @@ void main() {
             surfaceHistory: "항해 시간과 역할에 따른 예술적 열화",
             shot: currentShot,
             ships: fleet.length,
-            ringPeriodSeconds: 80,
+            ringPeriodSeconds: HABITAT_RING_PERIOD[0],
             sceneSeconds: seconds,
           }),
         });
@@ -67595,14 +67792,7 @@ void main() {
         requestAnimationFrame(tick2);
         const dt = Math.max(0, Math.min(0.1, (now3 - last) / 1e3));
         last = now3;
-        if (
-          paused ||
-          leaving ||
-          document.hidden ||
-          !document.getElementById("loading").hidden ||
-          recovery?.lost
-        )
-          return;
+        if (paused || leaving || document.hidden || !loading.hidden || recovery?.lost) return;
         if (params.has("test")) return;
         frameTime = frameTime * 0.97 + dt * 1e3 * 0.03;
         if (++frame % 180 === 0 && frameTime > 27 && pixelRatio > 0.8) {
@@ -67713,6 +67903,7 @@ void main() {
           arrivalDrone = createArrivalDrone(environment.surfaceHeightAt);
           habitat = createHabitatWorld(scene, environment.surface, tier, state.basin, {
             survey: state.evidence?.settlementSurvey,
+            decision: state.evidence?.settlementDecision,
           });
           placeRecorder = createPlaceRecorder(
             renderer,

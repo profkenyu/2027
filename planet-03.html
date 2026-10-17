@@ -2096,25 +2096,66 @@
         letter-spacing: 0.12em;
         text-decoration: none;
         touch-action: manipulation;
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+        border-radius: 0;
       }
       #vehicle-preview-link:hover {
         color: #fff;
+        text-decoration: underline;
       }
       #vehicle-preview-link:focus-visible {
-        outline: 1px solid #b8d2df;
-        outline-offset: 2px;
+        outline: none;
+        text-decoration: underline;
+        text-underline-offset: 4px;
       }
-      #vehicle-preview-link {
+      #journey-links {
         position: fixed;
         z-index: 91;
         left: max(16px, env(safe-area-inset-left));
         bottom: max(24px, calc(env(safe-area-inset-bottom) + 18px));
-        background: #0b1014b3;
-        border: 1px solid #35404a55;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      #journey-links #ti-sound {
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: #b8c3cb;
+        touch-action: manipulation;
+        cursor: pointer;
+      }
+      #journey-links #ti-sound svg {
+        width: 17px;
+        height: 17px;
+      }
+      #journey-links .ti-utility-label {
+        display: none;
+      }
+      #journey-links #ti-sound:disabled {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #ti-rover-tools {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      body.ti-mobile #ti-rover-tools {
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(3, var(--utility-button-height));
       }
       @media (max-width: 600px) {
-        #vehicle-preview-link {
+        #journey-links {
           left: max(12px, env(safe-area-inset-left));
+          bottom: max(72px, calc(env(safe-area-inset-bottom) + 64px));
+        }
+        #journey-links #vehicle-preview-link {
           font-size: 9px;
         }
       }
@@ -2170,17 +2211,6 @@
     <div class="bar b"></div>
     <div id="ti-copyright">©2026 KIM GUNWOO. ALL RIGHTS RESERVED.</div>
     <div id="ti-rover-tools" aria-label="로버 유틸리티">
-      <button id="ti-sound" type="button" aria-pressed="false" data-audio-state="start"
-        ><svg class="ti-utility-icon" viewBox="0 0 24 24" aria-hidden="true">
-          <path class="speaker" d="M4 10h4l5-4v12l-5-4H4z" />
-          <path class="wave" d="M16 9c1.25 1.55 1.25 4.45 0 6" />
-          <path class="wave" d="M19 6c3 3.25 3 8.75 0 12" />
-          <path class="mute" d="m16 9 5 6m0-6-5 6" /></svg
-        ><span class="ti-utility-label" aria-hidden="true">SOUND</span
-        ><span class="ti-utility-sr" data-sound-label aria-live="polite"
-          >TAP FOR SOUND</span
-        ></button
-      >
       <button
         id="ti-light"
         type="button"
@@ -2349,11 +2379,23 @@
       })();
     </script>
     <script defer src="./planet-engine.js"></script>
-    <a
-      id="vehicle-preview-link"
-      href="preview.html?from=planet-03.html"
-      aria-label="로버 · 탐사선 · 이주선 외장 보기"
-      >PREVIEW</a
+    <nav id="journey-links" aria-label="사운드와 외장 보기"
+      ><button id="ti-sound" type="button" aria-pressed="false" data-audio-state="start"
+        ><svg class="ti-utility-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path class="speaker" d="M4 10h4l5-4v12l-5-4H4z" />
+          <path class="wave" d="M16 9c1.25 1.55 1.25 4.45 0 6" />
+          <path class="wave" d="M19 6c3 3.25 3 8.75 0 12" />
+          <path class="mute" d="m16 9 5 6m0-6-5 6" /></svg
+        ><span class="ti-utility-label" aria-hidden="true">SOUND</span
+        ><span class="ti-utility-sr" data-sound-label aria-live="polite"
+          >TAP FOR SOUND</span
+        ></button
+      ><a
+        id="vehicle-preview-link"
+        href="preview.html?from=planet-03.html"
+        aria-label="로버 · 탐사선 · 이주선 외장 보기"
+        >PREVIEW</a
+      ></nav
     ></body
   >
 </html>

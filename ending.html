@@ -252,13 +252,19 @@
         letter-spacing: 0.12em;
         text-decoration: none;
         touch-action: manipulation;
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+        border-radius: 0;
       }
       #vehicle-preview-link:hover {
         color: #fff;
+        text-decoration: underline;
       }
       #vehicle-preview-link:focus-visible {
-        outline: 1px solid #b8d2df;
-        outline-offset: 2px;
+        outline: none;
+        text-decoration: underline;
+        text-underline-offset: 4px;
       }
     </style></head
   ><body data-phase="ending">
@@ -277,16 +283,16 @@
     <footer
       ><span id="credit">© 2026 KIM GUNWOO</span
       ><nav
-        ><a
-          id="vehicle-preview-link"
-          href="preview.html?from=ending.html"
-          aria-label="로버 · 탐사선 · 이주선 외장 보기"
-          >PREVIEW</a
         ><button id="sound" aria-label="사운드 켜기" title="사운드 켜기" aria-pressed="false"
           ><svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M11 5 6 9H3v6h3l5 4Z" />
             <g class="sound-waves"><path d="M15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14" /></g>
             <path class="sound-muted" d="m16 9 6 6m0-6-6 6" /></svg></button
+        ><a
+          id="vehicle-preview-link"
+          href="preview.html?from=ending.html"
+          aria-label="로버 · 탐사선 · 이주선 외장 보기"
+          >PREVIEW</a
         ><button id="replay" hidden>REPLAY</button
         ><a id="archive" href="field-archive.html" hidden>FIELD ARCHIVE</a
         ><a id="return" href="index.html">RETURN</a></nav
@@ -32151,6 +32157,95 @@ void main() {
         });
       }
 
+      // works/shared/candidate-survey.js
+      var CANDIDATE_SITE = Object.freeze({
+        x: -1400,
+        z: 3300,
+        size: 640,
+        planet: "candidate",
+      });
+      var PRESERVE_X = -1310;
+      var INTERVENTION = Object.freeze({
+        minX: -1475,
+        maxX: -1325,
+        minZ: 3120,
+        maxZ: 3480,
+      });
+      var CANDIDATE_STATIONS = Object.freeze([
+        {
+          id: "P04-001",
+          body: "candidate",
+          planet: "PLANET 04",
+          world: "CANDIDATE BASIN",
+          label: "RESOURCE / PRESERVATION BOUNDARY",
+          ko: "자원 후보와 보존 경계",
+          x: -1320,
+          z: 3280,
+          radius: 8,
+          order: 0,
+          capture: {
+            profile: "wide",
+            lens: "FOLLOW CAMERA",
+            viewpoint: "ROVER FOLLOW / BOUNDARY",
+            aspect: 1.6,
+            zoom: 1,
+            projection: "rectilinear",
+          },
+        },
+        {
+          id: "P04-002",
+          body: "candidate",
+          planet: "PLANET 04",
+          world: "CANDIDATE BASIN",
+          label: "LIMITED INSTALLATION FOOTPRINT",
+          ko: "설비 설치 범위",
+          x: -1410,
+          z: 3300,
+          radius: 8,
+          order: 1,
+          capture: {
+            profile: "wide",
+            lens: "FOLLOW CAMERA",
+            viewpoint: "ROVER FOLLOW / FOOTPRINT",
+            aspect: 1.6,
+            zoom: 1,
+            projection: "rectilinear",
+          },
+        },
+        {
+          id: "P04-003",
+          body: "candidate",
+          planet: "PLANET 04",
+          world: "CANDIDATE BASIN",
+          label: "SURFACE REFERENCE / NO INTERVENTION",
+          ko: "개입 전 지표 기준 기록",
+          x: -1450,
+          z: 3220,
+          radius: 8,
+          order: 2,
+          capture: {
+            profile: "wide",
+            lens: "FOLLOW CAMERA",
+            viewpoint: "ROVER FOLLOW / REFERENCE",
+            aspect: 1.6,
+            zoom: 1,
+            projection: "rectilinear",
+          },
+        },
+      ]);
+      function validDecision(d) {
+        return (
+          d?.version === 1 &&
+          d.planet === "candidate" &&
+          d.status === "limited-settlement" &&
+          d.preserveX === PRESERVE_X &&
+          Object.keys(INTERVENTION).every((k) => d.intervention?.[k] === INTERVENTION[k]) &&
+          Array.isArray(d.observations) &&
+          d.observations.length === 3 &&
+          CANDIDATE_STATIONS.every((s) => d.observations.includes(s.id))
+        );
+      }
+
       // works/first_dawn/habitat/conditions.js
       function validSurvey(s) {
         return (
@@ -32211,8 +32306,17 @@ void main() {
       var CP = 4200;
       var SOIL = 3e4;
       var clamp2 = (x, a, b) => Math.max(a, Math.min(b, x));
-      function createBasinModel(heightAt, saved = null, { equipment = true, survey = null } = {}) {
+      function createBasinModel(
+        heightAt,
+        saved = null,
+        { equipment = true, survey = null, decision = null } = {},
+      ) {
         const equipped = saved?.equipment ?? equipment;
+        const policy = validDecision(decision)
+          ? decision
+          : validDecision(saved?.decision)
+            ? saved.decision
+            : null;
         const operation = Object.freeze(restoreOperation(saved, survey));
         const fields = {};
         for (const name of ["water", "enthalpy", "vapor", "vaporHeat", "sediment", "trace"])
@@ -32246,6 +32350,14 @@ void main() {
             sediment[k] = 0.2 + 0.1 * shelter[k];
             sedimentOrigin[k] = sediment[k];
             heater[k] = Math.exp(-Math.pow((i - 32) / 8, 2) - Math.pow((j - 30) / 21, 4));
+            if (
+              policy &&
+              (x < policy.intervention.minX ||
+                x > policy.intervention.maxX ||
+                z < policy.intervention.minZ ||
+                z > policy.intervention.maxZ)
+            )
+              heater[k] = 0;
             initialHeat += enthalpy[k];
             initialWater += water[k];
             initialSediment += sediment[k];
@@ -32566,6 +32678,8 @@ void main() {
               dryTraceArea: dryTrace * (SITE.size / (GRID - 1)) ** 2,
             },
             equipment: equipped,
+            settlementDecision: policy,
+            directInterventionCells: heater.reduce((count, h) => count + Number(h > 0), 0),
             grid: GRID,
             localOnly: true,
             operation: { ...operation },
@@ -32597,6 +32711,7 @@ void main() {
             const result = {
               version: 1,
               equipment: equipped,
+              ...(policy ? { decision: policy } : {}),
               operation: { ...operation },
               surfaceHistory: {
                 sedimentOrigin: Array.from(sedimentOrigin),
@@ -33367,6 +33482,17 @@ void main() {
         }
         return {
           update,
+          async captureBefore() {
+            try {
+              await writeExhibitionRecord(capture("before", "before"));
+              available = true;
+              completed.add("before");
+              return true;
+            } catch {
+              available = false;
+              return false;
+            }
+          },
           persist: durable,
           flush: async () => {
             await pending;
@@ -55960,6 +56086,11 @@ void main() {
               s.evidence.nodes !== 3)
           )
             return null;
+          if (
+            s.evidence?.settlementDecision != null &&
+            !validDecision(s.evidence.settlementDecision)
+          )
+            return null;
           const signatures = s.evidence?.sampleSignatures;
           if (s.evidence?.settlementSurvey != null && !validSurvey(s.evidence.settlementSurvey))
             return null;
@@ -56251,6 +56382,7 @@ void main() {
         habitat = createHabitatWorld(scene, environment.surface, tier, state.basin, {
           equipment: !!state.basin,
           survey: state.evidence?.settlementSurvey,
+          decision: state.evidence?.settlementDecision,
         });
         placeRecorder = createPlaceRecorder(
           renderer,

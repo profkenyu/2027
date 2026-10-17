@@ -30073,15 +30073,15 @@ ${builder.flow.code}`;
       let distribution = texture(depthTexture).sample(shadowCoord.xy);
       (depthTexture.isArrayTexture && (distribution = distribution.depth(depthLayer)),
         (distribution = distribution.rg));
-      let mean2 = distribution.x,
+      let mean = distribution.x,
         variance = max$1(1e-7, distribution.y.mul(distribution.y)),
         hardShadow = builder.renderer.reversedDepthBuffer
-          ? step(mean2, shadowCoord.z)
-          : step(shadowCoord.z, mean2),
+          ? step(mean, shadowCoord.z)
+          : step(shadowCoord.z, mean),
         output3 = float(1).toVar();
       return (
         If(hardShadow.notEqual(1), () => {
-          let d = shadowCoord.z.sub(mean2),
+          let d = shadowCoord.z.sub(mean),
             p_max = variance.div(variance.add(d.mul(d)));
           ((p_max = clamp2(sub(p_max, 0.3).div(0.65))), output3.assign(max$1(hardShadow, p_max)));
         }),
@@ -30167,7 +30167,7 @@ ${builder.flow.code}`;
       );
     },
     VSMPassVertical = Fn(({ samples, radius, size, shadowPass, depthLayer }) => {
-      let mean2 = float(0).toVar("meanVertical"),
+      let mean = float(0).toVar("meanVertical"),
         squaredMean = float(0).toVar("squareMeanVertical"),
         uvStride = samples.lessThanEqual(float(1)).select(float(0), float(2).div(samples.sub(1))),
         uvStart = samples.lessThanEqual(float(1)).select(float(0), float(-1));
@@ -30178,16 +30178,16 @@ ${builder.flow.code}`;
           );
         (shadowPass.value.isArrayTexture && (depth3 = depth3.depth(depthLayer)),
           (depth3 = depth3.x),
-          mean2.addAssign(depth3),
+          mean.addAssign(depth3),
           squaredMean.addAssign(depth3.mul(depth3)));
       }),
-        mean2.divAssign(samples),
+        mean.divAssign(samples),
         squaredMean.divAssign(samples));
-      let std_dev = sqrt(squaredMean.sub(mean2.mul(mean2)).max(0));
-      return vec2(mean2, std_dev);
+      let std_dev = sqrt(squaredMean.sub(mean.mul(mean)).max(0));
+      return vec2(mean, std_dev);
     }),
     VSMPassHorizontal = Fn(({ samples, radius, size, shadowPass, depthLayer }) => {
-      let mean2 = float(0).toVar("meanHorizontal"),
+      let mean = float(0).toVar("meanHorizontal"),
         squaredMean = float(0).toVar("squareMeanHorizontal"),
         uvStride = samples.lessThanEqual(float(1)).select(float(0), float(2).div(samples.sub(1))),
         uvStart = samples.lessThanEqual(float(1)).select(float(0), float(-1));
@@ -30197,15 +30197,15 @@ ${builder.flow.code}`;
             add(screenCoordinate.xy, vec2(uvOffset, 0).mul(radius)).div(size),
           );
         (shadowPass.value.isArrayTexture && (distribution = distribution.depth(depthLayer)),
-          mean2.addAssign(distribution.x),
+          mean.addAssign(distribution.x),
           squaredMean.addAssign(
             add(distribution.y.mul(distribution.y), distribution.x.mul(distribution.x)),
           ));
       }),
-        mean2.divAssign(samples),
+        mean.divAssign(samples),
         squaredMean.divAssign(samples));
-      let std_dev = sqrt(squaredMean.sub(mean2.mul(mean2)).max(0));
-      return vec2(mean2, std_dev);
+      let std_dev = sqrt(squaredMean.sub(mean.mul(mean)).max(0));
+      return vec2(mean, std_dev);
     }),
     _shadowFilterLib = [BasicShadowFilter, PCFShadowFilter, PCFSoftShadowFilter, VSMShadowFilter],
     _rendererState,
@@ -50370,14 +50370,14 @@ var<${access}> ${name} : ${structName};`;
   }
   var VEHICLE_ARCHIVE_KEY = "terra-incognita:vehicle-archive:v1",
     kinds = new Set(["rover", "surveyor", "fleet"]),
-    contexts = new Set(["terra", "desert", "granite", "migration", "arrival"]);
+    contexts = new Set(["terra", "desert", "granite", "candidate", "migration", "arrival"]);
   function readVehicleArchive(storage4) {
     try {
       let source = JSON.parse(storage4.getItem(VEHICLE_ARCHIVE_KEY) || "null");
       return source?.version !== 1
         ? []
         : (Array.isArray(source.records) ? source.records : [])
-            .slice(0, 8)
+            .slice(0, 10)
             .filter(
               (r) =>
                 r &&
@@ -50450,7 +50450,7 @@ var<${access}> ${name} : ${structName};`;
               width: canvas.width,
               height: canvas.height,
             },
-            next = [...records.filter((r) => r.id !== id), record].slice(-8);
+            next = [...records.filter((r) => r.id !== id), record].slice(-10);
           return (
             storage4.setItem(VEHICLE_ARCHIVE_KEY, JSON.stringify({ version: 1, records: next })),
             (records = next),
@@ -60386,7 +60386,7 @@ body.ti-voyage #ti-transfer-trigger {
               .filter((item) => item && typeof item.id == "string")
               .map((item) => [item.id, clean(item)]),
           ).values(),
-        ].slice(0, 24);
+        ].slice(0, 32);
     for (let candidate of keys)
       try {
         let source = JSON.parse(storage4?.getItem(candidate) ?? "null");
@@ -60437,7 +60437,7 @@ body.ti-voyage #ti-transfer-trigger {
       return (
         record
           ? (record.data = archiveData(data))
-          : this.data.records.length < 24 &&
+          : this.data.records.length < 32 &&
             ((record = cleanRecord({
               ...station,
               data,
@@ -60450,7 +60450,7 @@ body.ti-voyage #ti-transfer-trigger {
       );
     }
     setMission(body, data) {
-      ["terra", "desert", "granite"].includes(body) &&
+      ["terra", "desert", "granite", "candidate"].includes(body) &&
         ((this.data.missions[body] = archiveData(data)), this.persist());
     }
     setTransmission(data) {
@@ -60475,7 +60475,7 @@ body.ti-voyage #ti-transfer-trigger {
       }
       return (
         this.data.stations.sort((a, b) => a.body.localeCompare(b.body) || a.order - b.order),
-        (this.data.stations = this.data.stations.slice(0, 24)),
+        (this.data.stations = this.data.stations.slice(0, 32)),
         changed && this.persist(),
         this.snapshot()
       );
@@ -60507,7 +60507,7 @@ body.ti-voyage #ti-transfer-trigger {
         )
           continue;
         let previous = this.data.records.find((r) => r.id === station.id);
-        if (!previous && this.data.records.length >= 24) continue;
+        if (!previous && this.data.records.length >= 32) continue;
         let capture = archiveCaptureProfile(station),
           record = cleanRecord({
             ...station,
@@ -62674,10 +62674,12 @@ body.ti-voyage #ti-transfer-trigger {
         (this.acquisitionGlowStart = -1 / 0),
         addEventListener("keydown", (e) => {
           (e.code === "Space" &&
-            (this.onSpace
-              ? this.onSpace(performance.now())
-              : this.externalDriveMode || (this.auto = !this.auto),
-            e.preventDefault()),
+            e.target.closest?.("a,button,input,select,textarea,[contenteditable='true']")) ||
+            (e.code === "Space" &&
+              (this.onSpace
+                ? this.onSpace(performance.now())
+                : this.externalDriveMode || (this.auto = !this.auto),
+              e.preventDefault()),
             !this.externalDriveMode &&
               [
                 "KeyW",
@@ -62789,12 +62791,12 @@ body.ti-voyage #ti-transfer-trigger {
         for (let wing of this.wings) wing.rotation.z = wing.userData.side * this.lidTilt * 0.78;
       let c = this.contacts(),
         rest = D.wheelR + D.clearance,
-        mean2 = (a) => a.reduce((t, i) => t + c[i].y, 0) / a.length,
-        front = mean2([0, 1]),
-        rear = mean2([6, 7]),
-        left = mean2([0, 2, 4, 6]),
-        right = mean2([1, 3, 5, 7]),
-        tDeck = mean2([0, 1, 2, 3, 4, 5, 6, 7]) + rest,
+        mean = (a) => a.reduce((t, i) => t + c[i].y, 0) / a.length,
+        front = mean([0, 1]),
+        rear = mean([6, 7]),
+        left = mean([0, 2, 4, 6]),
+        right = mean([1, 3, 5, 7]),
+        tDeck = mean([0, 1, 2, 3, 4, 5, 6, 7]) + rest,
         tPitch = Math.atan2(front - rear, D.wheelBase * 2),
         tRoll = Math.atan2(right - left, D.track * 2);
       if (!this.settled)
@@ -63249,6 +63251,7 @@ body.ti-voyage #ti-transfer-trigger {
           finish = profile ? aerospaceNode(profile, C.tier, profile === "foil" ? 3 : 2) : null;
         return (
           (mat.name = profile ? "aerospace-" + profile : "rover-signal"),
+          (mat.userData.flightSurface = { rgb, sheen: sheen3, gloss, profile }),
           (mat.userData.aerospace = profile
             ? { kind: profile, resolution: finish.resolution }
             : null),
@@ -63306,25 +63309,31 @@ body.ti-voyage #ti-transfer-trigger {
       beaconGlow = new MeshBasicNodeMaterial();
     beaconGlow.colorNode = vec42(vec32(...C.color.beacon).mul(beaconPulse.mul(4.4).add(0.018)), 1);
     let cell = new MeshBasicNodeMaterial();
-    cell.colorNode = Fn2(() => {
-      let n = normalize3(normalWorld2),
-        v = normalize3(cameraPosition2.sub(positionWorld2)),
-        ndl = max2(dot2(n, L), float2(0)),
-        halfVector = normalize3(L.add(v)),
-        crystal = sin2(positionLocal2.x.mul(83).add(positionLocal2.z.mul(51)))
-          .mul(0.5)
-          .add(0.5),
-        angle = smoothstep3(0, 1, ndl.mul(0.72).add(crystal.mul(0.1))),
-        base = mix2(vec32(0.006, 0.017, 0.032), vec32(0.025, 0.082, 0.135), angle),
-        glint = pow5(max2(dot2(n, halfVector), float2(0)), float2(78)).mul(0.52),
-        edge = pow5(float2(1).sub(abs2(dot2(n, v))), float2(2.2)).mul(0.065),
-        lit = base
-          .mul(ndl.mul(0.62).add(0.38))
-          .add(vec32(0.72, 0.87, 1).mul(glint))
-          .add(vec32(0.08, 0.18, 0.28).mul(edge)),
-        fog3 = float2(1).sub(exp3(positionView2.length().mul(-C.atmosphere.fogDensity)));
-      return vec42(mix2(lit, vec32(...C.color.horizon), smoothstep3(0, 1, fog3)), 1);
-    })();
+    ((cell.userData.flightSurface = {
+      rgb: [0.012, 0.038, 0.065],
+      sheen: 0.1,
+      gloss: 24,
+      profile: null,
+    }),
+      (cell.colorNode = Fn2(() => {
+        let n = normalize3(normalWorld2),
+          v = normalize3(cameraPosition2.sub(positionWorld2)),
+          ndl = max2(dot2(n, L), float2(0)),
+          halfVector = normalize3(L.add(v)),
+          crystal = sin2(positionLocal2.x.mul(83).add(positionLocal2.z.mul(51)))
+            .mul(0.5)
+            .add(0.5),
+          angle = smoothstep3(0, 1, ndl.mul(0.72).add(crystal.mul(0.1))),
+          base = mix2(vec32(0.006, 0.017, 0.032), vec32(0.025, 0.082, 0.135), angle),
+          glint = pow5(max2(dot2(n, halfVector), float2(0)), float2(78)).mul(0.52),
+          edge = pow5(float2(1).sub(abs2(dot2(n, v))), float2(2.2)).mul(0.065),
+          lit = base
+            .mul(ndl.mul(0.62).add(0.38))
+            .add(vec32(0.72, 0.87, 1).mul(glint))
+            .add(vec32(0.08, 0.18, 0.28).mul(edge)),
+          fog3 = float2(1).sub(exp3(positionView2.length().mul(-C.atmosphere.fogDensity)));
+        return vec42(mix2(lit, vec32(...C.color.horizon), smoothstep3(0, 1, fog3)), 1);
+      })()));
     let transferTag = (object, part, colour, rig = !1) => (
       (object.userData.transferPart = part),
       colour != null && (object.userData.transferColor = colour),
@@ -63828,19 +63837,25 @@ body.ti-voyage #ti-transfer-trigger {
     (instrumentSaddle.position.set(-0.3, deck + 0.205, 0.27),
       chassis.add(transferTag(instrumentSaddle, "signal", 6910073, !0)));
     let glass = new MeshBasicNodeMaterial();
-    glass.colorNode = Fn2(() => {
-      let n = normalize3(normalWorld2),
-        v = normalize3(cameraPosition2.sub(positionWorld2)),
-        halfVector = normalize3(L.add(v)),
-        glint = pow5(max2(dot2(n, halfVector), float2(0)), float2(96)).mul(0.42),
-        edge = pow5(float2(1).sub(abs2(dot2(n, v))), float2(5));
-      return vec42(
-        vec32(0.002, 0.006, 0.009)
-          .add(vec32(0.055, 0.075, 0.09).mul(edge))
-          .add(vec32(0.82, 0.93, 0.9).mul(glint)),
-        1,
-      );
-    })();
+    ((glass.userData.flightSurface = {
+      rgb: [0.002, 0.006, 0.009],
+      sheen: 0.1,
+      gloss: 50,
+      profile: null,
+    }),
+      (glass.colorNode = Fn2(() => {
+        let n = normalize3(normalWorld2),
+          v = normalize3(cameraPosition2.sub(positionWorld2)),
+          halfVector = normalize3(L.add(v)),
+          glint = pow5(max2(dot2(n, halfVector), float2(0)), float2(96)).mul(0.42),
+          edge = pow5(float2(1).sub(abs2(dot2(n, v))), float2(5));
+        return vec42(
+          vec32(0.002, 0.006, 0.009)
+            .add(vec32(0.055, 0.075, 0.09).mul(edge))
+            .add(vec32(0.82, 0.93, 0.9).mul(glint)),
+          1,
+        );
+      })()));
     let optic = (radius, depth3) => {
         let group2 = new Group(),
           segments2 = C.tier === "low" ? 12 : 24,
@@ -64441,7 +64456,7 @@ body.ti-voyage #ti-transfer-trigger {
         samples.push({ dx, dz, h: heightAt(cx + dx, cz + dz) });
       }
     }
-    let mean2 = samples.reduce((sum, p) => sum + p.h, 0) / samples.length,
+    let mean = samples.reduce((sum, p) => sum + p.h, 0) / samples.length,
       xx = 0,
       zz = 0,
       xh = 0,
@@ -64449,14 +64464,14 @@ body.ti-voyage #ti-transfer-trigger {
     for (let p of samples)
       ((xx += p.dx * p.dx),
         (zz += p.dz * p.dz),
-        (xh += p.dx * (p.h - mean2)),
-        (zh += p.dz * (p.h - mean2)));
+        (xh += p.dx * (p.h - mean)),
+        (zh += p.dz * (p.h - mean)));
     let ax = xh / Math.max(xx, 1e-6),
       az = zh / Math.max(zz, 1e-6),
       residual2 = 0,
       maxResidual = 0;
     for (let p of samples) {
-      let residual = Math.abs(p.h - (mean2 + ax * p.dx + az * p.dz));
+      let residual = Math.abs(p.h - (mean + ax * p.dx + az * p.dz));
       ((residual2 += residual * residual), (maxResidual = Math.max(maxResidual, residual)));
     }
     let feet = [];
@@ -64894,14 +64909,14 @@ body.ti-voyage #ti-transfer-trigger {
           this.core.add(sill),
           bayFrames.push(sill));
         for (let axle of [-C.vehicle.chassis.wheelBase, C.vehicle.chassis.wheelBase]) {
-          let clamp12 = new Mesh(new BoxGeometry(0.08, 0.18, 0.25), metal);
-          ((clamp12.position.y = this.dock.floorY + C.vehicle.chassis.wheelR),
-            (clamp12.userData.side = side),
-            (clamp12.userData.axle = axle),
-            (clamp12.userData.designRole = "wheel-hold-down"),
-            this.core.add(clamp12),
-            this.holdDowns.push(clamp12),
-            bayFrames.push(clamp12));
+          let clamp10 = new Mesh(new BoxGeometry(0.08, 0.18, 0.25), metal);
+          ((clamp10.position.y = this.dock.floorY + C.vehicle.chassis.wheelR),
+            (clamp10.userData.side = side),
+            (clamp10.userData.axle = axle),
+            (clamp10.userData.designRole = "wheel-hold-down"),
+            this.core.add(clamp10),
+            this.holdDowns.push(clamp10),
+            bayFrames.push(clamp10));
         }
       }
       (this.setHoldDown(0),
@@ -65541,9 +65556,9 @@ body.ti-voyage #ti-transfer-trigger {
     }
     setHoldDown(progress = 0, localZ = -0.58) {
       this.holdProgress = Math.max(0, Math.min(1, progress));
-      for (let clamp12 of this.holdDowns)
-        ((clamp12.position.x = clamp12.userData.side * (0.96 - this.holdProgress * 0.225)),
-          (clamp12.position.z = localZ + clamp12.userData.axle));
+      for (let clamp10 of this.holdDowns)
+        ((clamp10.position.x = clamp10.userData.side * (0.96 - this.holdProgress * 0.225)),
+          (clamp10.position.z = localZ + clamp10.userData.axle));
     }
     dockingPoint(localZ, localX = 0, localY = null, target = new Vector3()) {
       let yaw = this.group.rotation.y,
@@ -67681,12 +67696,13 @@ body.ti-voyage #ti-transfer-trigger {
   }
   var PLANET_STATE_KEY = "beyond-known:planet-state:v1",
     TRANSFER_KEY = "beyond-known:transfer:v1",
-    worlds = ["terra", "desert", "granite"],
+    worlds = ["terra", "desert", "granite", "candidate"],
     clamp9 = (x, a, b) => Math.max(a, Math.min(b, x)),
     defaults3 = {
       terra: { temperature: 246, radiation: 0.32 },
       desert: { temperature: 218, radiation: 0.56 },
       granite: { temperature: 233, radiation: 0.21 },
+      candidate: { temperature: 226, radiation: 0.27 },
     };
   function storage3() {
     try {
@@ -67797,18 +67813,23 @@ body.ti-voyage #ti-transfer-trigger {
   };
   function transferPage(t) {
     return t.stage === "flight"
-      ? t.source === "desert"
-        ? "space-02.html"
-        : "space-01.html"
-      : t.target === "granite"
-        ? "planet-03.html"
-        : "planet-02.html";
+      ? t.source === "granite"
+        ? "space-03.html"
+        : t.source === "desert"
+          ? "space-02.html"
+          : "space-01.html"
+      : t.target === "candidate"
+        ? "planet-04.html"
+        : t.target === "granite"
+          ? "planet-03.html"
+          : "planet-02.html";
   }
   function readTransfer() {
     let t = read(TRANSFER_KEY);
     return t?.version === 1 &&
       ((t.source === "terra" && t.target === "desert") ||
-        (t.source === "desert" && t.target === "granite")) &&
+        (t.source === "desert" && t.target === "granite") ||
+        (t.source === "granite" && t.target === "candidate")) &&
       ["flight", "arrival"].includes(t.stage) &&
       /^[0-9a-f]{6}$/i.test(t.seed) &&
       Number.isFinite(t.elapsed) &&
@@ -67822,51 +67843,9 @@ body.ti-voyage #ti-transfer-trigger {
     let t = { version: 1, source, target, stage: "flight", seed, elapsed: 0, environment };
     return (write(TRANSFER_KEY, t), t);
   }
-  function sampleSignatures(samples) {
-    return !Array.isArray(samples) ||
-      samples.length !== 6 ||
-      samples.some((s) => typeof s?.sample != "string" || typeof s?.sign != "string")
-      ? null
-      : samples.map((s) => {
-          let hash12 = 2166136261;
-          for (let char of `${s.sample}|${s.sign}`)
-            ((hash12 ^= char.charCodeAt(0)), (hash12 = Math.imul(hash12, 16777619)));
-          return (hash12 >>> 0) / 4294967295;
-        });
-  }
   var MIGRATION_CUTS = Object.freeze([30, 50, 102, 111]),
     FLEET_FRONT_DURATION = 14,
     MIGRATION_DURATION = MIGRATION_CUTS[3] + FLEET_FRONT_DURATION;
-  var clamp10 = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v)),
-    mean = (rows, key3) => rows.reduce((sum, row) => sum + row[key3], 0) / rows.length;
-  function surveyConditions(ledger, geology) {
-    let samples = ledger?.samples,
-      water = ledger?.water,
-      sites = geology?.observations;
-    if (
-      !Array.isArray(samples) ||
-      samples.length !== 6 ||
-      !water?.confirmed ||
-      !Number.isFinite(water.thermalDeltaK) ||
-      !Number.isFinite(water.particleDensity) ||
-      !Array.isArray(sites) ||
-      sites.length !== 3 ||
-      sites.some((s) => ![s.coherence, s.density, s.reflectance].every(Number.isFinite))
-    )
-      return null;
-    let names = samples.map((s) => String(s.sample).toUpperCase());
-    return {
-      version: 1,
-      insulation: clamp10(names.filter((s) => /SILICATE|CARBON|CERAMIC/.test(s)).length / 2),
-      conduction: clamp10(names.filter((s) => /^FE[–-]|ALLOY|CONDUCTIVE|METAL/.test(s)).length / 2),
-      thermalDemand: clamp10(Math.abs(water.thermalDeltaK) / 32),
-      fines: clamp10(water.particleDensity),
-      correlation: clamp10(mean(sites, "coherence")),
-      substrate: clamp10(mean(sites, "density") * 0.65 + (1 - mean(sites, "reflectance")) * 0.35),
-      sampleCount: samples.length,
-      siteCount: sites.length,
-    };
-  }
   var BASE_OPERATION = Object.freeze({
     version: 1,
     source: "baseline",
@@ -67876,6 +67855,111 @@ body.ti-voyage #ti-transfer-trigger {
     recoveryRate: 1,
     stableSeconds: 10,
   });
+  var CANDIDATE_KEY = "beyond-known:candidate-survey:v1",
+    CANDIDATE_SITE = Object.freeze({ x: -1400, z: 3300, size: 640, planet: "candidate" });
+  var INTERVENTION = Object.freeze({ minX: -1475, maxX: -1325, minZ: 3120, maxZ: 3480 }),
+    CANDIDATE_STATIONS = Object.freeze([
+      {
+        id: "P04-001",
+        body: "candidate",
+        planet: "PLANET 04",
+        world: "CANDIDATE BASIN",
+        label: "RESOURCE / PRESERVATION BOUNDARY",
+        ko: "자원 후보와 보존 경계",
+        x: -1320,
+        z: 3280,
+        radius: 8,
+        order: 0,
+        capture: {
+          profile: "wide",
+          lens: "FOLLOW CAMERA",
+          viewpoint: "ROVER FOLLOW / BOUNDARY",
+          aspect: 1.6,
+          zoom: 1,
+          projection: "rectilinear",
+        },
+      },
+      {
+        id: "P04-002",
+        body: "candidate",
+        planet: "PLANET 04",
+        world: "CANDIDATE BASIN",
+        label: "LIMITED INSTALLATION FOOTPRINT",
+        ko: "설비 설치 범위",
+        x: -1410,
+        z: 3300,
+        radius: 8,
+        order: 1,
+        capture: {
+          profile: "wide",
+          lens: "FOLLOW CAMERA",
+          viewpoint: "ROVER FOLLOW / FOOTPRINT",
+          aspect: 1.6,
+          zoom: 1,
+          projection: "rectilinear",
+        },
+      },
+      {
+        id: "P04-003",
+        body: "candidate",
+        planet: "PLANET 04",
+        world: "CANDIDATE BASIN",
+        label: "SURFACE REFERENCE / NO INTERVENTION",
+        ko: "개입 전 지표 기준 기록",
+        x: -1450,
+        z: 3220,
+        radius: 8,
+        order: 2,
+        capture: {
+          profile: "wide",
+          lens: "FOLLOW CAMERA",
+          viewpoint: "ROVER FOLLOW / REFERENCE",
+          aspect: 1.6,
+          zoom: 1,
+          projection: "rectilinear",
+        },
+      },
+    ]);
+  function previousSurveyReady(e) {
+    return (
+      !!e &&
+      Array.isArray(e.samples) &&
+      e.samples.length === 6 &&
+      e.water?.confirmed === !0 &&
+      e.geology?.complete === !0 &&
+      Array.isArray(e.geology?.records) &&
+      e.geology.records.length === 3
+    );
+  }
+  function saveCandidate(s, storage4 = globalThis.sessionStorage) {
+    try {
+      return (storage4.setItem(CANDIDATE_KEY, JSON.stringify(s)), !0);
+    } catch {
+      return !1;
+    }
+  }
+  function clearCandidate(storage4 = globalThis.sessionStorage) {
+    try {
+      storage4.removeItem(CANDIDATE_KEY);
+    } catch {}
+  }
+  function prepareCandidate(seed, ledger, environment, geology) {
+    let evidence = { samples: ledger.samples, water: ledger.water, geology };
+    if (!previousSurveyReady(evidence)) throw Error("Three completed surveys are required");
+    let s = {
+      version: 1,
+      seed,
+      seconds: 0,
+      phase: "survey",
+      phaseTime: 0,
+      observations: [],
+      ledger,
+      environment,
+      geology,
+      previous: evidence,
+    };
+    return (saveCandidate(s), s);
+  }
   var POST_KEY = "beyond-known:post-mission:v1",
     POST_PHASES = Object.freeze({
       migration: {
@@ -67886,48 +67970,11 @@ body.ti-voyage #ti-transfer-trigger {
       },
       arrival: { file: "arrival.html", start: 68, duration: 180, openEnded: !0, next: "ending" },
       ending: { file: "ending.html", start: 0, duration: 18, openEnded: !0, next: null },
-    }),
-    clamp11 = (x, a, b) => Math.max(a, Math.min(b, x));
-  function savePostMission(state) {
-    try {
-      return (sessionStorage.setItem(POST_KEY, JSON.stringify(state)), !0);
-    } catch {
-      return !1;
-    }
-  }
+    });
   function clearPostMission() {
     try {
       sessionStorage.removeItem(POST_KEY);
     } catch {}
-  }
-  function beginPostMission(seed, ledger, environment, geology) {
-    if (
-      !ledger?.ready ||
-      ledger.samples?.length !== 6 ||
-      !ledger.water?.confirmed ||
-      !geology?.complete ||
-      geology.records?.length !== 3
-    )
-      throw Error("Post-mission requires completed observations");
-    let state = {
-      version: 1,
-      phase: "migration",
-      elapsed: 0,
-      seed,
-      evidence: {
-        samples: 6,
-        water: !0,
-        nodes: 3,
-        temperature: clamp11(environment.temperature, 100, 500),
-        energy: clamp11(environment.energy, 0, 1),
-        radiation: clamp11(environment.radiation, 0, 1),
-        distance: Math.max(0, ledger.journey?.distance ?? 0),
-        sampleSignatures: sampleSignatures(ledger.samples),
-        settlementSurvey: surveyConditions(ledger, geology),
-      },
-      outcome: null,
-    };
-    return (savePostMission(state), state);
   }
   var planetPages = PLANET_PAGES,
     entryPlanet =
@@ -67938,7 +67985,7 @@ body.ti-voyage #ti-transfer-trigger {
     try {
       sessionStorage.removeItem(VEHICLE_HISTORY_KEY);
     } catch {}
-    (clearCheckpoint(), resetPlanetState(), clearPostMission());
+    (clearCheckpoint(), resetPlanetState(), clearPostMission(), clearCandidate());
     try {
       for (let name of [
         "terra-incognita:mission-memory:v3",
@@ -68948,8 +68995,7 @@ body.ti-voyage #ti-transfer-trigger {
         finalTableau.phase === "return" &&
           docking.docked &&
           (fieldArchive.persist(),
-          fleetUplink.start(now2, fieldArchive.snapshot(), shotDirector.focus),
-          (finalTableau.phase = "uplink"),
+          (finalTableau.phase = "complete"),
           document.body.classList.remove("ti-fleet-return")),
         finalTableau.phase === "complete" && !finalTableau.requested)
       ) {
@@ -68957,13 +69003,20 @@ body.ti-voyage #ti-transfer-trigger {
           clearCheckpoint(),
           missionMemory.persist(),
           fieldArchive.persist(),
-          beginPostMission(
+          clearPostMission(),
+          prepareCandidate(
             window.UNIVERSE_SEED,
             missionMemory.snapshot(),
             planetState.departure(world, power.charge),
             geologicalMemory.snapshot(),
           ));
-        let next = new URL("migration.html", location.href);
+        let transit = beginTransfer(
+            window.UNIVERSE_SEED,
+            planetState.departure(world, power.charge),
+            "granite",
+            "candidate",
+          ),
+          next = new URL(transferPage(transit), location.href);
         for (let key3 of ["quality", "full", "terminal"])
           new URLSearchParams(location.search).has(key3) &&
             next.searchParams.set(key3, new URLSearchParams(location.search).get(key3));
