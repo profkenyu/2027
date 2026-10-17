@@ -39034,6 +39034,32 @@ void main() {
         };
       }
 
+      // works/first_dawn/ring-encounter.js
+      function createRingEncounter() {
+        const direction = new Vector3();
+        const ramp = (t, a, b) => MathUtils.smootherstep(t, a, b);
+        let lighting = 0;
+        return {
+          update(phase2, t) {
+            lighting =
+              phase2 === "migration"
+                ? ramp(t, MIGRATION_CUTS[1] - 2, MIGRATION_CUTS[1] + 5) *
+                  (1 - ramp(t, MIGRATION_CUTS[3] - 3, MIGRATION_CUTS[3] + 2))
+                : 0;
+          },
+          light(scene2, hemisphere, fill, ark) {
+            scene2.environmentIntensity = MathUtils.lerp(0.55, 0.44, lighting);
+            hemisphere.intensity = MathUtils.lerp(0.16, 0.12, lighting);
+            if (!lighting) return;
+            direction.set(600, 900, -3e3).applyQuaternion(ark.quaternion).add(ark.position);
+            fill.position.lerp(direction, lighting);
+            fill.target.position.lerp(ark.position, lighting);
+            fill.intensity = MathUtils.lerp(fill.intensity, 0.28, lighting);
+          },
+          snapshot: () => ({ lighting }),
+        };
+      }
+
       // works/shared/detail-scale.js
       var ACCESS_SCALE = Object.freeze({
         leafHeight: 10.2,
@@ -67497,6 +67523,8 @@ void main() {
         { start: 3, duration: 92, z: -4100, x: -1250, y: 620, scale: 2.8 },
       ];
       var motion = schedule.map(() => ({ approach: 0, deploy: 0 }));
+      var ringEncounter = createRingEncounter();
+      var hemisphereLight;
       var choreography = createTimeline({ autoplay: false });
       schedule.forEach((s, i) => {
         choreography.add(
@@ -67642,6 +67670,7 @@ void main() {
             phase === "arrival" ? 1 : radiatorClosure(seconds, i, response.duration);
           poseRadiators(ship, motion[i].deploy, response.opening, false);
         });
+        ringEncounter.update(phase, seconds);
         updateHabitatRings(fleet[5], phase, seconds);
         const migrationShot =
           phase === "migration"
@@ -67741,6 +67770,7 @@ void main() {
           fillLight.position.set(1800, -600, -2200);
           fillLight.target.position.set(0, 0, 0);
         }
+        ringEncounter.light(scene, hemisphereLight, fillLight, fleet[5]);
         environment.update(
           flightTime,
           currentShot.startsWith("surface"),
@@ -67852,7 +67882,8 @@ void main() {
           planetColor: [0.105, 0.112, 0.13],
         }).texture;
         scene.environmentIntensity = 0.55;
-        scene.add(new HemisphereLight(12111079, 4278871, 0.16));
+        hemisphereLight = new HemisphereLight(12111079, 4278871, 0.16);
+        scene.add(hemisphereLight);
         keyLight = new DirectionalLight(14806271, 2.45);
         keyLight.castShadow = true;
         keyLight.shadow.mapSize.setScalar(quality.shadow);
@@ -67991,6 +68022,7 @@ void main() {
               name: r.name,
               angle: r.rotation.z,
             })),
+            ringEncounter: ringEncounter.snapshot(),
             structure: fleet.map((s) => ({
               bays: s.userData.serviceBays,
               hatches: s.userData.accessHatches,

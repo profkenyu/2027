@@ -68633,6 +68633,7 @@ body.ti-voyage #ti-transfer-trigger {
       experienceMode = "observer",
       lastExplorerIntent = -1 / 0,
       released = !1,
+      missionCompletionRequested = !1,
       prologuePhase = "boot",
       entryRevealRequested = !1,
       soundControl = null,
@@ -68870,6 +68871,7 @@ body.ti-voyage #ti-transfer-trigger {
     }
     (addEventListener("resize", () => renderer.setPixelRatio(adaptive.dpr)),
       addEventListener("keydown", (e) => {
+        if (e.target.closest?.('input,textarea,select,[contenteditable="true"]')) return;
         let now2 = performance.now();
         if (DRIVE_KEYS.has(e.code)) {
           if ((e.preventDefault(), !released)) return;
@@ -68882,7 +68884,7 @@ body.ti-voyage #ti-transfer-trigger {
         if (
           (!e.repeat &&
             (e.code === "Equal" || e.code === "NumpadEqual" || e.key === "=") &&
-            (e.preventDefault(), completeCurrentMission(now2)),
+            (e.preventDefault(), requestMissionCompletion(now2)),
           TEST && e.code === "KeyG")
         ) {
           let on = !ground.mesh.material.wireframe;
@@ -68890,6 +68892,15 @@ body.ti-voyage #ti-transfer-trigger {
           for (let m of scatter.meshes) m.visible = !on;
         }
       }));
+    function requestMissionCompletion(now2 = performance.now()) {
+      if (!(docking.started || finalTableau || voyage.phase === "departing")) {
+        if (!released || voyage.active || pendingArrival) {
+          missionCompletionRequested = !0;
+          return;
+        }
+        ((missionCompletionRequested = !1), completeCurrentMission(now2));
+      }
+    }
     function completeCurrentMission(now2 = performance.now()) {
       if (!released || voyage.active || docking.started || pendingArrival || finalTableau)
         return !1;
@@ -68937,14 +68948,8 @@ body.ti-voyage #ti-transfer-trigger {
     }
     bindMissionTripleTap({
       target: document,
-      enabled: () =>
-        mobileControl.active &&
-        released &&
-        !voyage.active &&
-        !docking.started &&
-        !pendingArrival &&
-        !finalTableau,
-      onComplete: () => completeCurrentMission(),
+      enabled: () => !docking.started && !finalTableau && voyage.phase !== "departing",
+      onComplete: () => requestMissionCompletion(),
     });
     function authoredExperienceLock() {
       return prologuePhase !== "released" ||
@@ -69779,6 +69784,11 @@ body.ti-voyage #ti-transfer-trigger {
           )),
         waterMission.update(v, now2, world === "desert"),
         await geologicalMemory.update(v, now2, world === "granite"),
+        missionCompletionRequested &&
+          released &&
+          !voyage.active &&
+          !pendingArrival &&
+          ((missionCompletionRequested = !1), completeCurrentMission(now2)),
         world === "desert" &&
           waterMission.complete &&
           now2 - waterMission.confirmedAt >= WATER_CONFIRM_BREATH_MS &&

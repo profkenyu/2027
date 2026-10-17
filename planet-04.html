@@ -59164,8 +59164,14 @@ void main() {
         hold = 0;
         persist();
       }
+      var completionRequested = false;
       function complete() {
-        if (state.phase !== "survey" || state.seconds < 12) return false;
+        if (state.phase !== "survey") return false;
+        if (state.seconds < 12) {
+          completionRequested = true;
+          return true;
+        }
+        completionRequested = false;
         setManual(false);
         setPhase("return");
         return true;
@@ -59227,6 +59233,7 @@ void main() {
       function update(dt, draw = true) {
         state.seconds += dt;
         state.phaseTime += dt;
+        if (completionRequested && state.seconds >= 12) complete();
         if (state.seconds >= 12 && state.phase === "survey") {
           const next = CANDIDATE_STATIONS.find((s) => !state.observations.includes(s.id));
           if (next) {
@@ -59568,7 +59575,7 @@ void main() {
           addEventListener(event, () => (touch = null));
         bindMissionTripleTap({
           target: document,
-          enabled: () => state.phase === "survey" && state.seconds >= 12,
+          enabled: () => state.phase === "survey",
           onComplete: complete,
         });
         addEventListener("pagehide", pause);
