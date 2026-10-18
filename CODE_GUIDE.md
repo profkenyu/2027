@@ -372,3 +372,23 @@ HTML과 JavaScript는 2칸 들여쓰기와 줄바꿈으로 정리했습니다. H
 - `surface.js`: 절벽 능선의 급격한 꺾임과 좁고 깊은 반복 골을 완화했다. 평원의 무한 평행 균열을 끝이 가늘어지는 유한 길이의 틈으로 변경했다.
 - 근접 암석 틈은 간격·폭·노출 범위가 달라지고 퇴적물에 가려진 부분에서 사라진다. 벽면 방향에 맞춰 표시하고 선의 대비와 깊이를 줄였다. 실제 지질 모델이 아닌 절차적 지형 연출이다.
 - 세 화질의 지형 메시 개수는 그대로다. 드론 이동·마지막 8초 정지 유지. 검사: `arrival-canyon.mjs`, `surface-natural.mjs`, `arrival-drone.mjs`, `basin-model.mjs`.
+
+
+## 2026-10-18 수정 모듈
+
+원본 프로젝트의 works/first_dawn/flush-outlet.js는 선체 일체형 분사구, ring-motion.js는 동일 크기 고리의 160초 역회전, voyage-materials.js는 출구 형상과 일치하는 분사광·열화 마스크를 담당합니다.
+
+works/candidate/navigation.js는 기체 안전 영역을 피하는 가시성 그래프 경로와 수동 접근 제한을 담당합니다. descent-gas.js는 고도에 따른 가스·지표 먼지를 한 번의 드로 호출로 그립니다. model-decoder.js는 표시 모델과 경사로 피벗을 복원하고, main.js는 착륙·출차·탐사·정렬·격납·송신·자동 전환 상태를 관리합니다. 후보지 저장 버전은 shared/candidate-survey.js의 SURVEY_REVISION을 공유합니다.
+
+tools/export-candidate-models.mjs는 세 화질에서 공통 착륙 위치를 선정하고 다리·경사로 접지 모델을 생성합니다. tools/candidate-contact-qa.mjs는 출입·우회·송신·전환을, tools/flush-landing-qa.mjs는 접지와 드론 구도를 검사합니다. tools/export-readable.mjs도 장면별 자료를 분리해 arrival 전용 모델이 migration 배포본에 포함되지 않도록 합니다.
+
+
+## 전체 UI와 갱신 최적화 — 2026-10-18
+
+works/shared/cinema-frame.js는 장면 공통 글자 계층·안전영역·44px 조작 영역·반응형 하단 여백을 관리합니다. 실제 viewport 변화와 CSS 값의 변화를 캐시하며, 반환 정리 함수는 이벤트·ResizeObserver를 해제합니다.
+
+works/opening/dev.html은 시작 화면에 필요한 스타일만 유지합니다. engine/core/hud.js는 임무 표시·조작 안내 및 진단 패널을 관리합니다. 진단 패널이 보이는 동안 기본 임무 표시를 숨겨 겹침을 방지합니다. 작품 시간·경로·카메라를 바꾸지 않고 candidate/first_dawn/space main의 중복 갱신·불변 DOM 쓰기·임시 배열을 줄였습니다.
+
+build-opening.mjs의 폰트 삽입은 self-closing link 태그도 지원합니다. space 개발 템플릿은 three/addons import map을 명시합니다. 배포 파일은 기존대로 인라인 자원을 사용합니다.
+
+검증: tools/ui-optimization.mjs(13페이지·65화면), tools/cinema-frame-efficiency.mjs(갱신 호출 비교·정리), tools/cinema-ui.mjs(조작 영역·안전영역), tools/smoke.mjs(실제 입력 경로). 상세 결과는 원본 기술문서/UI_OPTIMIZATION_2026-10-18.md에 있습니다.

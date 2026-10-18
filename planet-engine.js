@@ -51773,9 +51773,35 @@ var<${access}> ${name} : ${structName};`;
             .add(vec32(0.2, 0.23, 0.25).mul(quartz.mul(0.25)))
             .add(vec32(0.34, 0.32, 0.38).mul(mica.mul(0.18)));
         ((material.colorNode = stone.mul(ndl.mul(0.92).add(float2(0.16)))),
-          (this.mesh = new InstancedMesh(geometry, material, this.capacity)),
-          this.mesh.instanceMatrix.setUsage(DynamicDrawUsage),
-          (this.mesh.frustumCulled = !1),
+          (this.mesh = new Group()),
+          (this.batches = Array.from({ length: 6 }, (_, variant) => {
+            let g = geometry.clone(),
+              points = g.attributes.position;
+            for (let i = 0; i < points.count; i++) {
+              let x = points.getX(i),
+                y = points.getY(i),
+                z = points.getZ(i),
+                relief =
+                  0.74 +
+                  hash22(Math.round(x * 100), Math.round(z * 100 + y * 71), variant + 13) * 0.38;
+              points.setXYZ(
+                i,
+                x * relief + y * (variant - 2.5) * 0.09,
+                Math.min(y * relief, 0.54 + variant * 0.055),
+                z * relief + x * 0.14,
+              );
+            }
+            g.computeVertexNormals();
+            let batch3 = new InstancedMesh(g, material, this.capacity);
+            return (
+              batch3.instanceMatrix.setUsage(DynamicDrawUsage),
+              (batch3.frustumCulled = !1),
+              (batch3.count = 0),
+              this.mesh.add(batch3),
+              batch3
+            );
+          })),
+          geometry.dispose(),
           (this.mesh.visible = !1),
           (this.mesh.count = 0),
           (this.matrix = new Matrix4()),
@@ -51799,32 +51825,38 @@ var<${access}> ${name} : ${structName};`;
           az = Math.floor(z / (this.cell * stride)) * stride;
         if (!force && ax === this.anchorX && az === this.anchorZ) return !1;
         ((this.anchorX = ax), (this.anchorZ = az));
-        let n = 0;
+        let n = 0,
+          counts = [0, 0, 0, 0, 0, 0];
         for (let dz = -this.radius; dz <= this.radius; dz++)
           for (let dx = -this.radius; dx <= this.radius; dx++) {
             let ix = ax + dx,
-              iz = az + dz;
-            if (hash22(ix, iz, 1) < 0.43) continue;
+              iz = az + dz,
+              patch = hash22(Math.floor(ix / 4), Math.floor(iz / 4), 31);
+            if (hash22(ix, iz, 1) < 0.69 + patch * 0.1) continue;
             let px2 = (ix + 0.16 + hash22(ix, iz, 2) * 0.68) * this.cell,
               pz2 = (iz + 0.16 + hash22(ix, iz, 3) * 0.68) * this.cell,
-              rare = hash22(ix, iz, 4) > 0.945,
-              sx = rare ? 0.62 + hash22(ix, iz, 5) * 0.72 : 0.13 + hash22(ix, iz, 5) * 0.34,
-              sz = sx * (0.74 + hash22(ix, iz, 6) * 0.52),
-              sy = sx * (rare ? 0.28 + hash22(ix, iz, 7) * 0.22 : 0.24 + hash22(ix, iz, 7) * 0.25);
-            (this.position.set(px2, this.heightAt(px2, pz2) + sy * 0.72, pz2),
+              sx =
+                hash22(ix, iz, 4) > 0.945
+                  ? 0.62 + hash22(ix, iz, 5) * 0.72
+                  : 0.09 + Math.pow(hash22(ix, iz, 5), 1.8) * 0.62,
+              sz = sx * (0.42 + hash22(ix, iz, 6) * 1.02),
+              sy = sx * (0.28 + hash22(ix, iz, 7) * 0.72);
+            (this.position.set(px2, this.heightAt(px2, pz2) + sy * 0.44, pz2),
               this.euler.set(
-                hash22(ix, iz, 8) * 0.24,
+                (hash22(ix, iz, 8) - 0.5) * 0.7,
                 hash22(ix, iz, 9) * Math.PI * 2,
-                hash22(ix, iz, 10) * 0.2,
+                (hash22(ix, iz, 10) - 0.5) * 0.8,
               ),
               this.rotation.setFromEuler(this.euler),
               this.scale.set(sx, sy, sz),
-              this.matrix.compose(this.position, this.rotation, this.scale),
-              this.mesh.setMatrixAt(n++, this.matrix));
+              this.matrix.compose(this.position, this.rotation, this.scale));
+            let variant = Math.floor(hash22(ix, iz, 19) * this.batches.length);
+            (this.batches[variant].setMatrixAt(counts[variant]++, this.matrix), n++);
           }
         return (
-          (this.mesh.count = n),
-          (this.mesh.instanceMatrix.needsUpdate = !0),
+          this.batches.forEach((batch3, i) => {
+            ((batch3.count = counts[i]), (batch3.instanceMatrix.needsUpdate = !0));
+          }),
           (this.stats.instances = n),
           !0
         );
@@ -56453,7 +56485,7 @@ var<${access}> ${name} : ${structName};`;
     "DM Mono",
     ui-monospace,
     monospace;
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.55;
   letter-spacing: .06em;
   color: #8a9099;
@@ -56487,6 +56519,7 @@ var<${access}> ${name} : ${structName};`;
   text-shadow: 0 1px 9px rgba(0, 0, 0, .90);
   transition: opacity .8s ease;
 }
+#fh-mission.engineering-covered { opacity: 0; visibility: hidden; }
 #fh-mission > span {
   display: block;
   overflow: hidden;
@@ -56496,11 +56529,11 @@ var<${access}> ${name} : ${structName};`;
 #fh-mission .experience {
   margin-bottom: 4px;
   font:
-    500 8px/1.45 "DM Mono",
+    500 11px/1.45 "DM Mono",
     ui-monospace,
     monospace;
-  letter-spacing: .18em;
-  color: rgba(181, 186, 194, .84);
+  letter-spacing: .10em;
+  color: rgba(181, 186, 194, .88);
   transition: color .8s ease, letter-spacing .8s ease;
 }
 #fh-mission .body {
@@ -56522,13 +56555,13 @@ var<${access}> ${name} : ${structName};`;
 }
 #fh-mission .body-label {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: anywhere;
   font:
-    700 9px/1.5 "Space Mono",
+    700 11px/1.5 "Space Mono",
     ui-monospace,
     monospace;
-  letter-spacing: .17em;
+  letter-spacing: .10em;
   color: #d01a30;
 }
 #fh-mission .objective {
@@ -56536,15 +56569,16 @@ var<${access}> ${name} : ${structName};`;
   align-items: center;
   gap: 8px;
   margin-top: 4px;
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1.55;
   letter-spacing: .10em;
   color: rgba(237, 239, 241, .94);
 }
 #fh-mission .objective-label {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 #fh-mission .objective-code {
   flex: none;
@@ -56557,7 +56591,8 @@ var<${access}> ${name} : ${structName};`;
   --dot-glow:1px;
 }
 #fh-mission .systems {
-  font-size: 8px;
+  white-space: normal;
+  font-size: 10px;
   line-height: 1.65;
   letter-spacing: .09em;
   color: rgba(181, 186, 194, .82);
@@ -56600,7 +56635,7 @@ body.tx-active #fh-keys {
     ui-monospace,
     monospace;
   font-weight: 700;
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: .26em;
   color: #c0152a;
   text-transform: uppercase;
@@ -56615,7 +56650,7 @@ body.tx-active #fh-keys {
 }
 #fh-hud .gt {
   color: #4a4f57;
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: .22em;
   text-transform: uppercase;
   margin-bottom: 5px;
@@ -56628,7 +56663,7 @@ body.tx-active #fh-keys {
 }
 #fh-hud .k {
   color: #4a4f57;
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: .12em;
   text-transform: uppercase;
 }
@@ -56667,6 +56702,7 @@ body.tx-active #fh-keys {
   background: #c0152a;
 }
 #fh-keys {
+  max-width: calc(var(--viewport-width) - var(--safe-left) - var(--safe-right) - 280px);
   position: fixed;
   z-index: 30;
   left: 24px;
@@ -56684,9 +56720,9 @@ body.tx-active #fh-keys {
     "Noto Sans KR",
     ui-monospace,
     monospace;
-  font-size: 8px;
-  letter-spacing: .10em;
-  color: rgba(138, 144, 153, .54);
+  font-size: 11px;
+  letter-spacing: .04em;
+  color: rgba(164, 173, 185, .82);
   line-height: 1.8;
   opacity: 0;
   transition: opacity 1.6s ease;
@@ -56713,7 +56749,7 @@ body.tx-active #fh-keys {
     top: calc(var(--frame-top) + 14px);
   }
   #fh-mission {
-    width: min(200px, calc(100vw - 164px));
+    width: min(230px, calc(var(--viewport-width) - var(--safe-left) - var(--safe-right) - 150px));
     left: 14px;
     top: calc(var(--frame-top) + 14px);
     padding-left: 9px;
@@ -56724,8 +56760,9 @@ body.tx-active #fh-keys {
   #fh-keys {
     left: 14px;
     right: 14px;
+    max-width: none;
     bottom: calc(var(--frame-bottom) + 12px);
-    font-size: 7px;
+    font-size: 11px;
     letter-spacing: .06em;
   }
   #fh-mission .body {
@@ -56737,7 +56774,7 @@ body.tx-active #fh-keys {
     --dot-character-gap:2px;
   }
   #fh-mission .body-label {
-    font-size: 8px;
+    font-size: 11px;
     letter-spacing: .12em;
   }
   #fh-mission .objective-code {
@@ -56815,7 +56852,8 @@ body.tx-active #fh-keys {
           (this.ctx = el.querySelector("#fh-spark")?.getContext("2d") ?? null),
           (this.hist = new Array(136).fill(16.7)),
           (this._setVisible = (visible) => {
-            el.classList.toggle("hidden", !visible);
+            (el.classList.toggle("hidden", !visible),
+              mission.classList.toggle("engineering-covered", visible));
           }),
           this._setVisible(!1),
           addEventListener(
@@ -59964,9 +60002,9 @@ body.ti-voyage #ti-transfer-trigger {
         break;
     selected.sort((a, b) => a.radius - b.radius);
     let objectives = [
-      ["MATERIAL REFLECTANCE", "COMPARE SIX MATERIAL SPECTRAL RECORDS"],
-      ["HYDRATION COMPARISON", "COMPARE 1.9 µM HYDRATION SIGNATURE"],
-      ["SURVEY CORRELATION", "RECORD MODELLED SITE CORRELATION"],
+      ["Si · 규소 함유 광물", "규산염 분석 · 구조재 원료 기록", ["Si"]],
+      ["Fe · Ti · 철·타이타늄 함유 광물", "산화물 분석 · 정련용 원료 기록", ["Fe", "Ti"]],
+      ["Mg · 마그네슘 함유 광물", "마그네슘 규산염 분석 · 합금 원료 기록", ["Mg"]],
     ];
     return selected.map((site, index) => ({
       ...site,
@@ -59974,6 +60012,8 @@ body.ti-voyage #ti-transfer-trigger {
       order: index,
       objective: objectives[index][0],
       instruction: objectives[index][1],
+      elements: objectives[index][2],
+      resourceUse: "구조물 제조 원료 · 분리 및 정련 필요",
       acquireRadius: 4.2,
       scanRadius: 6.4,
       scanHoldMs: 4200,
@@ -60999,10 +61039,17 @@ body.ti-voyage #ti-transfer-trigger {
         current: this.current,
         total: this.model?.sites?.length ?? 0,
         records: [...this.records],
+        elements: [
+          ...new Set(
+            (this.model?.sites ?? []).slice(0, this.current).flatMap((site) => site.elements ?? []),
+          ),
+        ],
         observations: (this.model?.sites ?? [])
           .slice(0, this.current)
           .map((site) => ({
             id: site.id,
+            elements: site.elements ?? [],
+            resourceUse: site.resourceUse,
             coherence: site.coherence,
             density: site.density,
             reflectance: site.reflectance,
@@ -64670,6 +64717,7 @@ body.ti-voyage #ti-transfer-trigger {
           foot = [Math.cos(a) * padRadius, 0.16, Math.sin(a) * padRadius],
           upper = cylinderBetween2(shoulder, elbow, 0.22, ceramic, 8),
           lower = cylinderBetween2(elbow, foot, 0.12, metal, radial),
+          lowerCore = cylinderBetween2(elbow, foot, 0.085, metal, radial),
           sleeve = makeLink(0.19, LEG.sleeveLength, graphite, radial),
           middle = makeLink(0.145, LEG.sleeveLength, metal, radial),
           brace = cylinderBetween2(
@@ -64679,7 +64727,7 @@ body.ti-voyage #ti-transfer-trigger {
             graphite,
             10,
           );
-        this.group.add(upper, lower, brace, sleeve, middle);
+        this.group.add(upper, lower, lowerCore, brace, sleeve, middle);
         let shoulderJoint = new Mesh(new CylinderGeometry(0.32, 0.32, 0.52, 12), graphite);
         (shoulderJoint.position.set(...shoulder),
           shoulderJoint.quaternion.setFromUnitVectors(Y, new Vector3(-Math.sin(a), 0, Math.cos(a))),
@@ -64736,6 +64784,7 @@ body.ti-voyage #ti-transfer-trigger {
             foot,
             upper,
             lower,
+            lowerCore,
             sleeve,
             middle,
             brace,
@@ -64787,6 +64836,7 @@ body.ti-voyage #ti-transfer-trigger {
             1,
             upper,
             lower,
+            lowerCore,
             sleeve,
             middle,
             brace,
@@ -65455,6 +65505,7 @@ body.ti-voyage #ti-transfer-trigger {
         cz = Math.sin(angle),
         lower = leg.lowerExtension;
       (fitLink(leg.upper, leg.a, leg.b),
+        fitLink(leg.lowerCore, leg.b, leg.c),
         leg.braceA.copy(leg.b).sub(leg.c).normalize().multiplyScalar(LEG.sleeveLength).add(leg.c),
         fitLink(leg.lower, leg.braceA, leg.c),
         leg.sleeveEnd
@@ -67856,7 +67907,17 @@ body.ti-voyage #ti-transfer-trigger {
     stableSeconds: 10,
   });
   var CANDIDATE_KEY = "beyond-known:candidate-survey:v1",
-    CANDIDATE_SITE = Object.freeze({ x: -1400, z: 3300, size: 640, planet: "candidate" });
+    CANDIDATE_SITE = Object.freeze({ x: -1400, z: 3300, size: 640, planet: "candidate" }),
+    CANDIDATE_NAVIGATION = Object.freeze({
+      frame: "TF-NAV-01",
+      units: "AU",
+      origin: "작품 내 항성 중심",
+      x: 1.2846,
+      y: -0.0821,
+      z: 0.4368,
+      fictional: !0,
+    });
+  var LIFE_ELEMENTS = Object.freeze(["H", "O", "C", "N", "P", "S"]);
   var INTERVENTION = Object.freeze({ minX: -1475, maxX: -1325, minZ: 3120, maxZ: 3480 }),
     CANDIDATE_STATIONS = Object.freeze([
       {
@@ -67864,8 +67925,10 @@ body.ti-voyage #ti-transfer-trigger {
         body: "candidate",
         planet: "PLANET 04",
         world: "CANDIDATE BASIN",
-        label: "RESOURCE / PRESERVATION BOUNDARY",
-        ko: "자원 후보와 보존 경계",
+        label: "H · O / HYDRATED MINERALS",
+        ko: "H · O — 수소·산소 함유 광물",
+        elements: ["H", "O"],
+        compounds: "수화광물 · 물 추출 후보",
         x: -1320,
         z: 3280,
         radius: 8,
@@ -67884,8 +67947,10 @@ body.ti-voyage #ti-transfer-trigger {
         body: "candidate",
         planet: "PLANET 04",
         world: "CANDIDATE BASIN",
-        label: "LIMITED INSTALLATION FOOTPRINT",
-        ko: "설비 설치 범위",
+        label: "C · N / CARBONATE AND NITRATE",
+        ko: "C · N — 탄소·질소 함유 물질",
+        elements: ["C", "N"],
+        compounds: "탄산염 · 질산염",
         x: -1410,
         z: 3300,
         radius: 8,
@@ -67904,8 +67969,10 @@ body.ti-voyage #ti-transfer-trigger {
         body: "candidate",
         planet: "PLANET 04",
         world: "CANDIDATE BASIN",
-        label: "SURFACE REFERENCE / NO INTERVENTION",
-        ko: "개입 전 지표 기준 기록",
+        label: "P · S / PHOSPHATE AND SULFATE",
+        ko: "P · S — 인·황 함유 광물",
+        elements: ["P", "S"],
+        compounds: "인산염 · 황산염",
         x: -1450,
         z: 3220,
         radius: 8,
@@ -67950,7 +68017,8 @@ body.ti-voyage #ti-transfer-trigger {
       version: 1,
       seed,
       seconds: 0,
-      phase: "survey",
+      surveyRevision: 3,
+      phase: "landing",
       phaseTime: 0,
       observations: [],
       ledger,
@@ -68762,14 +68830,17 @@ body.ti-voyage #ti-transfer-trigger {
           ambient,
           passage: matterPassage,
           onSwap: (destination) =>
-            travelToPlanet(
-              destination.key,
-              missionMemory,
-              planetState.departure(world, power.charge),
-            ),
+            destination.key === "candidate"
+              ? departToCandidate()
+              : travelToPlanet(
+                  destination.key,
+                  missionMemory,
+                  planetState.departure(world, power.charge),
+                ),
           onDeparture: (destination) =>
             (world === "terra" && destination.key === "desert") ||
-            (world === "desert" && destination.key === "granite"),
+            (world === "desert" && destination.key === "granite") ||
+            (world === "granite" && destination.key === "candidate"),
           onSpace: (active) => {
             ((sky.visible = !active), (ground.mesh.visible = !active));
             for (let mesh of scatter.meshes) mesh.visible = !active && PLANETS[world].metric;
@@ -68991,8 +69062,7 @@ body.ti-voyage #ti-transfer-trigger {
         (kiosk.last = now2));
     }
     function updateFinalTableau(now2) {
-      if (
-        finalTableau &&
+      finalTableau &&
         (finalTableau.phase === "survey-hold" &&
           now2 - finalTableau.t0 >= 2400 &&
           docking.start(now2, { physicalReturn: !0 }) &&
@@ -69002,31 +69072,37 @@ body.ti-voyage #ti-transfer-trigger {
           (fieldArchive.persist(),
           (finalTableau.phase = "complete"),
           document.body.classList.remove("ti-fleet-return")),
-        finalTableau.phase === "complete" && !finalTableau.requested)
-      ) {
-        ((finalTableau.requested = !0),
-          clearCheckpoint(),
-          missionMemory.persist(),
-          fieldArchive.persist(),
-          clearPostMission(),
-          prepareCandidate(
-            window.UNIVERSE_SEED,
-            missionMemory.snapshot(),
-            planetState.departure(world, power.charge),
-            geologicalMemory.snapshot(),
-          ));
-        let transit = beginTransfer(
-            window.UNIVERSE_SEED,
-            planetState.departure(world, power.charge),
-            "granite",
-            "candidate",
-          ),
-          next = new URL(transferPage(transit), location.href);
-        for (let key3 of ["quality", "full", "terminal"])
-          new URLSearchParams(location.search).has(key3) &&
-            next.searchParams.set(key3, new URLSearchParams(location.search).get(key3));
-        location.assign(next.href);
-      }
+        finalTableau.phase === "complete" &&
+          !finalTableau.requested &&
+          ((finalTableau.requested = !0),
+          (finalTableau.phase = "departure"),
+          voyage.start(
+            { key: "candidate", id: "PLANET 04", label: "CANDIDATE BASIN", start: [-1456, 3190] },
+            now2,
+          )));
+    }
+    function departToCandidate() {
+      (clearCheckpoint(),
+        missionMemory.persist(),
+        fieldArchive.persist(),
+        clearPostMission(),
+        prepareCandidate(
+          window.UNIVERSE_SEED,
+          missionMemory.snapshot(),
+          planetState.departure(world, power.charge),
+          geologicalMemory.snapshot(),
+        ));
+      let transit = beginTransfer(
+          window.UNIVERSE_SEED,
+          planetState.departure(world, power.charge),
+          "granite",
+          "candidate",
+        ),
+        next = new URL(transferPage(transit), location.href);
+      for (let key3 of ["quality", "full", "terminal"])
+        new URLSearchParams(location.search).has(key3) &&
+          next.searchParams.set(key3, new URLSearchParams(location.search).get(key3));
+      location.assign(next.href);
     }
     function observerMayDrive() {
       return (
@@ -69389,7 +69465,7 @@ body.ti-voyage #ti-transfer-trigger {
             activated
               ? {
                   r: 0,
-                  ko: "PLANET 03 · 선행 탐사 자료 대조 · 후보지 3곳",
+                  ko: "PLANET 03 · 구조재 원료 Si · Fe · Ti · Mg 탐사",
                   en: "PLANET 03 · SURVEY RECORDS CORRELATED / THREE CANDIDATE SITES",
                 }
               : {
@@ -69641,7 +69717,7 @@ body.ti-voyage #ti-transfer-trigger {
       if (world === "desert")
         return `HYDRATION SIGNATURE · ${waterMission.complete ? "RECORDED" : waterMission.state.toUpperCase()}`;
       let total = geologicalMemory.model?.sites?.length ?? 3;
-      return `SURVEY CORRELATION · ${geologicalMemory.current} / ${total}`;
+      return `구조재 원료 Si · Fe · Ti · Mg · ${geologicalMemory.current} / ${total}`;
     }
     function reconStatusText() {
       if (world === "terra")
@@ -69793,7 +69869,7 @@ body.ti-voyage #ti-transfer-trigger {
           waterMission.complete &&
           now2 - waterMission.confirmedAt >= WATER_CONFIRM_BREATH_MS &&
           !docking.started &&
-          docking.start(now2),
+          docking.start(now2, { physicalReturn: !0 }),
         world === "terra" &&
           restoration.complete &&
           !restoration.event &&
@@ -70172,7 +70248,7 @@ body.ti-voyage #ti-transfer-trigger {
           body: "granite",
           planet: "PLANET 03",
           world: "JOINTED GRANITE",
-          label: "REFLECTANCE SITE",
+          label: "Si / SILICATE RESOURCE",
           x: sites[0].x,
           z: sites[0].z,
           radius: 14,
@@ -70193,7 +70269,7 @@ body.ti-voyage #ti-transfer-trigger {
           body: "granite",
           planet: "PLANET 03",
           world: "JOINTED GRANITE",
-          label: "HYDRATION COMPARISON",
+          label: "Fe · Ti / OXIDE RESOURCE",
           x: sites[1].x,
           z: sites[1].z,
           radius: 14,
@@ -70204,7 +70280,7 @@ body.ti-voyage #ti-transfer-trigger {
           body: "granite",
           planet: "PLANET 03",
           world: "JOINTED GRANITE",
-          label: "CORRELATION SITE",
+          label: "Mg / SILICATE RESOURCE",
           x: sites[2].x,
           z: sites[2].z,
           radius: 14,
@@ -70345,6 +70421,8 @@ body.ti-voyage #ti-transfer-trigger {
             stations[[1, 3, 4][i]],
             {
               objective: site.objective,
+              elements: site.elements ?? [],
+              resourceUse: site.resourceUse,
               coherence: site.coherence,
               reflectance: site.reflectance,
               density: site.density,
@@ -70444,7 +70522,7 @@ body.ti-voyage #ti-transfer-trigger {
           lander.setCompletionHighlight(null),
           document.body.classList.remove("ti-completion-tableau"),
           (completionTableau = null),
-          docking.start(now2)));
+          docking.start(now2, { physicalReturn: !0 })));
     }
     async function prepareVoyageDestination(destination) {
       let planet = PLANETS[destination.key];
