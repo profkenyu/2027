@@ -18057,272 +18057,179 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
           }
         };
       var PlaneGeometry = class _PlaneGeometry extends BufferGeometry {
-          /**
-           * Constructs a new plane geometry.
-           *
-           * @param {number} [width=1] - The width along the X axis.
-           * @param {number} [height=1] - The height along the Y axis
-           * @param {number} [widthSegments=1] - The number of segments along the X axis.
-           * @param {number} [heightSegments=1] - The number of segments along the Y axis.
-           */
-          constructor(width = 1, height = 1, widthSegments = 1, heightSegments = 1) {
-            (super(),
-              (this.type = "PlaneGeometry"),
-              (this.parameters = {
-                width,
-                height,
-                widthSegments,
-                heightSegments,
-              }));
-            let width_half = width / 2,
-              height_half = height / 2,
-              gridX = Math.floor(widthSegments),
-              gridY = Math.floor(heightSegments),
-              gridX1 = gridX + 1,
-              gridY1 = gridY + 1,
-              segment_width = width / gridX,
-              segment_height = height / gridY,
-              indices = [],
-              vertices = [],
-              normals = [],
-              uvs = [];
-            for (let iy = 0; iy < gridY1; iy++) {
-              let y = iy * segment_height - height_half;
-              for (let ix = 0; ix < gridX1; ix++) {
-                let x = ix * segment_width - width_half;
-                (vertices.push(x, -y, 0),
-                  normals.push(0, 0, 1),
-                  uvs.push(ix / gridX),
-                  uvs.push(1 - iy / gridY));
-              }
-            }
-            for (let iy = 0; iy < gridY; iy++)
-              for (let ix = 0; ix < gridX; ix++) {
-                let a = ix + gridX1 * iy,
-                  b = ix + gridX1 * (iy + 1),
-                  c = ix + 1 + gridX1 * (iy + 1),
-                  d = ix + 1 + gridX1 * iy;
-                (indices.push(a, b, d), indices.push(b, c, d));
-              }
-            (this.setIndex(indices),
-              this.setAttribute("position", new Float32BufferAttribute(vertices, 3)),
-              this.setAttribute("normal", new Float32BufferAttribute(normals, 3)),
-              this.setAttribute("uv", new Float32BufferAttribute(uvs, 2)));
-          }
-          copy(source) {
-            return (
-              super.copy(source),
-              (this.parameters = Object.assign({}, source.parameters)),
-              this
-            );
-          }
-          /**
-           * Factory method for creating an instance of this class from the given
-           * JSON object.
-           *
-           * @param {Object} data - A JSON object representing the serialized geometry.
-           * @return {PlaneGeometry} A new instance.
-           */
-          static fromJSON(data) {
-            return new _PlaneGeometry(
-              data.width,
-              data.height,
-              data.widthSegments,
-              data.heightSegments,
-            );
-          }
-        },
-        RingGeometry = class _RingGeometry extends BufferGeometry {
-          /**
-           * Constructs a new ring geometry.
-           *
-           * @param {number} [innerRadius=0.5] - The inner radius of the ring.
-           * @param {number} [outerRadius=1] - The outer radius of the ring.
-           * @param {number} [thetaSegments=32] - Number of segments. A higher number means the ring will be more round. Minimum is `3`.
-           * @param {number} [phiSegments=1] - Number of segments per ring segment. Minimum is `1`.
-           * @param {number} [thetaStart=0] - Starting angle in radians.
-           * @param {number} [thetaLength=Math.PI*2] - Central angle in radians.
-           */
-          constructor(
-            innerRadius = 0.5,
-            outerRadius = 1,
-            thetaSegments = 32,
-            phiSegments = 1,
-            thetaStart = 0,
-            thetaLength = Math.PI * 2,
-          ) {
-            (super(),
-              (this.type = "RingGeometry"),
-              (this.parameters = {
-                innerRadius,
-                outerRadius,
-                thetaSegments,
-                phiSegments,
-                thetaStart,
-                thetaLength,
-              }),
-              (thetaSegments = Math.max(3, thetaSegments)),
-              (phiSegments = Math.max(1, phiSegments)));
-            let indices = [],
-              vertices = [],
-              normals = [],
-              uvs = [],
-              radius = innerRadius,
-              radiusStep = (outerRadius - innerRadius) / phiSegments,
-              vertex2 = new Vector3(),
-              uv = new Vector2();
-            for (let j = 0; j <= phiSegments; j++) {
-              for (let i = 0; i <= thetaSegments; i++) {
-                let segment2 = thetaStart + (i / thetaSegments) * thetaLength;
-                ((vertex2.x = radius * Math.cos(segment2)),
-                  (vertex2.y = radius * Math.sin(segment2)),
-                  vertices.push(vertex2.x, vertex2.y, vertex2.z),
-                  normals.push(0, 0, 1),
-                  (uv.x = (vertex2.x / outerRadius + 1) / 2),
-                  (uv.y = (vertex2.y / outerRadius + 1) / 2),
-                  uvs.push(uv.x, uv.y));
-              }
-              radius += radiusStep;
-            }
-            for (let j = 0; j < phiSegments; j++) {
-              let thetaSegmentLevel = j * (thetaSegments + 1);
-              for (let i = 0; i < thetaSegments; i++) {
-                let segment2 = i + thetaSegmentLevel,
-                  a = segment2,
-                  b = segment2 + thetaSegments + 1,
-                  c = segment2 + thetaSegments + 2,
-                  d = segment2 + 1;
-                (indices.push(a, b, d), indices.push(b, c, d));
-              }
-            }
-            (this.setIndex(indices),
-              this.setAttribute("position", new Float32BufferAttribute(vertices, 3)),
-              this.setAttribute("normal", new Float32BufferAttribute(normals, 3)),
-              this.setAttribute("uv", new Float32BufferAttribute(uvs, 2)));
-          }
-          copy(source) {
-            return (
-              super.copy(source),
-              (this.parameters = Object.assign({}, source.parameters)),
-              this
-            );
-          }
-          /**
-           * Factory method for creating an instance of this class from the given
-           * JSON object.
-           *
-           * @param {Object} data - A JSON object representing the serialized geometry.
-           * @return {RingGeometry} A new instance.
-           */
-          static fromJSON(data) {
-            return new _RingGeometry(
-              data.innerRadius,
-              data.outerRadius,
-              data.thetaSegments,
-              data.phiSegments,
-              data.thetaStart,
-              data.thetaLength,
-            );
-          }
-        },
-        ShapeGeometry = class _ShapeGeometry extends BufferGeometry {
-          /**
-           * Constructs a new shape geometry.
-           *
-           * @param {Shape|Array<Shape>} [shapes] - A shape or an array of shapes.
-           * @param {number} [curveSegments=12] - Number of segments per shape.
-           */
-          constructor(
-            shapes = new Shape([
-              new Vector2(0, 0.5),
-              new Vector2(-0.5, -0.5),
-              new Vector2(0.5, -0.5),
-            ]),
-            curveSegments = 12,
-          ) {
-            (super(),
-              (this.type = "ShapeGeometry"),
-              (this.parameters = {
-                shapes,
-                curveSegments,
-              }));
-            let indices = [],
-              vertices = [],
-              normals = [],
-              uvs = [],
-              groupStart = 0,
-              groupCount = 0;
-            if (Array.isArray(shapes) === !1) addShape(shapes);
-            else
-              for (let i = 0; i < shapes.length; i++)
-                (addShape(shapes[i]),
-                  this.addGroup(groupStart, groupCount, i),
-                  (groupStart += groupCount),
-                  (groupCount = 0));
-            (this.setIndex(indices),
-              this.setAttribute("position", new Float32BufferAttribute(vertices, 3)),
-              this.setAttribute("normal", new Float32BufferAttribute(normals, 3)),
-              this.setAttribute("uv", new Float32BufferAttribute(uvs, 2)));
-            function addShape(shape) {
-              let indexOffset = vertices.length / 3,
-                points = shape.extractPoints(curveSegments),
-                shapeVertices = points.shape,
-                shapeHoles = points.holes;
-              ShapeUtils.isClockWise(shapeVertices) === !1 &&
-                (shapeVertices = shapeVertices.reverse());
-              for (let i = 0, l = shapeHoles.length; i < l; i++) {
-                let shapeHole = shapeHoles[i];
-                ShapeUtils.isClockWise(shapeHole) === !0 && (shapeHoles[i] = shapeHole.reverse());
-              }
-              let faces = ShapeUtils.triangulateShape(shapeVertices, shapeHoles);
-              for (let i = 0, l = shapeHoles.length; i < l; i++) {
-                let shapeHole = shapeHoles[i];
-                shapeVertices = shapeVertices.concat(shapeHole);
-              }
-              for (let i = 0, l = shapeVertices.length; i < l; i++) {
-                let vertex2 = shapeVertices[i];
-                (vertices.push(vertex2.x, vertex2.y, 0),
-                  normals.push(0, 0, 1),
-                  uvs.push(vertex2.x, vertex2.y));
-              }
-              for (let i = 0, l = faces.length; i < l; i++) {
-                let face = faces[i],
-                  a = face[0] + indexOffset,
-                  b = face[1] + indexOffset,
-                  c = face[2] + indexOffset;
-                (indices.push(a, b, c), (groupCount += 3));
-              }
+        /**
+         * Constructs a new plane geometry.
+         *
+         * @param {number} [width=1] - The width along the X axis.
+         * @param {number} [height=1] - The height along the Y axis
+         * @param {number} [widthSegments=1] - The number of segments along the X axis.
+         * @param {number} [heightSegments=1] - The number of segments along the Y axis.
+         */
+        constructor(width = 1, height = 1, widthSegments = 1, heightSegments = 1) {
+          (super(),
+            (this.type = "PlaneGeometry"),
+            (this.parameters = {
+              width,
+              height,
+              widthSegments,
+              heightSegments,
+            }));
+          let width_half = width / 2,
+            height_half = height / 2,
+            gridX = Math.floor(widthSegments),
+            gridY = Math.floor(heightSegments),
+            gridX1 = gridX + 1,
+            gridY1 = gridY + 1,
+            segment_width = width / gridX,
+            segment_height = height / gridY,
+            indices = [],
+            vertices = [],
+            normals = [],
+            uvs = [];
+          for (let iy = 0; iy < gridY1; iy++) {
+            let y = iy * segment_height - height_half;
+            for (let ix = 0; ix < gridX1; ix++) {
+              let x = ix * segment_width - width_half;
+              (vertices.push(x, -y, 0),
+                normals.push(0, 0, 1),
+                uvs.push(ix / gridX),
+                uvs.push(1 - iy / gridY));
             }
           }
-          copy(source) {
-            return (
-              super.copy(source),
-              (this.parameters = Object.assign({}, source.parameters)),
-              this
-            );
-          }
-          toJSON() {
-            let data = super.toJSON(),
-              shapes = this.parameters.shapes;
-            return toJSON(shapes, data);
-          }
-          /**
-           * Factory method for creating an instance of this class from the given
-           * JSON object.
-           *
-           * @param {Object} data - A JSON object representing the serialized geometry.
-           * @param {Array<Shape>} shapes - An array of shapes.
-           * @return {ShapeGeometry} A new instance.
-           */
-          static fromJSON(data, shapes) {
-            let geometryShapes = [];
-            for (let j = 0, jl = data.shapes.length; j < jl; j++) {
-              let shape = shapes[data.shapes[j]];
-              geometryShapes.push(shape);
+          for (let iy = 0; iy < gridY; iy++)
+            for (let ix = 0; ix < gridX; ix++) {
+              let a = ix + gridX1 * iy,
+                b = ix + gridX1 * (iy + 1),
+                c = ix + 1 + gridX1 * (iy + 1),
+                d = ix + 1 + gridX1 * iy;
+              (indices.push(a, b, d), indices.push(b, c, d));
             }
-            return new _ShapeGeometry(geometryShapes, data.curveSegments);
+          (this.setIndex(indices),
+            this.setAttribute("position", new Float32BufferAttribute(vertices, 3)),
+            this.setAttribute("normal", new Float32BufferAttribute(normals, 3)),
+            this.setAttribute("uv", new Float32BufferAttribute(uvs, 2)));
+        }
+        copy(source) {
+          return (
+            super.copy(source),
+            (this.parameters = Object.assign({}, source.parameters)),
+            this
+          );
+        }
+        /**
+         * Factory method for creating an instance of this class from the given
+         * JSON object.
+         *
+         * @param {Object} data - A JSON object representing the serialized geometry.
+         * @return {PlaneGeometry} A new instance.
+         */
+        static fromJSON(data) {
+          return new _PlaneGeometry(
+            data.width,
+            data.height,
+            data.widthSegments,
+            data.heightSegments,
+          );
+        }
+      };
+      var ShapeGeometry = class _ShapeGeometry extends BufferGeometry {
+        /**
+         * Constructs a new shape geometry.
+         *
+         * @param {Shape|Array<Shape>} [shapes] - A shape or an array of shapes.
+         * @param {number} [curveSegments=12] - Number of segments per shape.
+         */
+        constructor(
+          shapes = new Shape([
+            new Vector2(0, 0.5),
+            new Vector2(-0.5, -0.5),
+            new Vector2(0.5, -0.5),
+          ]),
+          curveSegments = 12,
+        ) {
+          (super(),
+            (this.type = "ShapeGeometry"),
+            (this.parameters = {
+              shapes,
+              curveSegments,
+            }));
+          let indices = [],
+            vertices = [],
+            normals = [],
+            uvs = [],
+            groupStart = 0,
+            groupCount = 0;
+          if (Array.isArray(shapes) === !1) addShape(shapes);
+          else
+            for (let i = 0; i < shapes.length; i++)
+              (addShape(shapes[i]),
+                this.addGroup(groupStart, groupCount, i),
+                (groupStart += groupCount),
+                (groupCount = 0));
+          (this.setIndex(indices),
+            this.setAttribute("position", new Float32BufferAttribute(vertices, 3)),
+            this.setAttribute("normal", new Float32BufferAttribute(normals, 3)),
+            this.setAttribute("uv", new Float32BufferAttribute(uvs, 2)));
+          function addShape(shape) {
+            let indexOffset = vertices.length / 3,
+              points = shape.extractPoints(curveSegments),
+              shapeVertices = points.shape,
+              shapeHoles = points.holes;
+            ShapeUtils.isClockWise(shapeVertices) === !1 &&
+              (shapeVertices = shapeVertices.reverse());
+            for (let i = 0, l = shapeHoles.length; i < l; i++) {
+              let shapeHole = shapeHoles[i];
+              ShapeUtils.isClockWise(shapeHole) === !0 && (shapeHoles[i] = shapeHole.reverse());
+            }
+            let faces = ShapeUtils.triangulateShape(shapeVertices, shapeHoles);
+            for (let i = 0, l = shapeHoles.length; i < l; i++) {
+              let shapeHole = shapeHoles[i];
+              shapeVertices = shapeVertices.concat(shapeHole);
+            }
+            for (let i = 0, l = shapeVertices.length; i < l; i++) {
+              let vertex2 = shapeVertices[i];
+              (vertices.push(vertex2.x, vertex2.y, 0),
+                normals.push(0, 0, 1),
+                uvs.push(vertex2.x, vertex2.y));
+            }
+            for (let i = 0, l = faces.length; i < l; i++) {
+              let face = faces[i],
+                a = face[0] + indexOffset,
+                b = face[1] + indexOffset,
+                c = face[2] + indexOffset;
+              (indices.push(a, b, c), (groupCount += 3));
+            }
           }
-        };
+        }
+        copy(source) {
+          return (
+            super.copy(source),
+            (this.parameters = Object.assign({}, source.parameters)),
+            this
+          );
+        }
+        toJSON() {
+          let data = super.toJSON(),
+            shapes = this.parameters.shapes;
+          return toJSON(shapes, data);
+        }
+        /**
+         * Factory method for creating an instance of this class from the given
+         * JSON object.
+         *
+         * @param {Object} data - A JSON object representing the serialized geometry.
+         * @param {Array<Shape>} shapes - An array of shapes.
+         * @return {ShapeGeometry} A new instance.
+         */
+        static fromJSON(data, shapes) {
+          let geometryShapes = [];
+          for (let j = 0, jl = data.shapes.length; j < jl; j++) {
+            let shape = shapes[data.shapes[j]];
+            geometryShapes.push(shape);
+          }
+          return new _ShapeGeometry(geometryShapes, data.curveSegments);
+        }
+      };
       function toJSON(shapes, data) {
         if (((data.shapes = []), Array.isArray(shapes)))
           for (let i = 0, l = shapes.length; i < l; i++) {
@@ -39613,30 +39520,21 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
       function nozzleAssembly(tier2, radius, length, outer, inner) {
         let r = radius,
           t = 1.05,
-          profile = [
-            [r * 0.65, 0],
-            [r * 0.66, length * 0.16],
-            [r * 0.71, length * 0.38],
-            [r * 0.83, length * 0.7],
-            [r, length],
-            [r - t, length],
-          ],
-          stations = tier2 === "low" ? [0.7, 0.38] : [0.82, 0.7, 0.38],
-          innerRadius = (u) =>
-            r *
-              (u > 0.7
-                ? 0.83 + ((u - 0.7) / 0.3) * 0.17
-                : u > 0.38
-                  ? 0.71 + ((u - 0.38) / 0.32) * 0.12
-                  : 0.66 + ((u - 0.16) / 0.22) * 0.05) -
-            t;
-        for (let u of stations)
-          profile.push(
-            [innerRadius(u + 0.016), length * (u + 0.016)],
-            [innerRadius(u) - 0.55, length * u],
-            [innerRadius(u - 0.016), length * (u - 0.016)],
-          );
-        profile.push([r * 0.66 - t, length * 0.16], [r * 0.65 - t, 0], [r * 0.65, 0]);
+          axialSteps = { high: 12, mid: 9, low: 6 }[tier2],
+          radiusAt = (u) => r * (0.65 + 0.04 * u + 0.31 * u * u),
+          profile = [];
+        for (let i = 0; i <= axialSteps; i++) {
+          let u = (i / axialSteps) * 0.98;
+          profile.push([radiusAt(u), length * u]);
+        }
+        profile.push([r - t * 0.12, length - 0.15], [r - t * 0.5, length]);
+        let outerEdges = profile.length - 1;
+        profile.push([r - t * 0.88, length - 0.15]);
+        for (let i = axialSteps; i >= 0; i--) {
+          let u = (i / axialSteps) * 0.98;
+          profile.push([radiusAt(u) - t, length * u]);
+        }
+        profile.push([r * 0.65, 0]);
         let segments = { high: 48, mid: 32, low: 20 }[tier2],
           geometry = new LatheGeometry(
             profile.map((p) => new Vector2(...p)),
@@ -39646,8 +39544,8 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
         let edges = profile.length - 1;
         geometry.clearGroups();
         for (let slice = 0; slice < segments; slice++)
-          (geometry.addGroup(slice * edges * 6, 30, 0),
-            geometry.addGroup((slice * edges + 5) * 6, (edges - 5) * 6, 1));
+          (geometry.addGroup(slice * edges * 6, outerEdges * 6, 0),
+            geometry.addGroup((slice * edges + outerEdges) * 6, (edges - outerEdges) * 6, 1));
         let indices = geometry.index.array,
           ordered = [];
         for (let materialIndex of [0, 1])
@@ -39657,8 +39555,8 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
                 ordered.push(indices[i]);
         (geometry.setIndex(ordered),
           geometry.clearGroups(),
-          geometry.addGroup(0, segments * 30, 0),
-          geometry.addGroup(segments * 30, segments * (edges - 5) * 6, 1));
+          geometry.addGroup(0, segments * outerEdges * 6, 0),
+          geometry.addGroup(segments * outerEdges * 6, segments * (edges - outerEdges) * 6, 1));
         let group = new Group();
         group.name = "layered-engine-nozzle";
         let liner = inner.clone();
@@ -39673,11 +39571,11 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           mounts = [collarGeometry],
           radialSegments = { high: 40, mid: 28, low: 16 }[tier2];
         for (let u of [0.18, 0.4, 0.7]) {
-          let radiusAt =
+          let radiusAt2 =
               u < 0.38
                 ? r * (0.66 + ((u - 0.16) / 0.22) * 0.05)
                 : r * (0.71 + ((u - 0.38) / 0.32) * 0.12),
-            band = new TorusGeometry(radiusAt + 0.28, 0.65, 4, radialSegments);
+            band = new TorusGeometry(radiusAt2 + 0.28, 0.65, 4, radialSegments);
           (band.translate(0, 0, -length * u), jacket.push(band));
         }
         let flange = new TorusGeometry(r * 0.73, 1.05, 5, radialSegments);
@@ -40626,41 +40524,109 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
       }
 
       // works/first_dawn/flush-outlet.js
+      function outletShape(width, height, sides = 4) {
+        let shape = new Shape();
+        if (sides !== 4)
+          return (shape.absellipse(0, 0, width, height, 0, Math.PI * 2, !1, 0), shape);
+        let r = Math.min(width, height) * 0.24;
+        return (
+          shape.moveTo(-width + r, -height),
+          shape.lineTo(width - r, -height),
+          shape.quadraticCurveTo(width, -height, width, -height + r),
+          shape.lineTo(width, height - r),
+          shape.quadraticCurveTo(width, height, width - r, height),
+          shape.lineTo(-width + r, height),
+          shape.quadraticCurveTo(-width, height, -width, height - r),
+          shape.lineTo(-width, -height + r),
+          shape.quadraticCurveTo(-width, -height, -width + r, -height),
+          shape
+        );
+      }
       function flushOutlet(parent, x, y, z, width, height, material, sides = 4) {
-        let profile = (g) => (
-            sides === 4 && g.rotateZ(Math.PI / 4).scale(Math.SQRT2, Math.SQRT2, 1),
-            g
-          ),
-          rim = new Mesh(profile(new RingGeometry(0.88, 1, sides)), material);
-        ((rim.name = "integral-thrust-outlet"),
-          rim.position.set(x, y, z),
-          (rim.rotation.y = Math.PI),
-          rim.scale.set(width, height, 1),
-          parent.add(rim));
+        let divisions = sides === 4 ? 6 : Math.max(8, sides / 2),
+          outline = outletShape(width, height, sides).getPoints(divisions);
+        outline.pop();
+        let depth = Math.min(width, height) * 0.32;
+        function section(rings, closed = !1) {
+          let positions = [],
+            uv = [],
+            indices = [],
+            n = outline.length;
+          for (let [scale, axial] of rings) {
+            let inset = (1 - scale) * Math.min(width, height),
+              contour = outletShape(width - inset, height - inset, sides).getPoints(divisions);
+            contour.pop();
+            for (let p of contour)
+              (positions.push(p.x, p.y, axial),
+                uv.push(0.5 + p.x / (2 * width), 0.5 + p.y / (2 * height)));
+          }
+          for (let j = 0; j < rings.length - 1; j++)
+            for (let i = 0; i < n; i++) {
+              let a = j * n + i,
+                b = j * n + ((i + 1) % n);
+              indices.push(a, a + n, b, b, a + n, b + n);
+            }
+          if (closed) {
+            let centre = positions.length / 3,
+              start2 = (rings.length - 1) * n;
+            (positions.push(0, 0, rings.at(-1)[1]), uv.push(0.5, 0.5));
+            for (let i = 0; i < n; i++) indices.push(centre, start2 + ((i + 1) % n), start2 + i);
+          }
+          let geometry = new BufferGeometry();
+          return (
+            geometry.setAttribute("position", new Float32BufferAttribute(positions, 3)),
+            geometry.setAttribute("uv", new Float32BufferAttribute(uv, 2)),
+            geometry.setIndex(indices),
+            geometry.computeVertexNormals(),
+            geometry
+          );
+        }
+        let rim = new Mesh(
+          section([
+            [1, 0.3],
+            [0.97, -0.25],
+            [0.87, -0.4],
+            [0.82, 0.6],
+          ]),
+          material,
+        );
+        rim.name = "integral-thrust-outlet";
         let liner = new Mesh(
-          profile(new CircleGeometry(0.88, sides)),
+          section(
+            [
+              [0.82, 0.6],
+              [0.74, depth * 0.45],
+              [0.62, depth],
+            ],
+            !0,
+          ),
           new MeshStandardMaterial({
-            color: 527890,
-            roughness: 0.72,
-            metalness: 0.55,
+            color: 1581095,
+            roughness: 0.66,
+            metalness: 0.48,
           }),
         );
-        return (
-          liner.position.set(x, y, z + 0.08),
-          (liner.rotation.y = Math.PI),
-          liner.scale.set(width, height, 1),
-          parent.add(liner),
-          {
-            x,
-            y,
-            exit: z - 0.12,
-            radius: height,
-            width,
-            height,
-            sides,
-            flush: !0,
-          }
-        );
+        liner.name = "recessed-thrust-liner";
+        for (let part of [rim, liner])
+          (part.position.set(x, y, z),
+            (part.castShadow = part.receiveShadow = !0),
+            (part.userData.blueprintPart = 3),
+            parent.add(part));
+        return {
+          x,
+          y,
+          exit: z - 0.5,
+          coreZ: z + depth - 0.35,
+          coreWidth: width - Math.min(width, height) * 0.39,
+          coreHeight: height - Math.min(width, height) * 0.39,
+          radius: height,
+          width,
+          height,
+          sides,
+          depth,
+          coreScale: 0.61,
+          flush: !0,
+        };
       }
 
       // works/shared/detail-scale.js
@@ -41015,7 +40981,11 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
               (ring(end[1], end[2]).forEach(([x, y], i) =>
                 i ? shape.lineTo(x, y) : shape.moveTo(x, y),
               ),
-                shape.closePath());
+                shape.closePath(),
+                end === profile[0] &&
+                  shape.holes.push(
+                    outletShape(end[1] * 0.66 - end[2] * 0.7 * 0.17, end[2] * 0.7 * 0.83),
+                  ));
               let g = new ShapeGeometry(shape);
               g.translate(0, 0, end[0]);
               let mesh = new Mesh(g, ivory);
@@ -42021,7 +41991,20 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
             (pod.rotateX(Math.PI / 2), mesh(pod, 2, side * 142, 0, -413.5));
             for (let k = 0; k < 5; k++) block2(0, side * 142, 41, -350 - k * 31, 44, 7, 20);
           }
-          (block2(2, 0, -8, -505, 120, 72, 18), (ship.userData.engineOutlets = []));
+          let thrustFace = outletShape(60, 36);
+          for (let y of [-18, 18])
+            for (let x of [-36, 0, 36]) {
+              let opening = new Path();
+              (opening.absarc(x, y, 14 * 0.83, 0, Math.PI * 2, !0), thrustFace.holes.push(opening));
+            }
+          let thrustBulkhead = new ExtrudeGeometry(thrustFace, {
+            depth: 18,
+            steps: 1,
+            bevelEnabled: !1,
+            curveSegments: tier2 === "low" ? 8 : 16,
+          });
+          ((mesh(thrustBulkhead, 2, 0, -8, -514).name = "integrated-thrust-bulkhead"),
+            (ship.userData.engineOutlets = []));
           for (let x of [-142, 142]) {
             let nozzle = nozzleAssembly(tier2, 32, 28.5, mats[2], mats[1]);
             (nozzle.position.set(x, 0, -496.5),
@@ -66495,6 +66478,202 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
         );
       }
 
+      // works/first_dawn/engine-glow.js
+      function plumeGeometry(segments, axial, rectangular, seed) {
+        let positions = [],
+          normals = [],
+          uvs = [],
+          seeds = [],
+          indices = [];
+        for (let k = 0; k <= axial; k++) {
+          let t = (k / axial) ** 2,
+            radius = 0.78 + 0.82 * t ** 0.65,
+            exponent = rectangular ? MathUtils.lerp(8, 2, Math.sqrt(t)) : 2;
+          for (let j = 0; j <= segments; j++) {
+            let a = (j / segments) * Math.PI * 2,
+              x = Math.cos(a),
+              y = Math.sin(a),
+              contour = (Math.abs(x) ** exponent + Math.abs(y) ** exponent) ** (-1 / exponent);
+            if (
+              (positions.push(x * contour * radius, y * contour * radius, 0.5 - t),
+              normals.push(x, y, 0),
+              uvs.push(j / segments, 1 - t),
+              seeds.push(seed),
+              k < axial && j < segments)
+            ) {
+              let v = k * (segments + 1) + j,
+                next2 = v + segments + 1;
+              indices.push(v, next2, v + 1, v + 1, next2, next2 + 1);
+            }
+          }
+        }
+        let g = new BufferGeometry();
+        return (
+          g.setAttribute("position", new Float32BufferAttribute(positions, 3)),
+          g.setAttribute("normal", new Float32BufferAttribute(normals, 3)),
+          g.setAttribute("uv", new Float32BufferAttribute(uvs, 2)),
+          g.setAttribute("engineSeed", new Float32BufferAttribute(seeds, 1)),
+          g.setIndex(indices),
+          g
+        );
+      }
+      function installVoyageEngineGlow(
+        fleet2,
+        tier2,
+        { lengthScale = 5, tailFalloff = 0, brightness = 1, colorGradient = !0 } = {},
+      ) {
+        let segments = { low: 20, mid: 28, high: 40 }[tier2],
+          axial = { low: 5, mid: 8, high: 10 }[tier2],
+          clock = { value: 0 };
+        function coreMaterial(rectangular) {
+          let material = new MeshBasicMaterial({
+            transparent: !0,
+            opacity: 0.88,
+            depthWrite: !1,
+            toneMapped: !1,
+            polygonOffset: !0,
+            polygonOffsetFactor: -1,
+            polygonOffsetUnits: -2,
+          });
+          return (
+            (material.onBeforeCompile = (shader) => {
+              ((shader.vertexShader =
+                `varying vec2 vEngineUV;
+` + shader.vertexShader),
+                (shader.vertexShader = shader.vertexShader.replace(
+                  "#include <begin_vertex>",
+                  `#include <begin_vertex>
+vEngineUV=uv;`,
+                )),
+                (shader.fragmentShader =
+                  `varying vec2 vEngineUV;
+` + shader.fragmentShader),
+                (shader.fragmentShader = shader.fragmentShader.replace(
+                  "#include <color_fragment>",
+                  `
+        #include <color_fragment>
+        vec2 q=abs((vEngineUV-.5)*2.0);
+        float radius=${rectangular ? "pow(pow(q.x,6.0)+pow(q.y,6.0),1.0/6.0)" : "length(q)"};
+        float hot=exp(-4.2*radius*radius);
+        diffuseColor.rgb=mix(vec3(.19,.34,.43),vec3(.84,.93,1.0),hot)*${brightness.toFixed(3)};
+        diffuseColor.a*=1.0-smoothstep(.38,1.0,radius);
+      `,
+                )));
+            }),
+            (material.customProgramCacheKey = () =>
+              `recessed-engine-core-v3-${rectangular}-${brightness}`),
+            material
+          );
+        }
+        let core = coreMaterial(!1),
+          rectCore = coreMaterial(!0),
+          plume = new MeshBasicMaterial({
+            transparent: !0,
+            opacity: 0.18,
+            depthWrite: !1,
+            side: FrontSide,
+            blending: AdditiveBlending,
+            toneMapped: !1,
+          });
+        ((plume.onBeforeCompile = (shader) => {
+          ((shader.uniforms.engineClock = clock),
+            (shader.vertexShader =
+              `attribute float engineSeed;
+      varying vec2 vEngineUV; varying vec3 vPlumeNormal; varying vec3 vPlumeView;
+      varying float vEngineSeed;
+` + shader.vertexShader),
+            (shader.vertexShader = shader.vertexShader.replace(
+              "#include <begin_vertex>",
+              `#include <begin_vertex>
+vEngineUV=uv;vEngineSeed=engineSeed;`,
+            )),
+            (shader.vertexShader = shader.vertexShader.replace(
+              "#include <project_vertex>",
+              `#include <project_vertex>
+vPlumeNormal=normalize(normalMatrix*normal);vPlumeView=-mvPosition.xyz;`,
+            )),
+            (shader.fragmentShader =
+              `uniform float engineClock; varying vec2 vEngineUV;
+      varying vec3 vPlumeNormal; varying vec3 vPlumeView; varying float vEngineSeed;
+` + shader.fragmentShader),
+            (shader.fragmentShader = shader.fragmentShader.replace(
+              "#include <color_fragment>",
+              `
+      #include <color_fragment>
+      float t=clamp(1.0-vEngineUV.y,0.0,1.0);
+      float facing=abs(dot(normalize(vPlumeNormal),normalize(vPlumeView)));
+      float column=pow(smoothstep(.0,.94,facing),1.85);
+      vec3 centre=mix(vec3(.83,.92,1.0),vec3(.35,.54,.65),smoothstep(.0,.72,t));
+      vec3 colour=${colorGradient ? "mix(vec3(.16,.30,.40),centre,column)" : "vec3(.48,.61,.69)"};
+      diffuseColor.rgb=colour*${brightness.toFixed(3)};
+      float density=pow(1.0-t,1.7)*exp(-${tailFalloff.toFixed(3)}*t);
+      // Restrained, advected variation; the throat stays steady and there are no
+      // periodic bright bands. The same clock freezes with the scene on pause.
+      float flow=1.0+smoothstep(.02,.18,t)*(.024*sin(t*7.0-engineClock*1.3+vEngineSeed)
+        +.013*sin(t*13.0-engineClock*2.1+vEngineSeed*.7));
+      diffuseColor.a*=density*column*flow;
+    `,
+            )));
+        }),
+          (plume.customProgramCacheKey = () =>
+            `soft-engine-envelope-v1-${tailFalloff}-${brightness}-${colorGradient}`));
+        let nozzles = 0;
+        return (
+          fleet2.forEach((ship, shipIndex) => {
+            ship.traverse((part) => {
+              part.isMesh &&
+                part.geometry?.type === "CircleGeometry" &&
+                part.position.z < -500 &&
+                (part.visible = !1);
+            });
+            for (let [index, outlet] of ship.userData.engineOutlets.entries()) {
+              let { x, y, radius, exit, flush, width = radius, height = radius, sides } = outlet,
+                rectangular = sides === 4,
+                coreWidth = outlet.coreWidth ?? width,
+                coreHeight = outlet.coreHeight ?? height,
+                opening = new ShapeGeometry(
+                  outletShape(coreWidth, coreHeight, rectangular ? 4 : segments),
+                  segments / 4,
+                ),
+                p = opening.attributes.position,
+                uv = opening.attributes.uv;
+              for (let i = 0; i < p.count; i++)
+                uv.setXY(i, 0.5 + p.getX(i) / (2 * coreWidth), 0.5 + p.getY(i) / (2 * coreHeight));
+              let disc = new Mesh(opening, rectangular ? rectCore : core);
+              ((disc.name = "voyage-engine-core"),
+                (disc.rotation.y = Math.PI),
+                disc.position.set(x, y, outlet.coreZ ?? exit + outlet.depth * 0.62),
+                disc.scale.setScalar(flush ? 1 : 0.48),
+                ship.add(disc));
+              let length = radius * lengthScale,
+                exhaust = new Mesh(
+                  plumeGeometry(segments, axial, rectangular, shipIndex * 1.37 + index * 0.61),
+                  plume,
+                );
+              ((exhaust.name = "voyage-engine-plume"),
+                exhaust.position.set(x, y, exit - length * 0.5),
+                exhaust.scale.set(width, height, length),
+                ship.add(exhaust),
+                nozzles++);
+            }
+          }),
+          {
+            nozzles,
+            mode: "recessed-outlets-soft-expanding-emission",
+            coreDepthRatio: 0.62,
+            coreRadiusRatio: 0.48,
+            segments,
+            lengthScale,
+            tailFalloff,
+            brightness,
+            colorGradient,
+            update(seconds2) {
+              clock.value = seconds2;
+            },
+          }
+        );
+      }
+
       // works/first_dawn/voyage-materials.js
       function installVoyageAgeing(fleet2, tier2) {
         let detail = tier2 === "high" ? 2 : tier2 === "mid" ? 1 : 0,
@@ -66778,167 +66957,6 @@ vShieldFinish=shieldFinish;`,
           }
         );
       }
-      function installVoyageEngineGlow(
-        fleet2,
-        tier2,
-        { lengthScale = 5, tailFalloff = 0, brightness = 1, colorGradient = !1 } = {},
-      ) {
-        let segments = tier2 === "low" ? 16 : tier2 === "mid" ? 24 : 32,
-          coreGeometry = new CircleGeometry(1, segments),
-          plumeGeometry = new CylinderGeometry(1, 0.08, 1, segments, 1, !0);
-        plumeGeometry.rotateX(Math.PI / 2);
-        let core = new MeshBasicMaterial({
-          color: 11063778,
-          transparent: !0,
-          opacity: 0.88,
-          depthWrite: !1,
-          toneMapped: !1,
-        });
-        ((core.onBeforeCompile = (shader) => {
-          ((shader.vertexShader =
-            `varying vec2 vEngineUV;
-` + shader.vertexShader),
-            (shader.vertexShader = shader.vertexShader.replace(
-              "#include <begin_vertex>",
-              `#include <begin_vertex>
-vEngineUV=uv;`,
-            )),
-            (shader.fragmentShader =
-              `varying vec2 vEngineUV;
-` + shader.fragmentShader),
-            (shader.fragmentShader = shader.fragmentShader.replace(
-              "#include <color_fragment>",
-              `#include <color_fragment>
-      float radius=length(vEngineUV-.5)*2.0;
-      diffuseColor.rgb=mix(vec3(.28,.52,.66),vec3(.85,.94,1.0),1.0-smoothstep(.0,.7,radius));
-      diffuseColor.rgb*=${brightness.toFixed(3)};
-      diffuseColor.a*=1.0-smoothstep(.55,1.0,radius);`,
-            )));
-        }),
-          (core.customProgramCacheKey = () => `voyage-engine-core-v2-${brightness}`));
-        let rectCore = core.clone();
-        ((rectCore.onBeforeCompile = (shader) => {
-          (core.onBeforeCompile(shader),
-            (shader.fragmentShader = shader.fragmentShader.replace(
-              "float radius=length(vEngineUV-.5)*2.0;",
-              "vec2 q=abs((vEngineUV-.5)*2.0); float radius=max(q.x,q.y);",
-            )));
-        }),
-          (rectCore.customProgramCacheKey = () => `voyage-rect-core-${brightness}`));
-        let rectPlumeGeometry = new CylinderGeometry(1, 0.08, 1, 4, 1, !0);
-        rectPlumeGeometry
-          .rotateX(Math.PI / 2)
-          .rotateZ(Math.PI / 4)
-          .scale(Math.SQRT2, Math.SQRT2, 1);
-        let plume = new MeshBasicMaterial({
-          color: 6659768,
-          transparent: !0,
-          opacity: 0.16,
-          depthWrite: !1,
-          side: 2,
-          blending: 2,
-          toneMapped: !1,
-        });
-        ((plume.onBeforeCompile = (shader) => {
-          ((shader.vertexShader =
-            `varying vec2 vEngineUV; varying vec3 vPlumeNormal; varying vec3 vPlumeView;
-` + shader.vertexShader),
-            (shader.vertexShader = shader.vertexShader.replace(
-              "#include <begin_vertex>",
-              `#include <begin_vertex>
-vEngineUV=uv;`,
-            )),
-            (shader.vertexShader = shader.vertexShader.replace(
-              "#include <project_vertex>",
-              `#include <project_vertex>
-vPlumeNormal=normalize(normalMatrix*normal);vPlumeView=-mvPosition.xyz;`,
-            )),
-            (shader.fragmentShader =
-              `varying vec2 vEngineUV; varying vec3 vPlumeNormal; varying vec3 vPlumeView;
-` + shader.fragmentShader),
-            (shader.fragmentShader = shader.fragmentShader.replace(
-              "#include <color_fragment>",
-              `#include <color_fragment>
-      float plumeFacing=abs(dot(normalize(vPlumeNormal),normalize(vPlumeView)));
-      float plumeU=clamp(vEngineUV.y,0.0,1.0);
-      ${
-        colorGradient
-          ? `
-      // View-facing cross section gives a continuous axial centre-to-edge gradient.
-      // This is an authored emission palette, not a plasma-temperature simulation.
-      float centreWeight=smoothstep(.12,.95,plumeFacing);
-      vec3 edgeColour=vec3(.18,.39,.62);
-      vec3 centreColour=mix(vec3(.40,.65,.82),vec3(.84,.94,1.0),smoothstep(.0,.85,plumeU));
-      vec3 plumeColour=mix(edgeColour,centreColour,centreWeight);
-      vec3 luminanceWeights=vec3(.2126,.7152,.0722);
-      float baseLuminance=dot(diffuseColor.rgb,luminanceWeights);
-      diffuseColor.rgb=plumeColour*(baseLuminance/max(dot(plumeColour,luminanceWeights),.0001));
-      `
-          : ""
-      }
-      diffuseColor.rgb*=${brightness.toFixed(3)};
-      float plumeFade=plumeU*plumeU*plumeU*(plumeU*(plumeU*6.0-15.0)+10.0);
-      // Authored optical falloff: retain the nozzle brightness, dissolve the long tail.
-      plumeFade*=exp(-${tailFalloff.toFixed(2)}*(1.0-plumeU));
-      diffuseColor.a*=plumeFade*pow(smoothstep(.0,.55,plumeFacing),1.35);`,
-            )));
-        }),
-          (plume.customProgramCacheKey = () =>
-            `voyage-engine-plume-v6-${tailFalloff}-${brightness}-${colorGradient}`));
-        let nozzles = 0;
-        return (
-          fleet2.forEach((ship) => {
-            ship.traverse((part) => {
-              part.isMesh &&
-                part.geometry?.type === "CircleGeometry" &&
-                part.position.z < -500 &&
-                (part.visible = !1);
-            });
-            let locations = ship.userData.engineOutlets;
-            for (let outlet of locations) {
-              let { x, y, radius, exit, flush, width = radius, height = radius, sides } = outlet,
-                openingGeometry = flush ? new CircleGeometry(1, sides) : coreGeometry;
-              if (
-                (sides === 4 &&
-                  openingGeometry.rotateZ(Math.PI / 4).scale(Math.SQRT2, Math.SQRT2, 1),
-                sides === 4)
-              ) {
-                let positions = openingGeometry.attributes.position,
-                  uv = openingGeometry.attributes.uv;
-                for (let i = 0; i < positions.count; i++)
-                  uv.setXY(i, 0.5 + positions.getX(i) * 0.5, 0.5 + positions.getY(i) * 0.5);
-              }
-              let disc = new Mesh(openingGeometry, sides === 4 ? rectCore : core);
-              ((disc.name = "voyage-engine-core"),
-                (disc.rotation.y = Math.PI),
-                disc.position.set(x, y, exit + (flush ? -0.02 : outlet.depth * 0.62)),
-                disc.scale.set(width * (flush ? 0.86 : 0.48), height * (flush ? 0.86 : 0.48), 1),
-                ship.add(disc));
-              let exhaust = new Mesh(
-                flush && sides === 4 ? rectPlumeGeometry : plumeGeometry,
-                plume,
-              );
-              exhaust.name = "voyage-engine-plume";
-              let length = radius * lengthScale;
-              (exhaust.position.set(x, y, exit - length * 0.5),
-                exhaust.scale.set(width * 0.7, height * 0.7, length),
-                ship.add(exhaust),
-                nozzles++);
-            }
-          }),
-          {
-            nozzles,
-            mode: "integrated-rectangular-and-circular-outlets",
-            coreDepthRatio: 0.62,
-            coreRadiusRatio: 0.48,
-            segments,
-            lengthScale,
-            tailFalloff,
-            brightness,
-            colorGradient,
-          }
-        );
-      }
 
       // works/shared/context-recovery.js
       function installContextRecovery(renderer2, pause2) {
@@ -67130,7 +67148,8 @@ vPlumeNormal=normalize(normalMatrix*normal);vPlumeView=-mvPosition.xyz;`,
       }
       function render2(t) {
         ((seconds = MathUtils.clamp(t, segment.start, endTime)),
-          window.VOYAGE_AGEING?.update(phase, seconds));
+          window.VOYAGE_AGEING?.update(phase, seconds),
+          window.VOYAGE_ENGINES?.update(seconds));
         let migrationTime = migrationClock(seconds),
           timelineTime =
             phase === "arrival"
