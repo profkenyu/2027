@@ -1092,6 +1092,148 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
         },
       });
 
+      // works/shared/shadow-budget.js
+      function createShadowBudget(renderer2, tier2) {
+        let last = -1 / 0,
+          lastKey = null,
+          updates = 0,
+          reuses = 0;
+        return {
+          update(seconds, key, { moving = !0, close = !1 } = {}) {
+            if (tier2 !== "low") return;
+            let changed = key !== lastKey || seconds < last,
+              due = moving && seconds - last >= 1 / (close ? 30 : 15) - 1e-3;
+            ((renderer2.shadowMap.autoUpdate = !1),
+              changed || due || renderer2.shadowMap.needsUpdate
+                ? ((renderer2.shadowMap.needsUpdate = !0),
+                  (last = seconds),
+                  (lastKey = key),
+                  updates++)
+                : reuses++);
+          },
+          snapshot: () => ({
+            mode: tier2 === "low" ? "scheduled" : "authored",
+            updates,
+            reuses,
+          }),
+        };
+      }
+
+      // works/shared/frame-capture.js
+      function copyFrame(source, width = 480, maxHeight = 640) {
+        if (!source.width || !source.height) throw new Error("Empty capture source");
+        let scale = Math.min(width / source.width, maxHeight / source.height, 1),
+          canvas = document.createElement("canvas");
+        return (
+          (canvas.width = Math.max(1, Math.round(source.width * scale))),
+          (canvas.height = Math.max(1, Math.round(source.height * scale))),
+          canvas.getContext("2d").drawImage(source, 0, 0, canvas.width, canvas.height),
+          canvas
+        );
+      }
+      function backgroundTurn() {
+        return globalThis.scheduler?.postTask
+          ? scheduler.postTask(() => {}, { priority: "background" })
+          : new Promise((resolve) => {
+              globalThis.requestIdleCallback
+                ? requestIdleCallback(resolve, { timeout: 700 })
+                : setTimeout(resolve, 0);
+            });
+      }
+      async function encodeFrame(canvas, quality2 = 0.7) {
+        await backgroundTurn();
+        let blob = await new Promise((resolve, reject) => {
+          canvas.toBlob(
+            (value) => (value ? resolve(value) : reject(new Error("Capture encoding failed"))),
+            "image/jpeg",
+            quality2,
+          );
+        });
+        return new Promise((resolve, reject) => {
+          let reader = new FileReader();
+          ((reader.onload = () => resolve(reader.result)),
+            (reader.onerror = () => reject(reader.error)),
+            reader.readAsDataURL(blob));
+        });
+      }
+
+      // works/shared/performance-policy.js
+      function performanceTier(
+        params2 = new URLSearchParams(globalThis.location?.search || ""),
+        device = globalThis.navigator || {},
+        viewport = globalThis,
+      ) {
+        let forced = params2.get("quality");
+        if (["high", "mid", "low"].includes(forced)) return forced;
+        if (params2.has("terminal") || forced === "critical") return "low";
+        if (params2.has("full")) return "high";
+        let coarse = viewport.matchMedia?.("(any-pointer: coarse)").matches;
+        return /Android|iPhone|iPad|iPod/i.test(device.userAgent || "") ||
+          (device.maxTouchPoints > 0 && coarse) ||
+          (viewport.innerWidth || 1024) < 700
+          ? "low"
+          : (device.hardwareConcurrency || 4) >= 8 && (device.deviceMemory ?? 8) >= 8
+            ? "high"
+            : "mid";
+      }
+      var FramePacer = class {
+        constructor(
+          tier2,
+          dpr2,
+          onResolution = () => {},
+          { minimum = tier2 === "low" ? 0.6 : 0.8 } = {},
+        ) {
+          ((this.fps = tier2 === "low" ? 30 : 60),
+            (this.interval = 1e3 / this.fps),
+            (this.dpr = dpr2),
+            (this.minimum = minimum),
+            (this.onResolution = onResolution),
+            (this.samples = []),
+            (this.frames = 0),
+            (this.changes = 0),
+            (this.p95 = 0),
+            (this.cooldown = 0),
+            this.reset());
+        }
+        reset() {
+          ((this.last = null), (this.next = null), (this.samples.length = 0));
+        }
+        step(now) {
+          if (this.next !== null && now < this.next - 0.5) return null;
+          let elapsed = this.last === null ? this.interval : now - this.last;
+          if (
+            ((this.last = now),
+            (this.next = this.next === null ? now + this.interval : this.next + this.interval),
+            this.next <= now && (this.next = now + this.interval),
+            this.frames++,
+            this.samples.push(elapsed),
+            this.samples.length >= this.fps * 3)
+          ) {
+            this.samples.sort((a, b) => a - b);
+            let mean2 = this.samples.reduce((sum, value) => sum + value, 0) / this.samples.length;
+            ((this.p95 = this.samples[Math.floor(this.samples.length * 0.95)]),
+              now >= this.cooldown &&
+                mean2 > this.interval * 1.22 &&
+                this.dpr > this.minimum &&
+                ((this.dpr = Math.max(this.minimum, Math.round((this.dpr - 0.1) * 100) / 100)),
+                this.onResolution(this.dpr),
+                this.changes++,
+                (this.cooldown = now + 1e4)),
+              (this.samples.length = 0));
+          }
+          return Math.min(0.1, Math.max(0, elapsed / 1e3));
+        }
+        snapshot() {
+          return {
+            targetFPS: this.fps,
+            renderedFrames: this.frames,
+            dpr: this.dpr,
+            p95: this.p95,
+            resolutionChanges: this.changes,
+          };
+        }
+      };
+
       // node_modules/three/build/three.core.js
       var CullFaceNone = 0,
         CullFaceBack = 1,
@@ -34496,6 +34638,82 @@ void main() {
         };
       }
 
+      // works/first_dawn/mobile-surface.js
+      function installMobileSurface(material) {
+        ((material.userData.surfaceProfile = "mobile-planar"),
+          (material.onBeforeCompile = (shader) => {
+            ((shader.vertexShader = shader.vertexShader
+              .replace(
+                "#include <common>",
+                `#include <common>
+varying vec3 basinPosition; varying vec3 basinNormal; varying float basinSlope; varying float basinAO; attribute float basinOcclusion;`,
+              )
+              .replace(
+                "#include <begin_vertex>",
+                `#include <begin_vertex>
+basinPosition=position; basinNormal=normal; basinSlope=1.-abs(normal.y); basinAO=basinOcclusion;`,
+              )),
+              (shader.fragmentShader = shader.fragmentShader
+                .replace(
+                  "#include <common>",
+                  `#include <common>
+        varying vec3 basinPosition; varying vec3 basinNormal;
+        varying float basinSlope; varying float basinAO;
+        float mobileHash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+        float mobileNoise(vec2 p){
+          vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+          return mix(mix(mobileHash(i),mobileHash(i+vec2(1,0)),f.x),
+            mix(mobileHash(i+vec2(0,1)),mobileHash(i+vec2(1,1)),f.x),f.y);
+        }`,
+                )
+                .replace(
+                  "#include <color_fragment>",
+                  `#include <color_fragment>
+        vec3 planeNormal=abs(basinNormal);
+        vec2 mineralPlane=planeNormal.y>max(planeNormal.x,planeNormal.z)?basinPosition.xz:
+          (planeNormal.x>planeNormal.z?basinPosition.yz:basinPosition.xy);
+        float rock=smoothstep(.10,.58,basinSlope);
+        float mineral=mobileNoise(mineralPlane*.027);
+        float bedding=sin(basinPosition.y*.108);
+        float nearDetail=1.-smoothstep(90.,380.,length(vViewPosition));
+        float grain=0.;
+        if(nearDetail>.001)grain=(mobileNoise(mineralPlane*.6)-.5)*
+          (1.-smoothstep(.25,.8,length(fwidth(mineralPlane*.6))));
+        diffuseColor.rgb*=1.+(mineral-.5)*.095+bedding*.025*rock+grain*.10*nearDetail;
+        diffuseColor.rgb*=mix(vec3(1.025,1.018,1.01),vec3(.91,.925,.94),rock*.46);
+        float veil=1.-exp(-length(vViewPosition)*.00042);
+        diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.34,.195,.15),veil*.10);`,
+                )
+                .replace(
+                  "#include <roughnessmap_fragment>",
+                  `#include <roughnessmap_fragment>
+roughnessFactor=mix(.97,.79,rock);`,
+                )
+                .replace(
+                  "#include <normal_fragment_maps>",
+                  `#include <normal_fragment_maps>
+        float relief=(mineral-.5)*mix(.18,.60,rock)+bedding*.24*basinSlope;
+        float visibility=1.-smoothstep(.45,1.5,length(fwidth(mineralPlane*.027)));
+        vec3 sigmaX=dFdx(-vViewPosition),sigmaY=dFdy(-vViewPosition);
+        vec3 gradX=cross(sigmaY,normal),gradY=cross(normal,sigmaX);
+        float determinant=dot(sigmaX,gradX)*faceDirection;
+        vec3 gradient=sign(determinant)*(dFdx(relief)*gradX+dFdy(relief)*gradY)*visibility;
+        normal=normalize(max(abs(determinant),1.e-8)*normal-gradient);`,
+                )
+                .replace(
+                  "#include <aomap_fragment>",
+                  `#include <aomap_fragment>
+reflectedLight.indirectDiffuse*=basinAO; reflectedLight.indirectSpecular*=basinAO;`,
+                )
+                .replace(
+                  "#include <fog_fragment>",
+                  `#include <fog_fragment>
+float terrainLuma=dot(gl_FragColor.rgb,vec3(.2126,.7152,.0722));gl_FragColor.rgb=mix(vec3(terrainLuma),gl_FragColor.rgb,.672);`,
+                )));
+          }),
+          (material.customProgramCacheKey = () => "canyon-mobile-planar-v1"));
+      }
+
       // works/first_dawn/timeline.js
       var CUTS = Object.freeze([20, 40, 68, 82]),
         SURFACE_AT = CUTS[3],
@@ -34792,7 +35010,11 @@ void main() {
           occlusion[i] = Math.max(0.42, 1 - blocked * 0.145);
         }
         geometry.setAttribute("basinOcclusion", new Float32BufferAttribute(occlusion, 1));
-        let material = new MeshStandardMaterial({ vertexColors: !0, roughness: 1, metalness: 0 });
+        let material = new MeshStandardMaterial({
+          vertexColors: !0,
+          roughness: 1,
+          metalness: 0,
+        });
         ((material.shadowSide = DoubleSide),
           (material.onBeforeCompile = (shader) => {
             ((shader.vertexShader = shader.vertexShader
@@ -34931,7 +35153,8 @@ basinPosition=position;basinSlope=1.-abs(normal.y);basinAO=basinOcclusion;basinN
 reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO;`,
                 )));
           }),
-          (material.customProgramCacheKey = () => `canyon-eroded-joints-v10-${tier2}`));
+          (material.customProgramCacheKey = () => `canyon-eroded-joints-v10-${tier2}`),
+          tier2 === "low" && installMobileSurface(material));
         let terrain = new Mesh(geometry, material);
         ((terrain.castShadow = terrain.receiveShadow = !0), group.add(terrain));
         let rockGeometry = new IcosahedronGeometry(1, tier2 === "low" ? 0 : 1),
@@ -34944,7 +35167,10 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           rockPos.setXYZ(i, x * split, Math.max(-0.62, Math.min(0.62, y)) * 0.8, z * split);
         }
         rockGeometry.computeVertexNormals();
-        let rockMaterial = new MeshStandardMaterial({ color: 7755850, roughness: 0.87 }),
+        let rockMaterial = new MeshStandardMaterial({
+            color: 7755850,
+            roughness: 0.87,
+          }),
           rocks = new InstancedMesh(rockGeometry, rockMaterial, tier2 === "low" ? 2 : 5),
           dummy = new Object3D(),
           seed = 7103,
@@ -34972,7 +35198,10 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           group.add(rocks));
         let skylight = new HemisphereLight(12895688, 7361350, 0.58);
         group.add(skylight);
-        let skyUniforms = { elapsed: { value: SURFACE_AT }, surfaceStart: { value: SURFACE_AT } },
+        let skyUniforms = {
+            elapsed: { value: SURFACE_AT },
+            surfaceStart: { value: SURFACE_AT },
+          },
           sky = new Mesh(
             new SphereGeometry(39e3, 32, 20),
             new ShaderMaterial({
@@ -36064,7 +36293,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
               ((deposited += Math.max(0, delta)), (eroded += Math.max(0, -delta)), count++);
             }
           return {
-            zone: zone === 0 ? "회수 설비 주변" : "낮은 개입의 경계 지역",
+            zone: zone === 0 ? "회수 설비 주변" : "설치 구역 주변의 경계 지역",
             side: zone,
             ice: ice / count,
             liquid: liquid / count,
@@ -36088,8 +36317,12 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
             return ((available = !1), !1);
           }
         }
-        function capture(stage, id) {
-          let target2 = new WebGLRenderTarget(640, 400);
+        async function capture(stage, id) {
+          let width = tier2 === "low" ? 384 : 640,
+            height = (width * 5) / 8,
+            s = habitat2.snapshot(),
+            capturedRegions = regions(habitat2.model),
+            target2 = new WebGLRenderTarget(width, height);
           target2.texture.colorSpace = SRGBColorSpace;
           let frame = new Scene();
           ((frame.background = new Color(197895)),
@@ -36105,7 +36338,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           (light.target.position.set(SITE.x, surface2.heightAt(SITE.x, SITE.z), SITE.z),
             light.position.copy(light.target.position).add(new Vector3(-1400, 2600, 1700)),
             (light.castShadow = !0),
-            light.shadow.mapSize.setScalar(1024),
+            light.shadow.mapSize.setScalar(tier2 === "low" ? 256 : 1024),
             Object.assign(light.shadow.camera, {
               left: -1e3,
               right: 1e3,
@@ -36113,9 +36346,10 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
               bottom: -1e3,
               near: 100,
               far: 9e3,
-            }),
-            (light.shadow.bias = ((-2e3 / 1024) * 1.2) / 8900),
-            (light.shadow.normalBias = (2e3 / 1024) * 1.5));
+            }));
+          let shadowTexel = 2e3 / light.shadow.mapSize.x;
+          ((light.shadow.bias = (-shadowTexel * 1.2) / 8900),
+            (light.shadow.normalBias = shadowTexel * 1.5));
           let fill = new DirectionalLight(10337247, 0.22);
           (fill.position.set(1800, -600, -2200), frame.add(light, light.target, fill));
           let camera2 = new PerspectiveCamera(42, 1.6, 0.5, 8e4);
@@ -36123,27 +36357,41 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
             camera2.lookAt(-1400, groundHeight(-1400, 3300) + 125, 3300));
           let previous = renderer2.getRenderTarget(),
             auto = renderer2.shadowMap.autoUpdate,
-            buffer = new Uint8Array(640 * 400 * 4);
+            buffer = new Uint8Array(width * height * 4);
           try {
             ((renderer2.shadowMap.autoUpdate = !0),
               renderer2.setRenderTarget(target2),
-              renderer2.render(frame, camera2),
-              renderer2.readRenderTargetPixels(target2, 0, 0, 640, 400, buffer));
+              renderer2.render(frame, camera2));
+            let readback = renderer2.readRenderTargetPixelsAsync(
+              target2,
+              0,
+              0,
+              width,
+              height,
+              buffer,
+            );
+            (renderer2.setRenderTarget(previous),
+              (renderer2.shadowMap.autoUpdate = auto),
+              (renderer2.shadowMap.needsUpdate = !0),
+              await readback);
             let canvas = document.createElement("canvas");
-            ((canvas.width = 640), (canvas.height = 400));
+            ((canvas.width = width), (canvas.height = height));
             let ctx = canvas.getContext("2d"),
-              image2 = ctx.createImageData(640, 400);
-            for (let y = 0; y < 400; y++)
-              image2.data.set(buffer.subarray((399 - y) * 2560, (400 - y) * 2560), y * 2560);
+              image2 = ctx.createImageData(width, height);
+            for (let y = 0; y < height; y++)
+              image2.data.set(
+                buffer.subarray((height - 1 - y) * width * 4, (height - y) * width * 4),
+                y * width * 4,
+              );
             ctx.putImageData(image2, 0, 0);
-            let s = habitat2.snapshot();
+            let imageURL = await encodeFrame(canvas, 0.77);
             return {
               id,
               stage,
               seconds: s.time,
-              image: canvas.toDataURL("image/jpeg", 0.77),
-              width: 640,
-              height: 400,
+              image: imageURL,
+              width,
+              height,
               tier: tier2,
               capturedAt: /* @__PURE__ */ new Date().toISOString(),
               site: { ...SITE },
@@ -36159,8 +36407,8 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
                   : !s.heatPower && !s.pumpPower
                     ? "설비 대기"
                     : s.eventAt === null
-                      ? "초기 운전"
-                      : "유지 운전",
+                      ? "초기 가동"
+                      : "안정 운전",
               resources: {
                 stored: s.storedKilograms,
                 reserve: s.reserve,
@@ -36171,12 +36419,13 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
                 operation: s.operation,
                 surfaceChange: s.surfaceChange,
               },
-              regions: regions(habitat2.model),
+              regions: capturedRegions,
             };
           } finally {
-            (renderer2.setRenderTarget(previous),
+            (renderer2.getRenderTarget() === target2 &&
+              (renderer2.setRenderTarget(previous),
               (renderer2.shadowMap.autoUpdate = auto),
-              (renderer2.shadowMap.needsUpdate = !0),
+              (renderer2.shadowMap.needsUpdate = !0)),
               target2.dispose(),
               light.shadow.map?.dispose());
           }
@@ -36199,7 +36448,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
             ((busy = !0),
             (pending = (async () => {
               try {
-                let record = capture(stage, id);
+                let record = await capture(stage, id);
                 (await writeExhibitionRecord(record),
                   (available = !0),
                   await durable(),
@@ -36217,7 +36466,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           async captureBefore() {
             try {
               return (
-                await writeExhibitionRecord(capture("before", "before")),
+                await writeExhibitionRecord(await capture("before", "before")),
                 (available = !0),
                 completed.add("before"),
                 !0
@@ -38217,9 +38466,10 @@ vHullPosition=position;`,
       function createVehicleRecorder() {
         let records,
           storage2,
-          canvas,
-          context2,
-          disabled = !1;
+          disabled = !1,
+          busy = !1,
+          pending = Promise.resolve(),
+          low = performanceTier() === "low";
         try {
           ((storage2 = sessionStorage), (records = null));
         } catch {
@@ -38229,7 +38479,7 @@ vHullPosition=position;`,
           seen = /* @__PURE__ */ new Map();
         return {
           sample({ kind, context: place, seconds, source, eligible: eligible2, status: status2 }) {
-            if (disabled || !eligible2 || !Number.isFinite(seconds)) return !1;
+            if (disabled || busy || !eligible2 || !Number.isFinite(seconds)) return !1;
             let id = `${kind}:${place}`,
               previous = clocks.get(id);
             if (previous !== void 0 && seconds < previous + 12) return !1;
@@ -38247,45 +38497,60 @@ vHullPosition=position;`,
                 (seen.set(id, count), Math.random() >= 1 / count || !source.width || !source.height)
               )
                 return !1;
-              canvas ||= document.createElement("canvas");
-              let scale = Math.min(480 / source.width, 640 / source.height);
-              ((canvas.width = Math.max(1, Math.round(source.width * scale))),
-                (canvas.height = Math.max(1, Math.round(source.height * scale))),
-                (context2 ||= canvas.getContext("2d", { willReadFrequently: !0 })),
-                context2.drawImage(source, 0, 0, canvas.width, canvas.height));
-              let pixels = context2.getImageData(0, 0, canvas.width, canvas.height).data,
-                bright = 0;
-              for (let i = 0; i < pixels.length; i += 64)
-                pixels[i] + pixels[i + 1] + pixels[i + 2] > 45 && bright++;
-              if (bright < 20) return !1;
-              let image2 = canvas.toDataURL("image/jpeg", 0.64);
-              if (image2.length >= 1e5) return !1;
-              let record = {
-                  id,
-                  kind,
-                  context: place,
-                  seconds,
-                  seen: count,
-                  status: status2(),
-                  image: image2,
-                  width: canvas.width,
-                  height: canvas.height,
-                },
-                next = [...records.filter((r) => r.id !== id), record].slice(-10);
+              let canvas = copyFrame(source, low ? 320 : 480, low ? 426 : 640),
+                capturedStatus = status2();
               return (
-                storage2.setItem(
-                  VEHICLE_ARCHIVE_KEY,
-                  JSON.stringify({ version: 1, records: next }),
-                ),
-                (records = next),
-                writeExhibitionRecord(record, "vehicles").catch(() => {}),
+                (busy = !0),
+                (pending = (async () => {
+                  try {
+                    await backgroundTurn();
+                    let probe = document.createElement("canvas");
+                    probe.width = probe.height = 16;
+                    let probeContext = probe.getContext("2d", {
+                      willReadFrequently: !0,
+                    });
+                    probeContext.drawImage(canvas, 0, 0, 16, 16);
+                    let pixels = probeContext.getImageData(0, 0, 16, 16).data,
+                      bright = 0;
+                    for (let i = 0; i < pixels.length; i += 4)
+                      pixels[i] + pixels[i + 1] + pixels[i + 2] > 45 && bright++;
+                    if (bright < 2) return;
+                    let image2 = await encodeFrame(canvas, 0.64);
+                    if (image2.length >= 1e5) return;
+                    let record = {
+                        id,
+                        kind,
+                        context: place,
+                        seconds,
+                        seen: count,
+                        status: capturedStatus,
+                        image: image2,
+                        width: canvas.width,
+                        height: canvas.height,
+                      },
+                      next = [...records.filter((r) => r.id !== id), record].slice(-10);
+                    (await backgroundTurn(),
+                      storage2.setItem(
+                        VEHICLE_ARCHIVE_KEY,
+                        JSON.stringify({ version: 1, records: next }),
+                      ),
+                      (records = next),
+                      await writeExhibitionRecord(record, "vehicles").catch(() => {}));
+                  } catch {
+                    disabled = !0;
+                  } finally {
+                    busy = !1;
+                  }
+                })()),
                 !0
               );
             } catch {
               return ((disabled = !0), !1);
             }
           },
+          flush: () => pending,
           snapshot: () => ({
+            busy,
             records: records?.length || 0,
             storage: disabled ? "unavailable" : "available",
           }),
@@ -58500,17 +58765,11 @@ vHullPosition=position;`,
       // works/candidate/main.js
       var params = new URLSearchParams(location.search),
         test = params.has("test"),
-        tier = ["high", "mid", "low"].includes(params.get("quality"))
-          ? params.get("quality")
-          : innerWidth < 700
-            ? "low"
-            : navigator.hardwareConcurrency >= 8
-              ? "high"
-              : "mid",
+        tier = performanceTier(params),
         quality = {
           high: { dpr: 1.65, shadow: 2048 },
           mid: { dpr: 1.25, shadow: 1024 },
-          low: { dpr: 1, shadow: 512 },
+          low: { dpr: 0.9, shadow: 512 },
         }[tier],
         state = readCandidate() ?? {
           version: 1,
@@ -58523,7 +58782,8 @@ vHullPosition=position;`,
         },
         eligible = previousSurveyReady(state.previous),
         vehicleRecorder = createVehicleRecorder(),
-        archive = new FieldArchive();
+        archive = new FieldArchive(),
+        captureJobs = /* @__PURE__ */ new Set();
       archive.registerStations(CANDIDATE_STATIONS);
       archive.data.records = archive.data.records.filter(
         (r) => r.body !== "candidate" || Array.isArray(r.data?.elements),
@@ -58545,15 +58805,16 @@ vHullPosition=position;`,
         recovery,
         paused = !1,
         leaving = !1,
-        last = performance.now(),
         dpr = Math.min(devicePixelRatio, quality.dpr),
-        average = 16,
-        frames = 0,
         saveAt = 0,
         manual = !1,
         touch = null,
         hold = 0,
         travel = 0,
+        pacer = new FramePacer(tier, dpr, (value) => {
+          ((dpr = value), renderer.setPixelRatio(value));
+        }),
+        shadowBudget,
         start2 = { x: -1456, z: 3180 },
         landing = { x: -1456, z: 3190 },
         position = { ...start2, ...state.rover };
@@ -58626,8 +58887,9 @@ vHullPosition=position;`,
       function persist() {
         ((state.rover = { x: position.x, z: position.z }), saveCandidate(state), archive.persist());
       }
-      function go() {
+      async function go() {
         if (leaving) return;
+        ((leaving = !0), await Promise.allSettled([...captureJobs, vehicleRecorder.flush()]));
         let policy = settlementDecision(state.observations);
         (eligible &&
           beginPostMission(
@@ -58651,18 +58913,26 @@ vHullPosition=position;`,
           params.has(k) && url.searchParams.set(k, params.get(k));
         location.assign(url.href);
       }
-      function image() {
-        renderer.render(scene, camera);
-        let c = document.createElement("canvas");
+      function image(profile, station) {
+        let canvas = copyFrame(renderer.domElement, tier === "low" ? 360 : 640, 720),
+          capturedAt = state.seconds * 1e3,
+          job = encodeFrame(canvas, 0.76)
+            .then(async (image2) => {
+              await backgroundTurn();
+              let record = archive.data.records.find(
+                (record2) => record2.id === station.id && record2.capturedAt === capturedAt,
+              );
+              record &&
+                ((record.image = image2),
+                (record.imageWidth = canvas.width),
+                (record.imageHeight = canvas.height),
+                archive.persist());
+            })
+            .catch(() => {})
+            .finally(() => captureJobs.delete(job));
         return (
-          (c.width = 640),
-          (c.height = Math.round(640 / camera.aspect)),
-          c.getContext("2d").drawImage(renderer.domElement, 0, 0, c.width, c.height),
-          {
-            image: c.toDataURL("image/jpeg", 0.76),
-            imageWidth: 640,
-            imageHeight: c.height,
-          }
+          captureJobs.add(job),
+          { image: null, imageWidth: canvas.width, imageHeight: canvas.height }
         );
       }
       function observe(s) {
@@ -58798,16 +59068,19 @@ vHullPosition=position;`,
           completionRequested && state.phase === "survey" && complete(),
           state.phase === "landing")
         )
-          (message("행성 4 · 탐사선 착륙", "감속 하강 · 착륙장 고도 확인"),
+          (message("행성 4 · 탐사선 착륙", "감속 하강 · 지표 고도 확인"),
             state.phaseTime >= 16 && setPhase("deploy"));
         else if (state.phase === "deploy")
-          (message("착륙 완료 · 출입 경사로 개방", "접지 확인 · 로버 출차 준비"),
+          (message(
+            "착륙 완료 · 로버 출입 경사로 개방",
+            "착륙 다리 지면 접촉 확인 · 로버 전개 준비",
+          ),
             (position.x = landing.x),
             (position.z = landing.z - 0.58),
             forward.set(0, 0, -1),
             state.phaseTime >= 4 && setPhase("egress"));
         else if (state.phase === "egress")
-          (message("로버 출차", "H · O · C · N · P · S 자원 탐사 시작"),
+          (message("로버 지상 전개", "H · O · C · N · P · S 자원 탐사 시작"),
             driveToward(start2.x, start2.z, dt, 0.9, 0.06) && setPhase("survey"));
         else if (state.phase === "survey") {
           let next = CANDIDATE_STATIONS.find((s) => !state.observations.includes(s.id));
@@ -58845,7 +59118,7 @@ vHullPosition=position;`,
           (missing
             ? driveToward(missing.x, missing.z, dt, 9) && (placeRover(), render(), observe(missing))
             : driveToward(start2.x, start2.z, dt, 4, 0.08) && setPhase("align"),
-            message("탐사선으로 복귀", "관측 지점의 원본 영상과 지표 자료를 모읍니다."));
+            message("탐사선으로 복귀", "관측 영상과 지표 분석 자료를 탐사선으로 가져갑니다."));
         } else if (state.phase === "align") {
           message("출입구 정렬", "경사로 중심선 정렬 · 저속 진입 준비");
           let angle =
@@ -58853,15 +59126,15 @@ vHullPosition=position;`,
           (forward.set(Math.sin(angle), 0, Math.cos(angle)),
             state.phaseTime >= 3 && (forward.set(0, 0, 1), setPhase("dock")));
         } else if (state.phase === "dock")
-          (message("탐사선 적재실로 복귀", "관측 자료 연결 · 이동 장치 고정"),
+          (message("로버 수납실 진입", "관측 자료 통합 · 로버 고정 준비"),
             driveToward(landing.x, landing.z - 0.58, dt, 0.9, 0.06) &&
               ((position.x = landing.x), (position.z = landing.z - 0.58), setPhase("stow")));
         else if (state.phase === "stow")
-          (message("로버 격납 · 출입문 폐쇄", "로버 고정 · 관측 자료 검증 · 통신 준비"),
+          (message("로버 수납 · 출입문 폐쇄 중", "로버 고정 · 관측 자료 검증 · 통신 준비"),
             state.phaseTime >= 4 && setPhase("uplink"));
         else if (state.phase === "uplink")
           (message(
-            `이주선 함대 호출 · ${Math.min(14, Math.floor(state.phaseTime))}/14초`,
+            `이주선 함대에 자료 송신 · ${Math.min(14, Math.floor(state.phaseTime))}/14초`,
             `발견: H · O · C · N · P · S
 행성 4 · 이주 적합 후보
 TF-NAV-01 / AU · X +1.2846 · Y −0.0821 · Z +0.4368
@@ -58985,6 +59258,10 @@ TF-NAV-01 / AU · X +1.2846 · Y −0.0821 · Z +0.4368
           camera.lookAt(cameraTarget),
           sun.target.position.copy(rover.group.position),
           sun.position.copy(sun.target.position).add(lightOffset),
+          shadowBudget.update(state.seconds, state.phase, {
+            moving: !finalPhases.has(state.phase) && state.phase !== "uplink",
+            close: entryPhases.has(state.phase) || state.phase === "dock" || state.phase === "stow",
+          }),
           renderer.render(scene, camera),
           vehicleRecorder.sample({
             kind: state.phase === "survey" || state.phase === "return" ? "rover" : "surveyor",
@@ -59011,7 +59288,7 @@ TF-NAV-01 / AU · X +1.2846 · Y −0.0821 · Z +0.4368
         ((paused = !0), keys.clear(), (touch = null), persist(), audio.pause());
       }
       function resume() {
-        recovery?.lost || ((paused = !1), (last = performance.now()), audio.resume());
+        recovery?.lost || ((paused = !1), pacer.reset(), audio.resume());
       }
       try {
         ((renderer = new WebGLRenderer({
@@ -59025,6 +59302,7 @@ TF-NAV-01 / AU · X +1.2846 · Y −0.0821 · Z +0.4368
           (renderer.toneMappingExposure = 1.05),
           (renderer.shadowMap.enabled = !0),
           (renderer.shadowMap.type = PCFSoftShadowMap),
+          (shadowBudget = createShadowBudget(renderer, tier)),
           document.body.prepend(renderer.domElement),
           (scene = new Scene()),
           (scene.background = new Color(197895)),
@@ -59162,16 +59440,15 @@ TF-NAV-01 / AU · X +1.2846 · Y −0.0821 · Z +0.4368
             document.hidden ? pause() : resume(),
           ));
         let tick = (now) => {
-          requestAnimationFrame(tick);
-          let dt = Math.min(0.1, Math.max(0, (now - last) / 1e3));
-          ((last = now),
-            !(paused || document.hidden || leaving || recovery.lost || test) &&
-              ((average = average * 0.97 + dt * 1e3 * 0.03),
-              ++frames % 180 === 0 &&
-                average > 28 &&
-                dpr > 0.8 &&
-                ((dpr = Math.max(0.8, dpr - 0.15)), renderer.setPixelRatio(dpr)),
-              update(dt)));
+          if (
+            (requestAnimationFrame(tick),
+            paused || document.hidden || leaving || recovery.lost || test)
+          ) {
+            pacer.reset();
+            return;
+          }
+          let dt = pacer.step(now);
+          dt !== null && update(dt);
         };
         (requestAnimationFrame(tick),
           (window.CANDIDATE = {
@@ -59182,6 +59459,8 @@ TF-NAV-01 / AU · X +1.2846 · Y −0.0821 · Z +0.4368
               position: { ...position },
               eligible,
               tier,
+              performance: pacer.snapshot(),
+              shadows: shadowBudget.snapshot(),
               phaseTime: state.phaseTime,
               manual,
               navigationPath: navigation.snapshot(),
@@ -59211,6 +59490,7 @@ TF-NAV-01 / AU · X +1.2846 · Y −0.0821 · Z +0.4368
               camera: camera.position.toArray(),
             }),
             complete,
+            flushArchive: () => Promise.allSettled([...captureJobs, vehicleRecorder.flush()]),
             advance: test
               ? (seconds) => {
                   for (let t = 0; t < seconds && !leaving; t += 0.1)

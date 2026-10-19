@@ -1024,6 +1024,110 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
         },
       });
 
+      // works/shared/shadow-budget.js
+      function createShadowBudget(renderer2, tier2) {
+        let last = -1 / 0,
+          lastKey = null,
+          updates = 0,
+          reuses = 0;
+        return {
+          update(seconds, key, { moving = !0, close = !1 } = {}) {
+            if (tier2 !== "low") return;
+            let changed = key !== lastKey || seconds < last,
+              due = moving && seconds - last >= 1 / (close ? 30 : 15) - 1e-3;
+            ((renderer2.shadowMap.autoUpdate = !1),
+              changed || due || renderer2.shadowMap.needsUpdate
+                ? ((renderer2.shadowMap.needsUpdate = !0),
+                  (last = seconds),
+                  (lastKey = key),
+                  updates++)
+                : reuses++);
+          },
+          snapshot: () => ({
+            mode: tier2 === "low" ? "scheduled" : "authored",
+            updates,
+            reuses,
+          }),
+        };
+      }
+
+      // works/shared/performance-policy.js
+      function performanceTier(
+        params2 = new URLSearchParams(globalThis.location?.search || ""),
+        device = globalThis.navigator || {},
+        viewport = globalThis,
+      ) {
+        let forced = params2.get("quality");
+        if (["high", "mid", "low"].includes(forced)) return forced;
+        if (params2.has("terminal") || forced === "critical") return "low";
+        if (params2.has("full")) return "high";
+        let coarse = viewport.matchMedia?.("(any-pointer: coarse)").matches;
+        return /Android|iPhone|iPad|iPod/i.test(device.userAgent || "") ||
+          (device.maxTouchPoints > 0 && coarse) ||
+          (viewport.innerWidth || 1024) < 700
+          ? "low"
+          : (device.hardwareConcurrency || 4) >= 8 && (device.deviceMemory ?? 8) >= 8
+            ? "high"
+            : "mid";
+      }
+      var FramePacer = class {
+        constructor(
+          tier2,
+          dpr2,
+          onResolution = () => {},
+          { minimum = tier2 === "low" ? 0.6 : 0.8 } = {},
+        ) {
+          ((this.fps = tier2 === "low" ? 30 : 60),
+            (this.interval = 1e3 / this.fps),
+            (this.dpr = dpr2),
+            (this.minimum = minimum),
+            (this.onResolution = onResolution),
+            (this.samples = []),
+            (this.frames = 0),
+            (this.changes = 0),
+            (this.p95 = 0),
+            (this.cooldown = 0),
+            this.reset());
+        }
+        reset() {
+          ((this.last = null), (this.next = null), (this.samples.length = 0));
+        }
+        step(now2) {
+          if (this.next !== null && now2 < this.next - 0.5) return null;
+          let elapsed = this.last === null ? this.interval : now2 - this.last;
+          if (
+            ((this.last = now2),
+            (this.next = this.next === null ? now2 + this.interval : this.next + this.interval),
+            this.next <= now2 && (this.next = now2 + this.interval),
+            this.frames++,
+            this.samples.push(elapsed),
+            this.samples.length >= this.fps * 3)
+          ) {
+            this.samples.sort((a, b) => a - b);
+            let mean = this.samples.reduce((sum, value) => sum + value, 0) / this.samples.length;
+            ((this.p95 = this.samples[Math.floor(this.samples.length * 0.95)]),
+              now2 >= this.cooldown &&
+                mean > this.interval * 1.22 &&
+                this.dpr > this.minimum &&
+                ((this.dpr = Math.max(this.minimum, Math.round((this.dpr - 0.1) * 100) / 100)),
+                this.onResolution(this.dpr),
+                this.changes++,
+                (this.cooldown = now2 + 1e4)),
+              (this.samples.length = 0));
+          }
+          return Math.min(0.1, Math.max(0, elapsed / 1e3));
+        }
+        snapshot() {
+          return {
+            targetFPS: this.fps,
+            renderedFrames: this.frames,
+            dpr: this.dpr,
+            p95: this.p95,
+            resolutionChanges: this.changes,
+          };
+        }
+      };
+
       // works/shared/journey-controls.js
       function installJourneyControls(audio2, button) {
         let chosen = () => {
@@ -56347,17 +56451,11 @@ vHullPosition=position;`,
         destination =
           passage === 3 ? "planet-04.html" : passage === 2 ? "planet-03.html" : "planet-02.html",
         cuts = passage === 2 ? [26, 44] : CUTS,
-        tier = ["high", "mid", "low"].includes(params.get("quality"))
-          ? params.get("quality")
-          : innerWidth < 700
-            ? "low"
-            : navigator.hardwareConcurrency >= 8
-              ? "high"
-              : "mid",
+        tier = performanceTier(params),
         quality = {
           high: { dpr: 1.65, shadow: 2048 },
           mid: { dpr: 1.25, shadow: 1024 },
-          low: { dpr: 1, shadow: 512 },
+          low: { dpr: 0.9, shadow: 512 },
         }[tier],
         savedTransfer = readTransfer(),
         transfer = savedTransfer?.source === source ? savedTransfer : null,
@@ -56385,14 +56483,15 @@ vHullPosition=position;`,
         keyLight,
         recovery,
         t = test ? 0 : transfer?.stage === "flight" ? Math.min(transfer.elapsed, DURATION) : 0,
-        last = performance.now(),
         paused = !1,
         leaving = !1,
-        average = 16,
-        frames = 0,
         lastSave = t,
         dpr = Math.min(devicePixelRatio, quality.dpr),
         veilOpacity = -1,
+        pacer = new FramePacer(tier, dpr, (value) => {
+          ((dpr = value), renderer.setPixelRatio(value));
+        }),
+        shadowBudget,
         targetPath = (file) =>
           location.pathname.includes("/works/space/") ? "../terra_incognita/" + file : file;
       document.getElementById("return").href = targetPath("index.html");
@@ -56421,6 +56520,7 @@ vHullPosition=position;`,
         (blackout !== veilOpacity &&
           ((veilOpacity = blackout), (veil.style.opacity = String(blackout))),
           audio.update(t),
+          shadowBudget.update(t, shotAt(t, passage)),
           renderer.render(scene, camera));
       }
       function resize(width, height, left = 0, top = 0) {
@@ -56443,21 +56543,21 @@ vHullPosition=position;`,
           location.replace(url.href);
           return;
         }
-        recovery?.lost || ((paused = !1), (last = performance.now()), audio.resume());
+        recovery?.lost || ((paused = !1), pacer.reset(), audio.resume());
       }
       function tick(now2) {
-        requestAnimationFrame(tick);
-        let dt = Math.max(0, Math.min(0.1, (now2 - last) / 1e3));
-        ((last = now2),
-          !(paused || document.hidden || leaving || test || recovery?.lost) &&
-            ((average = 0.97 * average + 0.03 * dt * 1e3),
-            ++frames % 180 === 0 &&
-              average > 27 &&
-              dpr > 0.8 &&
-              ((dpr = Math.max(0.8, dpr - 0.15)), renderer.setPixelRatio(dpr)),
-            render(t + dt),
-            t - lastSave >= 2 && ((lastSave = t), persist()),
-            t >= DURATION && arrive()));
+        if (
+          (requestAnimationFrame(tick),
+          paused || document.hidden || leaving || test || recovery?.lost)
+        ) {
+          pacer.reset();
+          return;
+        }
+        let dt = pacer.step(now2);
+        dt !== null &&
+          (render(t + dt),
+          t - lastSave >= 2 && ((lastSave = t), persist()),
+          t >= DURATION && arrive());
       }
       try {
         ((renderer = new WebGLRenderer({
@@ -56471,6 +56571,7 @@ vHullPosition=position;`,
           (renderer.toneMappingExposure = 1.05),
           (renderer.shadowMap.enabled = !0),
           (renderer.shadowMap.type = PCFSoftShadowMap),
+          (shadowBudget = createShadowBudget(renderer, tier)),
           document.body.prepend(renderer.domElement),
           (scene = new Scene()),
           (scene.background = new Color(197895)),
@@ -56500,7 +56601,7 @@ vHullPosition=position;`,
           (voidScene = createVoid(scene, tier, passage)),
           render(t),
           (document.getElementById("loading").hidden = !0),
-          (last = performance.now()),
+          pacer.reset(),
           (window.BTK_SPACE = {
             snapshot: () => ({
               passage,
@@ -56508,6 +56609,8 @@ vHullPosition=position;`,
               duration: DURATION,
               shot: shotAt(t, passage),
               tier,
+              performance: pacer.snapshot(),
+              shadows: shadowBudget.snapshot(),
               triangles: renderer.info.render.triangles,
               calls: renderer.info.render.calls,
               dpr,

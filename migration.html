@@ -1157,6 +1157,33 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
         },
       });
 
+      // works/shared/shadow-budget.js
+      function createShadowBudget(renderer2, tier2) {
+        let last = -1 / 0,
+          lastKey = null,
+          updates = 0,
+          reuses = 0;
+        return {
+          update(seconds2, key2, { moving = !0, close = !1 } = {}) {
+            if (tier2 !== "low") return;
+            let changed = key2 !== lastKey || seconds2 < last,
+              due = moving && seconds2 - last >= 1 / (close ? 30 : 15) - 1e-3;
+            ((renderer2.shadowMap.autoUpdate = !1),
+              changed || due || renderer2.shadowMap.needsUpdate
+                ? ((renderer2.shadowMap.needsUpdate = !0),
+                  (last = seconds2),
+                  (lastKey = key2),
+                  updates++)
+                : reuses++);
+          },
+          snapshot: () => ({
+            mode: tier2 === "low" ? "scheduled" : "authored",
+            updates,
+            reuses,
+          }),
+        };
+      }
+
       // node_modules/three/build/three.core.js
       var CullFaceNone = 0,
         CullFaceBack = 1,
@@ -8846,18 +8873,18 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
            * @param {XRReferenceSpace} referenceSpace - The reference space.
            * @return {WebXRController} A reference to this instance.
            */
-          update(inputSource, frame2, referenceSpace) {
+          update(inputSource, frame, referenceSpace) {
             let inputPose = null,
               gripPose = null,
               handPose = null,
               targetRay = this._targetRay,
               grip = this._grip,
               hand = this._hand;
-            if (inputSource && frame2.session.visibilityState !== "visible-blurred") {
+            if (inputSource && frame.session.visibilityState !== "visible-blurred") {
               if (hand && inputSource.hand) {
                 handPose = !0;
                 for (let inputjoint of inputSource.hand.values()) {
-                  let jointPose = frame2.getJointPose(inputjoint, referenceSpace),
+                  let jointPose = frame.getJointPose(inputjoint, referenceSpace),
                     joint = this._getHandJoint(hand, inputjoint);
                   (jointPose !== null &&
                     (joint.matrix.fromArray(jointPose.transform.matrix),
@@ -8889,7 +8916,7 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
               } else
                 grip !== null &&
                   inputSource.gripSpace &&
-                  ((gripPose = frame2.getPose(inputSource.gripSpace, referenceSpace)),
+                  ((gripPose = frame.getPose(inputSource.gripSpace, referenceSpace)),
                   gripPose !== null &&
                     (grip.matrix.fromArray(gripPose.transform.matrix),
                     grip.matrix.decompose(grip.position, grip.rotation, grip.scale),
@@ -8909,7 +8936,7 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
                         target: this,
                       })));
               targetRay !== null &&
-                ((inputPose = frame2.getPose(inputSource.targetRaySpace, referenceSpace)),
+                ((inputPose = frame.getPose(inputSource.targetRaySpace, referenceSpace)),
                 inputPose === null && gripPose !== null && (inputPose = gripPose),
                 inputPose !== null &&
                   (targetRay.matrix.fromArray(inputPose.transform.matrix),
@@ -15521,14 +15548,14 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
             this.needsUpdate = !1;
             let cache2 = [],
               current,
-              last2 = this.getPoint(0),
+              last = this.getPoint(0),
               sum = 0;
             cache2.push(0);
             for (let p = 1; p <= divisions; p++)
               ((current = this.getPoint(p / divisions)),
-                (sum += current.distanceTo(last2)),
+                (sum += current.distanceTo(last)),
                 cache2.push(sum),
-                (last2 = current));
+                (last = current));
             return ((this.cacheArcLengths = cache2), cache2);
           }
           /**
@@ -16561,7 +16588,7 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
           }
           getPoints(divisions = 12) {
             let points = [],
-              last2;
+              last;
             for (let i = 0, curves = this.curves; i < curves.length; i++) {
               let curve = curves[i],
                 resolution = curve.isEllipseCurve
@@ -16574,7 +16601,7 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
                 pts = curve.getPoints(resolution);
               for (let j = 0; j < pts.length; j++) {
                 let point = pts[j];
-                (last2 && last2.equals(point)) || (points.push(point), (last2 = point));
+                (last && last.equals(point)) || (points.push(point), (last = point));
               }
             }
             return (
@@ -16909,17 +16936,14 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
         return (earcutLinked(outerNode, triangles, dim, minX, minY, invSize, 0), triangles);
       }
       function linkedList(data, start2, end, dim, clockwise) {
-        let last2;
+        let last;
         if (clockwise === signedArea(data, start2, end, dim) > 0)
           for (let i = start2; i < end; i += dim)
-            last2 = insertNode((i / dim) | 0, data[i], data[i + 1], last2);
+            last = insertNode((i / dim) | 0, data[i], data[i + 1], last);
         else
           for (let i = end - dim; i >= start2; i -= dim)
-            last2 = insertNode((i / dim) | 0, data[i], data[i + 1], last2);
-        return (
-          last2 && equals(last2, last2.next) && (removeNode(last2), (last2 = last2.next)),
-          last2
-        );
+            last = insertNode((i / dim) | 0, data[i], data[i + 1], last);
+        return (last && equals(last, last.next) && (removeNode(last), (last = last.next)), last);
       }
       function filterPoints(start2, end) {
         if (!start2) return start2;
@@ -17326,11 +17350,11 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
           b2
         );
       }
-      function insertNode(i, x, y, last2) {
+      function insertNode(i, x, y, last) {
         let p = createNode(i, x, y);
         return (
-          last2
-            ? ((p.next = last2.next), (p.prev = last2), (last2.next.prev = p), (last2.next = p))
+          last
+            ? ((p.next = last.next), (p.prev = last), (last.next.prev = p), (last.next = p))
             : ((p.prev = p), (p.next = p)),
           p
         );
@@ -21589,8 +21613,8 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
           isAnimating = !1,
           animationLoop = null,
           requestId = null;
-        function onAnimationFrame(time, frame2) {
-          (animationLoop(time, frame2),
+        function onAnimationFrame(time, frame) {
+          (animationLoop(time, frame),
             (requestId = context2.requestAnimationFrame(onAnimationFrame)));
         }
         return {
@@ -28148,25 +28172,25 @@ void main() {
       function WebGLObjects(gl, geometries, attributes, bindingStates, info) {
         let updateMap = /* @__PURE__ */ new WeakMap();
         function update(object) {
-          let frame2 = info.render.frame,
+          let frame = info.render.frame,
             geometry = object.geometry,
             buffergeometry = geometries.get(object, geometry);
           if (
-            (updateMap.get(buffergeometry) !== frame2 &&
-              (geometries.update(buffergeometry), updateMap.set(buffergeometry, frame2)),
+            (updateMap.get(buffergeometry) !== frame &&
+              (geometries.update(buffergeometry), updateMap.set(buffergeometry, frame)),
             object.isInstancedMesh &&
               (object.hasEventListener("dispose", onInstancedMeshDispose) === !1 &&
                 object.addEventListener("dispose", onInstancedMeshDispose),
-              updateMap.get(object) !== frame2 &&
+              updateMap.get(object) !== frame &&
                 (attributes.update(object.instanceMatrix, gl.ARRAY_BUFFER),
                 object.instanceColor !== null &&
                   attributes.update(object.instanceColor, gl.ARRAY_BUFFER),
-                updateMap.set(object, frame2))),
+                updateMap.set(object, frame))),
             object.isSkinnedMesh)
           ) {
             let skeleton = object.skeleton;
-            updateMap.get(skeleton) !== frame2 &&
-              (skeleton.update(), updateMap.set(skeleton, frame2));
+            updateMap.get(skeleton) !== frame &&
+              (skeleton.update(), updateMap.set(skeleton, frame));
           }
           return buffergeometry;
         }
@@ -34044,9 +34068,9 @@ void main() {
           );
         }
         function updateVideoTexture(texture) {
-          let frame2 = info.render.frame;
-          _videoTextures.get(texture) !== frame2 &&
-            (_videoTextures.set(texture, frame2), texture.update());
+          let frame = info.render.frame;
+          _videoTextures.get(texture) !== frame &&
+            (_videoTextures.set(texture, frame), texture.update());
         }
         function verifyColorSpace(texture, image) {
           let colorSpace = texture.colorSpace,
@@ -34780,10 +34804,10 @@ void main() {
                 return cameraAccessTextures[xrCamera];
               }));
             let onAnimationFrameCallback = null;
-            function onAnimationFrame(time, frame2) {
+            function onAnimationFrame(time, frame) {
               if (
-                ((pose = frame2.getViewerPose(customReferenceSpace || referenceSpace)),
-                (xrFrame = frame2),
+                ((pose = frame.getViewerPose(customReferenceSpace || referenceSpace)),
+                (xrFrame = frame),
                 pose !== null)
               ) {
                 let views = pose.views;
@@ -34866,11 +34890,11 @@ void main() {
                   controller = controllers[i];
                 inputSource !== null &&
                   controller !== void 0 &&
-                  controller.update(inputSource, frame2, customReferenceSpace || referenceSpace);
+                  controller.update(inputSource, frame, customReferenceSpace || referenceSpace);
               }
-              (onAnimationFrameCallback && onAnimationFrameCallback(time, frame2),
-                frame2.detectedPlanes &&
-                  scope2.dispatchEvent({ type: "planesdetected", data: frame2 }),
+              (onAnimationFrameCallback && onAnimationFrameCallback(time, frame),
+                frame.detectedPlanes &&
+                  scope2.dispatchEvent({ type: "planesdetected", data: frame }),
                 (xrFrame = null));
             }
             let animation = new WebGLAnimation();
@@ -35181,9 +35205,9 @@ void main() {
             uniformsGroup.addEventListener("dispose", onUniformsGroupsDispose));
           let webglProgram = program.program;
           state2.updateUBOMapping(uniformsGroup, webglProgram);
-          let frame2 = info.render.frame;
-          updateList[uniformsGroup.id] !== frame2 &&
-            (updateBufferData(uniformsGroup), (updateList[uniformsGroup.id] = frame2));
+          let frame = info.render.frame;
+          updateList[uniformsGroup.id] !== frame &&
+            (updateBufferData(uniformsGroup), (updateList[uniformsGroup.id] = frame));
         }
         function createBuffer(uniformsGroup) {
           let bindingPointIndex = allocateBindingPointIndex();
@@ -37365,6 +37389,378 @@ void main() {
         }
       };
 
+      // node_modules/three/examples/jsm/utils/BufferGeometryUtils.js
+      function mergeGeometries(geometries, useGroups = !1) {
+        let isIndexed = geometries[0].index !== null,
+          attributesUsed = new Set(Object.keys(geometries[0].attributes)),
+          morphAttributesUsed = new Set(Object.keys(geometries[0].morphAttributes)),
+          attributes = {},
+          morphAttributes = {},
+          morphTargetsRelative = geometries[0].morphTargetsRelative,
+          mergedGeometry = new BufferGeometry(),
+          offset = 0;
+        for (let i = 0; i < geometries.length; ++i) {
+          let geometry = geometries[i],
+            attributesCount = 0;
+          if (isIndexed !== (geometry.index !== null))
+            return (
+              console.error(
+                "THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " +
+                  i +
+                  ". All geometries must have compatible attributes; make sure index attribute exists among all geometries, or in none of them.",
+              ),
+              null
+            );
+          for (let name in geometry.attributes) {
+            if (!attributesUsed.has(name))
+              return (
+                console.error(
+                  "THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " +
+                    i +
+                    '. All geometries must have compatible attributes; make sure "' +
+                    name +
+                    '" attribute exists among all geometries, or in none of them.',
+                ),
+                null
+              );
+            (attributes[name] === void 0 && (attributes[name] = []),
+              attributes[name].push(geometry.attributes[name]),
+              attributesCount++);
+          }
+          if (attributesCount !== attributesUsed.size)
+            return (
+              console.error(
+                "THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " +
+                  i +
+                  ". Make sure all geometries have the same number of attributes.",
+              ),
+              null
+            );
+          if (morphTargetsRelative !== geometry.morphTargetsRelative)
+            return (
+              console.error(
+                "THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " +
+                  i +
+                  ". .morphTargetsRelative must be consistent throughout all geometries.",
+              ),
+              null
+            );
+          for (let name in geometry.morphAttributes) {
+            if (!morphAttributesUsed.has(name))
+              return (
+                console.error(
+                  "THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " +
+                    i +
+                    ".  .morphAttributes must be consistent throughout all geometries.",
+                ),
+                null
+              );
+            (morphAttributes[name] === void 0 && (morphAttributes[name] = []),
+              morphAttributes[name].push(geometry.morphAttributes[name]));
+          }
+          if (useGroups) {
+            let count;
+            if (isIndexed) count = geometry.index.count;
+            else if (geometry.attributes.position !== void 0)
+              count = geometry.attributes.position.count;
+            else
+              return (
+                console.error(
+                  "THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " +
+                    i +
+                    ". The geometry must have either an index or a position attribute",
+                ),
+                null
+              );
+            (mergedGeometry.addGroup(offset, count, i), (offset += count));
+          }
+        }
+        if (isIndexed) {
+          let indexOffset = 0,
+            mergedIndex = [];
+          for (let i = 0; i < geometries.length; ++i) {
+            let index = geometries[i].index;
+            for (let j = 0; j < index.count; ++j) mergedIndex.push(index.getX(j) + indexOffset);
+            indexOffset += geometries[i].attributes.position.count;
+          }
+          mergedGeometry.setIndex(mergedIndex);
+        }
+        for (let name in attributes) {
+          let mergedAttribute = mergeAttributes(attributes[name]);
+          if (!mergedAttribute)
+            return (
+              console.error(
+                "THREE.BufferGeometryUtils: .mergeGeometries() failed while trying to merge the " +
+                  name +
+                  " attribute.",
+              ),
+              null
+            );
+          mergedGeometry.setAttribute(name, mergedAttribute);
+        }
+        for (let name in morphAttributes) {
+          let numMorphTargets = morphAttributes[name][0].length;
+          if (numMorphTargets !== 0) {
+            ((mergedGeometry.morphAttributes = mergedGeometry.morphAttributes || {}),
+              (mergedGeometry.morphAttributes[name] = []));
+            for (let i = 0; i < numMorphTargets; ++i) {
+              let morphAttributesToMerge = [];
+              for (let j = 0; j < morphAttributes[name].length; ++j)
+                morphAttributesToMerge.push(morphAttributes[name][j][i]);
+              let mergedMorphAttribute = mergeAttributes(morphAttributesToMerge);
+              if (!mergedMorphAttribute)
+                return (
+                  console.error(
+                    "THREE.BufferGeometryUtils: .mergeGeometries() failed while trying to merge the " +
+                      name +
+                      " morphAttribute.",
+                  ),
+                  null
+                );
+              mergedGeometry.morphAttributes[name].push(mergedMorphAttribute);
+            }
+          }
+        }
+        return mergedGeometry;
+      }
+      function mergeAttributes(attributes) {
+        let TypedArray,
+          itemSize,
+          normalized,
+          gpuType = -1,
+          arrayLength = 0;
+        for (let i = 0; i < attributes.length; ++i) {
+          let attribute = attributes[i];
+          if (
+            (TypedArray === void 0 && (TypedArray = attribute.array.constructor),
+            TypedArray !== attribute.array.constructor)
+          )
+            return (
+              console.error(
+                "THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.array must be of consistent array types across matching attributes.",
+              ),
+              null
+            );
+          if (
+            (itemSize === void 0 && (itemSize = attribute.itemSize),
+            itemSize !== attribute.itemSize)
+          )
+            return (
+              console.error(
+                "THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.itemSize must be consistent across matching attributes.",
+              ),
+              null
+            );
+          if (
+            (normalized === void 0 && (normalized = attribute.normalized),
+            normalized !== attribute.normalized)
+          )
+            return (
+              console.error(
+                "THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.normalized must be consistent across matching attributes.",
+              ),
+              null
+            );
+          if ((gpuType === -1 && (gpuType = attribute.gpuType), gpuType !== attribute.gpuType))
+            return (
+              console.error(
+                "THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.gpuType must be consistent across matching attributes.",
+              ),
+              null
+            );
+          arrayLength += attribute.count * itemSize;
+        }
+        let array = new TypedArray(arrayLength),
+          result = new BufferAttribute(array, itemSize, normalized),
+          offset = 0;
+        for (let i = 0; i < attributes.length; ++i) {
+          let attribute = attributes[i];
+          if (attribute.isInterleavedBufferAttribute) {
+            let tupleOffset = offset / itemSize;
+            for (let j = 0, l = attribute.count; j < l; j++)
+              for (let c = 0; c < itemSize; c++) {
+                let value = attribute.getComponent(j, c);
+                result.setComponent(j + tupleOffset, c, value);
+              }
+          } else array.set(attribute.array, offset);
+          offset += attribute.count * itemSize;
+        }
+        return (gpuType !== void 0 && (result.gpuType = gpuType), result);
+      }
+
+      // works/first_dawn/fleet-lod.js
+      function createFleetLOD(fleet2, tier2) {
+        let threshold = { low: 200, mid: 140, high: 100 }[tier2],
+          data = fleet2.map((ship) => {
+            let radius = new Box3().setFromObject(ship).getBoundingSphere(new Sphere()).radius,
+              owners = [],
+              near = [],
+              far = [],
+              fine = [];
+            ship.traverse((object) => {
+              object.isGroup && owners.push(object);
+            });
+            for (let owner of owners) {
+              let batches = /* @__PURE__ */ new Map();
+              for (let mesh of [...owner.children]) {
+                if (!mesh.isMesh) continue;
+                if (
+                  mesh.userData.distantOmit ||
+                  mesh.name === "mission-markings" ||
+                  mesh.name === "ring-module-markings"
+                ) {
+                  fine.push(mesh);
+                  continue;
+                }
+                if (
+                  mesh.isInstancedMesh ||
+                  Array.isArray(mesh.material) ||
+                  mesh.material.transparent ||
+                  !mesh.visible
+                )
+                  continue;
+                let attributes = Object.entries(mesh.geometry.attributes)
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(
+                      ([name, attribute]) =>
+                        `${name}/${attribute.itemSize}/${attribute.normalized}/${attribute.array.constructor.name}`,
+                    )
+                    .join(","),
+                  key2 = mesh.material.uuid + ":" + !!mesh.geometry.index + ":" + attributes;
+                (batches.has(key2) || batches.set(key2, []), batches.get(key2).push(mesh));
+              }
+              for (let meshes of batches.values()) {
+                if (meshes.length < 2) continue;
+                let geometries = meshes.map((mesh) => {
+                    mesh.updateMatrix();
+                    let geometry = mesh.geometry.clone().applyMatrix4(mesh.matrix);
+                    return (geometry.clearGroups(), geometry);
+                  }),
+                  merged = mergeGeometries(geometries);
+                if ((geometries.forEach((geometry) => geometry.dispose()), !merged)) continue;
+                let proxy = new Mesh(merged, meshes[0].material);
+                ((proxy.name = "distant-hull-batch"),
+                  (proxy.castShadow = meshes.some((mesh) => mesh.castShadow)),
+                  (proxy.receiveShadow = meshes.some((mesh) => mesh.receiveShadow)),
+                  (proxy.visible = !1),
+                  (proxy.userData.blueprintOmit = !0),
+                  owner.add(proxy),
+                  near.push(...meshes),
+                  far.push(proxy));
+              }
+            }
+            return { ship, radius, near, far, fine, distant: !1 };
+          }),
+          position = new Vector3();
+        return {
+          update(camera2, height, subject = -1) {
+            fleet2.forEach((ship, index) => {
+              let entry = data[index];
+              ship.getWorldPosition(position);
+              let scale = Math.max(ship.scale.x, ship.scale.y, ship.scale.z),
+                pixels =
+                  (entry.radius * scale * camera2.projectionMatrix.elements[5] * height) /
+                  Math.max(1, position.distanceTo(camera2.position)),
+                distant = index !== subject && pixels < threshold;
+              distant !== entry.distant &&
+                ((entry.distant = distant),
+                entry.near.forEach((mesh) => {
+                  mesh.visible = !distant;
+                }),
+                entry.fine.forEach((mesh) => {
+                  mesh.visible = !distant;
+                }),
+                entry.far.forEach((mesh) => {
+                  mesh.visible = distant;
+                }));
+            });
+          },
+          snapshot: () =>
+            data.map((entry) => ({
+              distant: entry.distant,
+              nearCalls: entry.near.length + entry.fine.length,
+              farCalls: entry.far.length,
+            })),
+        };
+      }
+
+      // works/shared/performance-policy.js
+      function performanceTier(
+        params2 = new URLSearchParams(globalThis.location?.search || ""),
+        device = globalThis.navigator || {},
+        viewport = globalThis,
+      ) {
+        let forced = params2.get("quality");
+        if (["high", "mid", "low"].includes(forced)) return forced;
+        if (params2.has("terminal") || forced === "critical") return "low";
+        if (params2.has("full")) return "high";
+        let coarse = viewport.matchMedia?.("(any-pointer: coarse)").matches;
+        return /Android|iPhone|iPad|iPod/i.test(device.userAgent || "") ||
+          (device.maxTouchPoints > 0 && coarse) ||
+          (viewport.innerWidth || 1024) < 700
+          ? "low"
+          : (device.hardwareConcurrency || 4) >= 8 && (device.deviceMemory ?? 8) >= 8
+            ? "high"
+            : "mid";
+      }
+      var FramePacer = class {
+        constructor(
+          tier2,
+          dpr,
+          onResolution = () => {},
+          { minimum = tier2 === "low" ? 0.6 : 0.8 } = {},
+        ) {
+          ((this.fps = tier2 === "low" ? 30 : 60),
+            (this.interval = 1e3 / this.fps),
+            (this.dpr = dpr),
+            (this.minimum = minimum),
+            (this.onResolution = onResolution),
+            (this.samples = []),
+            (this.frames = 0),
+            (this.changes = 0),
+            (this.p95 = 0),
+            (this.cooldown = 0),
+            this.reset());
+        }
+        reset() {
+          ((this.last = null), (this.next = null), (this.samples.length = 0));
+        }
+        step(now3) {
+          if (this.next !== null && now3 < this.next - 0.5) return null;
+          let elapsed = this.last === null ? this.interval : now3 - this.last;
+          if (
+            ((this.last = now3),
+            (this.next = this.next === null ? now3 + this.interval : this.next + this.interval),
+            this.next <= now3 && (this.next = now3 + this.interval),
+            this.frames++,
+            this.samples.push(elapsed),
+            this.samples.length >= this.fps * 3)
+          ) {
+            this.samples.sort((a, b) => a - b);
+            let mean = this.samples.reduce((sum, value) => sum + value, 0) / this.samples.length;
+            ((this.p95 = this.samples[Math.floor(this.samples.length * 0.95)]),
+              now3 >= this.cooldown &&
+                mean > this.interval * 1.22 &&
+                this.dpr > this.minimum &&
+                ((this.dpr = Math.max(this.minimum, Math.round((this.dpr - 0.1) * 100) / 100)),
+                this.onResolution(this.dpr),
+                this.changes++,
+                (this.cooldown = now3 + 1e4)),
+              (this.samples.length = 0));
+          }
+          return Math.min(0.1, Math.max(0, elapsed / 1e3));
+        }
+        snapshot() {
+          return {
+            targetFPS: this.fps,
+            renderedFrames: this.frames,
+            dpr: this.dpr,
+            p95: this.p95,
+            resolutionChanges: this.changes,
+          };
+        }
+      };
+
       // works/shared/aerospace-textures.js
       var cache = /* @__PURE__ */ new Map(),
         AEROSPACE_FINISH = Object.freeze({
@@ -37877,6 +38273,44 @@ void main() {
             ),
               m.finish());
           }
+        });
+      }
+
+      // works/shared/frame-capture.js
+      function copyFrame(source, width = 480, maxHeight = 640) {
+        if (!source.width || !source.height) throw new Error("Empty capture source");
+        let scale = Math.min(width / source.width, maxHeight / source.height, 1),
+          canvas = document.createElement("canvas");
+        return (
+          (canvas.width = Math.max(1, Math.round(source.width * scale))),
+          (canvas.height = Math.max(1, Math.round(source.height * scale))),
+          canvas.getContext("2d").drawImage(source, 0, 0, canvas.width, canvas.height),
+          canvas
+        );
+      }
+      function backgroundTurn() {
+        return globalThis.scheduler?.postTask
+          ? scheduler.postTask(() => {}, { priority: "background" })
+          : new Promise((resolve) => {
+              globalThis.requestIdleCallback
+                ? requestIdleCallback(resolve, { timeout: 700 })
+                : setTimeout(resolve, 0);
+            });
+      }
+      async function encodeFrame(canvas, quality2 = 0.7) {
+        await backgroundTurn();
+        let blob = await new Promise((resolve, reject) => {
+          canvas.toBlob(
+            (value) => (value ? resolve(value) : reject(new Error("Capture encoding failed"))),
+            "image/jpeg",
+            quality2,
+          );
+        });
+        return new Promise((resolve, reject) => {
+          let reader = new FileReader();
+          ((reader.onload = () => resolve(reader.result)),
+            (reader.onerror = () => reject(reader.error)),
+            reader.readAsDataURL(blob));
         });
       }
 
@@ -38524,6 +38958,82 @@ void main() {
         };
       }
 
+      // works/first_dawn/mobile-surface.js
+      function installMobileSurface(material) {
+        ((material.userData.surfaceProfile = "mobile-planar"),
+          (material.onBeforeCompile = (shader) => {
+            ((shader.vertexShader = shader.vertexShader
+              .replace(
+                "#include <common>",
+                `#include <common>
+varying vec3 basinPosition; varying vec3 basinNormal; varying float basinSlope; varying float basinAO; attribute float basinOcclusion;`,
+              )
+              .replace(
+                "#include <begin_vertex>",
+                `#include <begin_vertex>
+basinPosition=position; basinNormal=normal; basinSlope=1.-abs(normal.y); basinAO=basinOcclusion;`,
+              )),
+              (shader.fragmentShader = shader.fragmentShader
+                .replace(
+                  "#include <common>",
+                  `#include <common>
+        varying vec3 basinPosition; varying vec3 basinNormal;
+        varying float basinSlope; varying float basinAO;
+        float mobileHash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+        float mobileNoise(vec2 p){
+          vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+          return mix(mix(mobileHash(i),mobileHash(i+vec2(1,0)),f.x),
+            mix(mobileHash(i+vec2(0,1)),mobileHash(i+vec2(1,1)),f.x),f.y);
+        }`,
+                )
+                .replace(
+                  "#include <color_fragment>",
+                  `#include <color_fragment>
+        vec3 planeNormal=abs(basinNormal);
+        vec2 mineralPlane=planeNormal.y>max(planeNormal.x,planeNormal.z)?basinPosition.xz:
+          (planeNormal.x>planeNormal.z?basinPosition.yz:basinPosition.xy);
+        float rock=smoothstep(.10,.58,basinSlope);
+        float mineral=mobileNoise(mineralPlane*.027);
+        float bedding=sin(basinPosition.y*.108);
+        float nearDetail=1.-smoothstep(90.,380.,length(vViewPosition));
+        float grain=0.;
+        if(nearDetail>.001)grain=(mobileNoise(mineralPlane*.6)-.5)*
+          (1.-smoothstep(.25,.8,length(fwidth(mineralPlane*.6))));
+        diffuseColor.rgb*=1.+(mineral-.5)*.095+bedding*.025*rock+grain*.10*nearDetail;
+        diffuseColor.rgb*=mix(vec3(1.025,1.018,1.01),vec3(.91,.925,.94),rock*.46);
+        float veil=1.-exp(-length(vViewPosition)*.00042);
+        diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.34,.195,.15),veil*.10);`,
+                )
+                .replace(
+                  "#include <roughnessmap_fragment>",
+                  `#include <roughnessmap_fragment>
+roughnessFactor=mix(.97,.79,rock);`,
+                )
+                .replace(
+                  "#include <normal_fragment_maps>",
+                  `#include <normal_fragment_maps>
+        float relief=(mineral-.5)*mix(.18,.60,rock)+bedding*.24*basinSlope;
+        float visibility=1.-smoothstep(.45,1.5,length(fwidth(mineralPlane*.027)));
+        vec3 sigmaX=dFdx(-vViewPosition),sigmaY=dFdy(-vViewPosition);
+        vec3 gradX=cross(sigmaY,normal),gradY=cross(normal,sigmaX);
+        float determinant=dot(sigmaX,gradX)*faceDirection;
+        vec3 gradient=sign(determinant)*(dFdx(relief)*gradX+dFdy(relief)*gradY)*visibility;
+        normal=normalize(max(abs(determinant),1.e-8)*normal-gradient);`,
+                )
+                .replace(
+                  "#include <aomap_fragment>",
+                  `#include <aomap_fragment>
+reflectedLight.indirectDiffuse*=basinAO; reflectedLight.indirectSpecular*=basinAO;`,
+                )
+                .replace(
+                  "#include <fog_fragment>",
+                  `#include <fog_fragment>
+float terrainLuma=dot(gl_FragColor.rgb,vec3(.2126,.7152,.0722));gl_FragColor.rgb=mix(vec3(terrainLuma),gl_FragColor.rgb,.672);`,
+                )));
+          }),
+          (material.customProgramCacheKey = () => "canyon-mobile-planar-v1"));
+      }
+
       // works/first_dawn/timeline.js
       var CUTS = Object.freeze([20, 40, 68, 82]),
         SURFACE_AT = CUTS[3],
@@ -38830,7 +39340,11 @@ void main() {
           occlusion[i] = Math.max(0.42, 1 - blocked * 0.145);
         }
         geometry.setAttribute("basinOcclusion", new Float32BufferAttribute(occlusion, 1));
-        let material = new MeshStandardMaterial({ vertexColors: !0, roughness: 1, metalness: 0 });
+        let material = new MeshStandardMaterial({
+          vertexColors: !0,
+          roughness: 1,
+          metalness: 0,
+        });
         ((material.shadowSide = DoubleSide),
           (material.onBeforeCompile = (shader) => {
             ((shader.vertexShader = shader.vertexShader
@@ -38969,7 +39483,8 @@ basinPosition=position;basinSlope=1.-abs(normal.y);basinAO=basinOcclusion;basinN
 reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO;`,
                 )));
           }),
-          (material.customProgramCacheKey = () => `canyon-eroded-joints-v10-${tier2}`));
+          (material.customProgramCacheKey = () => `canyon-eroded-joints-v10-${tier2}`),
+          tier2 === "low" && installMobileSurface(material));
         let terrain = new Mesh(geometry, material);
         ((terrain.castShadow = terrain.receiveShadow = !0), group.add(terrain));
         let rockGeometry = new IcosahedronGeometry(1, tier2 === "low" ? 0 : 1),
@@ -38982,7 +39497,10 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           rockPos.setXYZ(i, x * split, Math.max(-0.62, Math.min(0.62, y)) * 0.8, z * split);
         }
         rockGeometry.computeVertexNormals();
-        let rockMaterial = new MeshStandardMaterial({ color: 7755850, roughness: 0.87 }),
+        let rockMaterial = new MeshStandardMaterial({
+            color: 7755850,
+            roughness: 0.87,
+          }),
           rocks = new InstancedMesh(rockGeometry, rockMaterial, tier2 === "low" ? 2 : 5),
           dummy = new Object3D(),
           seed = 7103,
@@ -39010,7 +39528,10 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           group.add(rocks));
         let skylight = new HemisphereLight(12895688, 7361350, 0.58);
         group.add(skylight);
-        let skyUniforms = { elapsed: { value: SURFACE_AT }, surfaceStart: { value: SURFACE_AT } },
+        let skyUniforms = {
+            elapsed: { value: SURFACE_AT },
+            surfaceStart: { value: SURFACE_AT },
+          },
           sky = new Mesh(
             new SphereGeometry(39e3, 32, 20),
             new ShaderMaterial({
@@ -39262,205 +39783,6 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           (geometry.userData.fabricatedPanel = !0),
           geometry
         );
-      }
-
-      // node_modules/three/examples/jsm/utils/BufferGeometryUtils.js
-      function mergeGeometries(geometries, useGroups = !1) {
-        let isIndexed = geometries[0].index !== null,
-          attributesUsed = new Set(Object.keys(geometries[0].attributes)),
-          morphAttributesUsed = new Set(Object.keys(geometries[0].morphAttributes)),
-          attributes = {},
-          morphAttributes = {},
-          morphTargetsRelative = geometries[0].morphTargetsRelative,
-          mergedGeometry = new BufferGeometry(),
-          offset = 0;
-        for (let i = 0; i < geometries.length; ++i) {
-          let geometry = geometries[i],
-            attributesCount = 0;
-          if (isIndexed !== (geometry.index !== null))
-            return (
-              console.error(
-                "THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " +
-                  i +
-                  ". All geometries must have compatible attributes; make sure index attribute exists among all geometries, or in none of them.",
-              ),
-              null
-            );
-          for (let name in geometry.attributes) {
-            if (!attributesUsed.has(name))
-              return (
-                console.error(
-                  "THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " +
-                    i +
-                    '. All geometries must have compatible attributes; make sure "' +
-                    name +
-                    '" attribute exists among all geometries, or in none of them.',
-                ),
-                null
-              );
-            (attributes[name] === void 0 && (attributes[name] = []),
-              attributes[name].push(geometry.attributes[name]),
-              attributesCount++);
-          }
-          if (attributesCount !== attributesUsed.size)
-            return (
-              console.error(
-                "THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " +
-                  i +
-                  ". Make sure all geometries have the same number of attributes.",
-              ),
-              null
-            );
-          if (morphTargetsRelative !== geometry.morphTargetsRelative)
-            return (
-              console.error(
-                "THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " +
-                  i +
-                  ". .morphTargetsRelative must be consistent throughout all geometries.",
-              ),
-              null
-            );
-          for (let name in geometry.morphAttributes) {
-            if (!morphAttributesUsed.has(name))
-              return (
-                console.error(
-                  "THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " +
-                    i +
-                    ".  .morphAttributes must be consistent throughout all geometries.",
-                ),
-                null
-              );
-            (morphAttributes[name] === void 0 && (morphAttributes[name] = []),
-              morphAttributes[name].push(geometry.morphAttributes[name]));
-          }
-          if (useGroups) {
-            let count;
-            if (isIndexed) count = geometry.index.count;
-            else if (geometry.attributes.position !== void 0)
-              count = geometry.attributes.position.count;
-            else
-              return (
-                console.error(
-                  "THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " +
-                    i +
-                    ". The geometry must have either an index or a position attribute",
-                ),
-                null
-              );
-            (mergedGeometry.addGroup(offset, count, i), (offset += count));
-          }
-        }
-        if (isIndexed) {
-          let indexOffset = 0,
-            mergedIndex = [];
-          for (let i = 0; i < geometries.length; ++i) {
-            let index = geometries[i].index;
-            for (let j = 0; j < index.count; ++j) mergedIndex.push(index.getX(j) + indexOffset);
-            indexOffset += geometries[i].attributes.position.count;
-          }
-          mergedGeometry.setIndex(mergedIndex);
-        }
-        for (let name in attributes) {
-          let mergedAttribute = mergeAttributes(attributes[name]);
-          if (!mergedAttribute)
-            return (
-              console.error(
-                "THREE.BufferGeometryUtils: .mergeGeometries() failed while trying to merge the " +
-                  name +
-                  " attribute.",
-              ),
-              null
-            );
-          mergedGeometry.setAttribute(name, mergedAttribute);
-        }
-        for (let name in morphAttributes) {
-          let numMorphTargets = morphAttributes[name][0].length;
-          if (numMorphTargets !== 0) {
-            ((mergedGeometry.morphAttributes = mergedGeometry.morphAttributes || {}),
-              (mergedGeometry.morphAttributes[name] = []));
-            for (let i = 0; i < numMorphTargets; ++i) {
-              let morphAttributesToMerge = [];
-              for (let j = 0; j < morphAttributes[name].length; ++j)
-                morphAttributesToMerge.push(morphAttributes[name][j][i]);
-              let mergedMorphAttribute = mergeAttributes(morphAttributesToMerge);
-              if (!mergedMorphAttribute)
-                return (
-                  console.error(
-                    "THREE.BufferGeometryUtils: .mergeGeometries() failed while trying to merge the " +
-                      name +
-                      " morphAttribute.",
-                  ),
-                  null
-                );
-              mergedGeometry.morphAttributes[name].push(mergedMorphAttribute);
-            }
-          }
-        }
-        return mergedGeometry;
-      }
-      function mergeAttributes(attributes) {
-        let TypedArray,
-          itemSize,
-          normalized,
-          gpuType = -1,
-          arrayLength = 0;
-        for (let i = 0; i < attributes.length; ++i) {
-          let attribute = attributes[i];
-          if (
-            (TypedArray === void 0 && (TypedArray = attribute.array.constructor),
-            TypedArray !== attribute.array.constructor)
-          )
-            return (
-              console.error(
-                "THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.array must be of consistent array types across matching attributes.",
-              ),
-              null
-            );
-          if (
-            (itemSize === void 0 && (itemSize = attribute.itemSize),
-            itemSize !== attribute.itemSize)
-          )
-            return (
-              console.error(
-                "THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.itemSize must be consistent across matching attributes.",
-              ),
-              null
-            );
-          if (
-            (normalized === void 0 && (normalized = attribute.normalized),
-            normalized !== attribute.normalized)
-          )
-            return (
-              console.error(
-                "THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.normalized must be consistent across matching attributes.",
-              ),
-              null
-            );
-          if ((gpuType === -1 && (gpuType = attribute.gpuType), gpuType !== attribute.gpuType))
-            return (
-              console.error(
-                "THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.gpuType must be consistent across matching attributes.",
-              ),
-              null
-            );
-          arrayLength += attribute.count * itemSize;
-        }
-        let array = new TypedArray(arrayLength),
-          result = new BufferAttribute(array, itemSize, normalized),
-          offset = 0;
-        for (let i = 0; i < attributes.length; ++i) {
-          let attribute = attributes[i];
-          if (attribute.isInterleavedBufferAttribute) {
-            let tupleOffset = offset / itemSize;
-            for (let j = 0, l = attribute.count; j < l; j++)
-              for (let c = 0; c < itemSize; c++) {
-                let value = attribute.getComponent(j, c);
-                result.setComponent(j + tupleOffset, c, value);
-              }
-          } else array.set(attribute.array, offset);
-          offset += attribute.count * itemSize;
-        }
-        return (gpuType !== void 0 && (result.gpuType = gpuType), result);
       }
 
       // works/first_dawn/ship-detail.js
@@ -40054,9 +40376,10 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
       function createVehicleRecorder() {
         let records,
           storage,
-          canvas,
-          context2,
-          disabled = !1;
+          disabled = !1,
+          busy = !1,
+          pending = Promise.resolve(),
+          low = performanceTier() === "low";
         try {
           ((storage = sessionStorage), (records = null));
         } catch {
@@ -40066,7 +40389,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           seen = /* @__PURE__ */ new Map();
         return {
           sample({ kind, context: place, seconds: seconds2, source, eligible, status }) {
-            if (disabled || !eligible || !Number.isFinite(seconds2)) return !1;
+            if (disabled || busy || !eligible || !Number.isFinite(seconds2)) return !1;
             let id = `${kind}:${place}`,
               previous = clocks.get(id);
             if (previous !== void 0 && seconds2 < previous + 12) return !1;
@@ -40084,45 +40407,60 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
                 (seen.set(id, count), Math.random() >= 1 / count || !source.width || !source.height)
               )
                 return !1;
-              canvas ||= document.createElement("canvas");
-              let scale = Math.min(480 / source.width, 640 / source.height);
-              ((canvas.width = Math.max(1, Math.round(source.width * scale))),
-                (canvas.height = Math.max(1, Math.round(source.height * scale))),
-                (context2 ||= canvas.getContext("2d", { willReadFrequently: !0 })),
-                context2.drawImage(source, 0, 0, canvas.width, canvas.height));
-              let pixels = context2.getImageData(0, 0, canvas.width, canvas.height).data,
-                bright = 0;
-              for (let i = 0; i < pixels.length; i += 64)
-                pixels[i] + pixels[i + 1] + pixels[i + 2] > 45 && bright++;
-              if (bright < 20) return !1;
-              let image = canvas.toDataURL("image/jpeg", 0.64);
-              if (image.length >= 1e5) return !1;
-              let record = {
-                  id,
-                  kind,
-                  context: place,
-                  seconds: seconds2,
-                  seen: count,
-                  status: status(),
-                  image,
-                  width: canvas.width,
-                  height: canvas.height,
-                },
-                next2 = [...records.filter((r) => r.id !== id), record].slice(-10);
+              let canvas = copyFrame(source, low ? 320 : 480, low ? 426 : 640),
+                capturedStatus = status();
               return (
-                storage.setItem(
-                  VEHICLE_ARCHIVE_KEY,
-                  JSON.stringify({ version: 1, records: next2 }),
-                ),
-                (records = next2),
-                writeExhibitionRecord(record, "vehicles").catch(() => {}),
+                (busy = !0),
+                (pending = (async () => {
+                  try {
+                    await backgroundTurn();
+                    let probe = document.createElement("canvas");
+                    probe.width = probe.height = 16;
+                    let probeContext = probe.getContext("2d", {
+                      willReadFrequently: !0,
+                    });
+                    probeContext.drawImage(canvas, 0, 0, 16, 16);
+                    let pixels = probeContext.getImageData(0, 0, 16, 16).data,
+                      bright = 0;
+                    for (let i = 0; i < pixels.length; i += 4)
+                      pixels[i] + pixels[i + 1] + pixels[i + 2] > 45 && bright++;
+                    if (bright < 2) return;
+                    let image = await encodeFrame(canvas, 0.64);
+                    if (image.length >= 1e5) return;
+                    let record = {
+                        id,
+                        kind,
+                        context: place,
+                        seconds: seconds2,
+                        seen: count,
+                        status: capturedStatus,
+                        image,
+                        width: canvas.width,
+                        height: canvas.height,
+                      },
+                      next2 = [...records.filter((r) => r.id !== id), record].slice(-10);
+                    (await backgroundTurn(),
+                      storage.setItem(
+                        VEHICLE_ARCHIVE_KEY,
+                        JSON.stringify({ version: 1, records: next2 }),
+                      ),
+                      (records = next2),
+                      await writeExhibitionRecord(record, "vehicles").catch(() => {}));
+                  } catch {
+                    disabled = !0;
+                  } finally {
+                    busy = !1;
+                  }
+                })()),
                 !0
               );
             } catch {
               return ((disabled = !0), !1);
             }
           },
+          flush: () => pending,
           snapshot: () => ({
+            busy,
             records: records?.length || 0,
             storage: disabled ? "unavailable" : "available",
           }),
@@ -41019,21 +41357,8 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
                     d = a + 4;
                   indices.push(a, c, b, a, d, c);
                 }
-              let last2 = (profile.length - 1) * 4;
-              indices.push(
-                0,
-                1,
-                2,
-                0,
-                2,
-                3,
-                last2,
-                last2 + 2,
-                last2 + 1,
-                last2,
-                last2 + 3,
-                last2 + 2,
-              );
+              let last = (profile.length - 1) * 4;
+              indices.push(0, 1, 2, 0, 2, 3, last, last + 2, last + 1, last, last + 3, last + 2);
               let g = new BufferGeometry();
               (g.setAttribute("position", new Float32BufferAttribute(positions, 3)),
                 g.setIndex(indices));
@@ -41349,6 +41674,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
                 (list.forEach((m, j) => mesh.setMatrixAt(j, m)),
                   (mesh.castShadow = mesh.receiveShadow = i !== 3),
                   mesh.computeBoundingSphere(),
+                  (mesh.userData.distantOmit = !0),
                   root.add(mesh));
               }));
             let pipeMesh = new InstancedMesh(cylinder2, steel, pipes.length);
@@ -42046,6 +42372,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
                   ((inst.userData.blueprintParts = selected.map((i) => batchParts[k][i])),
                     (inst.userData.blueprintFine = selected.map((i) => batchFine[k][i])),
                     (inst.userData.blueprintBox = !0),
+                    (inst.userData.distantOmit = fine),
                     (inst.userData.blueprintOmit = k === 4),
                     selected.forEach((i, j) => inst.setMatrixAt(j, arr[i])),
                     (inst.instanceMatrix.needsUpdate = !0),
@@ -42130,7 +42457,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
       }
 
       // works/first_dawn/environment.js
-      function createEnvironment(scene2, tier2) {
+      function createEnvironment(scene2, tier2, { terrain = !0 } = {}) {
         let uniforms = {
             time: { value: 0 },
             dawn: { value: 0 },
@@ -42229,13 +42556,18 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           }),
         );
         scene2.add(starfield);
-        let surface = createSurface(scene2, tier2),
+        let surface = terrain ? createSurface(scene2, tier2) : null,
+          ensureSurface = () => (surface ??= createSurface(scene2, tier2)),
           surfaceFog = new FogExp2(7489080, 14e-5);
         return {
-          surface,
+          get surface() {
+            return ensureSurface();
+          },
           planetPosition: () => planet.position.toArray(),
-          observerHeight: surface.observerHeight,
-          surfaceHeightAt: surface.heightAt,
+          get observerHeight() {
+            return surface ? surface.observerHeight : groundHeight(850, 1800);
+          },
+          surfaceHeightAt: (x, z) => (surface ? surface.heightAt(x, z) : groundHeight(x, z)),
           update(
             seconds2,
             onSurface = !1,
@@ -42251,19 +42583,20 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
                 planet.position.addScaledVector(planetRight, -planetDelta.dot(planetRight))),
               atmo.position.copy(planet.position),
               atmo.material.uniforms.center.value.copy(planet.position),
-              surface.update(elapsed),
+              onSurface && ensureSurface().update(elapsed),
               camera2 && starfield.position.copy(camera2.position),
               (uniforms.time.value = seconds2),
               (uniforms.dawn.value = MathUtils.smoothstep(seconds2, 110, 160)),
               (planet.visible = atmo.visible = starfield.visible = !onSurface),
-              (surface.group.visible = onSurface),
+              surface && (surface.group.visible = onSurface),
               onSurface &&
                 camera2 &&
                 (surfaceFog.density = MathUtils.lerp(
                   14e-5,
                   75e-6,
                   MathUtils.smoothstep(
-                    camera2.position.y - surface.heightAt(camera2.position.x, camera2.position.z),
+                    camera2.position.y -
+                      ensureSurface().heightAt(camera2.position.x, camera2.position.z),
                     80,
                     1800,
                   ),
@@ -66197,7 +66530,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           footer = document.querySelector("footer"),
           viewport = window.visualViewport,
           values = /* @__PURE__ */ new Map(),
-          frame2 = 0,
+          frame = 0,
           lastWidth = -1,
           lastHeight = -1,
           lastLeft = -1,
@@ -66207,7 +66540,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
             (values.set(name, value), root.style.setProperty(name, `${value}px`));
         }
         function sync() {
-          frame2 = 0;
+          frame = 0;
           let currentViewport = window.visualViewport,
             width = Math.max(1, Math.round(currentViewport?.width || innerWidth)),
             height = Math.max(1, Math.round(currentViewport?.height || innerHeight)),
@@ -66232,7 +66565,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
               onResize?.(width, height, left, top)));
         }
         let schedule2 = () => {
-          frame2 || (frame2 = requestAnimationFrame(sync));
+          frame || (frame = requestAnimationFrame(sync));
         };
         for (let event of ["resize", "orientationchange", "pageshow"])
           addEventListener(event, schedule2);
@@ -66243,7 +66576,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           footer && observer.observe(footer),
           sync(),
           () => {
-            (frame2 && cancelAnimationFrame(frame2), observer.disconnect());
+            (frame && cancelAnimationFrame(frame), observer.disconnect());
             for (let event of ["resize", "orientationchange", "pageshow"])
               removeEventListener(event, schedule2);
             (viewport?.removeEventListener("resize", schedule2),
@@ -66478,6 +66811,94 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
         );
       }
 
+      // works/first_dawn/mobile-plume.js
+      function mobilePlumeGeometry(seed, falloff, axial = 12) {
+        let positions = [],
+          uvs = [],
+          densities = [],
+          seeds = [],
+          indices = [];
+        for (let k = 0; k <= axial; k++) {
+          let t = (k / axial) ** 2,
+            radius = 0.78 + 0.82 * t ** 0.65,
+            density = (1 - t) ** 1.7 * Math.exp(-falloff * t);
+          for (let side of [-1, 1])
+            (positions.push(side * radius, 0, 0.5 - t),
+              uvs.push((side + 1) / 2, 1 - t),
+              densities.push(density),
+              seeds.push(seed));
+          if (k < axial) {
+            let a = k * 2;
+            indices.push(a, a + 2, a + 1, a + 1, a + 2, a + 3);
+          }
+        }
+        let geometry = new BufferGeometry();
+        return (
+          geometry.setAttribute("position", new Float32BufferAttribute(positions, 3)),
+          geometry.setAttribute("uv", new Float32BufferAttribute(uvs, 2)),
+          geometry.setAttribute("plumeDensity", new Float32BufferAttribute(densities, 1)),
+          geometry.setAttribute("engineSeed", new Float32BufferAttribute(seeds, 1)),
+          geometry.setIndex(indices),
+          (geometry.boundingSphere = new Sphere(new Vector3(), 1.7)),
+          geometry
+        );
+      }
+      function mobilePlumeMaterial(clock, brightness, colorGradient) {
+        let material = new MeshBasicMaterial({
+          transparent: !0,
+          opacity: 0.18,
+          depthWrite: !1,
+          side: DoubleSide,
+          blending: AdditiveBlending,
+          toneMapped: !1,
+        });
+        return (
+          (material.onBeforeCompile = (shader) => {
+            ((shader.uniforms.engineClock = clock),
+              (shader.vertexShader =
+                `attribute float plumeDensity; attribute float engineSeed;
+      uniform float engineClock; varying vec2 vEngineUV; varying float vDensity; varying vec3 vCentre;
+` + shader.vertexShader),
+              (shader.vertexShader = shader.vertexShader
+                .replace(
+                  "#include <begin_vertex>",
+                  `#include <begin_vertex>
+        vEngineUV=uv;
+        float t=1.-uv.y;
+        vCentre=mix(vec3(.83,.92,1.),vec3(.35,.54,.65),smoothstep(0.,.72,t));
+        vDensity=plumeDensity*(1.+smoothstep(.02,.18,t)*(.024*sin(t*7.-engineClock*1.3+engineSeed)
+          +.013*sin(t*13.-engineClock*2.1+engineSeed*.7)));`,
+                )
+                .replace(
+                  "#include <project_vertex>",
+                  `
+        vec4 axisPosition=modelViewMatrix*vec4(0.,0.,transformed.z,1.);
+        vec3 axisDirection=modelViewMatrix[2].xyz;
+        vec3 across=cross(axisDirection,-axisPosition.xyz);
+        float acrossLength=length(across);
+        across=acrossLength>1.e-5?across/acrossLength:vec3(1.,0.,0.);
+        float halfWidth=length(vec2(dot(modelViewMatrix[0].xyz,across),dot(modelViewMatrix[1].xyz,across)));
+        vec4 mvPosition=axisPosition;
+        mvPosition.xyz+=across*transformed.x*halfWidth;
+        gl_Position=projectionMatrix*mvPosition;`,
+                )),
+              (shader.fragmentShader =
+                `varying vec2 vEngineUV; varying float vDensity; varying vec3 vCentre;
+` + shader.fragmentShader),
+              (shader.fragmentShader = shader.fragmentShader.replace(
+                "#include <color_fragment>",
+                `#include <color_fragment>
+      float q=vEngineUV.x*2.-1.;
+      float column=max(0.,1.-q*q);column*=column;
+      diffuseColor.rgb=${colorGradient ? "mix(vec3(.16,.30,.40),vCentre,column)" : "vec3(.48,.61,.69)"}*${brightness.toFixed(3)};
+      diffuseColor.a*=column*vDensity;`,
+              )));
+          }),
+          (material.customProgramCacheKey = () => `mobile-plume-v1-${brightness}-${colorGradient}`),
+          material
+        );
+      }
+
       // works/first_dawn/engine-glow.js
       function plumeGeometry(segments, axial, rectangular, seed) {
         let positions = [],
@@ -66617,7 +67038,9 @@ vPlumeNormal=normalize(normalMatrix*normal);vPlumeView=-mvPosition.xyz;`,
         }),
           (plume.customProgramCacheKey = () =>
             `soft-engine-envelope-v1-${tailFalloff}-${brightness}-${colorGradient}`));
-        let nozzles = 0;
+        let emissionMaterial =
+            tier2 === "low" ? mobilePlumeMaterial(clock, brightness, colorGradient) : plume,
+          nozzles = 0;
         return (
           fleet2.forEach((ship, shipIndex) => {
             ship.traverse((part) => {
@@ -66647,8 +67070,10 @@ vPlumeNormal=normalize(normalMatrix*normal);vPlumeView=-mvPosition.xyz;`,
                 ship.add(disc));
               let length = radius * lengthScale,
                 exhaust = new Mesh(
-                  plumeGeometry(segments, axial, rectangular, shipIndex * 1.37 + index * 0.61),
-                  plume,
+                  tier2 === "low"
+                    ? mobilePlumeGeometry(shipIndex * 1.37 + index * 0.61, tailFalloff)
+                    : plumeGeometry(segments, axial, rectangular, shipIndex * 1.37 + index * 0.61),
+                  emissionMaterial,
                 );
               ((exhaust.name = "voyage-engine-plume"),
                 exhaust.position.set(x, y, exit - length * 0.5),
@@ -66663,6 +67088,7 @@ vPlumeNormal=normalize(normalMatrix*normal);vPlumeView=-mvPosition.xyz;`,
             coreDepthRatio: 0.62,
             coreRadiusRatio: 0.48,
             segments,
+            profile: tier2 === "low" ? "mobile-ribbon" : "emission-shell",
             lengthScale,
             tailFalloff,
             brightness,
@@ -66724,8 +67150,8 @@ vPlumeNormal=normalize(normalMatrix*normal);vPlumeView=-mvPosition.xyz;`,
                   (isPaint && paintMaterials++, material.bumpMap && (material.bumpScale *= 40));
                   let depositStrength =
                     finishKind === "foil" ? 0.025 : finishKind === "white" ? 0.13 : 0.065;
-                  return (
-                    (material.name = (original.name || "hull") + "-voyage-aged"),
+                  if (
+                    ((material.name = (original.name || "hull") + "-voyage-aged"),
                     (material.onBeforeCompile = (shader) => {
                       ((shader.uniforms.voyageAge = ageUniform),
                         (shader.uniforms.voyageDeposit = depositUniform),
@@ -66919,6 +67345,37 @@ vShieldFinish=shieldFinish;`,
           `,
                         )));
                     }),
+                    tier2 === "low")
+                  ) {
+                    let detailed = material.onBeforeCompile;
+                    material.onBeforeCompile = (shader) => {
+                      (detailed(shader),
+                        (shader.fragmentShader = shader.fragmentShader
+                          .replace(
+                            "vec2 field=vec2(10000.0,0.0);",
+                            "vec2 field=vec2(10000.0,0.0); if(p.z>-430.0)return field;",
+                          )
+                          .replace(
+                            "float ageGrain = voyageNoise(ageP * .32);",
+                            "float ageGrain = ageBroad;",
+                          )));
+                      let start2 = shader.fragmentShader.indexOf(
+                          "vec3 ageN=normalize(vVoyageNormal)",
+                        ),
+                        end = shader.fragmentShader.indexOf(
+                          "diffuseColor.rgb *= mix(vec3(1.0),ageTint",
+                          start2,
+                        );
+                      start2 >= 0 &&
+                        end > start2 &&
+                        (shader.fragmentShader =
+                          shader.fragmentShader.slice(0, start2) +
+                          `float agePit=0.0,ageRim=0.0;vec3 ageOffset=vec3(.5);
+` +
+                          shader.fragmentShader.slice(end));
+                    };
+                  }
+                  return (
                     (material.customProgramCacheKey = () =>
                       "voyage-ageing-v12-" +
                       index +
@@ -67014,17 +67471,11 @@ vShieldFinish=shieldFinish;`,
         transferRetryAt = 0,
         habitat,
         recovery,
-        tier = ["high", "mid", "low"].includes(requested)
-          ? requested
-          : innerWidth < 700
-            ? "low"
-            : navigator.hardwareConcurrency >= 8
-              ? "high"
-              : "mid",
+        tier = performanceTier(params),
         quality = {
           high: { dpr: 1.65, shadow: 2048 },
           mid: { dpr: 1.25, shadow: 1024 },
-          low: { dpr: 1, shadow: 512 },
+          low: { dpr: 0.9, shadow: 512 },
         }[tier],
         smooth4 = (x) => ((x = MathUtils.clamp(x, 0, 1)), x * x * (3 - 2 * x)),
         schedule = [
@@ -67051,6 +67502,7 @@ vShieldFinish=shieldFinish;`,
         scene,
         camera,
         fleet,
+        fleetLOD,
         approachVibration,
         ringVibration,
         fitVoyageShadow,
@@ -67061,10 +67513,11 @@ vShieldFinish=shieldFinish;`,
         settledLighting = !1,
         seconds = segment.start + state.elapsed,
         paused = !1,
-        last = performance.now(),
-        frame = 0,
-        frameTime = 16,
         pixelRatio = Math.min(devicePixelRatio, quality.dpr),
+        pacer = new FramePacer(tier, pixelRatio, (value) => {
+          ((pixelRatio = value), renderer.setPixelRatio(value));
+        }),
+        shadowBudget,
         sunlightOffset = new Vector3(-1400, 2600, 1700),
         title = document.getElementById("line"),
         cut = document.getElementById("cut"),
@@ -67103,7 +67556,7 @@ vShieldFinish=shieldFinish;`,
         let saved = savePostMission(state);
         return (saved || console.warn("Basin checkpoint storage unavailable"), saved);
       }
-      function next() {
+      async function next() {
         if (
           leaving ||
           seconds < transferRetryAt ||
@@ -67129,7 +67582,10 @@ vShieldFinish=shieldFinish;`,
           ((box.hidden = !1), (box.textContent = "기록 저장 공간을 확인한 후 다시 열어주세요."));
           return;
         }
-        (Object.assign(state, successor), (leaving = !0), audio.pause());
+        (Object.assign(state, successor),
+          (leaving = !0),
+          audio.pause(),
+          await vehicleRecorder.flush());
         let url = new URL(targetPath(POST_PHASES[segment.next].file), location.href);
         for (let key2 of ["quality", "full", "terminal"])
           params.has(key2) && url.searchParams.set(key2, params.get(key2));
@@ -67323,6 +67779,16 @@ vShieldFinish=shieldFinish;`,
             enter * exit,
           ),
           placeRecorder?.update(),
+          fleetLOD.update(
+            camera,
+            renderer.domElement.clientHeight || innerHeight,
+            phase === "migration" ? (migrationShot?.subject ?? 0) : -1,
+          ),
+          shadowBudget.update(seconds, currentShot, {
+            moving: !(phase === "arrival" && settledLighting),
+            close:
+              phase === "migration" && camera.position.distanceTo(shadowSubject.position) < 5e3,
+          }),
           renderer.render(scene, camera),
           vehicleRecorder.sample({
             kind: "fleet",
@@ -67333,7 +67799,7 @@ vShieldFinish=shieldFinish;`,
             status: () => ({
               role: "HABITATION / CONTINUOUS LOAD",
               voyageDays: window.VOYAGE_AGEING.snapshot().days ?? 340,
-              surfaceHistory: "항해 시간과 역할에 따른 예술적 열화",
+              surfaceHistory: "항해 시간과 임무에 따른 표면 손상 표현",
               shot: currentShot,
               ships: fleet.length,
               ringPeriodSeconds: HABITAT_RING_PERIOD[0],
@@ -67342,28 +67808,31 @@ vShieldFinish=shieldFinish;`,
           }));
       }
       function tick2(now3) {
-        requestAnimationFrame(tick2);
-        let dt = Math.max(0, Math.min(0.1, (now3 - last) / 1e3));
-        ((last = now3),
-          !(paused || leaving || document.hidden || !loading.hidden || recovery?.lost) &&
-            (params.has("test") ||
-              ((frameTime = frameTime * 0.97 + dt * 1e3 * 0.03),
-              ++frame % 180 === 0 &&
-                frameTime > 27 &&
-                pixelRatio > 0.8 &&
-                ((pixelRatio = Math.max(0.8, pixelRatio - 0.15)),
-                renderer.setPixelRatio(pixelRatio)),
-              render2(seconds + dt),
-              seconds - lastSaved >= 10 && (persist(), (lastSaved = seconds)),
-              (seconds >= endTime ||
-                (habitat &&
-                  seconds - segment.start >=
-                    arrivalDeparture(
-                      !!state.placeInherited,
-                      habitat.model.state.eventAt,
-                      basinOrigin,
-                    ))) &&
-                next())));
+        if (
+          (requestAnimationFrame(tick2),
+          paused ||
+            leaving ||
+            document.hidden ||
+            !loading.hidden ||
+            recovery?.lost ||
+            params.has("test"))
+        ) {
+          pacer.reset();
+          return;
+        }
+        let dt = pacer.step(now3);
+        dt !== null &&
+          (render2(seconds + dt),
+          seconds - lastSaved >= 10 && (persist(), (lastSaved = seconds)),
+          (seconds >= endTime ||
+            (habitat &&
+              seconds - segment.start >=
+                arrivalDeparture(
+                  !!state.placeInherited,
+                  habitat.model.state.eventAt,
+                  basinOrigin,
+                ))) &&
+            next());
       }
       function pause() {
         ((paused = !0), leaving || persist(), audio.pause());
@@ -67375,7 +67844,7 @@ vShieldFinish=shieldFinish;`,
             location.replace(new URL(targetPath(POST_PHASES[saved.phase].file), location.href));
           return;
         }
-        recovery?.lost || ((paused = !1), (last = performance.now()), audio.resume());
+        recovery?.lost || ((paused = !1), pacer.reset(), audio.resume());
       }
       try {
         ((renderer = new WebGLRenderer({
@@ -67388,6 +67857,7 @@ vShieldFinish=shieldFinish;`,
           (renderer.toneMappingExposure = 1.05),
           (renderer.shadowMap.enabled = !0),
           (renderer.shadowMap.type = PCFSoftShadowMap),
+          (shadowBudget = createShadowBudget(renderer, tier)),
           document.body.prepend(renderer.domElement),
           (scene = new Scene()),
           (scene.background = new Color(197895)),
@@ -67419,8 +67889,11 @@ vShieldFinish=shieldFinish;`,
           (fillLight = new DirectionalLight(10337247, 0.22)),
           fillLight.position.set(1800, -600, -2200),
           scene.add(fillLight, fillLight.target),
-          (environment = createEnvironment(scene, tier)),
+          (environment = createEnvironment(scene, tier, {
+            terrain: phase === "arrival",
+          })),
           (fleet = [...createFleet(tier), createReferenceArk(tier)]),
+          (fleetLOD = createFleetLOD(fleet, tier)),
           fleet.forEach((ship) => scene.add(ship)),
           phase === "migration" &&
             ((approachVibration = createApproachVibration(fleet[0])),
@@ -67450,7 +67923,7 @@ vShieldFinish=shieldFinish;`,
           render2(seconds),
           document.getElementById("loading").classList.add("done"),
           setTimeout(() => {
-            ((document.getElementById("loading").hidden = !0), (last = performance.now()));
+            ((document.getElementById("loading").hidden = !0), pacer.reset());
           }, 1300),
           installCinemaFrame((width, height, left, top) => {
             ((camera.aspect = width / height),
@@ -67498,7 +67971,7 @@ vShieldFinish=shieldFinish;`,
               tier,
               role: "HABITATION / CONTINUOUS LOAD",
               voyageDays: window.VOYAGE_AGEING.snapshot().days ?? 340,
-              surfaceHistory: "항해 시간과 역할에 따른 예술적 열화",
+              surfaceHistory: "항해 시간과 임무에 따른 표면 손상 표현",
               shot: currentShot,
               cameraPosition: camera.position.toArray(),
               cameraFov: camera.fov,
@@ -67534,6 +68007,9 @@ vShieldFinish=shieldFinish;`,
               triangles: renderer.info.render.triangles,
               calls: renderer.info.render.calls,
               pixelRatio,
+              performance: pacer.snapshot(),
+              shadows: shadowBudget.snapshot(),
+              detailLevels: fleetLOD.snapshot(),
               independent: !window.TI_WORLD,
               animation: "anime.js",
               motion: "restrained-distant / accelerating-approach / finite-braking",
@@ -67544,7 +68020,8 @@ vShieldFinish=shieldFinish;`,
                   seek: render2,
                   next,
                   persist,
-                  flushArchive: () => placeRecorder?.flush(),
+                  flushArchive: () =>
+                    Promise.all([vehicleRecorder.flush(), placeRecorder?.flush()]),
                   positions: () => fleet.map((s) => s.position.toArray()),
                 }
               : {}),

@@ -3,6 +3,76 @@
   var __export = (target, all3) => {
     for (var name in all3) __defProp(target, name, { get: all3[name], enumerable: !0 });
   };
+  function performanceTier(
+    params = new URLSearchParams(globalThis.location?.search || ""),
+    device = globalThis.navigator || {},
+    viewport3 = globalThis,
+  ) {
+    let forced = params.get("quality");
+    if (["high", "mid", "low"].includes(forced)) return forced;
+    if (params.has("terminal") || forced === "critical") return "low";
+    if (params.has("full")) return "high";
+    let coarse = viewport3.matchMedia?.("(any-pointer: coarse)").matches;
+    return /Android|iPhone|iPad|iPod/i.test(device.userAgent || "") ||
+      (device.maxTouchPoints > 0 && coarse) ||
+      (viewport3.innerWidth || 1024) < 700
+      ? "low"
+      : (device.hardwareConcurrency || 4) >= 8 && (device.deviceMemory ?? 8) >= 8
+        ? "high"
+        : "mid";
+  }
+  var FramePacer = class {
+    constructor(tier, dpr, onResolution = () => {}, { minimum = tier === "low" ? 0.6 : 0.8 } = {}) {
+      ((this.fps = tier === "low" ? 30 : 60),
+        (this.interval = 1e3 / this.fps),
+        (this.dpr = dpr),
+        (this.minimum = minimum),
+        (this.onResolution = onResolution),
+        (this.samples = []),
+        (this.frames = 0),
+        (this.changes = 0),
+        (this.p95 = 0),
+        (this.cooldown = 0),
+        this.reset());
+    }
+    reset() {
+      ((this.last = null), (this.next = null), (this.samples.length = 0));
+    }
+    step(now2) {
+      if (this.next !== null && now2 < this.next - 0.5) return null;
+      let elapsed = this.last === null ? this.interval : now2 - this.last;
+      if (
+        ((this.last = now2),
+        (this.next = this.next === null ? now2 + this.interval : this.next + this.interval),
+        this.next <= now2 && (this.next = now2 + this.interval),
+        this.frames++,
+        this.samples.push(elapsed),
+        this.samples.length >= this.fps * 3)
+      ) {
+        this.samples.sort((a, b) => a - b);
+        let mean = this.samples.reduce((sum, value) => sum + value, 0) / this.samples.length;
+        ((this.p95 = this.samples[Math.floor(this.samples.length * 0.95)]),
+          now2 >= this.cooldown &&
+            mean > this.interval * 1.22 &&
+            this.dpr > this.minimum &&
+            ((this.dpr = Math.max(this.minimum, Math.round((this.dpr - 0.1) * 100) / 100)),
+            this.onResolution(this.dpr),
+            this.changes++,
+            (this.cooldown = now2 + 1e4)),
+          (this.samples.length = 0));
+      }
+      return Math.min(0.1, Math.max(0, elapsed / 1e3));
+    }
+    snapshot() {
+      return {
+        targetFPS: this.fps,
+        renderedFrames: this.frames,
+        dpr: this.dpr,
+        p95: this.p95,
+        resolutionChanges: this.changes,
+      };
+    }
+  };
   var VEHICLE_HISTORY_KEY = "beyond-known:vehicle-history:v1",
     VEHICLE_ROLES = Object.freeze({
       rover: "OBSERVATION / SAMPLE RETURN",
@@ -50325,6 +50395,42 @@ var<${access}> ${name} : ${structName};`;
   function setMissionExposure(exposure) {
     ((roverExposure.value = exposure.rover), (landerExposure.value = exposure.surveyor));
   }
+  function copyFrame(source, width = 480, maxHeight = 640) {
+    if (!source.width || !source.height) throw new Error("Empty capture source");
+    let scale2 = Math.min(width / source.width, maxHeight / source.height, 1),
+      canvas = document.createElement("canvas");
+    return (
+      (canvas.width = Math.max(1, Math.round(source.width * scale2))),
+      (canvas.height = Math.max(1, Math.round(source.height * scale2))),
+      canvas.getContext("2d").drawImage(source, 0, 0, canvas.width, canvas.height),
+      canvas
+    );
+  }
+  function backgroundTurn() {
+    return globalThis.scheduler?.postTask
+      ? scheduler.postTask(() => {}, { priority: "background" })
+      : new Promise((resolve) => {
+          globalThis.requestIdleCallback
+            ? requestIdleCallback(resolve, { timeout: 700 })
+            : setTimeout(resolve, 0);
+        });
+  }
+  async function encodeFrame(canvas, quality = 0.7) {
+    await backgroundTurn();
+    let blob = await new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (value) => (value ? resolve(value) : reject(new Error("Capture encoding failed"))),
+        "image/jpeg",
+        quality,
+      );
+    });
+    return new Promise((resolve, reject) => {
+      let reader = new FileReader();
+      ((reader.onload = () => resolve(reader.result)),
+        (reader.onerror = () => reject(reader.error)),
+        reader.readAsDataURL(blob));
+    });
+  }
   var EXHIBITION_DB = "beyond-known-place-v1",
     connection;
   function openExhibition() {
@@ -50398,9 +50504,10 @@ var<${access}> ${name} : ${structName};`;
   function createVehicleRecorder() {
     let records,
       storage4,
-      canvas,
-      context3,
-      disabled = !1;
+      disabled = !1,
+      busy = !1,
+      pending = Promise.resolve(),
+      low = performanceTier() === "low";
     try {
       ((storage4 = sessionStorage), (records = null));
     } catch {
@@ -50410,7 +50517,7 @@ var<${access}> ${name} : ${structName};`;
       seen = new Map();
     return {
       sample({ kind, context: place, seconds, source, eligible, status }) {
-        if (disabled || !eligible || !Number.isFinite(seconds)) return !1;
+        if (disabled || busy || !eligible || !Number.isFinite(seconds)) return !1;
         let id = `${kind}:${place}`,
           previous = clocks.get(id);
         if (previous !== void 0 && seconds < previous + 12) return !1;
@@ -50426,42 +50533,58 @@ var<${access}> ${name} : ${structName};`;
           let count = (seen.get(id) || 0) + 1;
           if ((seen.set(id, count), Math.random() >= 1 / count || !source.width || !source.height))
             return !1;
-          canvas ||= document.createElement("canvas");
-          let scale2 = Math.min(480 / source.width, 640 / source.height);
-          ((canvas.width = Math.max(1, Math.round(source.width * scale2))),
-            (canvas.height = Math.max(1, Math.round(source.height * scale2))),
-            (context3 ||= canvas.getContext("2d", { willReadFrequently: !0 })),
-            context3.drawImage(source, 0, 0, canvas.width, canvas.height));
-          let pixels = context3.getImageData(0, 0, canvas.width, canvas.height).data,
-            bright = 0;
-          for (let i = 0; i < pixels.length; i += 64)
-            pixels[i] + pixels[i + 1] + pixels[i + 2] > 45 && bright++;
-          if (bright < 20) return !1;
-          let image = canvas.toDataURL("image/jpeg", 0.64);
-          if (image.length >= 1e5) return !1;
-          let record = {
-              id,
-              kind,
-              context: place,
-              seconds,
-              seen: count,
-              status: status(),
-              image,
-              width: canvas.width,
-              height: canvas.height,
-            },
-            next = [...records.filter((r) => r.id !== id), record].slice(-10);
+          let canvas = copyFrame(source, low ? 320 : 480, low ? 426 : 640),
+            capturedStatus = status();
           return (
-            storage4.setItem(VEHICLE_ARCHIVE_KEY, JSON.stringify({ version: 1, records: next })),
-            (records = next),
-            writeExhibitionRecord(record, "vehicles").catch(() => {}),
+            (busy = !0),
+            (pending = (async () => {
+              try {
+                await backgroundTurn();
+                let probe = document.createElement("canvas");
+                probe.width = probe.height = 16;
+                let probeContext = probe.getContext("2d", { willReadFrequently: !0 });
+                probeContext.drawImage(canvas, 0, 0, 16, 16);
+                let pixels = probeContext.getImageData(0, 0, 16, 16).data,
+                  bright = 0;
+                for (let i = 0; i < pixels.length; i += 4)
+                  pixels[i] + pixels[i + 1] + pixels[i + 2] > 45 && bright++;
+                if (bright < 2) return;
+                let image = await encodeFrame(canvas, 0.64);
+                if (image.length >= 1e5) return;
+                let record = {
+                    id,
+                    kind,
+                    context: place,
+                    seconds,
+                    seen: count,
+                    status: capturedStatus,
+                    image,
+                    width: canvas.width,
+                    height: canvas.height,
+                  },
+                  next = [...records.filter((r) => r.id !== id), record].slice(-10);
+                (await backgroundTurn(),
+                  storage4.setItem(
+                    VEHICLE_ARCHIVE_KEY,
+                    JSON.stringify({ version: 1, records: next }),
+                  ),
+                  (records = next),
+                  await writeExhibitionRecord(record, "vehicles").catch(() => {}));
+              } catch {
+                disabled = !0;
+              } finally {
+                busy = !1;
+              }
+            })()),
             !0
           );
         } catch {
           return ((disabled = !0), !1);
         }
       },
+      flush: () => pending,
       snapshot: () => ({
+        busy,
         records: records?.length || 0,
         storage: disabled ? "unavailable" : "available",
       }),
@@ -50680,20 +50803,7 @@ var<${access}> ${name} : ${structName};`;
       }
     };
   function deviceTier() {
-    let query = typeof location < "u" ? new URLSearchParams(location.search) : null,
-      forced = query?.get("quality");
-    if (query?.has("terminal") || forced === "critical" || forced === "low") return "low";
-    if (query?.has("full") || forced === "high") return "high";
-    if (forced === "mid") return "mid";
-    let mem = navigator.deviceMemory ?? 8,
-      cores = navigator.hardwareConcurrency ?? 4;
-    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
-      ? Number.isFinite(navigator.deviceMemory) && cores >= 8 && mem >= 8
-        ? "mid"
-        : "low"
-      : cores >= 8 && mem >= 8
-        ? "high"
-        : "mid";
+    return performanceTier();
   }
   function defaults(tier = deviceTier()) {
     let pick = (o) => o[tier];
@@ -51252,6 +51362,19 @@ var<${access}> ${name} : ${structName};`;
       await renderer.computeAsync(this.pass);
     }
   };
+  function scatterCells(ring2) {
+    let indices = [],
+      half = (ring2.side - 1) * 0.5,
+      margin = ring2.cell * Math.SQRT1_2;
+    for (let row = 0; row < ring2.side; row++)
+      for (let col = 0; col < ring2.side; col++) {
+        let radius = Math.hypot((col - half) * ring2.cell, (row - half) * ring2.cell);
+        radius - margin >= ring2.r1 ||
+          radius + margin <= ring2.r0 ||
+          indices.push(row * ring2.side + col);
+      }
+    return new Uint32Array(indices);
+  }
   var TAU = 6.283185307,
     Scatter = class {
       constructor(clipmap, field, wake, { shade, lengthOf, dirOf } = {}) {
@@ -51261,22 +51384,30 @@ var<${access}> ${name} : ${structName};`;
         )),
           (this.meshes = this.rings.map((r) => r.mesh)),
           (this.stats = {
-            instances: S.count,
-            vertices: S.vertices,
-            rings: S.rings.map((r) => `${r.count.toLocaleString()}·${r.seg}s`),
+            instances: this.rings.reduce((sum, r) => sum + r.mesh.geometry.instanceCount, 0),
+            vertices: this.rings.reduce(
+              (sum, r) => sum + r.mesh.geometry.instanceCount * (r.ring.seg + 1) * 2,
+              0,
+            ),
+            rings: this.rings.map(
+              (r) => `${r.mesh.geometry.instanceCount.toLocaleString()}·${r.ring.seg}s`,
+            ),
           }));
       }
       buildRing(ring2, clipmap, field, wake, hooks) {
         let C = cfg(),
           S = C.scatter,
-          CNT = ring2.count,
+          cells = scatterCells(ring2),
+          CNT = cells.length,
           SIDE = ring2.side,
           CELL = ring2.cell,
+          sourceIndex = instancedArray2(cells, "uint"),
           uOrigin = clipmap.uOrigin,
           bufA = instancedArray2(CNT, "vec4"),
           bufB = instancedArray2(CNT, "vec4"),
           pass3 = Fn2(() => {
-            let i = instanceIndex2,
+            let slot = instanceIndex2,
+              i = sourceIndex.element(slot),
               col = float2(i.mod(uint2(SIDE))),
               row = float2(i.div(uint2(SIDE))),
               jx = hash2(i).sub(0.5),
@@ -51324,8 +51455,8 @@ var<${access}> ${name} : ${structName};`;
               dir2 = (hooks.dirOf ?? defaultDir)({ ...ctx, clumpDir }),
               bend = float2(S.bend).mul(float2(0.55).add(fs.z.mul(0.75))),
               phase = fract2(bh.mul(19.7)).mul(TAU).add(seed.mul(1.7));
-            (bufA.element(i).assign(vec42(world.x, ts.x, world.y, len)),
-              bufB.element(i).assign(vec42(dir2.x, dir2.y, bend, phase)));
+            (bufA.element(slot).assign(vec42(world.x, ts.x, world.y, len)),
+              bufB.element(slot).assign(vec42(dir2.x, dir2.y, bend, phase)));
           })().compute(CNT),
           A = bufA.element(instanceIndex2),
           B3 = bufB.element(instanceIndex2),
@@ -51363,7 +51494,7 @@ var<${access}> ${name} : ${structName};`;
             cross2(vec32(dir.x.mul(st), ct, dir.y.mul(st)), vec32(perp.x, 0, perp.y)),
           ),
           vT = varying2(t),
-          vSeed = varying2(hash2(instanceIndex2)),
+          vSeed = varying2(hash2(sourceIndex.element(instanceIndex2))),
           vR = varying2(length2(vec22(A.x, A.z))),
           vDir = varying2(dir),
           vPos = varying2(A.xyz),
@@ -51387,7 +51518,10 @@ var<${access}> ${name} : ${structName};`;
           return vec42(mix2(shifted, vec32(...C.color.horizon), smoothstep3(0, 1, fog3)), 1);
         })();
         let mesh = new Mesh(ribbonGeometry(ring2.seg, CNT), mat);
-        return ((mesh.frustumCulled = !1), { ring: ring2, pass: pass3, mesh, bufA, bufB });
+        return (
+          (mesh.frustumCulled = !1),
+          { ring: ring2, pass: pass3, mesh, bufA, bufB, sourceIndex }
+        );
       }
       async recompute(renderer) {
         for (let r of this.rings) await renderer.computeAsync(r.pass);
@@ -68107,7 +68241,7 @@ body.ti-voyage #ti-transfer-trigger {
         typeof navigator < "u" &&
         navigator.maxTouchPoints > 0 &&
         (matchMedia("(any-pointer: coarse)").matches || matchMedia("(hover: none)").matches),
-      tier = touchTerminal ? "low" : deviceTier(),
+      tier = deviceTier(),
       pick = (o) => o[tier],
       ARCHIVE_AT_BOOT = tier === "low",
       CFG = configure({
@@ -68685,7 +68819,9 @@ body.ti-voyage #ti-transfer-trigger {
       let saved = JSON.parse(sessionStorage.getItem("terra-incognita:display") || "null");
       ((greenMonitorManual = saved?.green === !0), (rawMonitorManual = saved?.raw === !0));
     } catch {}
-    let lastArchiveFrame = 0,
+    let archivePacer = new FramePacer("low", 0.58, (value) => adaptive.lockAt(value), {
+        minimum: 0.5,
+      }),
       archiveCueTimer = 0,
       archiveRecordTimer = 0,
       resourceSignalAt = 0,
@@ -69264,6 +69400,8 @@ body.ti-voyage #ti-transfer-trigger {
         rawManual: rawMonitorManual,
         dpr: adaptive.dpr,
         lens: !!lens,
+        performance: archiveMode ? archivePacer.snapshot() : null,
+        scatter: scatter?.stats,
       })),
       (window.TI_AUDIO = () => ambient.snapshot()),
       (window.TI_OBSERVED = () => ({
@@ -69607,7 +69745,11 @@ body.ti-voyage #ti-transfer-trigger {
           let remaining = Math.max(0, COMPLETION_TABLEAU_MS - (now2 - completionTableau.t0) - 350);
           remaining > 0 && captions.force(COMPLETION_CAPTION, now2, remaining);
         }
-        (archiveMode && (document.body.classList.add("ti-terminal"), adaptive.lockAt(0.58)),
+        (archiveMode &&
+          (document.body.classList.add("ti-terminal"),
+          adaptive.lockAt(archivePacer.dpr),
+          archivePacer.reset()),
+          archivePacer.reset(),
           document.body.classList.remove("ti-paused"),
           ambient?.resume(),
           animeRituals?.resume(),
@@ -69688,11 +69830,11 @@ body.ti-voyage #ti-transfer-trigger {
     }
     async function loop(now2 = performance.now(), generation = loopGeneration) {
       if (((rafId = 0), !(!running || generation !== loopGeneration || frameInFlight))) {
-        if (archiveMode && now2 - lastArchiveFrame < 30) {
+        if (archiveMode && archivePacer.step(now2) === null) {
           queueLoop(generation);
           return;
         }
-        ((lastArchiveFrame = now2), (frameInFlight = !0));
+        frameInFlight = !0;
         try {
           await frame();
         } catch (e) {
@@ -69990,7 +70132,7 @@ body.ti-voyage #ti-transfer-trigger {
                 travelDistance: Math.round(vehicleHistory.snapshot().distance),
                 surfaceSeconds: Math.round(vehicleHistory.snapshot().surfaceSeconds),
                 recordedLandings: vehicleHistory.snapshot().landings.length,
-                finish: "운용 기록에 따른 예술적 표면 표현",
+                finish: "운용 이력에 따라 표현한 표면 마모",
                 mission: world,
                 phase: docking.started
                   ? docking.phase
@@ -70217,7 +70359,8 @@ body.ti-voyage #ti-transfer-trigger {
       archiveMode ||
         ((archiveMode = !0),
         document.body.classList.add("ti-terminal"),
-        adaptive?.lockAt(0.58),
+        adaptive?.lockAt(archivePacer.dpr),
+        archivePacer.reset(),
         lens?.dispose?.(),
         (lens = null),
         syncGreenMonitor(),
