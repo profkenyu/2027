@@ -38945,7 +38945,8 @@ vHullPosition=position;`,
 
       // works/candidate/model-decoder.js
       function decodeVehicle(models, kind, tier2) {
-        let rollAxis = new Vector3(0, 0, 1),
+        let site = models[tier2].site,
+          rollAxis = new Vector3(0, 0, 1),
           rollRotation = new Quaternion(),
           group = new Group(),
           wheels = /* @__PURE__ */ new Map(),
@@ -38993,13 +38994,13 @@ vHullPosition=position;`,
             (markSurveyor(group, meshes, tier2), markSurveyorEngine(group, meshes, tier2)),
           {
             group,
-            site: models[tier2].site,
+            site,
             setRamp(progress) {
               let pivot = wheels.get(100);
               if (!pivot) return;
               let p = MathUtils.clamp(progress, 0, 1),
                 e = p * p * (3 - 2 * p),
-                dock = models[tier2].site.dock;
+                dock = site.dock;
               (pivot.rotation.set(Math.PI / 2 + (dock.openAngle - Math.PI / 2) * e, 0, 0),
                 rollRotation.setFromAxisAngle(rollAxis, (dock.crossRoll ?? 0) * e),
                 pivot.quaternion.premultiply(rollRotation),
@@ -68055,7 +68056,24 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
       // works/first_dawn/arrival-drone.js
       var DRONE_START = 34,
         ARRIVAL_HOLD = 8,
-        droneEnd = (inherited) => (inherited ? 82 : 124);
+        originalDroneEnd = (inherited) => (inherited ? 82 : 124),
+        INSPECTION_EXTENSION = 18,
+        droneEnd = (inherited) => originalDroneEnd(inherited) + INSPECTION_EXTENSION;
+      function droneClock(elapsed, inherited = !1) {
+        let originalEnd = originalDroneEnd(inherited);
+        if (elapsed >= droneEnd(inherited)) return originalEnd;
+        let inspectionStart = DRONE_START + (originalEnd - DRONE_START) * 0.62;
+        if (elapsed <= inspectionStart) return elapsed;
+        let originalTail = originalEnd - inspectionStart,
+          stretchedTail = originalTail + INSPECTION_EXTENSION,
+          ramp = inherited ? 6 : 8,
+          cruise = (originalTail - ramp / 2) / (stretchedTail - ramp / 2),
+          t = Math.min(elapsed - inspectionStart, stretchedTail);
+        if (t >= ramp) return inspectionStart + (ramp * (1 + cruise)) / 2 + (t - ramp) * cruise;
+        let u = t / ramp,
+          integratedRamp = u ** 6 - 3 * u ** 5 + 2.5 * u ** 4;
+        return inspectionStart + t - (1 - cruise) * ramp * integratedRamp;
+      }
       function arrivalDeparture(inherited, eventAt, origin = 0) {
         return eventAt === null
           ? 1 / 0
@@ -68128,13 +68146,16 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
         }
         function frame(camera2, elapsed, inherited = !1) {
           if (elapsed <= DRONE_START) return;
-          let u = (elapsed - DRONE_START) / (droneEnd(inherited) - DRONE_START),
+          let u =
+              (droneClock(elapsed, inherited) - DRONE_START) /
+              (originalDroneEnd(inherited) - DRONE_START),
             p = pathProgress(travel(u));
-          (curve.getPointAt(p, camera2.position),
-            (camera2.position.y = Math.max(
-              camera2.position.y,
-              heightAt(camera2.position.x, camera2.position.z) + 8,
-            )),
+          curve.getPointAt(p, camera2.position);
+          let clearance = 6 + 2 * ease(u / 0.06);
+          ((camera2.position.y = Math.max(
+            camera2.position.y,
+            heightAt(camera2.position.x, camera2.position.z) + clearance,
+          )),
             curve.getPointAt(Math.min(1, p + 170 / length), ahead),
             target2.subVectors(ahead, camera2.position),
             (target2.y = 0),

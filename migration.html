@@ -66788,7 +66788,9 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
 
       // works/first_dawn/arrival-drone.js
       var ARRIVAL_HOLD = 8,
-        droneEnd = (inherited) => (inherited ? 82 : 124);
+        originalDroneEnd = (inherited) => (inherited ? 82 : 124),
+        INSPECTION_EXTENSION = 18,
+        droneEnd = (inherited) => originalDroneEnd(inherited) + INSPECTION_EXTENSION;
       function arrivalDeparture(inherited, eventAt, origin = 0) {
         return eventAt === null
           ? 1 / 0
