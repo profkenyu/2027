@@ -2659,9 +2659,9 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
            * @return {number} The squared distance.
            */
           distanceToSquared(v) {
-            let dx = this.x - v.x,
+            let dx2 = this.x - v.x,
               dy = this.y - v.y;
-            return dx * dx + dy * dy;
+            return dx2 * dx2 + dy * dy;
           }
           /**
            * Computes the Manhattan distance from the given vector to this instance.
@@ -4094,10 +4094,10 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
            * @return {number} The squared distance.
            */
           distanceToSquared(v) {
-            let dx = this.x - v.x,
+            let dx2 = this.x - v.x,
               dy = this.y - v.y,
-              dz = this.z - v.z;
-            return dx * dx + dy * dy + dz * dz;
+              dz2 = this.z - v.z;
+            return dx2 * dx2 + dy * dy + dz2 * dz2;
           }
           /**
            * Computes the Manhattan distance from the given vector to this instance.
@@ -15137,15 +15137,15 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
               normal2 = new Vector3(),
               curNormal = new Vector3(),
               prevNormal = new Vector3(),
-              dx = 0,
+              dx2 = 0,
               dy = 0;
             for (let j = 0; j <= points.length - 1; j++)
               switch (j) {
                 case 0:
-                  ((dx = points[j + 1].x - points[j].x),
+                  ((dx2 = points[j + 1].x - points[j].x),
                     (dy = points[j + 1].y - points[j].y),
                     (normal2.x = dy * 1),
-                    (normal2.y = -dx),
+                    (normal2.y = -dx2),
                     (normal2.z = dy * 0),
                     prevNormal.copy(normal2),
                     normal2.normalize(),
@@ -15155,10 +15155,10 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
                   initNormals.push(prevNormal.x, prevNormal.y, prevNormal.z);
                   break;
                 default:
-                  ((dx = points[j + 1].x - points[j].x),
+                  ((dx2 = points[j + 1].x - points[j].x),
                     (dy = points[j + 1].y - points[j].y),
                     (normal2.x = dy * 1),
-                    (normal2.y = -dx),
+                    (normal2.y = -dx2),
                     (normal2.z = dy * 0),
                     curNormal.copy(normal2),
                     (normal2.x += prevNormal.x),
@@ -17565,12 +17565,12 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
            * camera properties.
            */
           updateProjectionMatrix() {
-            let dx = (this.right - this.left) / (2 * this.zoom),
+            let dx2 = (this.right - this.left) / (2 * this.zoom),
               dy = (this.top - this.bottom) / (2 * this.zoom),
               cx = (this.right + this.left) / 2,
               cy = (this.top + this.bottom) / 2,
-              left = cx - dx,
-              right2 = cx + dx,
+              left = cx - dx2,
+              right2 = cx + dx2,
               top = cy + dy,
               bottom = cy - dy;
             if (this.view !== null && this.view.enabled) {
@@ -34483,8 +34483,8 @@ void main() {
         }
         for (let i = 0; i < quality2.dust; i++, cursor++) {
           let angle = i * 2.3999632297,
-            dx = Math.cos(angle),
-            dz = Math.sin(angle);
+            dx2 = Math.cos(angle),
+            dz2 = Math.sin(angle);
           (seeds.set(
             [i / quality2.dust, angle, ((i * 13) % 29) / 29, i % 2 === 0 ? 1 : 0],
             cursor * 4,
@@ -34492,8 +34492,8 @@ void main() {
             grounds.set(
               [
                 site.y,
-                surfaceHeight(site.x + dx * 4, site.z + dz * 4),
-                surfaceHeight(site.x + dx * 16, site.z + dz * 16),
+                surfaceHeight(site.x + dx2 * 4, site.z + dz2 * 4),
+                surfaceHeight(site.x + dx2 * 16, site.z + dz2 * 16),
               ],
               cursor * 3,
             ),
@@ -34521,7 +34521,7 @@ void main() {
               value: (0.047 * 96 * EMISSION.dustDensity) / quality2.dust,
             },
             uGasColor: { value: new Color(10791593) },
-            uDustColor: { value: new Color(8749172) },
+            uDustColor: { value: new Color(13158334) },
           },
           material = new ShaderMaterial({
             uniforms,
@@ -34601,16 +34601,17 @@ void main() {
           route = [],
           cursor = 0;
         function segmentClear(a, b) {
-          let dx = b.x - a.x,
-            dz = b.z - a.z,
+          let dx2 = b.x - a.x,
+            dz2 = b.z - a.z,
             t = Math.max(
               0,
               Math.min(
                 1,
-                ((landing2.x - a.x) * dx + (landing2.z - a.z) * dz) / (dx * dx + dz * dz || 1),
+                ((landing2.x - a.x) * dx2 + (landing2.z - a.z) * dz2) /
+                  (dx2 * dx2 + dz2 * dz2 || 1),
               ),
             );
-          return Math.hypot(a.x + dx * t - landing2.x, a.z + dz * t - landing2.z) >= clearance;
+          return Math.hypot(a.x + dx2 * t - landing2.x, a.z + dz2 * t - landing2.z) >= clearance;
         }
         function plan(position2, x, z) {
           ((key = `${x}:${z}`), (cursor = 0));
@@ -34656,12 +34657,12 @@ void main() {
             return route[cursor] ?? position2;
           },
           constrain(position2) {
-            let dx = position2.x - landing2.x,
-              dz = position2.z - landing2.z,
-              d = Math.hypot(dx, dz);
+            let dx2 = position2.x - landing2.x,
+              dz2 = position2.z - landing2.z,
+              d = Math.hypot(dx2, dz2);
             d < clearance &&
-              ((position2.x = landing2.x + (d ? dx / d : 0) * (clearance + 0.05)),
-              (position2.z = landing2.z + (d ? dz / d : -1) * (clearance + 0.05)));
+              ((position2.x = landing2.x + (d ? dx2 / d : 0) * (clearance + 0.05)),
+              (position2.z = landing2.z + (d ? dz2 / d : -1) * (clearance + 0.05)));
           },
           snapshot: () => ({
             clearance,
@@ -34669,6 +34670,77 @@ void main() {
             cursor,
           }),
         };
+      }
+
+      // works/first_dawn/terrain-light.js
+      var TERRAIN_SUN = Object.freeze([-1400, 2600, 1700]),
+        horizontal = Math.hypot(TERRAIN_SUN[0], TERRAIN_SUN[2]),
+        dx = TERRAIN_SUN[0] / horizontal,
+        dz = TERRAIN_SUN[2] / horizontal,
+        elevation = Math.atan2(TERRAIN_SUN[1], horizontal),
+        smooth = (a, b, x) => {
+          let u = Math.max(0, Math.min(1, (x - a) / (b - a)));
+          return u * u * (3 - 2 * u);
+        },
+        PROFILES = Object.fromEntries(
+          Object.entries({ high: 48, mid: 40, low: 28 }).map(([tier2, count]) => {
+            let width = 465e-5 + { high: 0.012, mid: 0.017, low: 0.027 }[tier2];
+            return [
+              tier2,
+              {
+                distances: Float64Array.from(
+                  { length: count },
+                  (_, i) => 2 * Math.pow(2300, i / (count - 1)),
+                ),
+                lo: Math.tan(elevation - width),
+                hi: Math.tan(elevation + width),
+              },
+            ];
+          }),
+        );
+      function terrainSunVisibility(heightAt, x, y, z, tier2 = "mid") {
+        let profile = PROFILES[tier2],
+          horizon = -1 / 0;
+        for (let distance of profile.distances)
+          horizon = Math.max(
+            horizon,
+            (heightAt(x + dx * distance, z + dz * distance) - y - 0.12) / distance,
+          );
+        return 1 - smooth(profile.lo, profile.hi, horizon);
+      }
+      var PALE_MINERAL_GLSL = `
+  vec2 depositWarp=vec2(sin(basinPosition.z*.0017),sin(basinPosition.x*.0021))*95.;
+  float depositDistance=length((basinPosition.xz-vec2(-1456.,3190.)+depositWarp)*vec2(1.15,.62));
+  float depositReach=1.-smoothstep(380.,1550.,depositDistance);
+  float depositFloor=smoothstep(1360.,1635.,-basinPosition.y)*(1.-smoothstep(.16,.70,basinSlope));
+  float paleDeposit=depositReach*depositFloor;
+  diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.69,.70,.68),paleDeposit*.96);
+`;
+      function installTerrainLight(shader) {
+        ((shader.vertexShader = shader.vertexShader
+          .replace(
+            "#include <common>",
+            `#include <common>
+attribute float basinSunlight; varying float basinSun;`,
+          )
+          .replace(
+            "#include <begin_vertex>",
+            `#include <begin_vertex>
+basinSun=basinSunlight;`,
+          )),
+          (shader.fragmentShader = shader.fragmentShader.replace(
+            "#include <common>",
+            `#include <common>
+varying float basinSun;`,
+          )),
+          (shader.fragmentShader = shader.fragmentShader.replace(
+            "#include <lights_fragment_begin>",
+            ShaderChunk.lights_fragment_begin.replace(
+              "getDirectionalLightInfo( directionalLight, directLight );",
+              `getDirectionalLightInfo( directionalLight, directLight );
+if ( UNROLLED_LOOP_INDEX == 0 ) directLight.color *= basinSun;`,
+            ),
+          )));
       }
 
       // works/first_dawn/mobile-surface.js
@@ -34702,6 +34774,7 @@ basinPosition=position; basinNormal=normal; basinSlope=1.-abs(normal.y); basinAO
                 .replace(
                   "#include <color_fragment>",
                   `#include <color_fragment>
+        ${PALE_MINERAL_GLSL}
         vec3 planeNormal=abs(basinNormal);
         vec2 mineralPlane=planeNormal.y>max(planeNormal.x,planeNormal.z)?basinPosition.xz:
           (planeNormal.x>planeNormal.z?basinPosition.yz:basinPosition.xy);
@@ -34714,6 +34787,7 @@ basinPosition=position; basinNormal=normal; basinSlope=1.-abs(normal.y); basinAO
           (1.-smoothstep(.25,.8,length(fwidth(mineralPlane*.6))));
         diffuseColor.rgb*=1.+(mineral-.5)*.095+bedding*.025*rock+grain*.10*nearDetail;
         diffuseColor.rgb*=mix(vec3(1.025,1.018,1.01),vec3(.91,.925,.94),rock*.46);
+        // Sub-metre aggregate
         float veil=1.-exp(-length(vViewPosition)*.00042);
         diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.34,.195,.15),veil*.10);`,
                 )
@@ -34743,8 +34817,12 @@ reflectedLight.indirectDiffuse*=basinAO; reflectedLight.indirectSpecular*=basinA
                   `#include <fog_fragment>
 float terrainLuma=dot(gl_FragColor.rgb,vec3(.2126,.7152,.0722));gl_FragColor.rgb=mix(vec3(terrainLuma),gl_FragColor.rgb,.672);`,
                 )));
-          }),
-          (material.customProgramCacheKey = () => "canyon-mobile-planar-v1"));
+          }));
+        let detailCompile = material.onBeforeCompile;
+        ((material.onBeforeCompile = (shader) => {
+          (detailCompile(shader), installTerrainLight(shader));
+        }),
+          (material.customProgramCacheKey = () => "canyon-mobile-mineral-sun-v3"));
       }
 
       // works/first_dawn/timeline.js
@@ -35034,15 +35112,25 @@ float terrainLuma=dot(gl_FragColor.rgb,vec3(.2126,.7152,.0722));gl_FragColor.rgb
             y = pos.getY(i),
             z = pos.getZ(i),
             blocked = 0;
-          for (let [dx, dz] of directions) {
+          for (let [dx2, dz2] of directions) {
             let horizon = 0;
             for (let r of radii)
-              horizon = Math.max(horizon, (heightAt(x + dx * r, z + dz * r) - y) / r);
+              horizon = Math.max(horizon, (heightAt(x + dx2 * r, z + dz2 * r) - y) / r);
             blocked += horizon / Math.sqrt(1 + horizon * horizon);
           }
           occlusion[i] = Math.max(0.42, 1 - blocked * 0.145);
         }
         geometry.setAttribute("basinOcclusion", new Float32BufferAttribute(occlusion, 1));
+        let sunlight = new Float32Array(pos.count);
+        for (let i = 0; i < pos.count; i++)
+          sunlight[i] = terrainSunVisibility(
+            heightAt,
+            pos.getX(i),
+            pos.getY(i),
+            pos.getZ(i),
+            tier2,
+          );
+        geometry.setAttribute("basinSunlight", new Float32BufferAttribute(sunlight, 1));
         let material = new MeshStandardMaterial({
           vertexColors: !0,
           roughness: 1,
@@ -35129,6 +35217,7 @@ basinPosition=position;basinSlope=1.-abs(normal.y);basinAO=basinOcclusion;basinN
                 .replace(
                   "#include <color_fragment>",
                   `#include <color_fragment>
+      ${PALE_MINERAL_GLSL}
       float warp=(basinNoise(basinPosition.xz*.0018)-.5)*26.;
       float phase=(basinPosition.y+warp)*.032;
       float bands=sin(phase+.23*sin(phase*.31));
@@ -35185,11 +35274,15 @@ basinPosition=position;basinSlope=1.-abs(normal.y);basinAO=basinOcclusion;basinN
                   `#include <aomap_fragment>
 reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO;`,
                 )));
-          }),
-          (material.customProgramCacheKey = () => `canyon-eroded-joints-v10-${tier2}`),
+          }));
+        let detailCompile = material.onBeforeCompile;
+        ((material.onBeforeCompile = (shader) => {
+          (detailCompile(shader), installTerrainLight(shader));
+        }),
+          (material.customProgramCacheKey = () => `canyon-mineral-sun-v11-${tier2}`),
           tier2 === "low" && installMobileSurface(material));
         let terrain = new Mesh(geometry, material);
-        ((terrain.castShadow = terrain.receiveShadow = !0), group.add(terrain));
+        ((terrain.castShadow = !1), (terrain.receiveShadow = !0), group.add(terrain));
         let rockGeometry = new IcosahedronGeometry(1, tier2 === "low" ? 0 : 1),
           rockPos = rockGeometry.attributes.position;
         for (let i = 0; i < rockPos.count; i++) {
@@ -35999,7 +36092,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
       }
 
       // works/first_dawn/habitat/world.js
-      var smooth = (x) => ((x = MathUtils.clamp(x, 0, 1)), x * x * x * (10 + x * (-15 + x * 6)));
+      var smooth2 = (x) => ((x = MathUtils.clamp(x, 0, 1)), x * x * x * (10 + x * (-15 + x * 6)));
       function createHabitatWorld(scene2, surface2, tier2, checkpoint, options = {}) {
         let model = createBasinModel(groundHeight, checkpoint, options),
           arrays = [new Float32Array(GRID * GRID * 4), new Float32Array(GRID * GRID * 4)],
@@ -36055,9 +36148,13 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
               .replace(
                 "roughnessFactor=clamp(mix(.97,.79,materialRock)+(basinStone(basinPosition,.17)-.5)*.045,.73,1.);",
                 "roughnessFactor=mix(clamp(mix(.97,.79,materialRock)+deposited*.035-eroded*.045,.7,1.),.18,wet*(1.-frost));",
+              )
+              .replace(
+                "roughnessFactor=mix(.97,.79,rock);",
+                "roughnessFactor=mix(clamp(mix(.97,.79,rock)+deposited*.035-eroded*.045,.7,1.),.18,wet*(1.-frost));",
               )));
         }),
-          (surface2.material.customProgramCacheKey = () => `inhabited-basin-v2-${tier2}`),
+          (surface2.material.customProgramCacheKey = () => `inhabited-basin-v3-${tier2}`),
           (surface2.material.needsUpdate = !0));
         let group = new Group();
         ((group.name = "sealed-first-settlement"), scene2.add(group));
@@ -36117,15 +36214,15 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
             cylinder.position.set(x, y, z),
             (cylinder.castShadow = cylinder.receiveShadow = !0),
             group.add(cylinder));
-          for (let dz of [-9, 9]) {
-            box(10, 0.8, 3, dark, x, y - 3, z + dz);
-            for (let dx of [-3, 3]) box(0.9, 5, 1, metal, x + dx, y - 4.8, z + dz);
+          for (let dz2 of [-9, 9]) {
+            box(10, 0.8, 3, dark, x, y - 3, z + dz2);
+            for (let dx2 of [-3, 3]) box(0.9, 5, 1, metal, x + dx2, y - 4.8, z + dz2);
           }
-          for (let dz of [-12.05, 12.05])
-            (box(4.5, 5, 0.24, dark, x, y, z + dz), box(3, 3.8, 0.28, metal, x, y - 0.2, z + dz));
+          for (let dz2 of [-12.05, 12.05])
+            (box(4.5, 5, 0.24, dark, x, y, z + dz2), box(3, 3.8, 0.28, metal, x, y - 0.2, z + dz2));
           (lamps.push(box(3, 0.7, 0.35, light, x, y + 1.5, z - 12.25)),
             box(7, 0.8, 16, dark, x, y + 4, z));
-          for (let dz of [-5, 0, 5]) box(0.3, 1.9, 2, glass, x + 3.9, y + 1, z + dz);
+          for (let dz2 of [-5, 0, 5]) box(0.3, 1.9, 2, glass, x + 3.9, y + 1, z + dz2);
         }
         let px = -1430,
           pz = 3294,
@@ -36204,7 +36301,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
             (gauge.scale.y = 0.08 + Math.min(1, model.state.stored / 65) * 0.92));
         }
         function frame(camera2, blend = 1) {
-          let p = smooth(blend);
+          let p = smooth2(blend);
           p <= 0 ||
             (startPosition.copy(camera2.position),
             startRotation.copy(camera2.quaternion),
@@ -37230,7 +37327,7 @@ vHullPosition=position;`,
         try {
           let response = await fetch(new URL(entry.file, base), {
             signal: controller.signal,
-            cache: reload ? "reload" : "default",
+            cache: reload ? "reload" : "force-cache",
           });
           if (!response.ok) throw new Error(`Candidate model request failed: ${response.status}`);
           payload = await response.json();
@@ -57837,8 +57934,8 @@ vHullPosition=position;`,
       }
       function observe(s) {
         if (state.observations.includes(s.id)) return;
-        let dx = (surface.heightAt(s.x + 2, s.z) - surface.heightAt(s.x - 2, s.z)) / 4,
-          dz = (surface.heightAt(s.x, s.z + 2) - surface.heightAt(s.x, s.z - 2)) / 4;
+        let dx2 = (surface.heightAt(s.x + 2, s.z) - surface.heightAt(s.x - 2, s.z)) / 4,
+          dz2 = (surface.heightAt(s.x, s.z + 2) - surface.heightAt(s.x, s.z - 2)) / 4;
         (placeRover(),
           render(),
           archive.observe({
@@ -57857,7 +57954,7 @@ vHullPosition=position;`,
               compounds: s.compounds,
               navigation: CANDIDATE_NAVIGATION,
               navigationLabel: "TF-NAV-01 / AU · X +1.2846 · Y −0.0821 · Z +0.4368 (작품 내 좌표)",
-              slopeDegrees: (Math.atan(Math.hypot(dx, dz)) * 180) / Math.PI,
+              slopeDegrees: (Math.atan(Math.hypot(dx2, dz2)) * 180) / Math.PI,
               preservationBoundary: PRESERVE_X,
               intervention: INTERVENTION,
               provenance: "procedural model observation",
@@ -57895,15 +57992,15 @@ vHullPosition=position;`,
           let waypoint = navigation.target(position, x, z);
           ((x = waypoint.x), (z = waypoint.z));
         }
-        let dx = x - position.x,
-          dz = z - position.z,
-          d = Math.hypot(dx, dz);
+        let dx2 = x - position.x,
+          dz2 = z - position.z,
+          d = Math.hypot(dx2, dz2);
         if (d > 0.05) {
           let step = Math.min(d, speed * dt);
-          ((position.x += (dx / d) * step),
-            (position.z += (dz / d) * step),
+          ((position.x += (dx2 / d) * step),
+            (position.z += (dz2 / d) * step),
             (travel += step),
-            forward.set(dx, 0, dz).normalize());
+            forward.set(dx2, 0, dz2).normalize());
         }
         return Math.hypot(destinationX - position.x, destinationZ - position.z) < tolerance;
       }
@@ -58346,11 +58443,11 @@ TF-NAV-01 / AU · X +1.2846 · Y −0.0821 · Z +0.4368
           }),
           renderer.domElement.addEventListener("pointermove", (e) => {
             if (touch?.id !== e.pointerId) return;
-            let dx = e.clientX - touch.x,
+            let dx2 = e.clientX - touch.x,
               dy = e.clientY - touch.y;
-            Math.hypot(dx, dy) > 18 &&
+            Math.hypot(dx2, dy) > 18 &&
               (setManual(!0),
-              (touch.steer = MathUtils.clamp(-dx / 90, -1, 1)),
+              (touch.steer = MathUtils.clamp(-dx2 / 90, -1, 1)),
               (touch.drive = MathUtils.clamp(-dy / 90, -1, 1)));
           }));
         for (let event of ["pointerup", "pointercancel"])

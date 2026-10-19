@@ -2676,9 +2676,9 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
            * @return {number} The squared distance.
            */
           distanceToSquared(v) {
-            let dx = this.x - v.x,
+            let dx2 = this.x - v.x,
               dy = this.y - v.y;
-            return dx * dx + dy * dy;
+            return dx2 * dx2 + dy * dy;
           }
           /**
            * Computes the Manhattan distance from the given vector to this instance.
@@ -4111,10 +4111,10 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
            * @return {number} The squared distance.
            */
           distanceToSquared(v) {
-            let dx = this.x - v.x,
+            let dx2 = this.x - v.x,
               dy = this.y - v.y,
-              dz = this.z - v.z;
-            return dx * dx + dy * dy + dz * dz;
+              dz2 = this.z - v.z;
+            return dx2 * dx2 + dy * dy + dz2 * dz2;
           }
           /**
            * Computes the Manhattan distance from the given vector to this instance.
@@ -17444,12 +17444,12 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
            * camera properties.
            */
           updateProjectionMatrix() {
-            let dx = (this.right - this.left) / (2 * this.zoom),
+            let dx2 = (this.right - this.left) / (2 * this.zoom),
               dy = (this.top - this.bottom) / (2 * this.zoom),
               cx = (this.right + this.left) / 2,
               cy = (this.top + this.bottom) / 2,
-              left = cx - dx,
-              right = cx + dx,
+              left = cx - dx2,
+              right = cx + dx2,
               top = cy + dy,
               bottom = cy - dy;
             if (this.view !== null && this.view.enabled) {
@@ -34714,6 +34714,77 @@ void main() {
         };
       }
 
+      // works/first_dawn/terrain-light.js
+      var TERRAIN_SUN = Object.freeze([-1400, 2600, 1700]),
+        horizontal = Math.hypot(TERRAIN_SUN[0], TERRAIN_SUN[2]),
+        dx = TERRAIN_SUN[0] / horizontal,
+        dz = TERRAIN_SUN[2] / horizontal,
+        elevation = Math.atan2(TERRAIN_SUN[1], horizontal),
+        smooth = (a, b, x) => {
+          let u = Math.max(0, Math.min(1, (x - a) / (b - a)));
+          return u * u * (3 - 2 * u);
+        },
+        PROFILES = Object.fromEntries(
+          Object.entries({ high: 48, mid: 40, low: 28 }).map(([tier2, count]) => {
+            let width = 465e-5 + { high: 0.012, mid: 0.017, low: 0.027 }[tier2];
+            return [
+              tier2,
+              {
+                distances: Float64Array.from(
+                  { length: count },
+                  (_, i) => 2 * Math.pow(2300, i / (count - 1)),
+                ),
+                lo: Math.tan(elevation - width),
+                hi: Math.tan(elevation + width),
+              },
+            ];
+          }),
+        );
+      function terrainSunVisibility(heightAt, x, y, z, tier2 = "mid") {
+        let profile = PROFILES[tier2],
+          horizon = -1 / 0;
+        for (let distance of profile.distances)
+          horizon = Math.max(
+            horizon,
+            (heightAt(x + dx * distance, z + dz * distance) - y - 0.12) / distance,
+          );
+        return 1 - smooth(profile.lo, profile.hi, horizon);
+      }
+      var PALE_MINERAL_GLSL = `
+  vec2 depositWarp=vec2(sin(basinPosition.z*.0017),sin(basinPosition.x*.0021))*95.;
+  float depositDistance=length((basinPosition.xz-vec2(-1456.,3190.)+depositWarp)*vec2(1.15,.62));
+  float depositReach=1.-smoothstep(380.,1550.,depositDistance);
+  float depositFloor=smoothstep(1360.,1635.,-basinPosition.y)*(1.-smoothstep(.16,.70,basinSlope));
+  float paleDeposit=depositReach*depositFloor;
+  diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.69,.70,.68),paleDeposit*.96);
+`;
+      function installTerrainLight(shader) {
+        ((shader.vertexShader = shader.vertexShader
+          .replace(
+            "#include <common>",
+            `#include <common>
+attribute float basinSunlight; varying float basinSun;`,
+          )
+          .replace(
+            "#include <begin_vertex>",
+            `#include <begin_vertex>
+basinSun=basinSunlight;`,
+          )),
+          (shader.fragmentShader = shader.fragmentShader.replace(
+            "#include <common>",
+            `#include <common>
+varying float basinSun;`,
+          )),
+          (shader.fragmentShader = shader.fragmentShader.replace(
+            "#include <lights_fragment_begin>",
+            ShaderChunk.lights_fragment_begin.replace(
+              "getDirectionalLightInfo( directionalLight, directLight );",
+              `getDirectionalLightInfo( directionalLight, directLight );
+if ( UNROLLED_LOOP_INDEX == 0 ) directLight.color *= basinSun;`,
+            ),
+          )));
+      }
+
       // works/first_dawn/mobile-surface.js
       function installMobileSurface(material) {
         ((material.userData.surfaceProfile = "mobile-planar"),
@@ -34745,6 +34816,7 @@ basinPosition=position; basinNormal=normal; basinSlope=1.-abs(normal.y); basinAO
                 .replace(
                   "#include <color_fragment>",
                   `#include <color_fragment>
+        ${PALE_MINERAL_GLSL}
         vec3 planeNormal=abs(basinNormal);
         vec2 mineralPlane=planeNormal.y>max(planeNormal.x,planeNormal.z)?basinPosition.xz:
           (planeNormal.x>planeNormal.z?basinPosition.yz:basinPosition.xy);
@@ -34757,6 +34829,7 @@ basinPosition=position; basinNormal=normal; basinSlope=1.-abs(normal.y); basinAO
           (1.-smoothstep(.25,.8,length(fwidth(mineralPlane*.6))));
         diffuseColor.rgb*=1.+(mineral-.5)*.095+bedding*.025*rock+grain*.10*nearDetail;
         diffuseColor.rgb*=mix(vec3(1.025,1.018,1.01),vec3(.91,.925,.94),rock*.46);
+        // Sub-metre aggregate
         float veil=1.-exp(-length(vViewPosition)*.00042);
         diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.34,.195,.15),veil*.10);`,
                 )
@@ -34786,8 +34859,12 @@ reflectedLight.indirectDiffuse*=basinAO; reflectedLight.indirectSpecular*=basinA
                   `#include <fog_fragment>
 float terrainLuma=dot(gl_FragColor.rgb,vec3(.2126,.7152,.0722));gl_FragColor.rgb=mix(vec3(terrainLuma),gl_FragColor.rgb,.672);`,
                 )));
-          }),
-          (material.customProgramCacheKey = () => "canyon-mobile-planar-v1"));
+          }));
+        let detailCompile = material.onBeforeCompile;
+        ((material.onBeforeCompile = (shader) => {
+          (detailCompile(shader), installTerrainLight(shader));
+        }),
+          (material.customProgramCacheKey = () => "canyon-mobile-mineral-sun-v3"));
       }
 
       // works/first_dawn/timeline.js
@@ -35077,15 +35154,25 @@ float terrainLuma=dot(gl_FragColor.rgb,vec3(.2126,.7152,.0722));gl_FragColor.rgb
             y = pos.getY(i),
             z = pos.getZ(i),
             blocked = 0;
-          for (let [dx, dz] of directions) {
+          for (let [dx2, dz2] of directions) {
             let horizon = 0;
             for (let r of radii)
-              horizon = Math.max(horizon, (heightAt(x + dx * r, z + dz * r) - y) / r);
+              horizon = Math.max(horizon, (heightAt(x + dx2 * r, z + dz2 * r) - y) / r);
             blocked += horizon / Math.sqrt(1 + horizon * horizon);
           }
           occlusion[i] = Math.max(0.42, 1 - blocked * 0.145);
         }
         geometry.setAttribute("basinOcclusion", new Float32BufferAttribute(occlusion, 1));
+        let sunlight = new Float32Array(pos.count);
+        for (let i = 0; i < pos.count; i++)
+          sunlight[i] = terrainSunVisibility(
+            heightAt,
+            pos.getX(i),
+            pos.getY(i),
+            pos.getZ(i),
+            tier2,
+          );
+        geometry.setAttribute("basinSunlight", new Float32BufferAttribute(sunlight, 1));
         let material = new MeshStandardMaterial({
           vertexColors: !0,
           roughness: 1,
@@ -35172,6 +35259,7 @@ basinPosition=position;basinSlope=1.-abs(normal.y);basinAO=basinOcclusion;basinN
                 .replace(
                   "#include <color_fragment>",
                   `#include <color_fragment>
+      ${PALE_MINERAL_GLSL}
       float warp=(basinNoise(basinPosition.xz*.0018)-.5)*26.;
       float phase=(basinPosition.y+warp)*.032;
       float bands=sin(phase+.23*sin(phase*.31));
@@ -35228,11 +35316,15 @@ basinPosition=position;basinSlope=1.-abs(normal.y);basinAO=basinOcclusion;basinN
                   `#include <aomap_fragment>
 reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO;`,
                 )));
-          }),
-          (material.customProgramCacheKey = () => `canyon-eroded-joints-v10-${tier2}`),
+          }));
+        let detailCompile = material.onBeforeCompile;
+        ((material.onBeforeCompile = (shader) => {
+          (detailCompile(shader), installTerrainLight(shader));
+        }),
+          (material.customProgramCacheKey = () => `canyon-mineral-sun-v11-${tier2}`),
           tier2 === "low" && installMobileSurface(material));
         let terrain = new Mesh(geometry, material);
-        ((terrain.castShadow = terrain.receiveShadow = !0), group.add(terrain));
+        ((terrain.castShadow = !1), (terrain.receiveShadow = !0), group.add(terrain));
         let rockGeometry = new IcosahedronGeometry(1, tier2 === "low" ? 0 : 1),
           rockPos = rockGeometry.attributes.position;
         for (let i = 0; i < rockPos.count; i++) {
@@ -35788,7 +35880,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
       }
 
       // works/first_dawn/habitat/world.js
-      var smooth = (x) => ((x = MathUtils.clamp(x, 0, 1)), x * x * x * (10 + x * (-15 + x * 6)));
+      var smooth2 = (x) => ((x = MathUtils.clamp(x, 0, 1)), x * x * x * (10 + x * (-15 + x * 6)));
       function createHabitatWorld(scene, surface, tier2, checkpoint, options = {}) {
         let model = createBasinModel(groundHeight, checkpoint, options),
           arrays = [new Float32Array(GRID * GRID * 4), new Float32Array(GRID * GRID * 4)],
@@ -35844,9 +35936,13 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
               .replace(
                 "roughnessFactor=clamp(mix(.97,.79,materialRock)+(basinStone(basinPosition,.17)-.5)*.045,.73,1.);",
                 "roughnessFactor=mix(clamp(mix(.97,.79,materialRock)+deposited*.035-eroded*.045,.7,1.),.18,wet*(1.-frost));",
+              )
+              .replace(
+                "roughnessFactor=mix(.97,.79,rock);",
+                "roughnessFactor=mix(clamp(mix(.97,.79,rock)+deposited*.035-eroded*.045,.7,1.),.18,wet*(1.-frost));",
               )));
         }),
-          (surface.material.customProgramCacheKey = () => `inhabited-basin-v2-${tier2}`),
+          (surface.material.customProgramCacheKey = () => `inhabited-basin-v3-${tier2}`),
           (surface.material.needsUpdate = !0));
         let group = new Group();
         ((group.name = "sealed-first-settlement"), scene.add(group));
@@ -35906,15 +36002,15 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
             cylinder.position.set(x, y, z),
             (cylinder.castShadow = cylinder.receiveShadow = !0),
             group.add(cylinder));
-          for (let dz of [-9, 9]) {
-            box(10, 0.8, 3, dark, x, y - 3, z + dz);
-            for (let dx of [-3, 3]) box(0.9, 5, 1, metal, x + dx, y - 4.8, z + dz);
+          for (let dz2 of [-9, 9]) {
+            box(10, 0.8, 3, dark, x, y - 3, z + dz2);
+            for (let dx2 of [-3, 3]) box(0.9, 5, 1, metal, x + dx2, y - 4.8, z + dz2);
           }
-          for (let dz of [-12.05, 12.05])
-            (box(4.5, 5, 0.24, dark, x, y, z + dz), box(3, 3.8, 0.28, metal, x, y - 0.2, z + dz));
+          for (let dz2 of [-12.05, 12.05])
+            (box(4.5, 5, 0.24, dark, x, y, z + dz2), box(3, 3.8, 0.28, metal, x, y - 0.2, z + dz2));
           (lamps.push(box(3, 0.7, 0.35, light, x, y + 1.5, z - 12.25)),
             box(7, 0.8, 16, dark, x, y + 4, z));
-          for (let dz of [-5, 0, 5]) box(0.3, 1.9, 2, glass, x + 3.9, y + 1, z + dz);
+          for (let dz2 of [-5, 0, 5]) box(0.3, 1.9, 2, glass, x + 3.9, y + 1, z + dz2);
         }
         let px = -1430,
           pz = 3294,
@@ -35993,7 +36089,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
             (gauge.scale.y = 0.08 + Math.min(1, model.state.stored / 65) * 0.92));
         }
         function frame(camera, blend = 1) {
-          let p = smooth(blend);
+          let p = smooth2(blend);
           p <= 0 ||
             (startPosition.copy(camera.position),
             startRotation.copy(camera.quaternion),
@@ -56019,14 +56115,14 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           traceAt: 108,
           recoverAt: 114,
         }),
-        smooth2 = (t, a, b) => {
+        smooth3 = (t, a, b) => {
           let u = Math.max(0, Math.min(1, (t - a) / (b - a)));
           return u * u * u * (u * (u * 6 - 15) + 10);
         };
       function arrivalHandoffGain(elapsed) {
         let t = elapsed + 68,
           h = ARRIVAL_HANDOFF;
-        return 1 - smooth2(t, h.settleAt, h.stillAt) + smooth2(t, h.traceAt, h.recoverAt);
+        return 1 - smooth3(t, h.settleAt, h.stillAt) + smooth3(t, h.traceAt, h.recoverAt);
       }
 
       // works/shared/journey-score.js
@@ -56724,7 +56820,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
         pointerEvents: "auto",
       });
       Object.assign(title.style, { top: "40%", bottom: "auto", zIndex: "4" });
-      var smooth3 = (x) => ((x = Math.max(0, Math.min(1, x))), x * x * (3 - 2 * x));
+      var smooth4 = (x) => ((x = Math.max(0, Math.min(1, x))), x * x * (3 - 2 * x));
       function persist() {
         return (
           (state.elapsed = seconds),
@@ -56748,7 +56844,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
               habitat.update(origin + seconds),
               habitat.frame(camera),
               environment.update(origin + seconds, !0, camera, 108));
-            let opacity = smooth3((seconds - 1) / 5) * (1 - smooth3((seconds - 18) / 8));
+            let opacity = smooth4((seconds - 1) / 5) * (1 - smooth4((seconds - 18) / 8));
             ((title.style.opacity = String(opacity)),
               seconds >= 18 &&
                 archive.parentElement === title &&

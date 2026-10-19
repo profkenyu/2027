@@ -2604,9 +2604,9 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
            * @return {number} The squared distance.
            */
           distanceToSquared(v) {
-            let dx = this.x - v.x,
+            let dx2 = this.x - v.x,
               dy = this.y - v.y;
-            return dx * dx + dy * dy;
+            return dx2 * dx2 + dy * dy;
           }
           /**
            * Computes the Manhattan distance from the given vector to this instance.
@@ -4039,10 +4039,10 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
            * @return {number} The squared distance.
            */
           distanceToSquared(v) {
-            let dx = this.x - v.x,
+            let dx2 = this.x - v.x,
               dy = this.y - v.y,
-              dz = this.z - v.z;
-            return dx * dx + dy * dy + dz * dz;
+              dz2 = this.z - v.z;
+            return dx2 * dx2 + dy * dy + dz2 * dz2;
           }
           /**
            * Computes the Manhattan distance from the given vector to this instance.
@@ -17537,9 +17537,9 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
                 for (let i = 1; i <= points.length; i++) {
                   let currentIndex = i % points.length,
                     currentPos = points[currentIndex],
-                    dx = currentPos.x - prevPos.x,
+                    dx2 = currentPos.x - prevPos.x,
                     dy = currentPos.y - prevPos.y,
-                    distSq = dx * dx + dy * dy,
+                    distSq = dx2 * dx2 + dy * dy,
                     scalingFactorSqrt = Math.max(
                       Math.abs(currentPos.x),
                       Math.abs(currentPos.y),
@@ -17999,15 +17999,15 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
               normal = new Vector3(),
               curNormal = new Vector3(),
               prevNormal = new Vector3(),
-              dx = 0,
+              dx2 = 0,
               dy = 0;
             for (let j = 0; j <= points.length - 1; j++)
               switch (j) {
                 case 0:
-                  ((dx = points[j + 1].x - points[j].x),
+                  ((dx2 = points[j + 1].x - points[j].x),
                     (dy = points[j + 1].y - points[j].y),
                     (normal.x = dy * 1),
-                    (normal.y = -dx),
+                    (normal.y = -dx2),
                     (normal.z = dy * 0),
                     prevNormal.copy(normal),
                     normal.normalize(),
@@ -18017,10 +18017,10 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
                   initNormals.push(prevNormal.x, prevNormal.y, prevNormal.z);
                   break;
                 default:
-                  ((dx = points[j + 1].x - points[j].x),
+                  ((dx2 = points[j + 1].x - points[j].x),
                     (dy = points[j + 1].y - points[j].y),
                     (normal.x = dy * 1),
-                    (normal.y = -dx),
+                    (normal.y = -dx2),
                     (normal.z = dy * 0),
                     curNormal.copy(normal),
                     (normal.x += prevNormal.x),
@@ -20629,12 +20629,12 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
            * camera properties.
            */
           updateProjectionMatrix() {
-            let dx = (this.right - this.left) / (2 * this.zoom),
+            let dx2 = (this.right - this.left) / (2 * this.zoom),
               dy = (this.top - this.bottom) / (2 * this.zoom),
               cx = (this.right + this.left) / 2,
               cy = (this.top + this.bottom) / 2,
-              left = cx - dx,
-              right = cx + dx,
+              left = cx - dx2,
+              right = cx + dx2,
               top = cy + dy,
               bottom = cy - dy;
             if (this.view !== null && this.view.enabled) {
@@ -37761,6 +37761,139 @@ void main() {
         }
       };
 
+      // works/shared/model-manifest.js
+      var SCENE_MODEL_ASSETS = Object.freeze({
+        opening: {
+          high: {
+            file: "high-ec41d2100e6800f2.json",
+            bytes: 1977963,
+          },
+          mid: {
+            file: "mid-4f8046dc071c7a98.json",
+            bytes: 1977962,
+          },
+          low: {
+            file: "low-e460ba49749a89d3.json",
+            bytes: 1330511,
+          },
+        },
+        transit: {
+          high: {
+            file: "high-f05b1f714fac95e9.json",
+            bytes: 1292985,
+          },
+          mid: {
+            file: "mid-99e227b6cb4d8646.json",
+            bytes: 1176776,
+          },
+          low: {
+            file: "low-d1af8b80728e1760.json",
+            bytes: 626406,
+          },
+        },
+        arrival: {
+          high: {
+            file: "high-56cc497c0adf1413.json",
+            bytes: 1312691,
+          },
+          mid: {
+            file: "mid-6c55b7a24440196f.json",
+            bytes: 1192991,
+          },
+          low: {
+            file: "low-7909aeffbc5ec5fa.json",
+            bytes: 639167,
+          },
+        },
+      });
+
+      // works/shared/model-loader.js
+      async function loadSceneModel(kind, tier2, { reload = !1 } = {}) {
+        let asset = SCENE_MODEL_ASSETS[kind]?.[tier2];
+        if (!asset) throw new Error(`Unknown model: ${kind}/${tier2}`);
+        let base = new URL("./assets/", document.baseURI),
+          controller = new AbortController(),
+          timeout = setTimeout(() => controller.abort(), 45e3);
+        try {
+          let response2 = await fetch(new URL(`${kind}/${asset.file}`, base), {
+            signal: controller.signal,
+            cache: reload ? "reload" : "force-cache",
+          });
+          if (!response2.ok) throw new Error(`Model request failed: ${response2.status}`);
+          let payload = await response2.json();
+          if (
+            payload.version !== 1 ||
+            payload.kind !== kind ||
+            payload.tier !== tier2 ||
+            !payload.data
+          )
+            throw new Error("Model payload does not match requested tier");
+          if (
+            kind === "transit" &&
+            (!Array.isArray(payload.data) ||
+              !payload.data.length ||
+              !payload.data.every((part) => part.p && part.n))
+          )
+            throw new Error("Incomplete transit model");
+          if (kind === "arrival" && (!payload.data.site || !payload.data.lander?.length))
+            throw new Error("Incomplete arrival model");
+          if (
+            kind === "opening" &&
+            !["rover", "lander", "ship"].every(
+              (key2) =>
+                payload.data[key2]?.indices &&
+                payload.data[key2]?.positions &&
+                payload.data[key2]?.segmentParts,
+            )
+          )
+            throw new Error("Incomplete blueprint model");
+          return { data: payload.data, info: { kind, tier: tier2, ...asset } };
+        } finally {
+          clearTimeout(timeout);
+        }
+      }
+      async function prepareSceneModel(
+        kind,
+        tier2,
+        { errorId = "error", loadingId = "loading" } = {},
+      ) {
+        let reload = !1;
+        for (;;)
+          try {
+            return await loadSceneModel(kind, tier2, { reload });
+          } catch {
+            let error2 = document.getElementById(errorId),
+              loading2 = document.getElementById(loadingId);
+            (loading2 && (loading2.hidden = !0),
+              (error2.hidden = !1),
+              error2.setAttribute("role", "alert"));
+            let message = document.createElement("p"),
+              retry = document.createElement("button");
+            ((message.textContent =
+              "기체 자료를 불러오지 못했습니다. 연결을 확인한 뒤 다시 시도해 주세요."),
+              (retry.type = "button"),
+              (retry.textContent = "다시 시도"),
+              Object.assign(retry.style, {
+                font: "inherit",
+                color: "inherit",
+                background: "transparent",
+                border: "0",
+                padding: "12px 20px",
+                minHeight: "44px",
+                cursor: "pointer",
+                textDecoration: "underline",
+                textUnderlineOffset: "5px",
+              }),
+              error2.replaceChildren(message, retry),
+              await new Promise((resolve) =>
+                retry.addEventListener("click", resolve, { once: !0 }),
+              ),
+              (error2.hidden = !0),
+              loading2 && (loading2.hidden = !1),
+              (reload = !0));
+          }
+      }
+
       // works/shared/aerospace-textures.js
       var cache = /* @__PURE__ */ new Map(),
         AEROSPACE_FINISH = Object.freeze({
@@ -38958,6 +39091,77 @@ void main() {
         };
       }
 
+      // works/first_dawn/terrain-light.js
+      var TERRAIN_SUN = Object.freeze([-1400, 2600, 1700]),
+        horizontal = Math.hypot(TERRAIN_SUN[0], TERRAIN_SUN[2]),
+        dx = TERRAIN_SUN[0] / horizontal,
+        dz = TERRAIN_SUN[2] / horizontal,
+        elevation = Math.atan2(TERRAIN_SUN[1], horizontal),
+        smooth = (a, b, x) => {
+          let u = Math.max(0, Math.min(1, (x - a) / (b - a)));
+          return u * u * (3 - 2 * u);
+        },
+        PROFILES = Object.fromEntries(
+          Object.entries({ high: 48, mid: 40, low: 28 }).map(([tier2, count]) => {
+            let width = 465e-5 + { high: 0.012, mid: 0.017, low: 0.027 }[tier2];
+            return [
+              tier2,
+              {
+                distances: Float64Array.from(
+                  { length: count },
+                  (_, i) => 2 * Math.pow(2300, i / (count - 1)),
+                ),
+                lo: Math.tan(elevation - width),
+                hi: Math.tan(elevation + width),
+              },
+            ];
+          }),
+        );
+      function terrainSunVisibility(heightAt, x, y, z, tier2 = "mid") {
+        let profile = PROFILES[tier2],
+          horizon = -1 / 0;
+        for (let distance of profile.distances)
+          horizon = Math.max(
+            horizon,
+            (heightAt(x + dx * distance, z + dz * distance) - y - 0.12) / distance,
+          );
+        return 1 - smooth(profile.lo, profile.hi, horizon);
+      }
+      var PALE_MINERAL_GLSL = `
+  vec2 depositWarp=vec2(sin(basinPosition.z*.0017),sin(basinPosition.x*.0021))*95.;
+  float depositDistance=length((basinPosition.xz-vec2(-1456.,3190.)+depositWarp)*vec2(1.15,.62));
+  float depositReach=1.-smoothstep(380.,1550.,depositDistance);
+  float depositFloor=smoothstep(1360.,1635.,-basinPosition.y)*(1.-smoothstep(.16,.70,basinSlope));
+  float paleDeposit=depositReach*depositFloor;
+  diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.69,.70,.68),paleDeposit*.96);
+`;
+      function installTerrainLight(shader) {
+        ((shader.vertexShader = shader.vertexShader
+          .replace(
+            "#include <common>",
+            `#include <common>
+attribute float basinSunlight; varying float basinSun;`,
+          )
+          .replace(
+            "#include <begin_vertex>",
+            `#include <begin_vertex>
+basinSun=basinSunlight;`,
+          )),
+          (shader.fragmentShader = shader.fragmentShader.replace(
+            "#include <common>",
+            `#include <common>
+varying float basinSun;`,
+          )),
+          (shader.fragmentShader = shader.fragmentShader.replace(
+            "#include <lights_fragment_begin>",
+            ShaderChunk.lights_fragment_begin.replace(
+              "getDirectionalLightInfo( directionalLight, directLight );",
+              `getDirectionalLightInfo( directionalLight, directLight );
+if ( UNROLLED_LOOP_INDEX == 0 ) directLight.color *= basinSun;`,
+            ),
+          )));
+      }
+
       // works/first_dawn/mobile-surface.js
       function installMobileSurface(material) {
         ((material.userData.surfaceProfile = "mobile-planar"),
@@ -38989,6 +39193,7 @@ basinPosition=position; basinNormal=normal; basinSlope=1.-abs(normal.y); basinAO
                 .replace(
                   "#include <color_fragment>",
                   `#include <color_fragment>
+        ${PALE_MINERAL_GLSL}
         vec3 planeNormal=abs(basinNormal);
         vec2 mineralPlane=planeNormal.y>max(planeNormal.x,planeNormal.z)?basinPosition.xz:
           (planeNormal.x>planeNormal.z?basinPosition.yz:basinPosition.xy);
@@ -39001,6 +39206,7 @@ basinPosition=position; basinNormal=normal; basinSlope=1.-abs(normal.y); basinAO
           (1.-smoothstep(.25,.8,length(fwidth(mineralPlane*.6))));
         diffuseColor.rgb*=1.+(mineral-.5)*.095+bedding*.025*rock+grain*.10*nearDetail;
         diffuseColor.rgb*=mix(vec3(1.025,1.018,1.01),vec3(.91,.925,.94),rock*.46);
+        // Sub-metre aggregate
         float veil=1.-exp(-length(vViewPosition)*.00042);
         diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.34,.195,.15),veil*.10);`,
                 )
@@ -39030,8 +39236,12 @@ reflectedLight.indirectDiffuse*=basinAO; reflectedLight.indirectSpecular*=basinA
                   `#include <fog_fragment>
 float terrainLuma=dot(gl_FragColor.rgb,vec3(.2126,.7152,.0722));gl_FragColor.rgb=mix(vec3(terrainLuma),gl_FragColor.rgb,.672);`,
                 )));
-          }),
-          (material.customProgramCacheKey = () => "canyon-mobile-planar-v1"));
+          }));
+        let detailCompile = material.onBeforeCompile;
+        ((material.onBeforeCompile = (shader) => {
+          (detailCompile(shader), installTerrainLight(shader));
+        }),
+          (material.customProgramCacheKey = () => "canyon-mobile-mineral-sun-v3"));
       }
 
       // works/first_dawn/timeline.js
@@ -39331,15 +39541,25 @@ float terrainLuma=dot(gl_FragColor.rgb,vec3(.2126,.7152,.0722));gl_FragColor.rgb
             y = pos.getY(i),
             z = pos.getZ(i),
             blocked = 0;
-          for (let [dx, dz] of directions) {
+          for (let [dx2, dz2] of directions) {
             let horizon = 0;
             for (let r of radii)
-              horizon = Math.max(horizon, (heightAt(x + dx * r, z + dz * r) - y) / r);
+              horizon = Math.max(horizon, (heightAt(x + dx2 * r, z + dz2 * r) - y) / r);
             blocked += horizon / Math.sqrt(1 + horizon * horizon);
           }
           occlusion[i] = Math.max(0.42, 1 - blocked * 0.145);
         }
         geometry.setAttribute("basinOcclusion", new Float32BufferAttribute(occlusion, 1));
+        let sunlight = new Float32Array(pos.count);
+        for (let i = 0; i < pos.count; i++)
+          sunlight[i] = terrainSunVisibility(
+            heightAt,
+            pos.getX(i),
+            pos.getY(i),
+            pos.getZ(i),
+            tier2,
+          );
+        geometry.setAttribute("basinSunlight", new Float32BufferAttribute(sunlight, 1));
         let material = new MeshStandardMaterial({
           vertexColors: !0,
           roughness: 1,
@@ -39426,6 +39646,7 @@ basinPosition=position;basinSlope=1.-abs(normal.y);basinAO=basinOcclusion;basinN
                 .replace(
                   "#include <color_fragment>",
                   `#include <color_fragment>
+      ${PALE_MINERAL_GLSL}
       float warp=(basinNoise(basinPosition.xz*.0018)-.5)*26.;
       float phase=(basinPosition.y+warp)*.032;
       float bands=sin(phase+.23*sin(phase*.31));
@@ -39482,11 +39703,15 @@ basinPosition=position;basinSlope=1.-abs(normal.y);basinAO=basinOcclusion;basinN
                   `#include <aomap_fragment>
 reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO;`,
                 )));
-          }),
-          (material.customProgramCacheKey = () => `canyon-eroded-joints-v10-${tier2}`),
+          }));
+        let detailCompile = material.onBeforeCompile;
+        ((material.onBeforeCompile = (shader) => {
+          (detailCompile(shader), installTerrainLight(shader));
+        }),
+          (material.customProgramCacheKey = () => `canyon-mineral-sun-v11-${tier2}`),
           tier2 === "low" && installMobileSurface(material));
         let terrain = new Mesh(geometry, material);
-        ((terrain.castShadow = terrain.receiveShadow = !0), group.add(terrain));
+        ((terrain.castShadow = !1), (terrain.receiveShadow = !0), group.add(terrain));
         let rockGeometry = new IcosahedronGeometry(1, tier2 === "low" ? 0 : 1),
           rockPos = rockGeometry.attributes.position;
         for (let i = 0; i < rockPos.count; i++) {
@@ -40468,7 +40693,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
       }
 
       // works/first_dawn/attitude-jets.js
-      var smooth = (x, a, b) => {
+      var smooth2 = (x, a, b) => {
           let p = Math.max(0, Math.min(1, (x - a) / (b - a)));
           return p * p * (3 - 2 * p);
         },
@@ -40628,8 +40853,8 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
             continue;
           }
           let detached = Math.max(0, age - p.valve),
-            release = smooth(detached, 0, p.tail),
-            strength = smooth(age, 0, Math.min(0.065, p.valve * 0.3)) * (1 - release);
+            release = smooth2(detached, 0, p.tail),
+            strength = smooth2(age, 0, Math.min(0.065, p.valve * 0.3)) * (1 - release);
           ((jet.material.uniforms.strength.value = p.opacity * strength),
             (jet.material.uniforms.release.value = release));
           let ramp = Math.min(1, detached / (p.tail * 0.3)),
@@ -40638,8 +40863,8 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
                 ? p.tail * 0.3 * (ramp ** 3 - 0.5 * ramp ** 4)
                 : detached - p.tail * 0.15;
           jet.position.y = 8.2 + travel * (p.length / (p.valve + p.tail)) * 0.65;
-          let length = p.length * (0.24 + 0.76 * smooth(age, 0, p.valve + p.tail * 0.3)),
-            width = p.width * (0.45 + 0.55 * smooth(age, 0, p.valve + p.tail));
+          let length = p.length * (0.24 + 0.76 * smooth2(age, 0, p.valve + p.tail * 0.3)),
+            width = p.width * (0.45 + 0.55 * smooth2(age, 0, p.valve + p.tail));
           jet.scale.set(width, length, width);
         }
       }
@@ -40741,14 +40966,14 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
       }
 
       // works/first_dawn/approach-vibration.js
-      var smooth2 = (x) => ((x = Math.max(0, Math.min(1, x))), x * x * (3 - 2 * x)),
+      var smooth3 = (x) => ((x = Math.max(0, Math.min(1, x))), x * x * (3 - 2 * x)),
         wave = (t, hz, phase2 = 0) => Math.sin(t * Math.PI * 2 * hz + phase2);
       function approachVibrationStrength(t, distance) {
-        return (smooth2(t / 3) * smooth2((30 - t) / 4)) / (1 + (distance / 1050) ** 4);
+        return (smooth3(t / 3) * smooth3((30 - t) / 4)) / (1 + (distance / 1050) ** 4);
       }
       function closePassVibrationStrength(t, start2, end, distance) {
         return (
-          (0.85 * smooth2((t - start2) / 2.5) * smooth2((end - t) / 2.5)) /
+          (0.85 * smooth3((t - start2) / 2.5) * smooth3((end - t) / 2.5)) /
           (1 + (distance / 3e3) ** 4)
         );
       }
@@ -41416,14 +41641,14 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
                       section(z + 38).w * 0.68,
                     ),
                   y = Math.max(deck(x, z - 38), deck(x, z + 38)) + 20;
-                for (let dz of [-28, 28]) {
-                  let bottom = deck(x, z + dz) - 2,
+                for (let dz2 of [-28, 28]) {
+                  let bottom = deck(x, z + dz2) - 2,
                     top = y - 12;
-                  (add(0, x, (bottom + top) / 2, z + dz, 18, top - bottom, 8),
+                  (add(0, x, (bottom + top) / 2, z + dz2, 18, top - bottom, 8),
                     joints.push({
                       kind: "pod",
                       bottom,
-                      deck: deck(x, z + dz),
+                      deck: deck(x, z + dz2),
                       top,
                       target: y - 12,
                     }));
@@ -41436,7 +41661,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
                 for (let g of pressureVesselFittings(12, 66, tier2))
                   (g.translate(x, y, z), pressureDetails.push(g));
                 add(1, x, y - 12, z, 31, 5, 75);
-                for (let dz of [-19, 19]) add(0, x, y + 11, z + dz, 24, 2, 3);
+                for (let dz2 of [-19, 19]) add(0, x, y + 11, z + dz2, 24, 2, 3);
                 if (
                   (beam([x, y - 16, z - 43], [x, y - 16, z + 43], 2),
                   beam([x, y - 16, z - 43], [x, y + 8, z], 1.2),
@@ -41445,10 +41670,10 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
                   add(5, x, y + 2, z + 32.5, 10, 10, 1.4);
                   for (let sideX of [-1, 1]) add(0, x + sideX * 5.7, y + 2, z + 32.8, 1, 10, 1.5);
                 }
-                for (let dz of [-25, 25])
-                  for (let sideX of [-1, 1]) add(0, x + sideX * 11.8, y, z + dz, 2, 4, 3);
+                for (let dz2 of [-25, 25])
+                  for (let sideX of [-1, 1]) add(0, x + sideX * 11.8, y, z + dz2, 2, 4, 3);
                 (add(0, x, y + 13, z, 27, 1.5, 58), add(2, x, y + 16, z, 29, 2, 55));
-                for (let dz of [-26, 26]) add(0, x, y + 17.4, z + dz, 30, 0.8, 2.4);
+                for (let dz2 of [-26, 26]) add(0, x, y + 17.4, z + dz2, 30, 0.8, 2.4);
               }
             root.add(mergedShipDetail(pressureDetails, steel, "pressure-module-welds", 1));
             let bridgeBase = Math.min(deck(0, -315), deck(0, -265)) - 1.5,
@@ -41539,12 +41764,12 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
                   x = side * w * 0.43;
                 (add(1, x, h + 0.4, z, Math.max(7, w * 0.13), 1.2, 57, q),
                   add(0, x, h + 1.3, z, 2, 1.3, 51, q));
-                for (let dz of [-20, 20])
+                for (let dz2 of [-20, 20])
                   add(
                     2,
                     x,
-                    h + 2 - dz * Math.sin(-slope2),
-                    z + dz,
+                    h + 2 - dz2 * Math.sin(-slope2),
+                    z + dz2,
                     Math.max(8, w * 0.14),
                     1.2,
                     2,
@@ -41559,13 +41784,13 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
                   slope2 = (section(z + 1).h - section(z - 1).h) / 2,
                   q = new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), Math.atan(slope2));
                 (add(1, x, -h - 1.3, z, 47, 3.8, 49, q), add(2, x, -h - 3.1, z, 41, 1.4, 43, q));
-                for (let dx of [-17, 17])
-                  for (let dz of [-17, 17]) {
-                    let p = new Vector3(dx, -4, dz).applyQuaternion(q);
+                for (let dx2 of [-17, 17])
+                  for (let dz2 of [-17, 17]) {
+                    let p = new Vector3(dx2, -4, dz2).applyQuaternion(q);
                     add(0, x + p.x, -h + p.y, z + p.z, 1.9, 0.7, 1.9, q);
                   }
-                for (let dz of [-13, 13]) {
-                  let p = new Vector3(21, -3.3, dz).applyQuaternion(q);
+                for (let dz2 of [-13, 13]) {
+                  let p = new Vector3(21, -3.3, dz2).applyQuaternion(q);
                   add(0, x + p.x, -h + p.y, z + p.z, 2.2, 1, 5, q);
                 }
               }
@@ -41620,10 +41845,10 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
               let rootWidth = Math.max(section(-415).w, section(-220).w, section(-85).w) + 26,
                 position = new Vector3(side * rootWidth, 4, -250);
               beam([side * (section(-250).w - 8), 4, -250], [position.x + side * 4, 4, -250], 5);
-              for (let dz of [-105.6, 105.6])
+              for (let dz2 of [-105.6, 105.6])
                 beam(
-                  [side * (section(-250 + dz).w - 8), 4, -250 + dz],
-                  [position.x - side * 19, 4, -250 + dz],
+                  [side * (section(-250 + dz2).w - 8), 4, -250 + dz2],
+                  [position.x - side * 19, 4, -250 + dz2],
                   5,
                 );
               deployables.push(
@@ -41900,9 +42125,9 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
             block2(seals, [1.2, 10.6, 30], [side * 185, 0, -362]),
             tier2 !== "low")
           )
-            for (let dz of [-12, 12])
+            for (let dz2 of [-12, 12])
               for (let y of [-3.8, 3.8])
-                block2(fittings, [1.8, 1.2, 1.2], [side * 186.2, y, -362 + dz]);
+                block2(fittings, [1.8, 1.2, 1.2], [side * 186.2, y, -362 + dz2]);
         if (
           (block2(fittings, [9, 8, 16], [0, 149, -423]),
           block2(seals, [9.6, 1.3, 16.6], [0, 145, -423]),
@@ -42125,13 +42350,13 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
                 (j !== 2 || k === 2) && block2(4, x + side * 28.6, 7, z - 30 + k * 14, 1, 0.8, 1.8);
               if ((block2(5, x, 30, z - 23, 18, 1, 8), j === 0 || j === 4)) {
                 block2(5, x, 0, z + 46.4, 23, 24, 1.2);
-                for (let dx of [-12.5, 12.5]) block2(2, x + dx, 0, z + 46.7, 1.2, 24, 1);
+                for (let dx2 of [-12.5, 12.5]) block2(2, x + dx2, 0, z + 46.7, 1.2, 24, 1);
               }
-              for (let dz of [-(47 - 29 * 0.44 - 3), 47 - 29 * 0.44 - 3])
+              for (let dz2 of [-(47 - 29 * 0.44 - 3), 47 - 29 * 0.44 - 3])
                 for (let a of [0, Math.PI / 2, Math.PI, Math.PI * 1.5])
-                  block2(2, x + Math.cos(a) * 30.3, Math.sin(a) * 30.3, z + dz, 2.4, 2.4, 6.8);
+                  block2(2, x + Math.cos(a) * 30.3, Math.sin(a) * 30.3, z + dz2, 2.4, 2.4, 6.8);
               beam([x + side * 17, -23, z - 42], [x + side * 17, -23, z + 42], 2.2);
-              for (let dz of [-36, 36]) block2(2, x, 33, z + dz, 34, 2, 3);
+              for (let dz2 of [-36, 36]) block2(2, x, 33, z + dz2, 34, 2, 3);
             }
           (ship.add(
             mergedShipDetail(pressureDetails, mats[2], "pressure-module-straps-and-welds", 1),
@@ -42271,9 +42496,9 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
                 block2(4, rim(176) * Math.cos(a), rim(176) * Math.sin(a), z + 18, 3, 0.65, 1, q);
               }
             }
-            for (let dz of [-9, 9]) {
+            for (let dz2 of [-9, 9]) {
               let hub = ringShieldGeometry(56, 68, 4, 0, Math.PI * 2, tier2);
-              (hub.translate(0, 0, z + dz), hubs.push(hub));
+              (hub.translate(0, 0, z + dz2), hubs.push(hub));
             }
             for (let j = 0; j < 6; j++) {
               let a = (j * Math.PI) / 3,
@@ -42300,9 +42525,9 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           ship.add(mergedShipDetail(bearings, mats[2], "stationary-ring-bearing-housings", 0));
           let seals = [];
           for (let z of HABITAT_RING_Z)
-            for (let dz of [-10.2, 10.2]) {
+            for (let dz2 of [-10.2, 10.2]) {
               let lip = ringShieldGeometry(52, 55.5, 1.2, 0, Math.PI * 2, tier2);
-              (lip.translate(0, 0, z + dz), seals.push(lip));
+              (lip.translate(0, 0, z + dz2), seals.push(lip));
             }
           (ship.add(mergedShipDetail(seals, mats[1], "stationary-hub-seal-lips", 0)),
             (partParent = ship),
@@ -66064,14 +66289,14 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           traceAt: 108,
           recoverAt: 114,
         }),
-        smooth3 = (t, a, b) => {
+        smooth4 = (t, a, b) => {
           let u = Math.max(0, Math.min(1, (t - a) / (b - a)));
           return u * u * u * (u * (u * 6 - 15) + 10);
         };
       function arrivalHandoffGain(elapsed) {
         let t = elapsed + 68,
           h = ARRIVAL_HANDOFF;
-        return 1 - smooth3(t, h.settleAt, h.stillAt) + smooth3(t, h.traceAt, h.recoverAt);
+        return 1 - smooth4(t, h.settleAt, h.stillAt) + smooth4(t, h.traceAt, h.recoverAt);
       }
 
       // works/shared/journey-score.js
@@ -67479,7 +67704,7 @@ vShieldFinish=shieldFinish;`,
           mid: { dpr: 1.25, shadow: 1024 },
           low: { dpr: 0.9, shadow: 512 },
         }[tier],
-        smooth4 = (x) => ((x = MathUtils.clamp(x, 0, 1)), x * x * (3 - 2 * x)),
+        smooth5 = (x) => ((x = MathUtils.clamp(x, 0, 1)), x * x * (3 - 2 * x)),
         schedule = [
           { start: 1.5, duration: 69, z: -150, x: 50, y: 20, scale: 1.6 },
           { start: 4, duration: 70, z: -1400, x: -800, y: 220, scale: 0.65 },
@@ -67637,7 +67862,7 @@ vShieldFinish=shieldFinish;`,
           (ship.position.set(s.x, s.y, anchorZ - depth),
             ship.scale.setScalar(s.scale),
             (ship.visible = phase === "migration" && (!opening || i === 0)));
-          let correction = smooth4((flightTime - 64 - i * 3) / 22);
+          let correction = smooth5((flightTime - 64 - i * 3) / 22);
           (ship.rotation.set(-0.025 + i * 8e-3, -0.13 + correction * 0.085, (i - 2) * 0.012),
             phase === "migration" && openingFlyby(ship.position, i, seconds, ship.quaternion),
             updateAttitudeJets(ship, i, phase === "migration" ? seconds : -1),
@@ -67691,8 +67916,8 @@ vShieldFinish=shieldFinish;`,
           let start2 = currentShot === "ring-rear" ? MIGRATION_CUTS[2] : MIGRATION_CUTS[3],
             end = currentShot === "ring-rear" ? MIGRATION_CUTS[3] : segment.duration,
             envelope =
-              smooth4((seconds - start2) / 1.5) *
-              smooth4((end - seconds) / (currentShot === "ring-rear" ? 1.5 : 4));
+              smooth5((seconds - start2) / 1.5) *
+              smooth5((end - seconds) / (currentShot === "ring-rear" ? 1.5 : 4));
           applyCameraVibration(seconds, camera, 0.7 * envelope);
         }
         (phase === "arrival" &&
@@ -67760,8 +67985,8 @@ vShieldFinish=shieldFinish;`,
               (opening || currentShot === "ring-rear" || currentShot === "escort-closeup"),
           ),
           habitat && audio.setEnvironment(habitat.model.state));
-        let enter = smooth4((seconds - segment.start) / 0.75),
-          exit = 1 - smooth4((seconds - (endTime - 1.2)) / 0.9),
+        let enter = smooth5((seconds - segment.start) / 0.75),
+          exit = 1 - smooth5((seconds - (endTime - 1.2)) / 0.9),
           veil = Math.max(1 - enter, 1 - exit);
         for (let at of cutTimes) veil = Math.max(veil, transitionVeil(seconds, at));
         if (
@@ -67769,7 +67994,7 @@ vShieldFinish=shieldFinish;`,
           arrivalIntro && phase === "arrival")
         ) {
           let introTime = seconds - segment.start,
-            opacity = smooth4((introTime - 0.4) / 1.5) * (1 - smooth4((introTime - 5) / 2));
+            opacity = smooth5((introTime - 0.4) / 1.5) * (1 - smooth5((introTime - 5) / 2));
           opacity !== introOpacity &&
             ((introOpacity = opacity), (arrivalIntro.style.opacity = String(opacity)));
         }
@@ -67849,6 +68074,7 @@ vShieldFinish=shieldFinish;`,
         recovery?.lost || ((paused = !1), pacer.reset(), audio.resume());
       }
       try {
+        let modelAsset = phase === "arrival" ? await prepareSceneModel("arrival", tier) : null;
         ((renderer = new WebGLRenderer({
           antialias: !0,
           powerPreference: tier === "low" ? "low-power" : "high-performance",
@@ -68002,6 +68228,7 @@ vShieldFinish=shieldFinish;`,
                 bays: s.userData.serviceBays,
                 hatches: s.userData.accessHatches,
               })),
+              modelLoad: modelAsset?.info ?? null,
               shadowSpan: keyLight.shadow.camera.right,
               referenceArks: fleet.filter((s) => s.name === "sf-migration-ark").length,
               originalArks: fleet.filter((s) => s.name.startsWith("ark-")).length,
