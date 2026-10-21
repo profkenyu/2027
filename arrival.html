@@ -67848,7 +67848,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
       // works/first_dawn/arrival-drone.js
       var DRONE_START = 34,
         ARRIVAL_HOLD = 8,
-        originalDroneEnd = (inherited) => (inherited ? 82 : 124),
+        originalDroneEnd = () => 124,
         INSPECTION_EXTENSION = 18,
         droneEnd = (inherited) => originalDroneEnd(inherited) + INSPECTION_EXTENSION;
       function droneClock(elapsed, inherited = !1) {
@@ -67858,7 +67858,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
         if (elapsed <= inspectionStart) return elapsed;
         let originalTail = originalEnd - inspectionStart,
           stretchedTail = originalTail + INSPECTION_EXTENSION,
-          ramp = inherited ? 6 : 8,
+          ramp = 8,
           cruise = (originalTail - ramp / 2) / (stretchedTail - ramp / 2),
           t = Math.min(elapsed - inspectionStart, stretchedTail);
         if (t >= ramp) return inspectionStart + (ramp * (1 + cruise)) / 2 + (t - ramp) * cruise;

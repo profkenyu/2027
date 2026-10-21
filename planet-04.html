@@ -1098,6 +1098,94 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
         },
       });
 
+      // works/candidate/rover-motion.js
+      var ROVER_GUIDANCE = Object.freeze({
+          acceleration: 0.9,
+          braking: 1.4,
+          turnRate: 0.72,
+          step: 0.008333333333333333,
+        }),
+        clamp = (value, lo, hi) => Math.max(lo, Math.min(hi, value)),
+        approach = (value, target2, amount) => value + clamp(target2 - value, -amount, amount),
+        wrap = (angle) => Math.atan2(Math.sin(angle), Math.cos(angle));
+      function createRoverMotion() {
+        let speed = 0,
+          yawRate = 0,
+          headingError = 0,
+          result = { travelled: 0, arrived: !1 };
+        function changeSpeed(target2, dt) {
+          let rate =
+            speed * target2 < 0 || Math.abs(target2) < Math.abs(speed)
+              ? ROVER_GUIDANCE.braking
+              : ROVER_GUIDANCE.acceleration;
+          speed = approach(speed, target2, rate * dt);
+        }
+        return {
+          get speed() {
+            return speed;
+          },
+          reset() {
+            speed = yawRate = headingError = 0;
+          },
+          toward(position2, forward2, x, z, dt, cruise = 3.4, tolerance = 1.2) {
+            let heading = Math.atan2(forward2.x, forward2.z),
+              travelled = 0,
+              stopRadius = Math.min(0.24, tolerance * 0.4);
+            for (let left = dt; left > 1e-9; ) {
+              let h = Math.min(left, ROVER_GUIDANCE.step);
+              left -= h;
+              let dx2 = x - position2.x,
+                dz2 = z - position2.z,
+                distance = Math.hypot(dx2, dz2);
+              headingError = distance > 1e-6 ? wrap(Math.atan2(dx2, dz2) - heading) : 0;
+              let turn = clamp(
+                headingError,
+                -ROVER_GUIDANCE.turnRate * h,
+                ROVER_GUIDANCE.turnRate * h,
+              );
+              ((heading = wrap(heading + turn)), (yawRate = turn / h));
+              let alignment = Math.max(0, Math.cos(headingError)) ** 6,
+                remaining = Math.max(0, distance - stopRadius),
+                target2 =
+                  Math.min(
+                    cruise,
+                    Math.sqrt(2 * ROVER_GUIDANCE.braking * remaining) * 0.7,
+                    remaining * 1.8,
+                  ) * alignment;
+              changeSpeed(target2, h);
+              let step = Math.min(Math.max(0, speed) * h, remaining);
+              ((position2.x += Math.sin(heading) * step),
+                (position2.z += Math.cos(heading) * step),
+                (travelled += step));
+            }
+            return (
+              forward2.set(Math.sin(heading), 0, Math.cos(heading)),
+              (result.travelled = travelled),
+              (result.arrived =
+                Math.hypot(x - position2.x, z - position2.z) < tolerance && Math.abs(speed) < 0.01),
+              result
+            );
+          },
+          manual(position2, forward2, throttle, steer, dt) {
+            let heading = Math.atan2(forward2.x, forward2.z),
+              travelled = 0;
+            for (let left = dt; left > 1e-9; ) {
+              let h = Math.min(left, ROVER_GUIDANCE.step);
+              ((left -= h),
+                (yawRate = clamp(steer, -1, 1) * ROVER_GUIDANCE.turnRate),
+                (heading = wrap(heading + yawRate * h)),
+                changeSpeed(clamp(throttle, -1, 1) * 3, h));
+              let step = speed * h;
+              ((position2.x += Math.sin(heading) * step),
+                (position2.z += Math.cos(heading) * step),
+                (travelled += step));
+            }
+            return (forward2.set(Math.sin(heading), 0, Math.cos(heading)), travelled);
+          },
+          snapshot: () => ({ speed, yawRate, headingError }),
+        };
+      }
+
       // works/shared/shadow-budget.js
       function createShadowBudget(renderer2, tier2) {
         let last = -1 / 0,
@@ -1831,7 +1919,7 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
           _lut[(d3 >> 24) & 255]
         ).toLowerCase();
       }
-      function clamp(value, min, max) {
+      function clamp2(value, min, max) {
         return Math.max(min, Math.min(max, value));
       }
       function euclideanModulo(n, m) {
@@ -1993,7 +2081,7 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
            * @param {number} max - The max value.
            * @return {number} The clamped value.
            */
-          clamp,
+          clamp: clamp2,
           /**
            * Computes the Euclidean modulo of the given parameters that
            * is `( ( n % m ) + m ) % m`.
@@ -2491,8 +2579,8 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
            */
           clamp(min, max) {
             return (
-              (this.x = clamp(this.x, min.x, max.x)),
-              (this.y = clamp(this.y, min.y, max.y)),
+              (this.x = clamp2(this.x, min.x, max.x)),
+              (this.y = clamp2(this.y, min.y, max.y)),
               this
             );
           }
@@ -2508,8 +2596,8 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
            */
           clampScalar(minVal, maxVal) {
             return (
-              (this.x = clamp(this.x, minVal, maxVal)),
-              (this.y = clamp(this.y, minVal, maxVal)),
+              (this.x = clamp2(this.x, minVal, maxVal)),
+              (this.y = clamp2(this.y, minVal, maxVal)),
               this
             );
           }
@@ -2525,7 +2613,7 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
            */
           clampLength(min, max) {
             let length = this.length();
-            return this.divideScalar(length || 1).multiplyScalar(clamp(length, min, max));
+            return this.divideScalar(length || 1).multiplyScalar(clamp2(length, min, max));
           }
           /**
            * The components of this vector are rounded down to the nearest integer value.
@@ -2639,7 +2727,7 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
             let denominator = Math.sqrt(this.lengthSq() * v.lengthSq());
             if (denominator === 0) return Math.PI / 2;
             let theta = this.dot(v) / denominator;
-            return Math.acos(clamp(theta, -1, 1));
+            return Math.acos(clamp2(theta, -1, 1));
           }
           /**
            * Computes the distance from the given vector to this instance.
@@ -3118,7 +3206,7 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
            * @return {number} The angle in radians.
            */
           angleTo(q) {
-            return 2 * Math.acos(Math.abs(clamp(this.dot(q), -1, 1)));
+            return 2 * Math.acos(Math.abs(clamp2(this.dot(q), -1, 1)));
           }
           /**
            * Rotates this quaternion by a given angular step to the given quaternion.
@@ -3814,9 +3902,9 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
            */
           clamp(min, max) {
             return (
-              (this.x = clamp(this.x, min.x, max.x)),
-              (this.y = clamp(this.y, min.y, max.y)),
-              (this.z = clamp(this.z, min.z, max.z)),
+              (this.x = clamp2(this.x, min.x, max.x)),
+              (this.y = clamp2(this.y, min.y, max.y)),
+              (this.z = clamp2(this.z, min.z, max.z)),
               this
             );
           }
@@ -3832,9 +3920,9 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
            */
           clampScalar(minVal, maxVal) {
             return (
-              (this.x = clamp(this.x, minVal, maxVal)),
-              (this.y = clamp(this.y, minVal, maxVal)),
-              (this.z = clamp(this.z, minVal, maxVal)),
+              (this.x = clamp2(this.x, minVal, maxVal)),
+              (this.y = clamp2(this.y, minVal, maxVal)),
+              (this.z = clamp2(this.z, minVal, maxVal)),
               this
             );
           }
@@ -3850,7 +3938,7 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
            */
           clampLength(min, max) {
             let length = this.length();
-            return this.divideScalar(length || 1).multiplyScalar(clamp(length, min, max));
+            return this.divideScalar(length || 1).multiplyScalar(clamp2(length, min, max));
           }
           /**
            * The components of this vector are rounded down to the nearest integer value.
@@ -4074,7 +4162,7 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
             let denominator = Math.sqrt(this.lengthSq() * v.lengthSq());
             if (denominator === 0) return Math.PI / 2;
             let theta = this.dot(v) / denominator;
-            return Math.acos(clamp(theta, -1, 1));
+            return Math.acos(clamp2(theta, -1, 1));
           }
           /**
            * Computes the distance from the given vector to this instance.
@@ -5863,10 +5951,10 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
            */
           clamp(min, max) {
             return (
-              (this.x = clamp(this.x, min.x, max.x)),
-              (this.y = clamp(this.y, min.y, max.y)),
-              (this.z = clamp(this.z, min.z, max.z)),
-              (this.w = clamp(this.w, min.w, max.w)),
+              (this.x = clamp2(this.x, min.x, max.x)),
+              (this.y = clamp2(this.y, min.y, max.y)),
+              (this.z = clamp2(this.z, min.z, max.z)),
+              (this.w = clamp2(this.w, min.w, max.w)),
               this
             );
           }
@@ -5882,10 +5970,10 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
            */
           clampScalar(minVal, maxVal) {
             return (
-              (this.x = clamp(this.x, minVal, maxVal)),
-              (this.y = clamp(this.y, minVal, maxVal)),
-              (this.z = clamp(this.z, minVal, maxVal)),
-              (this.w = clamp(this.w, minVal, maxVal)),
+              (this.x = clamp2(this.x, minVal, maxVal)),
+              (this.y = clamp2(this.y, minVal, maxVal)),
+              (this.z = clamp2(this.z, minVal, maxVal)),
+              (this.w = clamp2(this.w, minVal, maxVal)),
               this
             );
           }
@@ -5901,7 +5989,7 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
            */
           clampLength(min, max) {
             let length = this.length();
-            return this.divideScalar(length || 1).multiplyScalar(clamp(length, min, max));
+            return this.divideScalar(length || 1).multiplyScalar(clamp2(length, min, max));
           }
           /**
            * The components of this vector are rounded down to the nearest integer value.
@@ -7705,37 +7793,37 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
               m33 = te[10];
             switch (order) {
               case "XYZ":
-                ((this._y = Math.asin(clamp(m13, -1, 1))),
+                ((this._y = Math.asin(clamp2(m13, -1, 1))),
                   Math.abs(m13) < 0.9999999
                     ? ((this._x = Math.atan2(-m23, m33)), (this._z = Math.atan2(-m12, m11)))
                     : ((this._x = Math.atan2(m32, m22)), (this._z = 0)));
                 break;
               case "YXZ":
-                ((this._x = Math.asin(-clamp(m23, -1, 1))),
+                ((this._x = Math.asin(-clamp2(m23, -1, 1))),
                   Math.abs(m23) < 0.9999999
                     ? ((this._y = Math.atan2(m13, m33)), (this._z = Math.atan2(m21, m22)))
                     : ((this._y = Math.atan2(-m31, m11)), (this._z = 0)));
                 break;
               case "ZXY":
-                ((this._x = Math.asin(clamp(m32, -1, 1))),
+                ((this._x = Math.asin(clamp2(m32, -1, 1))),
                   Math.abs(m32) < 0.9999999
                     ? ((this._y = Math.atan2(-m31, m33)), (this._z = Math.atan2(-m12, m22)))
                     : ((this._y = 0), (this._z = Math.atan2(m21, m11))));
                 break;
               case "ZYX":
-                ((this._y = Math.asin(-clamp(m31, -1, 1))),
+                ((this._y = Math.asin(-clamp2(m31, -1, 1))),
                   Math.abs(m31) < 0.9999999
                     ? ((this._x = Math.atan2(m32, m33)), (this._z = Math.atan2(m21, m11)))
                     : ((this._x = 0), (this._z = Math.atan2(-m12, m22))));
                 break;
               case "YZX":
-                ((this._z = Math.asin(clamp(m21, -1, 1))),
+                ((this._z = Math.asin(clamp2(m21, -1, 1))),
                   Math.abs(m21) < 0.9999999
                     ? ((this._x = Math.atan2(-m23, m22)), (this._y = Math.atan2(-m31, m11)))
                     : ((this._x = 0), (this._y = Math.atan2(m13, m33))));
                 break;
               case "XZY":
-                ((this._z = Math.asin(-clamp(m12, -1, 1))),
+                ((this._z = Math.asin(-clamp2(m12, -1, 1))),
                   Math.abs(m12) < 0.9999999
                     ? ((this._x = Math.atan2(m32, m22)), (this._y = Math.atan2(m13, m11)))
                     : ((this._x = Math.atan2(-m23, m33)), (this._y = 0)));
@@ -9297,7 +9385,9 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
            * @return {Color} A reference to this color.
            */
           setHSL(h, s, l, colorSpace = ColorManagement.workingColorSpace) {
-            if (((h = euclideanModulo(h, 1)), (s = clamp(s, 0, 1)), (l = clamp(l, 0, 1)), s === 0))
+            if (
+              ((h = euclideanModulo(h, 1)), (s = clamp2(s, 0, 1)), (l = clamp2(l, 0, 1)), s === 0)
+            )
               this.r = this.g = this.b = l;
             else {
               let p = l <= 0.5 ? l * (1 + s) : l + s - l * s,
@@ -9490,9 +9580,9 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
           getHex(colorSpace = SRGBColorSpace) {
             return (
               ColorManagement.workingToColorSpace(_color.copy(this), colorSpace),
-              Math.round(clamp(_color.r * 255, 0, 255)) * 65536 +
-                Math.round(clamp(_color.g * 255, 0, 255)) * 256 +
-                Math.round(clamp(_color.b * 255, 0, 255))
+              Math.round(clamp2(_color.r * 255, 0, 255)) * 65536 +
+                Math.round(clamp2(_color.g * 255, 0, 255)) * 256 +
+                Math.round(clamp2(_color.b * 255, 0, 255))
             );
           }
           /**
@@ -15125,7 +15215,7 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
                 phiLength,
               }),
               (segments = Math.floor(segments)),
-              (phiLength = clamp(phiLength, 0, Math.PI * 2)));
+              (phiLength = clamp2(phiLength, 0, Math.PI * 2)));
             let indices = [],
               vertices = [],
               uvs = [],
@@ -15764,7 +15854,7 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
               (this.ior = 1.5),
               Object.defineProperty(this, "reflectivity", {
                 get: function () {
-                  return clamp((2.5 * (this.ior - 1)) / (this.ior + 1), 0, 1);
+                  return clamp2((2.5 * (this.ior - 1)) / (this.ior + 1), 0, 1);
                 },
                 set: function (reflectivity) {
                   this.ior = (1 + 0.4 * reflectivity) / (1 - 0.4 * reflectivity);
@@ -34550,11 +34640,11 @@ void main() {
             let gas = 0,
               dust = 0;
             if (phase === "landing") {
-              let approach = 1 - MathUtils.smoothstep(currentAltitude, 4, 24),
+              let approach2 = 1 - MathUtils.smoothstep(currentAltitude, 4, 24),
                 cutoff = 1 - MathUtils.smoothstep(elapsed, 15.65, 16);
               ((gas =
-                approach * cutoff * (0.42 + 0.58 * MathUtils.smoothstep(currentAltitude, 0, 3))),
-                (dust = approach * Math.exp(-currentAltitude * 0.32) * (0.78 + 0.22 * cutoff)));
+                approach2 * cutoff * (0.42 + 0.58 * MathUtils.smoothstep(currentAltitude, 0, 3))),
+                (dust = approach2 * Math.exp(-currentAltitude * 0.32) * (0.78 + 0.22 * cutoff)));
             } else if (phase === "deploy" && elapsed < 5.5)
               dust =
                 0.78 * Math.exp(-elapsed * 0.82) * (1 - MathUtils.smoothstep(elapsed, 3.2, 5.5));
@@ -35583,7 +35673,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
       }
 
       // works/first_dawn/habitat/conditions.js
-      var clamp2 = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v)),
+      var clamp3 = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v)),
         mean = (rows, key) => rows.reduce((sum, row) => sum + row[key], 0) / rows.length;
       function surveyConditions(ledger, geology) {
         let samples = ledger?.samples,
@@ -35604,14 +35694,14 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
         return {
           version: 1,
           // These are suitability indices assigned to the identified material classes.
-          insulation: clamp2(names.filter((s) => /SILICATE|CARBON|CERAMIC/.test(s)).length / 2),
-          conduction: clamp2(
+          insulation: clamp3(names.filter((s) => /SILICATE|CARBON|CERAMIC/.test(s)).length / 2),
+          conduction: clamp3(
             names.filter((s) => /^FE[–-]|ALLOY|CONDUCTIVE|METAL/.test(s)).length / 2,
           ),
-          thermalDemand: clamp2(Math.abs(water.thermalDeltaK) / 32),
-          fines: clamp2(water.particleDensity),
-          correlation: clamp2(mean(sites, "coherence")),
-          substrate: clamp2(
+          thermalDemand: clamp3(Math.abs(water.thermalDeltaK) / 32),
+          fines: clamp3(water.particleDensity),
+          correlation: clamp3(mean(sites, "coherence")),
+          substrate: clamp3(
             mean(sites, "density") * 0.65 + (1 - mean(sites, "reflectance")) * 0.35,
           ),
           sampleCount: samples.length,
@@ -35677,7 +35767,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
         LV = 25e5,
         CP = 4200,
         SOIL = 3e4,
-        clamp3 = (x, a, b) => Math.max(a, Math.min(b, x));
+        clamp4 = (x, a, b) => Math.max(a, Math.min(b, x));
       function createBasinModel(
         heightAt,
         saved = null,
@@ -35710,7 +35800,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
               x = SITE.x + (i / (GRID - 1) - 0.5) * SITE.size,
               z = SITE.z + (j / (GRID - 1) - 0.5) * SITE.size;
             ((height[k] = heightAt(x, z)),
-              (shelter[k] = clamp3((heightAt(x - 110, z + 80) - height[k]) / 65, 0, 1)));
+              (shelter[k] = clamp4((heightAt(x - 110, z + 80) - height[k]) / 65, 0, 1)));
             let valley = Math.exp(-Math.pow((x - SITE.x - 70 * Math.sin(j * 0.055)) / 200, 2));
             ((water[k] =
               (0.03 + 0.85 * valley * (0.35 + 0.65 * shelter[k])) *
@@ -35900,7 +35990,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
             (state2.flow = 0));
           for (let k = 0; k < COUNT; k++) {
             let ice = water[k] - liquid[k],
-              albedo = 0.19 + 0.49 * clamp3(ice / 0.32, 0, 1),
+              albedo = 0.19 + 0.49 * clamp4(ice / 0.32, 0, 1),
               kelvin = temperature[k] + 273.15,
               loss = 0.92 * 5670374419e-17 * (kelvin ** 4 - 250 ** 4) + 1.6 * (kelvin - 263),
               q =
@@ -36641,7 +36731,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
         }),
         fract = (x) => x - Math.floor(x),
         hash = (x, y) => fract(Math.sin(x * 127.1 + y * 311.7) * 43758.5453),
-        clamp4 = (x) => Math.max(0, Math.min(1, x)),
+        clamp5 = (x) => Math.max(0, Math.min(1, x)),
         noise = (u, v, cells) => {
           let x = u * cells,
             y = v * cells,
@@ -36681,7 +36771,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
                 cross = Math.sin(2 * Math.PI * (v * 9 - u * 3 + warp * 0.55)),
                 crease = Math.exp(-Math.abs(fold) * 15),
                 crinkle = Math.exp(-Math.abs(cross) * 12);
-              ((height = clamp4(
+              ((height = clamp5(
                 0.5 +
                   fold * 0.19 +
                   cross * 0.065 -
@@ -36690,7 +36780,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
                   (fine - 0.5) * 0.05,
               )),
                 (tone = 0.955 + (broad - 0.5) * 0.025),
-                (rough = clamp4(0.72 + (broad - 0.5) * 0.23 + crease * 0.16 + crinkle * 0.08)),
+                (rough = clamp5(0.72 + (broad - 0.5) * 0.23 + crease * 0.16 + crinkle * 0.08)),
                 (tint = (broad - 0.5) * 0.025));
             } else if (
               kind === "aluminum" ||
@@ -36707,7 +36797,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
               ((tone = 0.962 + (broad - 0.5) * 0.04 - scratch * 0.06),
                 (height =
                   0.5 + brush * 0.033 + machining * 0.02 + (fine - 0.5) * 0.01 - scratch * 0.08),
-                (rough = clamp4(
+                (rough = clamp5(
                   (kind.endsWith("steel") ? 0.82 : 0.9) +
                     brush * 0.13 +
                     (finishField - 0.5) * 0.13 +
@@ -36718,7 +36808,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
               let pore = Math.max(0, (fine - 0.71) / 0.29);
               ((tone = 0.96 + (broad - 0.5) * 0.025 - pore * 0.025),
                 (height = 0.5 + (fine - 0.5) * 0.022 - pore * 0.035),
-                (rough = clamp4(0.96 + n * 0.025 + pore * 0.015)));
+                (rough = clamp5(0.96 + n * 0.025 + pore * 0.015)));
             } else if (kind === "radiator") {
               let channel = Math.abs(fract(v * 12) - 0.5) > 0.465;
               ((tone = channel ? 0.66 : 0.955 + (broad - 0.5) * 0.025),
@@ -36733,12 +36823,12 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
                   (height = 0.5 + (fine - 0.5) * 0.042 + (n - 0.5) * 8e-3),
                   (rough = 0.95 + (finishField - 0.5) * 0.07 + (fine - 0.5) * 0.035));
             let i = (y * size + x) * 4;
-            ((color[i] = Math.round(clamp4(tone + tint) * 255)),
-              (color[i + 1] = Math.round(clamp4(tone) * 255)),
-              (color[i + 2] = Math.round(clamp4(tone - tint) * 255)),
+            ((color[i] = Math.round(clamp5(tone + tint) * 255)),
+              (color[i + 1] = Math.round(clamp5(tone) * 255)),
+              (color[i + 2] = Math.round(clamp5(tone - tint) * 255)),
               (color[i + 3] = 255),
-              (data[i] = Math.round(clamp4(height) * 255)),
-              (data[i + 1] = Math.round(clamp4(rough) * 255)),
+              (data[i] = Math.round(clamp5(height) * 255)),
+              (data[i + 1] = Math.round(clamp5(rough) * 255)),
               (data[i + 2] = 0),
               (data[i + 3] = 255));
           }
@@ -37596,7 +37686,7 @@ vHullPosition=position;`,
             next: null,
           },
         }),
-        clamp5 = (x, a, b) => Math.max(a, Math.min(b, x));
+        clamp6 = (x, a, b) => Math.max(a, Math.min(b, x));
       function readPostMission() {
         try {
           let s = JSON.parse(sessionStorage.getItem(POST_KEY) || "null");
@@ -37659,9 +37749,9 @@ vHullPosition=position;`,
             samples: 6,
             water: !0,
             nodes: 3,
-            temperature: clamp5(environment2.temperature, 100, 500),
-            energy: clamp5(environment2.energy, 0, 1),
-            radiation: clamp5(environment2.radiation, 0, 1),
+            temperature: clamp6(environment2.temperature, 100, 500),
+            energy: clamp6(environment2.energy, 0, 1),
+            radiation: clamp6(environment2.radiation, 0, 1),
             distance: Math.max(0, ledger.journey?.distance ?? 0),
             sampleSignatures: sampleSignatures(ledger.samples),
             settlementSurvey: surveyConditions(ledger, geology),
@@ -37745,7 +37835,7 @@ vHullPosition=position;`,
       var DEFAULT_FIELD_ARCHIVE_KEY = "terra-incognita:field-archive:v4";
       var finite = (value, fallback = 0) =>
           Number.isFinite(Number(value)) ? Number(value) : fallback,
-        clamp6 = (value, min, max) => Math.max(min, Math.min(max, value)),
+        clamp7 = (value, min, max) => Math.max(min, Math.min(max, value)),
         RESOURCE_LABEL_SUFFIX =
           /\s*\xB7\s*(?:FIELD\s*\d+|EVIDENCE|RESOLVED POTENTIAL.*|SAMPLE RECORD|MODEL CANDIDATE.*|조사 지점\s*\d+|관측 증거|후보 지점.*)$/i,
         ARCHIVE_TRANSLATIONS = Object.freeze([
@@ -37872,10 +37962,10 @@ vHullPosition=position;`,
           profile: ARCHIVE_CAPTURE_PROFILES[requested] ? requested : "wide",
           lens: archiveEnglish(capture.lens, base.lens),
           viewpoint: archiveEnglish(capture.viewpoint, base.viewpoint),
-          aspect: clamp6(finite(capture.aspect, base.aspect), 0.5, 2.5),
-          zoom: clamp6(finite(capture.zoom, base.zoom), 1, 3.2),
-          focusX: clamp6(finite(capture.focusX, base.focusX), 0, 1),
-          focusY: clamp6(finite(capture.focusY, base.focusY), 0, 1),
+          aspect: clamp7(finite(capture.aspect, base.aspect), 0.5, 2.5),
+          zoom: clamp7(finite(capture.zoom, base.zoom), 1, 3.2),
+          focusX: clamp7(finite(capture.focusX, base.focusX), 0, 1),
+          focusY: clamp7(finite(capture.focusY, base.focusY), 0, 1),
           projection: ["fisheye", "rectilinear"].includes(capture.projection)
             ? capture.projection
             : base.projection,
@@ -37898,7 +37988,7 @@ vHullPosition=position;`,
           label: archiveEnglish(source?.label),
           x: finite(source?.x),
           z: finite(source?.z),
-          radius: clamp6(finite(source?.radius, 10), 1, 120),
+          radius: clamp7(finite(source?.radius, 10), 1, 120),
           order: stationOrder(source),
           resourceItem:
             source?.resourceItem == null
@@ -48441,7 +48531,7 @@ vHullPosition=position;`,
       function EQ(a, b) {
         return Math.abs(a - b) < 1e-6;
       }
-      function clamp7(value, min, max) {
+      function clamp8(value, min, max) {
         return Math.max(Math.min(value, max), min);
       }
 
@@ -54652,7 +54742,7 @@ vHullPosition=position;`,
               this._inverseFFT(real, imag, (i / testPositions) * twoPi),
               maxValue,
             );
-          return clamp7(-this._inverseFFT(real, imag, this._phase) / maxValue, -1, 1);
+          return clamp8(-this._inverseFFT(real, imag, this._phase) / maxValue, -1, 1);
         }
         get partials() {
           return this._partials.slice(0, this.partialCount);
@@ -57818,11 +57908,13 @@ vHullPosition=position;`,
       (!Number.isFinite(position.x) || !Number.isFinite(position.z)) &&
         ((position.x = start2.x), (position.z = start2.z));
       var navigation = createSurveyNavigation(landing),
+        roverMotion = createRoverMotion(),
         offset = new Vector3(),
         target = new Vector3(),
         normal = new Vector3(),
         right = new Vector3(),
         forward = new Vector3(),
+        surfaceForward = new Vector3(),
         backward = new Vector3(),
         basis = new Matrix4(),
         rotation = new Quaternion(),
@@ -57840,6 +57932,16 @@ vHullPosition=position;`,
         status = "",
         uiPhase = "",
         introOpacity = -1,
+        bayPhases = /* @__PURE__ */ new Set([
+          "landing",
+          "deploy",
+          "egress",
+          "dock",
+          "stow",
+          "uplink",
+          "decision",
+          "complete",
+        ]),
         surveyPhases = /* @__PURE__ */ new Set(["survey", "return"]),
         entryPhases = /* @__PURE__ */ new Set(["landing", "deploy", "egress"]),
         finalPhases = /* @__PURE__ */ new Set(["decision", "complete"]),
@@ -57987,24 +58089,22 @@ vHullPosition=position;`,
       }
       function driveToward(x, z, dt, speed = 3.4, tolerance = 1.2) {
         let destinationX = x,
-          destinationZ = z;
+          destinationZ = z,
+          localTolerance = tolerance;
         if (surveyPhases.has(state.phase)) {
           let waypoint = navigation.target(position, x, z);
-          ((x = waypoint.x), (z = waypoint.z));
+          ((waypoint.x !== x || waypoint.z !== z) && (localTolerance = 0.1),
+            (x = waypoint.x),
+            (z = waypoint.z));
         }
-        let dx2 = x - position.x,
-          dz2 = z - position.z,
-          d = Math.hypot(dx2, dz2);
-        if (d > 0.05) {
-          let step = Math.min(d, speed * dt);
-          ((position.x += (dx2 / d) * step),
-            (position.z += (dz2 / d) * step),
-            (travel += step),
-            forward.set(dx2, 0, dz2).normalize());
-        }
-        return Math.hypot(destinationX - position.x, destinationZ - position.z) < tolerance;
+        let result = roverMotion.toward(position, forward, x, z, dt, speed, localTolerance);
+        return (
+          (travel += result.travelled),
+          result.arrived &&
+            Math.hypot(destinationX - position.x, destinationZ - position.z) < tolerance
+        );
       }
-      function placeRover() {
+      function placeRover(dt = 0, snap = !1) {
         let y = surface.heightAt(position.x, position.z);
         if (
           (normal
@@ -58020,11 +58120,7 @@ vHullPosition=position;`,
               ) / 2,
             )
             .normalize(),
-          ["egress", "stow"].includes(state.phase) ||
-            state.phase === "dock" ||
-            state.phase === "uplink" ||
-            state.phase === "decision" ||
-            state.phase === "complete")
+          bayPhases.has(state.phase))
         ) {
           let z = position.z - landing.z,
             { entryZ, hatchZ, toeY, floorY, halfWidth } = lander.site.dock;
@@ -58047,11 +58143,19 @@ vHullPosition=position;`,
                 .normalize());
           }
         }
-        (right.crossVectors(normal, forward).normalize(),
-          forward.crossVectors(right, normal).normalize(),
-          basis.makeBasis(right.negate(), normal, backward.copy(forward).negate()),
+        (surfaceForward
+          .set(
+            forward.x,
+            -(normal.x * forward.x + normal.z * forward.z) / Math.max(0.1, normal.y),
+            forward.z,
+          )
+          .normalize(),
+          right.crossVectors(normal, surfaceForward).normalize(),
+          basis.makeBasis(right.negate(), normal, backward.copy(surfaceForward).negate()),
           rotation.setFromRotationMatrix(basis),
-          rover.group.quaternion.slerp(rotation, 0.18),
+          snap
+            ? rover.group.quaternion.copy(rotation)
+            : dt > 0 && rover.group.quaternion.slerp(rotation, 1 - Math.exp(-12 * dt)),
           rover.group.position.set(position.x, y + 0.57, position.z),
           rover.spin(travel));
       }
@@ -58090,18 +58194,16 @@ vHullPosition=position;`,
                 turn =
                   (keys.has("KeyA") || keys.has("ArrowLeft") ? 1 : 0) -
                   (keys.has("KeyD") || keys.has("ArrowRight") ? 1 : 0) +
-                  (touch?.steer ?? 0);
-              forward.applyAxisAngle(normal, turn * dt * 0.8);
-              let throttle =
-                (keys.has("KeyW") || keys.has("ArrowUp") ? 1 : 0) -
-                (keys.has("KeyS") || keys.has("ArrowDown") ? 1 : 0) +
-                (touch?.drive ?? 0);
-              ((position.x += forward.x * throttle * dt * 3),
-                (position.z += forward.z * throttle * dt * 3),
-                (travel += throttle * dt * 3));
+                  (touch?.steer ?? 0),
+                throttle =
+                  (keys.has("KeyW") || keys.has("ArrowUp") ? 1 : 0) -
+                  (keys.has("KeyS") || keys.has("ArrowDown") ? 1 : 0) +
+                  (touch?.drive ?? 0);
+              travel += roverMotion.manual(position, forward, throttle, turn, dt);
               for (let s of CANDIDATE_STATIONS)
                 Math.hypot(s.x - position.x, s.z - position.z) < s.radius &&
                   !state.observations.includes(s.id) &&
+                  Math.abs(roverMotion.speed) < 0.12 &&
                   ((nearStation = !0), (hold += dt), hold > 4 && (observe(s), (hold = 0)));
               nearStation || (hold = 0);
             }
@@ -58113,7 +58215,8 @@ vHullPosition=position;`,
         } else if (state.phase === "return") {
           let missing = captureMissing();
           (missing
-            ? driveToward(missing.x, missing.z, dt, 9) && (placeRover(), render(), observe(missing))
+            ? driveToward(missing.x, missing.z, dt, 4.2) &&
+              (placeRover(), render(), observe(missing))
             : driveToward(start2.x, start2.z, dt, 4, 0.08) && setPhase("align"),
             message("탐사선으로 복귀", "관측 영상과 지표 분석 자료를 탐사선으로 가져갑니다."));
         } else if (state.phase === "align") {
@@ -58181,15 +58284,20 @@ TF-NAV-01 / AU · X +1.2846 · Y −0.0821 · Z +0.4368
           (position.x = MathUtils.clamp(position.x, -1550, PRESERVE_X - 6)),
           (position.z = MathUtils.clamp(position.z, 3100, 3410)),
           applyVehicleState(),
-          placeRover(),
+          placeRover(dt),
           state.seconds - saveAt >= 2 && ((saveAt = state.seconds), persist()),
           audio.update(state.phase, state.phaseTime),
           draw && render(dt, !0));
       }
       function applyVehicleState() {
         let p = state.phase,
-          t = state.phaseTime,
-          altitude = p === "landing" ? 70 * Math.pow(Math.max(0, 1 - t / 16), 2.5) : 0;
+          t = state.phaseTime;
+        (p === "landing" || p === "deploy") &&
+          ((position.x = landing.x),
+          (position.z = landing.z - 0.58),
+          forward.set(0, 0, -1),
+          roverMotion.reset());
+        let altitude = p === "landing" ? 70 * Math.pow(Math.max(0, 1 - t / 16), 2.5) : 0;
         ((lander.group.position.y = lander.site.y + altitude),
           descentGas?.update(state.seconds, p, t, altitude));
         let openness =
@@ -58380,7 +58488,8 @@ TF-NAV-01 / AU · X +1.2846 · Y −0.0821 · Z +0.4368
           (uplink = createUplink(lander.group)),
           (descentGas = createDescentGas(scene, lander.group, surface.heightAt, tier)),
           forward.set(0, 0, 1),
-          placeRover());
+          applyVehicleState(),
+          placeRover(0, !0));
         let markerMaterial = new MeshStandardMaterial({
           color: 10132884,
           metalness: 0.3,
@@ -58487,6 +58596,9 @@ TF-NAV-01 / AU · X +1.2846 · Y −0.0821 · Z +0.4368
               shadows: shadowBudget.snapshot(),
               phaseTime: state.phaseTime,
               manual,
+              roverMotion: roverMotion.snapshot(),
+              roverPosition: rover.group.position.toArray(),
+              roverQuaternion: rover.group.quaternion.toArray(),
               navigationPath: navigation.snapshot(),
               landingAltitude: lander.group.position.y - lander.site.y,
               descentGas: descentGas?.snapshot(),
