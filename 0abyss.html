@@ -425,6 +425,56 @@ dialog .credits {
   overflow: hidden;
   clip-path: inset(50%);
 }
+#experience-log {
+  margin: 26px 0;
+}
+#experience-log .memory-status {
+  font-size: 11px;
+  color: #8e9da7;
+}
+.memory-cycles h4 {
+  margin: 20px 0 10px;
+  font-size: 12px;
+  font-weight: 400;
+  color: #aab9c0;
+}
+.memory-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.memory-grid figure {
+  margin: 0;
+  min-width: 0;
+}
+.memory-grid img {
+  position: static;
+  display: block;
+  width: 100%;
+  height: auto;
+  opacity: 1;
+}
+.memory-grid figcaption {
+  font-size: 10px;
+  line-height: 1.7;
+  color: #8e9da7;
+  overflow-wrap: anywhere;
+}
+.memory-grid strong {
+  display: block;
+  margin: 7px 0;
+  font-weight: 400;
+  color: #bac5ca;
+}
+.memory-grid figcaption p {
+  margin: 0 0 4px;
+}
+@media (max-width: 480px) {
+  .memory-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+}
 @media (max-width: 640px), (max-height: 500px) {
   :root {
     --ui-title: 14px;
@@ -566,42 +616,60 @@ body[data-artwork="abyss"].ready canvas {
       </p>
       <p>
         접촉 중에는 카메라의 공전이 느려지고, 손을 놓으면 부드럽게 원래 속도로
-        돌아갑니다. 포획 이후의 빈틈은 새 항해를 시작할 때까지 남습니다. 그
-        뒤에도 접촉 부근을 변형하거나 흐름을 비틀 수 있습니다.
+        돌아갑니다. 두 가지의 간격이 닫힐수록 접근은 천천히 진행되고, 경계 전에는
+        바깥쪽 손짓으로 즉시 후퇴할 수 있습니다. 포획 뒤에는 공전과 주변 흐름이
+        가라앉고 빈틈에 시선이 머뭅니다. 그 뒤에도 접촉 부근을 변형하거나 흐름을
+        비틀 수 있습니다.
+      </p>
+      <p>
+        새 항해는 탐사선의 여정을 다시 시작하지만 장소를 처음으로 되돌리지는
+        않습니다. 이전 포획의 작은 결손은 최대 세 곳까지 남습니다. 손대지 않고
+        지켜보는 동안에도 흐름은 이어집니다. 이곳은 관측자를 기다리기 위해 멈춰
+        있는 세계가 아닙니다.
       </p>
       <h3>A · 수학적 관계</h3>
       <p>
-        Lambert W는 W exp(W) = x의 역관계입니다. −1/e &lt; x &lt; 0에서는 두
-        실수 가지 W₀와 W₋₁이 존재하며, x = −1/e에서 W = −1로 만납니다. 그보다
-        작은 x에는 실수 해가 없습니다.
+        Lambert W 함수는 W exp(W) = x를 만족하는 W를 나타냅니다.
+        −1/e &lt; x &lt; 0에서는 실수값을 갖는 두 분지 W₀와 W₋₁이 존재합니다.
+        두 분지는 분기점 x = −1/e에서 W = −1로 만나며, x &lt; −1/e에서는
+        실수해가 없습니다.
       </p>
       <h3>B · 수치 근사</h3>
       <p>
-        두 실수 가지를 따로 이분법으로 계산하고, 4096개 표본을 갖는 표에서
-        보간합니다. 같은 표를 CPU와 GPU가 공유합니다. 고정 시간 간격으로 접촉과
-        카메라 속도를 완화하며, 열린 끝점 x = 0은 유한한 범위로 제한합니다.
+        각 분지를 이분법으로 계산하고, 4096개 표본으로 만든 수치표에서 값을
+        보간합니다. CPU와 GPU는 같은 표를 사용합니다. 접촉 반응과 카메라 속도는
+        일정한 시간 간격으로 계산해 부드럽게 바꿉니다. W₋₁(x)가 발산하는
+        x → 0⁻ 부근은 x = −10⁻⁵까지만 계산합니다.
       </p>
       <h3>C · 예술적 해석</h3>
       <p>
-        두 가지 사이의 거리를 탐사선의 접근 반지름에 대응시킵니다. 각 리본은
-        함수 입력의 연속 구간을 잇고, 가지가 만나는 곳에서 폭과 깊이가 접힙니다.
+        두 분지의 함숫값 차이를 탐사선의 접근 반지름에 대응시킵니다. 각 리본은
+        함수 입력의 연속 구간을 잇고, 두 분지가 만나는 곳에서 폭과 깊이가 접힙니다.
         손짓은 접촉 부근의 함수 입력을 바꾸어 별 무리의 반지름을 변형합니다.
         포획 이후에는 좁은 영역의 입력이 실수 정의역을 벗어나며 해당 표본을
         표시하지 않습니다. 이 부재가 빈틈으로 남습니다. 실제 중력·항법·물질의
-        붕괴를 계산한 것으로 해석하지 않습니다.
+        붕괴를 계산한 것으로 해석하지 않습니다. 두 분지의 함숫값 차이로 접근 속도의
+        상한을 정하고 포획 뒤 운동을 서서히 멈추는 과정도 예술적 시간 구성입니다.
+        포획을 특정 시각에 예약하지 않으며, 접근과 후퇴가 사건의 시점을 바꿉니다.
       </p>
       <p>
-        원작의 여섯 영역과 청색·적색의 두 가지를 유지하며, 함수 입력을 따라
-        연결한 리본 단면으로 재구성했습니다. 짧은 소리는 경계에 접근하거나
-        물러나는 움직임을 음으로 대응시킨 해석입니다. 지속적인 배경음은
-        없습니다.
+        원작의 여섯 영역과 청색·적색으로 구분한 두 흐름을 유지하며, 함수 입력을 따라
+        연결한 리본 단면으로 재구성했습니다. 접근하는 한 영역의 접힌 경계에 빛을
+        집중하고 다른 다섯 영역은 낮은 대비로 남깁니다. 포획 이후에는 밝았던
+        경계의 결손이 읽히도록 주변 흐름을 절제합니다. 이전 항해의 결손도
+        실수 정의역이 끊긴 국소 경계를 따라 남아, 새 접근과 같은 장소에서 만납니다.
+        접근과 후퇴, 비틀림이 있을 때만
+        두 갈래의 짧은 금속성 공명이 발생합니다. 두 분지의 함숫값이 음높이를,
+        함숫값의 차이가 좌우 음상의 간격을 결정합니다. 경계에서 두 음은 가까워지고
+        포획 순간 함께 사라집니다. 음높이와 음색은 수학적 관계의 예술적 대응이며,
+        물질의 실제 진동을 뜻하지 않습니다. 정지한 손과 포획 이후에는 침묵합니다.
       </p>
       <p>
         <a
           href="https://dlmf.nist.gov/4.13"
           target="_blank"
           rel="noopener noreferrer"
-          >NIST DLMF · Lambert W와 두 실수 가지</a
+          >NIST DLMF · Lambert W 함수의 두 실수 분지</a
         >
       </p>
       <nav aria-label="다른 작품">
@@ -28190,6 +28258,520 @@ void main() {
     };
   }
 
+  // exhibition-memory.mjs
+  var DB_NAME = "hybrid-exhibition-20-v1";
+  var STORE = "artworks";
+  var MAX_CYCLES = 3;
+  var STAGES = ["\uAC1C\uC785 \uC804", "\uAC1C\uC785 \uC9C1\uD6C4", "\uC2DC\uAC04\uC774 \uC9C0\uB09C \uB4A4"];
+  var actionKeys = {
+    transfer: ["Space", "ArrowLeft", "ArrowRight", "KeyA", "KeyD"],
+    abyss: ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"],
+    echo: ["Enter", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"],
+    delay: ["Enter", "Space", "ArrowUp", "ArrowLeft", "ArrowRight"]
+  };
+  function createExhibitionMemory(options) {
+    const { id, canvas, paint, now, summary, continuation, restore } = options;
+    const actionable = new Set(actionKeys[id] || []);
+    let db = null, storage = "memory", loaded = false, capturing = false;
+    let saveAt = -Infinity, writing = null, saveAgain = false, serial = 0;
+    let cycle = 1, interventionAt = null, released = false, frames2 = [];
+    let lastCapture = -Infinity, loadedPayload = null, statusNode, listNode;
+    const urls = [], contacts = /* @__PURE__ */ new Set(), keys2 = /* @__PURE__ */ new Set();
+    let afterFrame = 0, refreshNeeded = false;
+    const isTest = new URLSearchParams(location.search).has("test");
+    const allowPersistence = !isTest || new URLSearchParams(location.search).has("persist");
+    const key = `hybrid-exhibition:${id}:v1`;
+    const owner = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+    function safeSummary() {
+      try {
+        return summary().filter((x2) => typeof x2 === "string").slice(0, 7).map((x2) => x2.slice(0, 180));
+      } catch {
+        return [];
+      }
+    }
+    function updateStatus() {
+      if (!statusNode) return;
+      statusNode.textContent = storage === "superseded" ? "\uB2E4\uB978 \uD654\uBA74\uC5D0\uC11C \uD56D\uD574\uB97C \uC774\uC5B4\uBC1B\uC558\uC2B5\uB2C8\uB2E4. \uC774 \uD654\uBA74\uC758 \uAE30\uB85D\uC740 \uD604\uC7AC \uD654\uBA74\uC5D0\uC11C\uB9CC \uBCF4\uAD00\uD569\uB2C8\uB2E4." : storage === "indexeddb" ? "\uC774 \uBE0C\uB77C\uC6B0\uC800\uC5D0 \uAE30\uB85D\uD569\uB2C8\uB2E4. \uC0C8 \uD56D\uD574\uB97C \uC2DC\uC791\uD574\uB3C4 \uC774\uC804 \uAE30\uB85D\uC740 \uB0A8\uC2B5\uB2C8\uB2E4." : storage === "local" ? "\uC774 \uBE0C\uB77C\uC6B0\uC800\uC5D0 \uD56D\uD574 \uC0C1\uD0DC\uB97C \uAE30\uB85D\uD569\uB2C8\uB2E4. \uC774\uBBF8\uC9C0\uB294 \uC774\uBC88 \uD654\uBA74\uC5D0\uC11C \uBCF4\uAD00\uD569\uB2C8\uB2E4." : "\uD604\uC7AC \uD654\uBA74\uC5D0\uC11C \uAE30\uB85D\uD569\uB2C8\uB2E4. \uC800\uC7A5 \uACF5\uAC04\uC744 \uC0AC\uC6A9\uD560 \uC218 \uC5C6\uC5B4 \uC7AC\uC811\uC18D \uC2DC \uC778\uACC4\uB418\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.";
+    }
+    function mount() {
+      const dialog2 = document.getElementById("record");
+      if (!dialog2) return;
+      const section = document.createElement("section");
+      section.id = "experience-log";
+      const heading = document.createElement("h3");
+      heading.textContent = "\uAC1C\uC785\uACFC \uADF8 \uC774\uD6C4";
+      statusNode = document.createElement("p");
+      statusNode.className = "memory-status";
+      listNode = document.createElement("div");
+      listNode.className = "memory-cycles";
+      section.append(heading, statusNode, listNode);
+      const first = dialog2.querySelector("h2 + p");
+      if (first) first.after(section);
+      else dialog2.append(section);
+      dialog2.addEventListener("close", () => {
+        if (refreshNeeded) refresh();
+      });
+      document.getElementById("about")?.addEventListener("click", refresh);
+      updateStatus();
+    }
+    function formatClock(t) {
+      const s = Math.max(0, Math.floor(t));
+      return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+    }
+    function refresh() {
+      if (!listNode) return;
+      refreshNeeded = false;
+      urls.splice(0).forEach((u) => URL.revokeObjectURL(u));
+      listNode.replaceChildren();
+      const cycles = [...new Set(frames2.map((f) => f.cycle))].sort(
+        (a, b) => b - a
+      );
+      if (!cycles.length) {
+        const p = document.createElement("p");
+        p.textContent = "\uD654\uBA74\uC744 \uAD00\uCC30\uD558\uAC70\uB098 \uC870\uC791\uD558\uBA74 \uC2E4\uC81C \uC7A5\uBA74\uACFC \uAD00\uCE21 \uAE30\uB85D\uC774 \uB0A8\uC2B5\uB2C8\uB2E4.";
+        listNode.append(p);
+      }
+      for (const c of cycles) {
+        const group = document.createElement("div");
+        const h = document.createElement("h4");
+        h.textContent = `\uD56D\uD574 ${c}${c === cycle ? " \xB7 \uD604\uC7AC" : ""}`;
+        const grid = document.createElement("div");
+        grid.className = "memory-grid";
+        for (const f of frames2.filter((f2) => f2.cycle === c).sort((a, b) => a.stage - b.stage)) {
+          const figure = document.createElement("figure");
+          if (f.image instanceof Blob && /^image\//.test(f.image.type)) {
+            const img = document.createElement("img"), url = URL.createObjectURL(f.image);
+            urls.push(url);
+            img.src = url;
+            img.alt = `${STAGES[f.stage]} \xB7 \uD56D\uD574 \uACBD\uACFC ${formatClock(f.at)}`;
+            img.loading = "lazy";
+            img.width = 480;
+            img.height = 300;
+            figure.append(img);
+          }
+          const caption = document.createElement("figcaption"), title = document.createElement("strong");
+          title.textContent = `${STAGES[f.stage]} \xB7 ${formatClock(f.at)}`;
+          caption.append(title);
+          for (const line of f.summary) {
+            const p = document.createElement("p");
+            p.textContent = line;
+            caption.append(p);
+          }
+          figure.append(caption);
+          grid.append(figure);
+        }
+        group.append(h, grid);
+        listNode.append(group);
+      }
+      updateStatus();
+    }
+    function openDatabase() {
+      return new Promise((resolve) => {
+        let settled = false;
+        const finish = (value) => {
+          if (!settled) {
+            settled = true;
+            clearTimeout(timer);
+            resolve(value);
+          }
+        };
+        const timer = setTimeout(() => finish(null), 1600);
+        try {
+          const request = indexedDB.open(DB_NAME, 1);
+          request.onupgradeneeded = () => {
+            if (!request.result.objectStoreNames.contains(STORE))
+              request.result.createObjectStore(STORE);
+          };
+          request.onsuccess = () => {
+            if (settled) {
+              request.result.close();
+              return;
+            }
+            const connection = request.result;
+            connection.onversionchange = () => {
+              connection.close();
+              db = null;
+              storage = "memory";
+              updateStatus();
+            };
+            finish(connection);
+          };
+          request.onerror = request.onblocked = () => finish(null);
+        } catch {
+          finish(null);
+        }
+      });
+    }
+    function readStored() {
+      if (db)
+        return new Promise((resolve) => {
+          let settled = false, tx, record = null;
+          const finish = (value) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            resolve(value);
+          };
+          const timer = setTimeout(() => {
+            try {
+              tx?.abort();
+            } catch {
+            }
+            finish({ readFailed: true });
+          }, 1600);
+          try {
+            tx = db.transaction(STORE, "readwrite");
+            const store = tx.objectStore(STORE), request = store.get(id);
+            request.onsuccess = () => {
+              record = request.result || null;
+              store.put(
+                record ? { ...record, owner } : {
+                  version: 1,
+                  id,
+                  cycle: 1,
+                  frames: [],
+                  payload: null,
+                  owner
+                },
+                id
+              );
+            };
+            tx.oncomplete = () => finish(record);
+            tx.onerror = tx.onabort = () => finish({ readFailed: true });
+          } catch {
+            finish({ readFailed: true });
+          }
+        });
+      if (options.requiresBinaryStorage) return Promise.resolve(null);
+      try {
+        return Promise.resolve(JSON.parse(localStorage.getItem(key) || "null"));
+      } catch {
+        return Promise.resolve(null);
+      }
+    }
+    function validFrame(f) {
+      return f && Number.isInteger(f.cycle) && f.cycle > 0 && Number.isInteger(f.stage) && f.stage >= 0 && f.stage < 3 && Number.isFinite(f.at) && f.at >= 0 && Array.isArray(f.summary) && f.summary.every((s) => typeof s === "string" && s.length <= 180);
+    }
+    async function start2() {
+      mount();
+      const guard = (e) => {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      };
+      for (const event of [
+        "pointerdown",
+        "pointermove",
+        "click",
+        "keydown",
+        "wheel"
+      ])
+        addEventListener(event, guard, { capture: true, passive: false });
+      if (allowPersistence) {
+        db = await openDatabase();
+        if (db) storage = "indexeddb";
+        else if (!options.requiresBinaryStorage) {
+          try {
+            localStorage.setItem(key + ":test", "1");
+            localStorage.removeItem(key + ":test");
+            storage = "local";
+          } catch {
+          }
+        }
+        const stored = await readStored();
+        if (stored?.readFailed) {
+          db?.close();
+          db = null;
+          storage = "memory";
+        }
+        if (stored?.version === 1 && stored.id === id) {
+          const restoredCycle = Number.isInteger(stored.cycle) && stored.cycle > 0 ? stored.cycle : 1;
+          cycle = Math.min(restoredCycle, 1e9);
+          frames2 = (Array.isArray(stored.frames) ? stored.frames : []).filter(validFrame).slice(-9);
+          interventionAt = Number.isFinite(stored.interventionAt) && stored.interventionAt >= 0 ? stored.interventionAt : null;
+          released = !!stored.released;
+          try {
+            loadedPayload = stored.payload;
+            if (stored.payload != null && restore && restore(stored.payload) === false)
+              throw new Error("Invalid continuation");
+          } catch {
+            loadedPayload = null;
+            interventionAt = null;
+            released = false;
+            cycle++;
+          }
+          if (!options.resumeCycle) {
+            cycle++;
+            interventionAt = null;
+            released = false;
+          }
+        }
+      }
+      loaded = true;
+      saveAt = now();
+      updateStatus();
+      refresh();
+      for (const event of [
+        "pointerdown",
+        "pointermove",
+        "click",
+        "keydown",
+        "wheel"
+      ])
+        removeEventListener(event, guard, true);
+      installEvents();
+      return { storage, restored: loadedPayload !== null };
+    }
+    function packet() {
+      return {
+        version: 1,
+        id,
+        cycle,
+        interventionAt,
+        released,
+        frames: frames2.slice(-9),
+        payload: continuation ? continuation() : null,
+        serial: ++serial,
+        owner
+      };
+    }
+    async function checkpoint() {
+      if (!loaded || !allowPersistence) return;
+      saveAgain = true;
+      if (writing) return writing;
+      writing = (async () => {
+        while (saveAgain) {
+          saveAgain = false;
+          saveAt = now();
+          if (!db && storage !== "local") continue;
+          let value;
+          try {
+            value = packet();
+          } catch {
+            continue;
+          }
+          if (!db) {
+            try {
+              const compact = {
+                ...value,
+                frames: value.frames.map(({ image, ...f }) => f)
+              };
+              const json = JSON.stringify(compact);
+              if (json.length <= 15e4) localStorage.setItem(key, json);
+              else {
+                storage = "memory";
+                updateStatus();
+              }
+            } catch {
+              storage = "memory";
+              updateStatus();
+            }
+            continue;
+          }
+          await new Promise((resolve) => {
+            try {
+              const tx = db.transaction(STORE, "readwrite");
+              const store = tx.objectStore(STORE), request = store.get(id);
+              request.onsuccess = () => {
+                if (request.result?.owner !== owner) {
+                  storage = "superseded";
+                  db?.close();
+                  db = null;
+                  updateStatus();
+                  return;
+                }
+                store.put(value, id);
+              };
+              tx.oncomplete = () => resolve(true);
+              tx.onerror = tx.onabort = () => {
+                storage = "memory";
+                db = null;
+                updateStatus();
+                resolve(false);
+              };
+            } catch {
+              storage = "memory";
+              db = null;
+              updateStatus();
+              resolve(false);
+            }
+          });
+        }
+      })();
+      try {
+        await writing;
+      } finally {
+        writing = null;
+      }
+    }
+    function trim() {
+      const keep = [...new Set(frames2.map((f) => f.cycle))].sort((a, b) => b - a).slice(0, MAX_CYCLES);
+      frames2 = frames2.filter((f) => keep.includes(f.cycle)).slice(-9);
+    }
+    function capture(stage) {
+      if (!loaded || capturing || frames2.some((f) => f.cycle === cycle && f.stage === stage))
+        return;
+      const source = canvas();
+      if (!source?.width || !source?.height) return;
+      capturing = true;
+      const at = now(), record = { cycle, stage, at, summary: safeSummary(), image: null };
+      try {
+        paint();
+        const image = document.createElement("canvas"), ratio = Math.min(480 / source.width, 300 / source.height, 1);
+        image.width = Math.max(1, Math.round(source.width * ratio));
+        image.height = Math.max(1, Math.round(source.height * ratio));
+        image.getContext("2d", { alpha: false }).drawImage(source, 0, 0, image.width, image.height);
+        frames2.push(record);
+        trim();
+        lastCapture = at;
+        refreshNeeded = true;
+        image.toBlob(
+          (blob) => {
+            if (blob && blob.size <= 18e4) record.image = blob;
+            refreshNeeded = true;
+            checkpoint();
+          },
+          "image/jpeg",
+          0.76
+        );
+      } catch {
+      }
+      capturing = false;
+    }
+    function beforeInput() {
+      if (!loaded) return;
+      capture(0);
+      if (interventionAt === null) interventionAt = now();
+      released = false;
+    }
+    function afterInput() {
+      if (!loaded || contacts.size || keys2.size || interventionAt === null)
+        return;
+      released = true;
+      if (afterFrame) cancelAnimationFrame(afterFrame);
+      const capturedCycle = cycle;
+      afterFrame = requestAnimationFrame(() => {
+        afterFrame = 0;
+        if (capturedCycle !== cycle || interventionAt === null) return;
+        capture(1);
+        checkpoint();
+      });
+    }
+    function eventTarget(e) {
+      if (document.getElementById("record")?.open) return false;
+      return !e.target?.closest?.(
+        "button,a,input,textarea,select,dialog,[contenteditable=true]"
+      );
+    }
+    function installEvents() {
+      const surface = canvas();
+      surface.addEventListener(
+        "pointerdown",
+        (e) => {
+          if (e.button > 0 || !eventTarget(e)) return;
+          contacts.add(e.pointerId);
+          beforeInput();
+        },
+        true
+      );
+      const finish = (e) => {
+        if (contacts.delete(e.pointerId)) afterInput();
+      };
+      addEventListener("pointerup", finish);
+      addEventListener("pointercancel", finish);
+      surface.addEventListener("lostpointercapture", finish);
+      addEventListener(
+        "keydown",
+        (e) => {
+          if (!e.repeat && actionable.has(e.code) && eventTarget(e)) {
+            keys2.add(e.code);
+            beforeInput();
+          }
+        },
+        true
+      );
+      addEventListener("keyup", (e) => {
+        if (keys2.delete(e.code)) afterInput();
+      });
+      if (id === "abyss")
+        surface.addEventListener(
+          "wheel",
+          (e) => {
+            if (eventTarget(e)) {
+              beforeInput();
+              released = true;
+              afterInput();
+            }
+          },
+          { capture: true, passive: true }
+        );
+      const suspendInput = () => {
+        contacts.clear();
+        keys2.clear();
+        afterInput();
+        checkpoint();
+      };
+      addEventListener("blur", suspendInput);
+      addEventListener("resize", suspendInput);
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) suspendInput();
+      });
+      addEventListener("pagehide", () => {
+        checkpoint();
+      });
+    }
+    function tick2() {
+      if (!loaded || capturing) return;
+      const t = now();
+      if (t >= 0.8 && !frames2.some((f) => f.cycle === cycle && f.stage === 0))
+        capture(0);
+      const after = frames2.find((f) => f.cycle === cycle && f.stage === 1);
+      if (released && after && t - after.at >= 30) capture(2);
+      if (t < saveAt || t - saveAt >= 5) checkpoint();
+    }
+    function newVoyage() {
+      if (afterFrame) {
+        cancelAnimationFrame(afterFrame);
+        afterFrame = 0;
+      }
+      if (interventionAt !== null && !frames2.some((f) => f.cycle === cycle && f.stage === 1))
+        capture(1);
+      cycle++;
+      interventionAt = null;
+      released = false;
+      contacts.clear();
+      keys2.clear();
+      lastCapture = -Infinity;
+      trim();
+      refreshNeeded = true;
+      queueMicrotask(checkpoint);
+    }
+    return {
+      start: start2,
+      tick: tick2,
+      checkpoint,
+      newVoyage,
+      beforeInput,
+      afterInput,
+      refresh,
+      snapshot: () => ({
+        storage,
+        loaded,
+        cycle,
+        interventionAt,
+        released,
+        frameCount: frames2.length,
+        frames: frames2.map((f) => ({
+          cycle: f.cycle,
+          stage: f.stage,
+          at: f.at,
+          summary: [...f.summary],
+          hasImage: f.image instanceof Blob
+        })),
+        lastCapture
+      })
+    };
+  }
+
   // readout.mjs
   function createReadout() {
     const clock = document.querySelector('[data-readout="time"]');
@@ -28438,6 +29020,54 @@ void main() {
     };
   }
 
+  // abyss/place-history.mjs
+  var MAX_PLACE_SCARS = 3;
+  var PLACE_SCAR_WEIGHT = 0.22;
+  var PLACE_SCAR_CAP = 0.48;
+  var wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+  var validRecord = (r) => r && Number.isSafeInteger(r.id) && r.id > 0 && Number.isFinite(r.angle) && Number.isFinite(r.capturedAt) && r.capturedAt >= 0 && Number.isFinite(r.weight) && r.weight > 0 && r.weight <= PLACE_SCAR_WEIGHT;
+  function createPlaceHistory() {
+    let records = [], nextId = 1;
+    const captureRecord = (live) => live?.captured && Number.isFinite(live.scarAngle) && Number.isFinite(live.eventAt) && live.eventAt >= 0 ? {
+      id: nextId,
+      angle: wrap(live.scarAngle),
+      capturedAt: live.eventAt,
+      weight: PLACE_SCAR_WEIGHT
+    } : null;
+    function snapshot(live = null) {
+      const current = captureRecord(live);
+      const list = current ? [...records, current].slice(-MAX_PLACE_SCARS) : records;
+      return {
+        version: 1,
+        nextId: nextId + (current ? 1 : 0),
+        records: list.map((r) => ({ ...r }))
+      };
+    }
+    function commit(live) {
+      const current = captureRecord(live);
+      if (!current) return false;
+      records = [...records, current].slice(-MAX_PLACE_SCARS);
+      nextId++;
+      return true;
+    }
+    function restore(payload) {
+      if (!payload || payload.version !== 1 || !Array.isArray(payload.records) || payload.records.length > MAX_PLACE_SCARS || !Number.isSafeInteger(payload.nextId) || payload.nextId < 1 || !payload.records.every(validRecord))
+        return false;
+      const ids = payload.records.map((r) => r.id);
+      if (new Set(ids).size !== ids.length || ids.some((id) => id >= payload.nextId))
+        return false;
+      records = payload.records.map((r) => ({
+        id: r.id,
+        angle: wrap(r.angle),
+        capturedAt: r.capturedAt,
+        weight: r.weight
+      }));
+      nextId = payload.nextId;
+      return true;
+    }
+    return { snapshot, commit, restore };
+  }
+
   // abyss/model.mjs
   var EDGE = -1 / Math.E;
   var N = 4096;
@@ -28553,7 +29183,10 @@ void main() {
         dirty++;
         return;
       }
-      s.targetProgress = clamp2(s.targetProgress + radial * 1.55, 0, 1);
+      // Reversing a gesture removes the outstanding approach demand immediately.
+      // The branch pair limits inward motion; retreat remains available until capture.
+      const anchor = radial < 0 ? Math.min(s.targetProgress, s.progress) : radial > 0 ? Math.max(s.targetProgress, s.progress) : s.targetProgress;
+      s.targetProgress = clamp2(anchor + radial * 1.55, 0, 1);
       s.targetTurn = clamp2(s.targetTurn + tangent2 * 3.2, -18, 18);
       s.radialWork += Math.max(0, radial);
       s.returnWork += Math.max(0, -radial);
@@ -28566,10 +29199,16 @@ void main() {
       while (s.clock >= H - 1e-10) {
         s.clock -= H;
         s.elapsed += H;
-        s.progress += (s.targetProgress - s.progress) * (1 - Math.exp(-H / 0.16));
+        lookup2.pairAt(s.progress, branch);
+        const gap = clamp2((branch[1] - branch[0]) / gapStart, 0, 1);
+        const demand = (s.targetProgress - s.progress) * (1 - Math.exp(-H / 0.16));
+        // Artistic mobility, derived from the actual branch gap, not a reserved event time.
+        const mobility = demand >= 0 ? 0.018 + 0.24 * Math.pow(gap, 0.9) : 0.8;
+        s.progress += clamp2(demand, -mobility * H, mobility * H);
         s.turn += (s.targetTurn - s.turn) * (1 - Math.exp(-H / 0.18));
         s.press += ((s.held ? 1 : 0) - s.press) * (1 - Math.exp(-H / (s.held ? 0.065 : 0.6)));
-        s.cameraRate += ((s.held ? 0.045 : 0.18) - s.cameraRate) * (1 - Math.exp(-H / 0.9));
+        const observerRate = s.captured ? 0 : s.held ? 0.045 : 0.18;
+        s.cameraRate += (observerRate - s.cameraRate) * (1 - Math.exp(-H / 0.9));
         s.cameraPhase += s.cameraRate * H;
         if (!s.captured && s.targetProgress === 1 && s.progress > 0.9985) {
           s.progress = 1;
@@ -28602,6 +29241,7 @@ void main() {
         gap: branch[1] - branch[0],
         gapStart,
         normalizedGap: (branch[1] - branch[0]) / gapStart,
+        approachMobility: 0.018 + 0.24 * Math.pow(clamp2((branch[1] - branch[0]) / gapStart, 0, 1), 0.9),
         finite: Object.values(s).every(
           (v) => typeof v !== "number" || Number.isFinite(v)
         ) && branch.every(Number.isFinite)
@@ -28612,15 +29252,18 @@ void main() {
   // abyss/main.mjs
   var hud = createReadout();
   var quietSky;
+  var journeyMemory;
   var params = new URLSearchParams(location.search);
   var testMode = params.has("test");
   var lookup = createLookup();
   var model = createAbyss(lookup);
   var state = model.s;
+  var placeHistory = createPlaceHistory();
+  var liveCaptureAlreadyStored = false;
   var tiers = [
     {
-      tracks: 20,
-      samples: 36,
+      tracks: 15,
+      samples: 48,
       points: 17280,
       dpr: 1,
       fps: 30,
@@ -28628,8 +29271,8 @@ void main() {
       opacity: 0.24
     },
     {
-      tracks: 32,
-      samples: 56,
+      tracks: 28,
+      samples: 64,
       points: 43008,
       dpr: 1.25,
       fps: 60,
@@ -28637,8 +29280,8 @@ void main() {
       opacity: 0.19
     },
     {
-      tracks: 44,
-      samples: 76,
+      tracks: 38,
+      samples: 88,
       points: 80256,
       dpr: 1.5,
       fps: 60,
@@ -28690,11 +29333,11 @@ void main() {
   var keys = /* @__PURE__ */ new Set();
   var centers = [
     [-120, 0, -80],
-    [120, 20, 40],
-    [0, -90, 120],
-    [0, 100, -140],
-    [-180, 80, 160],
-    [180, -60, -160]
+    [174, 29, 58],
+    [0, -130.5, 174],
+    [0, 145, -203],
+    [-261, 116, 232],
+    [261, -87, -232]
   ];
   var target = new Vector3(...centers[0]);
   var start = new Vector3(60, 12, 25);
@@ -28707,6 +29350,7 @@ void main() {
   var pos = new Vector3();
   var previousPos = new Vector3();
   var projected = new Vector3();
+  var lossFocus = new Vector3();
   var delta = new Vector3();
   var forward = new Vector3(0, 0, 1);
   var rotation = new Quaternion();
@@ -28724,8 +29368,42 @@ void main() {
     uPress: { value: 0 },
     uHover: { value: 0 },
     uScar: { value: 0 },
-    uScarAngle: { value: 0 }
+    uAftermath: { value: 0 },
+    uScarAngle: { value: 0 },
+    uPlaceScars: {
+      value: Array.from({ length: 3 }, () => new Vector4(1, 0, 0, 0))
+    },
+    uPlaceScarCap: { value: PLACE_SCAR_CAP }
   };
+  function syncPlaceHistory() {
+    const records = placeHistory.snapshot().records;
+    for (let i = 0; i < 3; i++) {
+      const record = records[i];
+      uniforms.uPlaceScars.value[i].set(
+        record ? Math.cos(record.angle) : 1,
+        record ? Math.sin(record.angle) : 0,
+        record?.weight || 0,
+        0
+      );
+    }
+  }
+  function getPlaceHistory() {
+    return placeHistory.snapshot(liveCaptureAlreadyStored ? null : state);
+  }
+  function restorePlaceHistory(payload) {
+    if (!placeHistory.restore(payload)) return false;
+    liveCaptureAlreadyStored = state.captured && payload.records.some(
+      (record) => Math.abs(record.capturedAt - state.eventAt) < 1e-8 && Math.abs(
+        Math.atan2(
+          Math.sin(record.angle - state.scarAngle),
+          Math.cos(record.angle - state.scarAngle)
+        )
+      ) < 1e-8
+    );
+    syncPlaceHistory();
+    if (ready) draw();
+    return true;
+  }
   function show(text, seconds = 5) {
     hint.textContent = text;
     hint.style.opacity = "1";
@@ -28735,120 +29413,159 @@ void main() {
     status.textContent = text;
     status.hidden = !text;
   }
+  // SOUND / BRANCH EXTINCTION
+  // A: branch[] is the same pair of real Lambert W values used by the geometry.
+  // B: two reusable, band-limited modal buffers; at most six simultaneous sources.
+  // C: pitch, stereo distance and a final extinction are a sonification, not acoustics of W.
   var audio = (() => {
-    let ctx = null, master = null, wanted = false, enabled = false, previousCell = 0, gate = 0, played = 0;
-    const voices = /* @__PURE__ */ new Set(), button = document.getElementById("sound");
-    try {
-      wanted = sessionStorage.getItem("ti_audio_muted") === "0";
-    } catch {
+    const VOICE_LIMIT = 6, BASE_HZ = 164;
+    const voices = new Set(), button = document.getElementById("sound");
+    let ctx = null, master = null, buffers = null, enabled = false, wanted = false;
+    let revision = 0, suspendTimer = 0, played = 0, extinguished = 0, gate = -Infinity;
+    let lastProgress = state.progress, lastTurn = state.turn, lastElapsed = state.elapsed;
+    let motion = 0, captured = state.captured, frequencyLow = BASE_HZ, frequencyHigh = BASE_HZ, stereoWidth = 0;
+    try { wanted = sessionStorage.getItem("ti_audio_muted") === "0"; } catch {}
+
+    function blocked() {
+      return paused || lost || document.hidden || dialog.open;
     }
     function sync() {
-      const on = enabled && ctx?.state === "running";
+      const on = enabled && ctx?.state === "running" && !blocked();
       button.setAttribute("aria-pressed", String(on));
-      button.setAttribute(
-        "aria-label",
-        on ? "\uC0AC\uC6B4\uB4DC \uB044\uAE30" : wanted ? "\uC0AC\uC6B4\uB4DC \uC7AC\uAC1C" : "\uC0AC\uC6B4\uB4DC \uCF1C\uAE30"
-      );
+      button.setAttribute("aria-label", on ? "사운드 끄기" : wanted ? "사운드 재개" : "사운드 켜기");
       button.title = button.getAttribute("aria-label");
     }
+    function modalBuffer(variant) {
+      const duration = 1.55, buffer = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * duration), ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      // Damped shell modes, not a repeating sampled ambience. W determines playback pitch.
+      const ratios = variant ? [1, 2.003, 3.987, 6.021] : [1, 2.011, 4.003, 6.047];
+      const weights = [0.66, 0.23, 0.075, 0.025];
+      for (let i = 0; i < data.length; i++) {
+        const t = i / ctx.sampleRate, attack = Math.sin(Math.min(1, t / 0.028) * Math.PI / 2) ** 2;
+        const tail = Math.min(1, Math.max(0, (duration - t) / 0.09));
+        let sum = 0;
+        for (let j = 0; j < ratios.length; j++)
+          sum += weights[j] * Math.sin(2 * Math.PI * BASE_HZ * ratios[j] * t) * Math.exp(-t * (3.2 + j * 2.1));
+        data[i] = sum * attack * tail;
+      }
+      return buffer;
+    }
+    function create() {
+      if (ctx) return;
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      ctx = new AC({ latencyHint: "interactive" });
+      master = ctx.createGain();
+      master.gain.value = 0.62;
+      const highpass = ctx.createBiquadFilter(), lowpass = ctx.createBiquadFilter(), limiter = ctx.createDynamicsCompressor();
+      highpass.type = "highpass"; highpass.frequency.value = 48; highpass.Q.value = 0.5;
+      lowpass.type = "lowpass"; lowpass.frequency.value = 2700; lowpass.Q.value = 0.55;
+      limiter.threshold.value = -15; limiter.knee.value = 9; limiter.ratio.value = 5;
+      limiter.attack.value = 0.004; limiter.release.value = 0.14;
+      master.connect(highpass); highpass.connect(lowpass); lowpass.connect(limiter); limiter.connect(ctx.destination);
+      buffers = [modalBuffer(0), modalBuffer(1)];
+      ctx.onstatechange = () => { if (ctx.state !== "running") enabled = false; sync(); };
+    }
+    function stopVoice(v, fade = 0.025) {
+      if (v.stopping) return;
+      v.stopping = true;
+      const t = ctx.currentTime;
+      if (v.gain.gain.cancelAndHoldAtTime) v.gain.gain.cancelAndHoldAtTime(t);
+      else { v.gain.gain.cancelScheduledValues(t); v.gain.gain.setValueAtTime(v.gain.gain.value, t); }
+      v.gain.gain.linearRampToValueAtTime(0, t + fade);
+      try { v.source.stop(t + fade + 0.004); } catch {}
+    }
     function cancel() {
-      for (const v of voices)
-        try {
-          v.stop();
-        } catch {
-        }
-      voices.clear();
+      for (const v of voices) stopVoice(v);
+      motion = 0;
+    }
+    function scheduleSuspend() {
+      enabled = false;
+      const token = ++revision;
+      clearTimeout(suspendTimer);
+      cancel(); sync();
+      if (!ctx) return;
+      suspendTimer = setTimeout(async () => {
+        if (token !== revision || enabled) return;
+        try { if (ctx.state === "running") await ctx.suspend(); } catch {}
+        if (token === revision) sync();
+      }, 36);
     }
     async function enable(value, persist = true) {
-      wanted = value;
-      if (value) {
-        if (!ctx) {
-          const AC = window.AudioContext || window.webkitAudioContext;
-          if (AC) {
-            ctx = new AC();
-            master = ctx.createGain();
-            master.gain.value = 0.28;
-            master.connect(ctx.destination);
-            ctx.onstatechange = sync;
-          }
-        }
-        if (ctx)
-          try {
-            await ctx.resume();
-            enabled = ctx.state === "running";
-          } catch {
-            enabled = false;
-          }
-      } else {
-        cancel();
-        enabled = false;
-        if (ctx) await ctx.suspend();
-      }
-      if (persist)
+      wanted = !!value;
+      if (persist) try { sessionStorage.setItem("ti_audio_muted", wanted ? "0" : "1"); } catch {}
+      if (!wanted || blocked()) { scheduleSuspend(); return; }
+      const token = ++revision;
+      clearTimeout(suspendTimer);
+      create();
+      if (ctx) {
         try {
-          sessionStorage.setItem("ti_audio_muted", value ? "0" : "1");
-        } catch {
-        }
-      sync();
+          await ctx.resume();
+          if (token !== revision || !wanted) return;
+          enabled = ctx.state === "running" && !blocked();
+          if (!enabled) { scheduleSuspend(); return; }
+        } catch { if (token === revision) enabled = false; }
+      }
+      if (token === revision) sync();
+    }
+    function soundBranch(frequency, panValue, power, variant, at) {
+      if (voices.size >= VOICE_LIMIT) return;
+      const source = ctx.createBufferSource(), gain = ctx.createGain(), pan = ctx.createStereoPanner();
+      source.buffer = buffers[variant];
+      const rate = frequency / BASE_HZ, duration = buffers[variant].duration / rate;
+      source.playbackRate.value = rate;
+      gain.gain.setValueAtTime(0, at);
+      gain.gain.linearRampToValueAtTime(power, at + 0.025);
+      gain.gain.setTargetAtTime(0, at + 0.12, 0.21);
+      pan.pan.value = panValue;
+      source.connect(gain); gain.connect(pan); pan.connect(master);
+      const voice = { source, gain, stopping: false };
+      voices.add(voice);
+      source.onended = () => { voices.delete(voice); source.disconnect(); gain.disconnect(); pan.disconnect(); };
+      source.start(at); source.stop(at + Math.min(2.4, duration) + 0.01);
+    }
+    function capture() {
+      if (captured) return;
+      captured = true; extinguished++;
+      // The event removes the sounding system. There is deliberately no completion chime.
+      for (const voice of voices) stopVoice(voice, 0.032);
+      motion = 0;
     }
     function update() {
-      const cell = Math.floor(state.progress * 32);
-      if (cell === previousCell) return;
-      previousCell = cell;
-      if (!enabled || ctx?.state !== "running" || state.captured || ctx.currentTime < gate || voices.size >= 4)
-        return;
-      gate = ctx.currentTime + 0.12;
-      const t = ctx.currentTime, osc = ctx.createOscillator(), g = ctx.createGain(), gap = model.branch[1] - model.branch[0];
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(80 + gap * 25, t);
-      osc.frequency.exponentialRampToValueAtTime(70 + gap * 19, t + 0.09);
-      g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(0.075, t + 8e-3);
-      g.gain.exponentialRampToValueAtTime(1e-4, t + 0.16);
-      osc.connect(g);
-      g.connect(master);
-      voices.add(osc);
+      const dt = Math.max(1 / 240, Math.min(0.1, state.elapsed - lastElapsed));
+      const radial = Math.abs(state.progress - lastProgress) / dt, twist = Math.abs(state.turn - lastTurn) / dt;
+      lastProgress = state.progress; lastTurn = state.turn; lastElapsed = state.elapsed;
+      const activity = Math.min(1, radial * 3.4 + twist * 0.14);
+      motion += (activity - motion) * (1 - Math.exp(-dt / 0.11));
+      frequencyLow = BASE_HZ * Math.pow(2, clamp2((model.branch[0] + 1) * 0.42, -1.75, 1.4));
+      frequencyHigh = BASE_HZ * Math.pow(2, clamp2((model.branch[1] + 1) * 0.42, -1.75, 1.4));
+      stereoWidth = 0.82 * clamp2((model.branch[1] - model.branch[0]) / model.gapStart, 0, 1);
+      if (state.captured) { capture(); return; }
+      if (!enabled || ctx?.state !== "running" || paused || lost || document.hidden || dialog.open || motion < 0.045 || ctx.currentTime < gate || voices.size > VOICE_LIMIT - 2) return;
+      // Energy is a consequence of motion. Holding still and autonomous camera drift stay silent.
+      gate = ctx.currentTime + 0.25 + state.progress * 0.23;
+      const power = (0.17 + 0.1 * motion) * (1 - 0.28 * state.progress);
+      const at = ctx.currentTime + 0.005;
+      soundBranch(frequencyLow, -stereoWidth, power, 0, at);
+      soundBranch(frequencyHigh, stereoWidth, power * 0.88, 1, at);
       played++;
-      osc.onended = () => {
-        voices.delete(osc);
-        osc.disconnect();
-        g.disconnect();
-      };
-      osc.start(t);
-      osc.stop(t + 0.18);
     }
-    button.addEventListener(
-      "click",
-      () => enable(!wanted || ctx?.state !== "running")
-    );
+    button.addEventListener("click", () => enable(!wanted || ctx?.state !== "running"));
+    sync();
     return {
-      update,
-      cancel,
-      reset() {
-        cancel();
-        previousCell = 0;
-        gate = 0;
-      },
-      gesture() {
-        if (wanted && ctx?.state !== "running") enable(true, false);
-      },
-      toggle() {
-        enable(!wanted || ctx?.state !== "running");
-      },
-      suspend() {
-        cancel();
-        if (ctx?.state === "running") ctx.suspend();
-        sync();
-      },
-      snapshot: () => ({
-        wanted,
-        enabled,
-        state: ctx?.state || "uninitialized",
-        voices: voices.size,
-        played
-      })
+      enable, update, cancel, capture,
+      get context() { return ctx; },
+      reset() { cancel(); lastProgress = state.progress; lastTurn = state.turn; lastElapsed = state.elapsed; captured = false; gate = -Infinity; },
+      gesture() { if (wanted && (!enabled || ctx?.state !== "running")) enable(true, false); },
+      toggle() { enable(!wanted || ctx?.state !== "running"); },
+      suspend: scheduleSuspend,
+      snapshot: () => ({ wanted, enabled, state: ctx?.state || "uninitialized", voices: voices.size, played,
+        design: "branch-extinction", activeSources: voices.size, voiceLimit: VOICE_LIMIT,
+        frequencies: [frequencyLow, frequencyHigh], stereoWidth, motion, extinguished, captured })
     };
   })();
+
   function buildCloud() {
     if (stars) {
       nebula.remove(stars);
@@ -28908,7 +29625,7 @@ void main() {
       toneMapped: false,
       vertexShader: `
  attribute vec4 aSeed,aCenter;attribute vec3 aTone;attribute vec2 aJitter;
- uniform sampler2D uW;uniform float uTurn,uPull,uSize,uScale,uOpacity,uAspect,uPress,uHover,uScar,uScarAngle;uniform vec2 uContact;
+ uniform sampler2D uW;uniform float uTurn,uPull,uSize,uScale,uOpacity,uAspect,uPress,uHover,uScar,uAftermath,uScarAngle,uPlaceScarCap;uniform vec2 uContact;uniform vec4 uPlaceScars[3];
  varying vec3 vColor;varying float vAlpha;
  float branch(float value,float lower){
   float negative=max(lower,1.-step(-.00001,value));
@@ -28922,7 +29639,7 @@ void main() {
    float distance=abs(w+1.);
    float radius=24.+distance*mix(49.,20.,lower);
    float angle=phase+u*3.8+distance*.18+uTurn*.13*exp(-radius*radius/60000.);
-   float depth=(w+1.)*48.+sin(phase*2.+u*3.14159)*18.;
+   float depth=(w+1.)*84.+sin(phase*2.+u*3.14159)*24.;
    return vec3(cos(angle)*radius,sin(angle)*radius,depth);
  }
  void main(){
@@ -28933,7 +29650,13 @@ void main() {
   float contact=exp(-dot(d,d)/.07)*max(uPress,uHover*.2)*step(0.,projected.w);
   vec3 q=aCenter.xyz+original-vec3(-120.,0.,-80.);float cs=cos(uScarAngle),sn=sin(uScarAngle);
   vec2 cut=mat2(cs,sn,-sn,cs)*q.xy;
-  float scar=exp(-pow(cut.y/18.,2.)-pow(cut.x/150.,4.)-pow(q.z/145.,2.))*uScar;
+  float scar=exp(-pow(cut.y/18.,2.)-pow(cut.x/150.,4.)-pow(q.z/220.,2.))*uScar;
+  float previousLoss=0.;
+  for(int i=0;i<3;i++){
+    vec2 oldCut=mat2(uPlaceScars[i].x,uPlaceScars[i].y,-uPlaceScars[i].y,uPlaceScars[i].x)*q.xy;
+    previousLoss+=exp(-pow(oldCut.y/18.,2.)-pow(oldCut.x/150.,4.)-pow(q.z/220.,2.))*uPlaceScars[i].z;
+  }
+  scar=max(scar,min(uPlaceScarCap,previousLoss*1.65));
   float influence=exp(-dot(original.xy,original.xy)/60000.),selected=1.-step(.5,aCenter.w);
   float range=mix(5.,.3678694411714423,lower);
   float argument=aSeed.x-range*(uPull*.055*selected*influence+contact*.065+scar*.8);
@@ -28943,7 +29666,20 @@ void main() {
   p.z+=contact*28.+uPull*selected*influence*10.;
   vec4 eye=modelViewMatrix*vec4(aCenter.xyz+p,1.);gl_Position=projectionMatrix*eye;
   float endFade=smoothstep(0.,.035,aSeed.w)*(1.-smoothstep(.95,1.,aSeed.w));
-  vColor=aTone;vAlpha=valid*uOpacity*endFade;
+  float depthFade=mix(.18,1.,exp(-max(-eye.z-90.,0.)/430.));
+  float nearFade=smoothstep(7.,38.,-eye.z);
+  float foreground=mix(.22,1.,step(.74,fract(aSeed.z*2.399963)));
+  float hierarchy=mix(foreground,1.,smoothstep(130.,330.,-eye.z));
+  // The approached branch pair owns the light. Five other regions remain spatial references.
+  float branchDistance=max(0.,(argument+.3678794411714423)/range);
+  float foldEdge=1.-smoothstep(.014,.19,branchDistance);
+  float regionWeight=mix(mix(.18,.055,uAftermath),1.,selected);
+  // Reveal only the surviving edge of a real domain cut; darkness remains the scar.
+  float lossEdge=exp(-pow((branchDistance-.009)/.015,2.))*smoothstep(.018,.11,scar)*selected;
+  float structuralLight=(.56+.86*foldEdge+.2*selected)*mix(1.,.46,uAftermath*selected)+lossEdge*(.72+.6*uAftermath);
+  float grey=dot(aTone,vec3(.2126,.7152,.0722));
+  vColor=mix(vec3(grey*.7),aTone,mix(.16,.78,selected));
+  vAlpha=valid*uOpacity*endFade*depthFade*nearFade*hierarchy*regionWeight*structuralLight;
  }`,
       fragmentShader: `varying vec3 vColor;varying float vAlpha;
  void main(){if(vAlpha<.001)discard;gl_FragColor=vec4(vColor,vAlpha);
@@ -28967,9 +29703,17 @@ void main() {
     uniforms.uAspect.value = viewport.width / viewport.height;
   }
   function updateCamera() {
-    const a = Math.atan2(85, 245) + state.cameraPhase;
-    camera.position.set(Math.cos(a) * 260, 0, Math.sin(a) * 260);
-    camera.lookAt(0, 0, 0);
+    const a = Math.atan2(85, 245) + state.cameraPhase * 0.72;
+    const radius = 245 - 25 * ease(0, 1, state.progress);
+    camera.position.set(Math.cos(a) * radius, 0, Math.sin(a) * radius);
+    // A narrow frame keeps the approached branch in view as its actual gap closes.
+    // After capture the observer settles on that same absent branch pair.
+    const aftermath = state.captured ? ease(0, 5, state.elapsed - state.eventAt) : 0;
+    const approachFocus = viewport.width < viewport.height ? ease(0.24, 0.84, state.progress) * 0.9 : 0;
+    const focusWeight = approachFocus + (1 - approachFocus) * aftermath;
+    nebula.updateWorldMatrix(true, false);
+    lossFocus.copy(target).applyMatrix4(nebula.matrixWorld);
+    camera.lookAt(-42 + (lossFocus.x + 42) * focusWeight, lossFocus.y * focusWeight, -28 + (lossFocus.z + 28) * focusWeight);
     camera.updateMatrixWorld();
   }
   function orbit(progress, out) {
@@ -28979,7 +29723,9 @@ void main() {
   }
   function simulate(dt = 1 / 60, snap = false) {
     world.rotation.set(viewX, viewY, 0);
-    nebula.rotation.set(0, state.elapsed * 0.072, state.elapsed * 0.048);
+    const aftermathAge = state.captured ? Math.max(0, state.elapsed - state.eventAt) : 0;
+    const fieldTime = state.captured ? state.eventAt + 1.8 * (1 - Math.exp(-aftermathAge / 1.8)) : state.elapsed;
+    nebula.rotation.set(0, fieldTime * 0.044, fieldTime * 0.029);
     updateCamera();
     orbit(state.progress, pos);
     if (snap) {
@@ -29010,6 +29756,7 @@ void main() {
     uniforms.uPress.value = state.press;
     uniforms.uHover.value = hover;
     uniforms.uScar.value = state.scar;
+    uniforms.uAftermath.value = state.captured ? ease(0, 5, state.elapsed - state.eventAt) : 0;
     uniforms.uScarAngle.value = state.scarAngle;
   }
   function resize() {
@@ -29113,7 +29860,11 @@ void main() {
     hoverTarget = 0;
   }
   function reset() {
+    journeyMemory?.newVoyage();
     release();
+    if (!liveCaptureAlreadyStored) placeHistory.commit(state);
+    liveCaptureAlreadyStored = false;
+    syncPlaceHistory();
     model.reset();
     audio.reset();
     x = y = viewX = viewY = 0;
@@ -29142,7 +29893,7 @@ void main() {
     if (keys.has("ArrowLeft")) model.input(0, -dt * 0.5);
     if (keys.has("ArrowRight")) model.input(0, dt * 0.5);
     if (model.update(dt)) {
-      audio.cancel();
+      audio.capture();
       mark.classList.remove("active");
       show("\uD0D0\uC0AC\uC120\uC774 \uC0AC\uB77C\uC9C4 \uC790\uB9AC\uC5D0 \uBE48\uD2C8\uC774 \uB0A8\uC2B5\uB2C8\uB2E4", 7);
     }
@@ -29158,6 +29909,7 @@ void main() {
     hud.update(state.elapsed, state.progress * 100);
     renderer.render(scene, camera);
     frames++;
+    journeyMemory?.tick();
   }
   function tick(time) {
     requestAnimationFrame(tick);
@@ -29336,12 +30088,27 @@ void main() {
       lastTick = lastDraw = 0;
       if (!paused) audio.gesture();
     });
-    ready = true;
-    setStatus("");
-    document.body.classList.add("ready");
-    show("\uC911\uC2EC\uC73C\uB85C \uBC00\uACE0 \uBC14\uAE65\uC73C\uB85C \uB2F9\uACA8, \uC811\uD788\uB294 \uACBD\uACC4\uB97C \uBC14\uAFC9\uB2C8\uB2E4", 7);
-    draw();
-    requestAnimationFrame(tick);
+    journeyMemory = createExhibitionMemory({
+      id: "abyss",
+      canvas: () => renderer.domElement,
+      paint: draw,
+      now: () => state.elapsed,
+      summary: () => [
+        `\uC811\uADFC ${Math.round(state.progress * 100)}% \xB7 ${state.captured ? "\uD3EC\uD68D \uC774\uD6C4" : "\uAD00\uCE21 \uC911"}`,
+        `\uC7A5\uC18C\uC5D0 \uB0A8\uC740 \uD754\uC801 ${getPlaceHistory().records.length}\uAC1C`,
+        "\uAC1C\uC785\uD558\uC9C0 \uC54A\uC544\uB3C4 \uB450 \uAC08\uB798\uC758 \uD750\uB984\uC740 \uACC4\uC18D\uB429\uB2C8\uB2E4."
+      ],
+      continuation: getPlaceHistory,
+      restore: restorePlaceHistory
+    });
+    journeyMemory.start().then(() => {
+      ready = true;
+      setStatus("");
+      document.body.classList.add("ready");
+      show("\uC911\uC2EC\uC73C\uB85C \uBC00\uACE0 \uBC14\uAE65\uC73C\uB85C \uB2F9\uACA8, \uC811\uD788\uB294 \uACBD\uACC4\uB97C \uBC14\uAFC9\uB2C8\uB2E4", 7);
+      draw();
+      requestAnimationFrame(tick);
+    });
     if (params.has("inspect") || testMode)
       window.__ARTWORK__ = {
         get ready() {
@@ -29375,6 +30142,7 @@ void main() {
             drawCalls: renderer.info.render.calls,
             triangles: renderer.info.render.triangles,
             frames,
+            exhibitionMemory: journeyMemory?.snapshot(),
             paused,
             lost,
             pointers: pointers.size,
@@ -29383,9 +30151,13 @@ void main() {
             position: vesselRoot.position.toArray(),
             vesselVisible: vesselRoot.visible,
             nebulaRotation: nebula.rotation.toArray().slice(0, 3),
+            aftermath: uniforms.uAftermath.value,
+            lossFocus: lossFocus.toArray(),
+            visualRule: "branch-gap-approach / persistent-domain-loss",
             center: centerScreen(),
             viewport: { ...viewport },
             qualityChanges,
+            placeHistory: placeHistory.snapshot(),
             residual: lookup.residual
           };
         },
@@ -29395,7 +30167,11 @@ void main() {
           draw();
           return this.state;
         },
-        reset
+        reset,
+        audioEngine: audio,
+        getPlaceHistory,
+        restorePlaceHistory,
+        saveJourney: () => journeyMemory.checkpoint()
       };
   } catch (error2) {
     console.error(error2);

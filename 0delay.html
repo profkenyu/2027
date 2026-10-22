@@ -425,6 +425,56 @@ dialog .credits {
   overflow: hidden;
   clip-path: inset(50%);
 }
+#experience-log {
+  margin: 26px 0;
+}
+#experience-log .memory-status {
+  font-size: 11px;
+  color: #8e9da7;
+}
+.memory-cycles h4 {
+  margin: 20px 0 10px;
+  font-size: 12px;
+  font-weight: 400;
+  color: #aab9c0;
+}
+.memory-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.memory-grid figure {
+  margin: 0;
+  min-width: 0;
+}
+.memory-grid img {
+  position: static;
+  display: block;
+  width: 100%;
+  height: auto;
+  opacity: 1;
+}
+.memory-grid figcaption {
+  font-size: 10px;
+  line-height: 1.7;
+  color: #8e9da7;
+  overflow-wrap: anywhere;
+}
+.memory-grid strong {
+  display: block;
+  margin: 7px 0;
+  font-weight: 400;
+  color: #bac5ca;
+}
+.memory-grid figcaption p {
+  margin: 0 0 4px;
+}
+@media (max-width: 480px) {
+  .memory-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+}
 @media (max-width: 640px), (max-height: 500px) {
   :root {
     --ui-title: 14px;
@@ -566,35 +616,38 @@ body[data-artwork="abyss"].ready canvas {
       </p>
       <p>
         스페이스 또는 위 방향키를 누르는 동안 최대 제동 명령을 보낼 수 있습니다.
-        엔터로는 제동 없이 신호만 보낼 수 있고, 좌우 방향키로 수신 주파수를
+        엔터를 누르고 놓으면 제동 없이 그 길이의 신호만 보낼 수 있고, 좌우 방향키로 수신 주파수를
         조절합니다. P는 일시 정지, R은 새 항해, M은 소리입니다. 이 기록을 열면
         항해가 잠시 멈춥니다.
       </p>
       <h3>A · 물리적 관계</h3>
       <p>
         회전하지 않는 블랙홀의 슈바르츠실트 시공간에서 방사 방향 운동과 빛의
-        도달을 계산합니다. 사건의 지평선에서 특이하지 않은 팽르베–굴스트란
-        좌표를 사용합니다. 단위는 광속 c = 1, 슈바르츠실트 반지름 rₛ = 1입니다.
+        도달을 계산합니다. 사건의 지평선에서 좌표 특이점이 생기지 않는
+        팽르베–굴스트란(Painlevé–Gullstrand) 좌표를 사용합니다. 광속 c = 1,
+        슈바르츠실트 반지름 rₛ = 1인 단위계를 사용합니다.
       </p>
       <p>
         탐사선은 국소 자유낙하계에 대해 정지한 상태에서 r = 8.6으로 출발하고,
-        관측소는 R = 9에 정지해 있습니다. 송신과 수신은 각자의 고유시로
+        관측소는 R = 9에 정지해 있습니다. 송신과 수신은 각자의 고유시간으로
         기록합니다. 화면의 두 시각은 서로 다른 시계의 기록이므로, 차이를 그대로
         통신 소요 시간으로 해석할 수 없습니다.
       </p>
       <p>
-        외부로 향하는 빛과 안쪽으로 향하는 명령은 각각 방사 방향 영측지선을
-        따릅니다. 중력에 의한 적색편이와 탐사선 운동에 의한 도플러 효과를 함께
+        바깥으로 보내는 응답과 안쪽으로 보내는 명령은 모두 방사 방향으로
+        진행하는 빛의 경로인 영측지선을 따릅니다. 중력에 의한 적색편이와
+        탐사선의 운동에 의한 도플러 효과를 함께
         계산합니다. 사건의 지평선 안쪽에서 새로 보낸 정보가 관측소에 도착하는
         일은 없습니다.
       </p>
       <h3>B · 수치 근사</h3>
       <p>
-        세계선은 4차 룽게–쿠타 적분으로 계산합니다. 기본 시간 간격은 1/600
-        이하이며, 지평선 가까이에서는 더 작게 나눕니다. 제한된 일정 고유가속도와
-        누적 충격량으로 제동을 근사합니다. 탐사선의 자체 중력, 조석 파괴, 연료의
-        상세 유체 거동은 계산하지 않습니다. 방사 방향 1차원 모형으로, 각도에
-        따른 중력 렌즈 영상은 추적하지 않습니다.
+        탐사선의 세계선은 4차 룽게–쿠타 방법으로 수치 적분합니다. 좌표시간의
+        적분 간격은 1/600 이하이며, 사건의 지평선에 가까워지면 더 잘게 나눕니다.
+        제동은 바깥쪽으로 작용하는 고유가속도로 나타내고, 그 크기와 고유시간에
+        따른 누적량에 상한을 둡니다. 추력은 수신된 제동 명령을 완만하게 따라갑니다.
+        탐사선의 자체 중력과 조석 파괴, 추진제의 소모 과정은 계산하지 않습니다.
+        방사 방향의 1차원 모형이며, 중력 렌즈 효과에 따른 영상은 계산하지 않습니다.
       </p>
       <h3>C · 예술적 해석</h3>
       <p>
@@ -602,28 +655,49 @@ body[data-artwork="abyss"].ready canvas {
         화면상의 거리, 수신면의 명암·시간 간격, 시간 배율, 붉어지는 색과 노출은
         시각적 해석입니다. 실제 광학 영상이나 천체의 크기 비율을 재현하지
         않습니다. 검은 중심과 원반은 원작 「Odyssey Archive」의 공간적 기준을
-        이어갑니다. 원반을 화면 전체의 수신면으로 펼치고, 바깥으로 향하는 빛의
-        좌표 F(r)에 따라 수신 시각의 등위선을 구성합니다. 이는 광학 강착원반의
-        영상이 아니라 도착한 기록을 공간으로 펼친 계측 영상입니다. 각도에 따른
-        다섯 갈래의 위상 배치는 수신면을 펼치는 예술적 매핑입니다.
+        이어갑니다. 원반은 화면 전체에 펼쳐진 수신면입니다. 바깥으로 나가는 빛의
+        전파 시간을 계산할 때 쓰는 함수 F(r)를 공간 배치에 사용합니다. 기록의 발신
+        시각에 이 좌표와 다섯 갈래의 각도 위상을 결합해 얇은 능선을 만듭니다.
+        이는 도착한 기록을 펼쳐 보이는 예술적 배치이며, 강착 원반의 광학 영상이
+        아닙니다. 수신 자료가 가리키는 탐사선의 반지름 좌표가 작아질수록 선체의
+        표시 크기도 작아집니다. 실제로 수신된 기준
+        교신과 응답만이 발신 시각에 대응하는 얇은 능선으로 드러납니다. 도착
+        직후의 능선은 잠시 선명해졌다가 낮은 대비의 시간층으로 남습니다.
+        직접 보낸 신호의 층은 누르는 순간과 손을 떼는 순간에 보낸 두 신호가
+        차례로 돌아오는 동안 드러납니다. 손을 뗀 신호까지 돌아오면 조용히 사라집니다. 짧게·길게·짧게 눌러 보낸
+        간격은 각각의 도착 간격으로 다시 나타납니다.
+        수신되지 않은 신호는 면에 기록하지 않으며, 능선 사이에는 조용한 공백이
+        이어집니다. 도착한 기록은 선체가 희미해진 뒤에도 남습니다.
       </p>
       <p>
-        소리는 신호를 음으로 바꾼 수신음입니다. 탐사선의 응답기는 일정한 고유
-        주파수의 반송파를 새로 생성합니다. 왕복 경로가 응답의 간격을 바꾸고,
+        소리는 도착한 신호를 음으로 옮긴 것입니다. 응답기는 탐사선의 시계를
+        기준으로 일정한 주파수의 반송파를 새로 보냅니다. 왕복 경로가 응답의 간격을 바꾸고,
         바깥으로 향하는 경로의 적색편이가 반송파를 낮춥니다. 거울 반사파를
-        계산하는 방식은 아닙니다. 가청 대역·이득·음의 길이는 청취를 위한
-        해석입니다. 아래쪽 두 선은 관측소의 발신과 수신을 나타냅니다. 우주
+        계산하는 방식은 아닙니다. 기준 신호은 짧은 한 획으로 들립니다. 직접
+        누른 신호의 응답은 누를 때 보낸 신호가 돌아오면 시작되고,
+        손을 뗄 때 보낸 신호가 돌아오면 멈춥니다. 관객이 만든 길이와 침묵의 간격이 왕복 경로에 의해 달라져
+        돌아오며, 음높이는 이미 수신된 원격측정의 적색편이를 따릅니다.
+        반송파의 배음과 좁은 대역의 수신 질감, 가청 대역·이득은 청취를 위한
+        예술적 해석입니다. 아주 긴 획은 배경음으로 남지 않도록 16초 이내로
+        감쇠하며, 이 청취 상한은 모형의 도착 시각을 바꾸지 않습니다. 수신 주파수와
+        대역폭에서 벗어난 신호는 약해지고, 응답 사이에는 침묵이 남습니다.
+        오른쪽 위의 두 선은 관측소의 발신과 수신을 나타냅니다. 우주
         공간을 통해 공기 중의 소리가 전달된다는 뜻은 아닙니다. 배경음은
         없습니다.
       </p>
       <p>
         긴 공백 뒤 오래전의 응답이 도착하는 순간이 이 항해의 단 한 번의
-        사건입니다. 직접 보낸 신호의 응답이 없을 때에는 기준 교신이 그 공백을
+        사건입니다. 직접 보낸 신호의 응답이 없을 때에는 기준 신호이 그 공백을
         드러냅니다. 그 순간 수신면은 8초 동안 한 기록을 붙잡습니다. 계측기의
         표본 유지에 해당하는 예술적 시간 구성으로, 항해 계산은 계속됩니다.
         접촉에 의한 수신면 변형도 계속 반응합니다. 제동으로 세계선이 달라지면 그
         시각도 달라집니다. 이후 화면은 자동으로 되돌아가지 않습니다. 새 항해는
         직접 시작할 수 있습니다.
+      </p>
+      <p>
+        이 브라우저에서 다시 열면 저장된 항해와 도착을 기다리는 명령을
+        이어받습니다. 닫혀 있던 시간만큼 항해를 임의로 진행하지 않습니다. 화면을
+        떠날 때 보낸 중지 명령도 앞서 보낸 명령의 뒤를 따라 이동합니다.
       </p>
       <h3>자료</h3>
       <p>
@@ -28247,6 +28321,520 @@ void main() {
     };
   }
 
+  // exhibition-memory.mjs
+  var DB_NAME = "hybrid-exhibition-20-v1";
+  var STORE = "artworks";
+  var MAX_CYCLES = 3;
+  var STAGES = ["\uAC1C\uC785 \uC804", "\uAC1C\uC785 \uC9C1\uD6C4", "\uC2DC\uAC04\uC774 \uC9C0\uB09C \uB4A4"];
+  var actionKeys = {
+    transfer: ["Space", "ArrowLeft", "ArrowRight", "KeyA", "KeyD"],
+    abyss: ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"],
+    echo: ["Enter", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"],
+    delay: ["Enter", "Space", "ArrowUp", "ArrowLeft", "ArrowRight"]
+  };
+  function createExhibitionMemory(options) {
+    const { id, canvas, paint, now, summary, continuation, restore } = options;
+    const actionable = new Set(actionKeys[id] || []);
+    let db = null, storage = "memory", loaded = false, capturing = false;
+    let saveAt = -Infinity, writing = null, saveAgain = false, serial = 0;
+    let cycle = 1, interventionAt = null, released = false, frames = [];
+    let lastCapture = -Infinity, loadedPayload = null, statusNode, listNode;
+    const urls = [], contacts2 = /* @__PURE__ */ new Set(), keys2 = /* @__PURE__ */ new Set();
+    let afterFrame = 0, refreshNeeded = false;
+    const isTest = new URLSearchParams(location.search).has("test");
+    const allowPersistence = !isTest || new URLSearchParams(location.search).has("persist");
+    const key = `hybrid-exhibition:${id}:v1`;
+    const owner = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+    function safeSummary() {
+      try {
+        return summary().filter((x) => typeof x === "string").slice(0, 7).map((x) => x.slice(0, 180));
+      } catch {
+        return [];
+      }
+    }
+    function updateStatus() {
+      if (!statusNode) return;
+      statusNode.textContent = storage === "superseded" ? "\uB2E4\uB978 \uD654\uBA74\uC5D0\uC11C \uD56D\uD574\uB97C \uC774\uC5B4\uBC1B\uC558\uC2B5\uB2C8\uB2E4. \uC774 \uD654\uBA74\uC758 \uAE30\uB85D\uC740 \uD604\uC7AC \uD654\uBA74\uC5D0\uC11C\uB9CC \uBCF4\uAD00\uD569\uB2C8\uB2E4." : storage === "indexeddb" ? "\uC774 \uBE0C\uB77C\uC6B0\uC800\uC5D0 \uAE30\uB85D\uD569\uB2C8\uB2E4. \uC0C8 \uD56D\uD574\uB97C \uC2DC\uC791\uD574\uB3C4 \uC774\uC804 \uAE30\uB85D\uC740 \uB0A8\uC2B5\uB2C8\uB2E4." : storage === "local" ? "\uC774 \uBE0C\uB77C\uC6B0\uC800\uC5D0 \uD56D\uD574 \uC0C1\uD0DC\uB97C \uAE30\uB85D\uD569\uB2C8\uB2E4. \uC774\uBBF8\uC9C0\uB294 \uC774\uBC88 \uD654\uBA74\uC5D0\uC11C \uBCF4\uAD00\uD569\uB2C8\uB2E4." : "\uD604\uC7AC \uD654\uBA74\uC5D0\uC11C \uAE30\uB85D\uD569\uB2C8\uB2E4. \uC800\uC7A5 \uACF5\uAC04\uC744 \uC0AC\uC6A9\uD560 \uC218 \uC5C6\uC5B4 \uC7AC\uC811\uC18D \uC2DC \uC778\uACC4\uB418\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.";
+    }
+    function mount() {
+      const dialog2 = document.getElementById("record");
+      if (!dialog2) return;
+      const section = document.createElement("section");
+      section.id = "experience-log";
+      const heading = document.createElement("h3");
+      heading.textContent = "\uAC1C\uC785\uACFC \uADF8 \uC774\uD6C4";
+      statusNode = document.createElement("p");
+      statusNode.className = "memory-status";
+      listNode = document.createElement("div");
+      listNode.className = "memory-cycles";
+      section.append(heading, statusNode, listNode);
+      const first = dialog2.querySelector("h2 + p");
+      if (first) first.after(section);
+      else dialog2.append(section);
+      dialog2.addEventListener("close", () => {
+        if (refreshNeeded) refresh();
+      });
+      document.getElementById("about")?.addEventListener("click", refresh);
+      updateStatus();
+    }
+    function formatClock(t) {
+      const s = Math.max(0, Math.floor(t));
+      return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+    }
+    function refresh() {
+      if (!listNode) return;
+      refreshNeeded = false;
+      urls.splice(0).forEach((u) => URL.revokeObjectURL(u));
+      listNode.replaceChildren();
+      const cycles = [...new Set(frames.map((f) => f.cycle))].sort(
+        (a, b) => b - a
+      );
+      if (!cycles.length) {
+        const p = document.createElement("p");
+        p.textContent = "\uD654\uBA74\uC744 \uAD00\uCC30\uD558\uAC70\uB098 \uC870\uC791\uD558\uBA74 \uC2E4\uC81C \uC7A5\uBA74\uACFC \uAD00\uCE21 \uAE30\uB85D\uC774 \uB0A8\uC2B5\uB2C8\uB2E4.";
+        listNode.append(p);
+      }
+      for (const c of cycles) {
+        const group = document.createElement("div");
+        const h = document.createElement("h4");
+        h.textContent = `\uD56D\uD574 ${c}${c === cycle ? " \xB7 \uD604\uC7AC" : ""}`;
+        const grid = document.createElement("div");
+        grid.className = "memory-grid";
+        for (const f of frames.filter((f2) => f2.cycle === c).sort((a, b) => a.stage - b.stage)) {
+          const figure = document.createElement("figure");
+          if (f.image instanceof Blob && /^image\//.test(f.image.type)) {
+            const img = document.createElement("img"), url = URL.createObjectURL(f.image);
+            urls.push(url);
+            img.src = url;
+            img.alt = `${STAGES[f.stage]} \xB7 \uD56D\uD574 \uACBD\uACFC ${formatClock(f.at)}`;
+            img.loading = "lazy";
+            img.width = 480;
+            img.height = 300;
+            figure.append(img);
+          }
+          const caption = document.createElement("figcaption"), title = document.createElement("strong");
+          title.textContent = `${STAGES[f.stage]} \xB7 ${formatClock(f.at)}`;
+          caption.append(title);
+          for (const line of f.summary) {
+            const p = document.createElement("p");
+            p.textContent = line;
+            caption.append(p);
+          }
+          figure.append(caption);
+          grid.append(figure);
+        }
+        group.append(h, grid);
+        listNode.append(group);
+      }
+      updateStatus();
+    }
+    function openDatabase() {
+      return new Promise((resolve) => {
+        let settled = false;
+        const finish = (value) => {
+          if (!settled) {
+            settled = true;
+            clearTimeout(timer);
+            resolve(value);
+          }
+        };
+        const timer = setTimeout(() => finish(null), 1600);
+        try {
+          const request = indexedDB.open(DB_NAME, 1);
+          request.onupgradeneeded = () => {
+            if (!request.result.objectStoreNames.contains(STORE))
+              request.result.createObjectStore(STORE);
+          };
+          request.onsuccess = () => {
+            if (settled) {
+              request.result.close();
+              return;
+            }
+            const connection = request.result;
+            connection.onversionchange = () => {
+              connection.close();
+              db = null;
+              storage = "memory";
+              updateStatus();
+            };
+            finish(connection);
+          };
+          request.onerror = request.onblocked = () => finish(null);
+        } catch {
+          finish(null);
+        }
+      });
+    }
+    function readStored() {
+      if (db)
+        return new Promise((resolve) => {
+          let settled = false, tx, record = null;
+          const finish = (value) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            resolve(value);
+          };
+          const timer = setTimeout(() => {
+            try {
+              tx?.abort();
+            } catch {
+            }
+            finish({ readFailed: true });
+          }, 1600);
+          try {
+            tx = db.transaction(STORE, "readwrite");
+            const store = tx.objectStore(STORE), request = store.get(id);
+            request.onsuccess = () => {
+              record = request.result || null;
+              store.put(
+                record ? { ...record, owner } : {
+                  version: 1,
+                  id,
+                  cycle: 1,
+                  frames: [],
+                  payload: null,
+                  owner
+                },
+                id
+              );
+            };
+            tx.oncomplete = () => finish(record);
+            tx.onerror = tx.onabort = () => finish({ readFailed: true });
+          } catch {
+            finish({ readFailed: true });
+          }
+        });
+      if (options.requiresBinaryStorage) return Promise.resolve(null);
+      try {
+        return Promise.resolve(JSON.parse(localStorage.getItem(key) || "null"));
+      } catch {
+        return Promise.resolve(null);
+      }
+    }
+    function validFrame(f) {
+      return f && Number.isInteger(f.cycle) && f.cycle > 0 && Number.isInteger(f.stage) && f.stage >= 0 && f.stage < 3 && Number.isFinite(f.at) && f.at >= 0 && Array.isArray(f.summary) && f.summary.every((s) => typeof s === "string" && s.length <= 180);
+    }
+    async function start() {
+      mount();
+      const guard = (e) => {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      };
+      for (const event of [
+        "pointerdown",
+        "pointermove",
+        "click",
+        "keydown",
+        "wheel"
+      ])
+        addEventListener(event, guard, { capture: true, passive: false });
+      if (allowPersistence) {
+        db = await openDatabase();
+        if (db) storage = "indexeddb";
+        else if (!options.requiresBinaryStorage) {
+          try {
+            localStorage.setItem(key + ":test", "1");
+            localStorage.removeItem(key + ":test");
+            storage = "local";
+          } catch {
+          }
+        }
+        const stored = await readStored();
+        if (stored?.readFailed) {
+          db?.close();
+          db = null;
+          storage = "memory";
+        }
+        if (stored?.version === 1 && stored.id === id) {
+          const restoredCycle = Number.isInteger(stored.cycle) && stored.cycle > 0 ? stored.cycle : 1;
+          cycle = Math.min(restoredCycle, 1e9);
+          frames = (Array.isArray(stored.frames) ? stored.frames : []).filter(validFrame).slice(-9);
+          interventionAt = Number.isFinite(stored.interventionAt) && stored.interventionAt >= 0 ? stored.interventionAt : null;
+          released = !!stored.released;
+          try {
+            loadedPayload = stored.payload;
+            if (stored.payload != null && restore && restore(stored.payload) === false)
+              throw new Error("Invalid continuation");
+          } catch {
+            loadedPayload = null;
+            interventionAt = null;
+            released = false;
+            cycle++;
+          }
+          if (!options.resumeCycle) {
+            cycle++;
+            interventionAt = null;
+            released = false;
+          }
+        }
+      }
+      loaded = true;
+      saveAt = now();
+      updateStatus();
+      refresh();
+      for (const event of [
+        "pointerdown",
+        "pointermove",
+        "click",
+        "keydown",
+        "wheel"
+      ])
+        removeEventListener(event, guard, true);
+      installEvents();
+      return { storage, restored: loadedPayload !== null };
+    }
+    function packet() {
+      return {
+        version: 1,
+        id,
+        cycle,
+        interventionAt,
+        released,
+        frames: frames.slice(-9),
+        payload: continuation ? continuation() : null,
+        serial: ++serial,
+        owner
+      };
+    }
+    async function checkpoint() {
+      if (!loaded || !allowPersistence) return;
+      saveAgain = true;
+      if (writing) return writing;
+      writing = (async () => {
+        while (saveAgain) {
+          saveAgain = false;
+          saveAt = now();
+          if (!db && storage !== "local") continue;
+          let value;
+          try {
+            value = packet();
+          } catch {
+            continue;
+          }
+          if (!db) {
+            try {
+              const compact = {
+                ...value,
+                frames: value.frames.map(({ image, ...f }) => f)
+              };
+              const json = JSON.stringify(compact);
+              if (json.length <= 15e4) localStorage.setItem(key, json);
+              else {
+                storage = "memory";
+                updateStatus();
+              }
+            } catch {
+              storage = "memory";
+              updateStatus();
+            }
+            continue;
+          }
+          await new Promise((resolve) => {
+            try {
+              const tx = db.transaction(STORE, "readwrite");
+              const store = tx.objectStore(STORE), request = store.get(id);
+              request.onsuccess = () => {
+                if (request.result?.owner !== owner) {
+                  storage = "superseded";
+                  db?.close();
+                  db = null;
+                  updateStatus();
+                  return;
+                }
+                store.put(value, id);
+              };
+              tx.oncomplete = () => resolve(true);
+              tx.onerror = tx.onabort = () => {
+                storage = "memory";
+                db = null;
+                updateStatus();
+                resolve(false);
+              };
+            } catch {
+              storage = "memory";
+              db = null;
+              updateStatus();
+              resolve(false);
+            }
+          });
+        }
+      })();
+      try {
+        await writing;
+      } finally {
+        writing = null;
+      }
+    }
+    function trim() {
+      const keep = [...new Set(frames.map((f) => f.cycle))].sort((a, b) => b - a).slice(0, MAX_CYCLES);
+      frames = frames.filter((f) => keep.includes(f.cycle)).slice(-9);
+    }
+    function capture(stage) {
+      if (!loaded || capturing || frames.some((f) => f.cycle === cycle && f.stage === stage))
+        return;
+      const source = canvas();
+      if (!source?.width || !source?.height) return;
+      capturing = true;
+      const at = now(), record = { cycle, stage, at, summary: safeSummary(), image: null };
+      try {
+        paint();
+        const image = document.createElement("canvas"), ratio = Math.min(480 / source.width, 300 / source.height, 1);
+        image.width = Math.max(1, Math.round(source.width * ratio));
+        image.height = Math.max(1, Math.round(source.height * ratio));
+        image.getContext("2d", { alpha: false }).drawImage(source, 0, 0, image.width, image.height);
+        frames.push(record);
+        trim();
+        lastCapture = at;
+        refreshNeeded = true;
+        image.toBlob(
+          (blob) => {
+            if (blob && blob.size <= 18e4) record.image = blob;
+            refreshNeeded = true;
+            checkpoint();
+          },
+          "image/jpeg",
+          0.76
+        );
+      } catch {
+      }
+      capturing = false;
+    }
+    function beforeInput() {
+      if (!loaded) return;
+      capture(0);
+      if (interventionAt === null) interventionAt = now();
+      released = false;
+    }
+    function afterInput() {
+      if (!loaded || contacts2.size || keys2.size || interventionAt === null)
+        return;
+      released = true;
+      if (afterFrame) cancelAnimationFrame(afterFrame);
+      const capturedCycle = cycle;
+      afterFrame = requestAnimationFrame(() => {
+        afterFrame = 0;
+        if (capturedCycle !== cycle || interventionAt === null) return;
+        capture(1);
+        checkpoint();
+      });
+    }
+    function eventTarget(e) {
+      if (document.getElementById("record")?.open) return false;
+      return !e.target?.closest?.(
+        "button,a,input,textarea,select,dialog,[contenteditable=true]"
+      );
+    }
+    function installEvents() {
+      const surface = canvas();
+      surface.addEventListener(
+        "pointerdown",
+        (e) => {
+          if (e.button > 0 || !eventTarget(e)) return;
+          contacts2.add(e.pointerId);
+          beforeInput();
+        },
+        true
+      );
+      const finish = (e) => {
+        if (contacts2.delete(e.pointerId)) afterInput();
+      };
+      addEventListener("pointerup", finish);
+      addEventListener("pointercancel", finish);
+      surface.addEventListener("lostpointercapture", finish);
+      addEventListener(
+        "keydown",
+        (e) => {
+          if (!e.repeat && actionable.has(e.code) && eventTarget(e)) {
+            keys2.add(e.code);
+            beforeInput();
+          }
+        },
+        true
+      );
+      addEventListener("keyup", (e) => {
+        if (keys2.delete(e.code)) afterInput();
+      });
+      if (id === "abyss")
+        surface.addEventListener(
+          "wheel",
+          (e) => {
+            if (eventTarget(e)) {
+              beforeInput();
+              released = true;
+              afterInput();
+            }
+          },
+          { capture: true, passive: true }
+        );
+      const suspendInput = () => {
+        contacts2.clear();
+        keys2.clear();
+        afterInput();
+        checkpoint();
+      };
+      addEventListener("blur", suspendInput);
+      addEventListener("resize", suspendInput);
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) suspendInput();
+      });
+      addEventListener("pagehide", () => {
+        checkpoint();
+      });
+    }
+    function tick2() {
+      if (!loaded || capturing) return;
+      const t = now();
+      if (t >= 0.8 && !frames.some((f) => f.cycle === cycle && f.stage === 0))
+        capture(0);
+      const after = frames.find((f) => f.cycle === cycle && f.stage === 1);
+      if (released && after && t - after.at >= 30) capture(2);
+      if (t < saveAt || t - saveAt >= 5) checkpoint();
+    }
+    function newVoyage() {
+      if (afterFrame) {
+        cancelAnimationFrame(afterFrame);
+        afterFrame = 0;
+      }
+      if (interventionAt !== null && !frames.some((f) => f.cycle === cycle && f.stage === 1))
+        capture(1);
+      cycle++;
+      interventionAt = null;
+      released = false;
+      contacts2.clear();
+      keys2.clear();
+      lastCapture = -Infinity;
+      trim();
+      refreshNeeded = true;
+      queueMicrotask(checkpoint);
+    }
+    return {
+      start,
+      tick: tick2,
+      checkpoint,
+      newVoyage,
+      beforeInput,
+      afterInput,
+      refresh,
+      snapshot: () => ({
+        storage,
+        loaded,
+        cycle,
+        interventionAt,
+        released,
+        frameCount: frames.length,
+        frames: frames.map((f) => ({
+          cycle: f.cycle,
+          stage: f.stage,
+          at: f.at,
+          summary: [...f.summary],
+          hasImage: f.image instanceof Blob
+        })),
+        lastCapture
+      })
+    };
+  }
+
   // delay/vessel.mjs
   var up = new Vector3(0, 1, 0);
   function createVessel() {
@@ -28434,12 +29022,17 @@ void main() {
       uG: { value: 1 },
       uTuning: { value: 0 },
       uHold: { value: 0 },
+      // Arrival, validity, received frequency ratio, and emitted coordinate time.
+      // The reference ridge does not exist until the model receives a real packet.
+      uPacket: { value: new Vector4(-1e3, 0, 1, 0) },
       uContact: {
         value: [new Vector4(0, 0, 0, 220), new Vector4(0, 0, 0, 220)]
       },
       uReplies: {
         value: Array.from({ length: 4 }, () => new Vector4(-1e3, 0, 0, 0))
-      }
+      },
+      // Each component is a received release time; a negative value means no release arrived.
+      uReplyEnd: { value: new Vector4(-1, -1, -1, -1) }
     };
     const material = new ShaderMaterial({
       uniforms,
@@ -28451,12 +29044,29 @@ void main() {
     precision highp float;
     varying vec2 p;
     uniform float uArchiveT,uNow,uIntro,uG,uTuning,uHold;
-    uniform vec4 uContact[2],uReplies[4];
+    uniform vec4 uContact[2],uReplies[4],uPacket,uReplyEnd;
     float nullCoordinate(float r){float q=sqrt(r);return r+2.*q+2.*log(q-1.);}
     float contour(float phase,float width){
       float d=abs(fract(phase/6.2831853+.5)-.5)*6.2831853;
       float aa=max(fwidth(phase),.005);
       return 1.-smoothstep(width,width+aa*1.2,d);
+    }
+    vec2 receiptLayer(vec4 packet,float F,float a,float band,float ended,float personal){
+      float age=uNow-packet.x;
+      float valid=step(.5,packet.y)*step(0.,age);
+      float phase=(packet.w-F)*band+5.*a;
+      float width=.025+.012*(1.-clamp(packet.z,0.,1.));
+      float ridge=contour(phase,width);
+      float shoulder=max(0.,contour(phase,.13)-ridge);
+      // Exact received emission time fixes the layer. Age changes only its exposure.
+      // A delayed response reveals an existing path; no ridge predicts an arrival.
+      float closed=step(0.,ended);
+      // A personal layer stays identifiable for the observed open interval, never a predicted one.
+      // Very long marks dim gently; their actual release still determines the final decay.
+      float mark=exp(-max(0.,age-3.)/6.)*(1.-closed+closed*exp(-max(0.,uNow-ended)/1.25));
+      float fresh=mix(exp(-max(0.,age)/1.7),mark,personal);
+      float retained=exp(-max(0.,age)/85.);
+      return vec2(ridge*(.12+.82*fresh),shoulder*.055)*retained*valid;
     }
     void main(){
       vec2 q=p;
@@ -28472,27 +29082,25 @@ void main() {
       float F=nullCoordinate(r),retarded=uArchiveT-F;
       float band=.72+.045*uTuning;
       float phase=retarded*band+5.*a;
-      float mainLine=contour(phase,.065);
-      float minor=contour(phase*3.,.022)*.23;
-      float interval=contour(retarded*.19-2.*a,.035)*.18;
-      float side=.32+.68*pow(.5+.5*cos(a-.7),2.);
-      float fold=pow(.5+.5*cos(phase),5.);
-      float echo=0.;
+      float mainLine=contour(phase,.04);
+      // The fivefold receiver geometry is a quiet coordinate scaffold, not a field of stars.
+      // Most of the aperture stays inactive between the few actual received layers.
+      float aperture=.10+.90*pow(.5+.5*cos(a-.7),4.);
+      vec2 receipt=receiptLayer(uPacket,F,a,band,-1.,0.)*.60;
+      float received=step(.5,uPacket.y);
       for(int i=0;i<4;i++){
-        float age=uNow-uReplies[i].x;
-        float front=abs((F-nullCoordinate(3.))*.38-age);
-        float width=.05+.065/max(.06,uReplies[i].z);
-        echo+=exp(-front*front/(width*width))*exp(-age*.075)*step(0.,age)*step(.5,uReplies[i].y);
+        receipt+=receiptLayer(uReplies[i],F,a,band,uReplyEnd[i],1.);
+        received=max(received,step(.5,uReplies[i].y));
       }
       float inner=smoothstep(1.12,1.6,r);
       float envelope=1./(1.+pow(r*.034,1.3));
-      float aperture=.55+.45*pow(.5+.5*cos(a+uTuning*.16),2.);
-      vec3 graphite=vec3(.035,.041,.045),silver=vec3(.32,.34,.34);
-      vec3 warm=vec3(.40,.29,.19);
+      vec3 graphite=vec3(.013,.017,.020),silver=vec3(.48,.51,.52);
+      vec3 warm=vec3(.48,.34,.23);
       vec3 ink=mix(silver,warm,(1.-clamp(uG,0.,1.))*.55);
-      float lines=(mainLine+minor+interval)*(.36+.15*uHold);
-      vec3 color=graphite*(.4+fold*.55)+ink*(lines*side+echo*.65+touch*.10);
-      float density=(.45+aperture*.4)*inner*envelope*uIntro;
+      float scaffold=mainLine*.055*received;
+      float layers=receipt.x*(.28+.72*aperture)+receipt.y;
+      vec3 color=graphite*(.24+.18*aperture)+ink*(scaffold+layers*(1.+.18*uHold)+touch*.075);
+      float density=(.62+.18*aperture)*inner*envelope*uIntro;
       gl_FragColor=vec4(color,density);
       #include <tonemapping_fragment>
       #include <colorspace_fragment>
@@ -28783,6 +29391,195 @@ void main() {
       }
       return result;
     }
+    function exportState() {
+      return {
+        version: 1,
+        scalars: {
+          now,
+          T,
+          target,
+          frameCount,
+          imageIndex,
+          packetCount,
+          receivedPackets,
+          nextBeacon,
+          commandCount,
+          commandIndex,
+          lastCommandValue,
+          lastCommandAt,
+          ack,
+          horizonAt,
+          horizonTau,
+          finished,
+          signatureAt,
+          previousArrival,
+          lastInterval,
+          maxError,
+          droppedFrames,
+          emissionViolations,
+          pingCount,
+          pingIndex,
+          replyCount,
+          receivedReplies,
+          unanswered,
+          lastReplyInterval,
+          previousReplyArrival
+        },
+        s: s.slice(),
+        image: image.slice(),
+        lastPacket: lastPacket.slice(),
+        lastReply: lastReply.slice(),
+        frames: frames.slice(0, frameCount * STRIDE),
+        packets: packets.slice(0, packetCount * STRIDE),
+        commands: commands.slice(0, commandCount * 3),
+        pings: pings.slice(0, pingCount * 3),
+        replies: replies.slice(0, replyCount * REPLY_STRIDE)
+      };
+    }
+    function restoreState(data) {
+      try {
+        if (data?.version !== 1 || !data.scalars) return false;
+        const q = data.scalars;
+        const finite = (a) => a instanceof Float64Array && a.every(Number.isFinite);
+        const count = (n, max) => Number.isInteger(n) && n >= 0 && n <= max;
+        const nullable = (n) => n === null || Number.isFinite(n) && n >= 0;
+        const numbers = [
+          "now",
+          "T",
+          "target",
+          "nextBeacon",
+          "lastCommandValue",
+          "lastCommandAt",
+          "ack",
+          "lastInterval",
+          "maxError",
+          "lastReplyInterval"
+        ];
+        if (!numbers.every((k) => Number.isFinite(q[k])) || q.now < 0 || q.T < 0 || q.T > q.now / CLOCK_SCALE + 1e-8 || q.target < 0 || q.target > 1 || typeof q.finished !== "boolean")
+          return false;
+        if (!count(q.frameCount, FRAME_CAP) || q.frameCount < 1 || !count(q.packetCount, PACKET_CAP) || q.packetCount < 1 || !count(q.receivedPackets, q.packetCount) || !Number.isInteger(q.imageIndex) || q.imageIndex < -1 || q.imageIndex >= q.frameCount || !count(q.commandCount, 2048) || !count(q.commandIndex, q.commandCount) || !count(q.pingCount, PING_CAP) || !count(q.pingIndex, q.pingCount) || !count(q.replyCount, PING_CAP) || !count(q.receivedReplies, q.replyCount) || !count(q.unanswered, q.pingCount) || !count(q.droppedFrames, 1e9) || !count(q.emissionViolations, 1e9) || ![
+          q.horizonAt,
+          q.horizonTau,
+          q.signatureAt,
+          q.previousArrival,
+          q.previousReplyArrival
+        ].every(nullable))
+          return false;
+        for (const [name, length] of [
+          ["s", 6],
+          ["image", STRIDE],
+          ["lastPacket", STRIDE],
+          ["lastReply", REPLY_STRIDE],
+          ["frames", q.frameCount * STRIDE],
+          ["packets", q.packetCount * STRIDE],
+          ["commands", q.commandCount * 3],
+          ["pings", q.pingCount * 3],
+          ["replies", q.replyCount * REPLY_STRIDE]
+        ]) {
+          if (!finite(data[name]) || data[name].length !== length) return false;
+        }
+        if (data.s[0] < 0.5 || data.s[0] > 100 || data.s[3] < 0 || data.s[3] > 1 || data.s[4] < 0 || data.s[4] > FUEL_BUDGET + 1e-8)
+          return false;
+        for (const name of ["frames", "packets", "replies"]) {
+          const a = data[name], stride = name === "replies" ? REPLY_STRIDE : STRIDE;
+          for (let i = 0; i < a.length; i += stride) {
+            // Press/release edges can be emitted in the same rendered frame and
+            // legitimately share one return instant; sampled frames/beacons stay strict.
+            if (a[i + 2] <= 1 || a[i + 8] < 0 || a[i] < a[i + 1] * CLOCK_SCALE - 1e-8 || i && (name === "replies" ? a[i] < a[i - stride] : a[i] <= a[i - stride]))
+              return false;
+          }
+        }
+        for (const name of ["commands", "pings"]) {
+          const a = data[name];
+          for (let i = 0; i < a.length; i += 3) {
+            if (a[i] < 0 || a[i] * CLOCK_SCALE > q.now + 1e-8 || i && a[i] < a[i - 3] || a[i + 2] !== i / 3 + 1)
+              return false;
+            if (name === "commands" ? a[i + 1] < 0 || a[i + 1] > 1 : Math.abs(a[i + 1]) !== 1)
+              return false;
+          }
+        }
+        if (q.imageIndex >= 0) {
+          const at = q.imageIndex * STRIDE;
+          if (data.frames[at] > q.now + 1e-8 || !data.image.every((v, i) => v === data.frames[at + i]))
+            return false;
+        }
+        if (q.imageIndex + 1 < q.frameCount && data.frames[(q.imageIndex + 1) * STRIDE] <= q.now - 1e-8)
+          return false;
+        for (const [name, count2, total, stride, last] of [
+          ["packets", q.receivedPackets, q.packetCount, STRIDE, "lastPacket"],
+          ["replies", q.receivedReplies, q.replyCount, REPLY_STRIDE, "lastReply"]
+        ]) {
+          const a = data[name];
+          if (count2) {
+            const at = (count2 - 1) * stride;
+            if (a[at] > q.now + 1e-8 || !data[last].every((v, i) => v === a[at + i]))
+              return false;
+          } else if (!data[last].every((v) => v === 0)) return false;
+          if (count2 < total && a[count2 * stride] <= q.now - 1e-8) return false;
+        }
+        if (q.signatureAt !== null) {
+          if (q.signatureAt > q.now + 1e-8) return false;
+          let found = false;
+          for (let i = 0; i < q.receivedPackets; i++)
+            if (data.packets[i * STRIDE] === q.signatureAt) found = true;
+          for (let i = 0; i < q.receivedReplies; i++)
+            if (data.replies[i * REPLY_STRIDE] === q.signatureAt) found = true;
+          if (!found) return false;
+        }
+        s.set(data.s);
+        before.set(data.s);
+        image.set(data.image);
+        lastPacket.set(data.lastPacket);
+        lastReply.set(data.lastReply);
+        frames.fill(0);
+        frames.set(data.frames);
+        packets.fill(0);
+        packets.set(data.packets);
+        commands.fill(0);
+        commands.set(data.commands);
+        pings.fill(0);
+        pings.set(data.pings);
+        replies.fill(0);
+        replies.set(data.replies);
+        ({
+          now,
+          T,
+          target,
+          frameCount,
+          imageIndex,
+          packetCount,
+          receivedPackets,
+          nextBeacon,
+          commandCount,
+          commandIndex,
+          lastCommandValue,
+          lastCommandAt,
+          ack,
+          horizonAt,
+          horizonTau,
+          finished,
+          signatureAt,
+          previousArrival,
+          lastInterval,
+          maxError,
+          droppedFrames,
+          emissionViolations,
+          pingCount,
+          pingIndex,
+          replyCount,
+          receivedReplies,
+          unanswered,
+          lastReplyInterval,
+          previousReplyArrival
+        } = q);
+        result.newPackets = result.newReplies = 0;
+        result.signature = false;
+        result.signatureKind = "";
+        return true;
+      } catch {
+        return false;
+      }
+    }
     reset2();
     return {
       s,
@@ -28793,6 +29590,8 @@ void main() {
       update: update2,
       command,
       reset: reset2,
+      exportState,
+      restoreState,
       get now() {
         return now;
       },
@@ -28867,6 +29666,7 @@ void main() {
 
   // delay/main.mjs
   var quietSky;
+  var journeyMemory;
   var params = new URLSearchParams(location.search);
   var testMode = params.has("test");
   var inspect = params.has("inspect");
@@ -28920,11 +29720,14 @@ void main() {
   var receiverLog = Math.log2(900);
   var lastSentAt = -100;
   var transmitting = false;
+  var signalHeld = false;
   var held = 0;
   var hintHidden = false;
   var noticeUntil = 0;
   var lastTelemetry = -1;
   var receiverBandwidth = 1.3;
+  var receivedScale = 1;
+  var receivedExposure = 0;
   var archiveHoldUntil = -1;
   var archiveHoldT = 0;
   var replyCursor = 0;
@@ -28971,137 +29774,344 @@ void main() {
     const sec = Math.max(0, value);
     return `${String(Math.floor(sec / 60)).padStart(2, "0")}:${(sec % 60).toFixed(1).padStart(4, "0")}`;
   }
+  // Received-carrier instrument: model arrivals alone open the receiver.
+  // Actual + / - return edges preserve the viewer's transmitted timing. The carrier follows
+  // only received telemetry. Timbre, a 16-second listening window and decay are artistic mappings.
+  // Two sources per packet, eight total. There is no running bed or synthetic propagation echo.
   var audio = (() => {
-    let ctx = null, master = null, wanted = false, enabled = false, played = 0, replyPlayed = 0, lastFrequency = 0;
-    const voices = /* @__PURE__ */ new Set(), references = /* @__PURE__ */ new Set(), button = document.getElementById("sound");
+    let ctx = null, master = null, noise = null, carrierWave = null;
+    let wanted = false, enabled = false, blocked = true, revision = 0;
+    let played = 0, replyPlayed = 0, referencePlayed = 0, lastFrequency = 0, lastDuration = 0;
+    let deferredReplies = 0, droppedReplies = 0, lastQueueDelay = 0, flushing = false;
+    let signalVoice = null, mark = null, edgeStarts = 0, edgeEnds = 0;
+    let lastMarkDuration = 0, lastAudibleDuration = 0, lastFollow = -Infinity;
+    const MARK_WINDOW = 16;
+    const voices = new Set(), sources = new Set(), pending = [], button = document.getElementById("sound");
+    const SOURCE_LIMIT = 8, OUTPUT = 0.62;
     try {
       wanted = sessionStorage.getItem("ti_audio_muted") === "0";
     } catch {
     }
     function sync() {
-      const on = enabled && ctx?.state === "running";
+      const on = enabled && !blocked && wanted && ctx?.state === "running";
       button.setAttribute("aria-pressed", String(on));
-      button.setAttribute(
-        "aria-label",
-        on ? "\uC0AC\uC6B4\uB4DC \uB044\uAE30" : wanted ? "\uC0AC\uC6B4\uB4DC \uC7AC\uAC1C" : "\uC0AC\uC6B4\uB4DC \uCF1C\uAE30"
-      );
+      button.setAttribute("aria-label", on ? "사운드 끄기" : wanted ? "사운드 재개" : "사운드 켜기");
+      button.title = button.getAttribute("aria-label");
+    }
+    function hold(param, time) {
+      if (param.cancelAndHoldAtTime) param.cancelAndHoldAtTime(time);
+      else {
+        const value = param.value;
+        param.cancelScheduledValues(time);
+        param.setValueAtTime(value, time);
+      }
+    }
+    function retire(voice) {
+      if (voice.stopping) return;
+      voice.stopping = true;
+      const t = ctx.currentTime;
+      hold(voice.gain.gain, t);
+      voice.gain.gain.setTargetAtTime(0, t, 0.005);
+      for (const source of voice.sources) {
+        try { source.stop(t + 0.025); } catch {}
+      }
     }
     function cancel() {
-      for (const v of voices) {
-        try {
-          v.stop();
-        } catch {
-        }
+      pending.length = 0;
+      mark = null;
+      signalVoice = null;
+      for (const voice of voices) retire(voice);
+    }
+    function flushPending() {
+      if (flushing || pending.length === 0 || sources.size + 2 > SOURCE_LIMIT) return;
+      if (!enabled || blocked || !wanted || ctx?.state !== "running" || paused || lost || document.hidden || dialog.open) {
+        pending.length = 0;
+        return;
       }
-      voices.clear();
-      references.clear();
+      flushing = true;
+      try {
+        while (pending.length && sources.size + 2 <= SOURCE_LIMIT) {
+          const packet = pending.shift();
+          lastQueueDelay = Math.max(0, ctx.currentTime - packet.arrived);
+          // Keep the model's original lateness. This short fade handover is presentation only.
+          receive(packet.g, packet.late, packet.kind, packet.mark);
+        }
+      } finally {
+        flushing = false;
+      }
     }
     function create() {
       if (ctx) return;
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return;
-      ctx = new AC();
+      ctx = new AC({ latencyHint: "interactive" });
       master = ctx.createGain();
-      master.gain.value = 0.42;
-      master.connect(ctx.destination);
-      ctx.onstatechange = sync;
+      master.gain.value = 0;
+      const lowCut = ctx.createBiquadFilter(), limiter = ctx.createDynamicsCompressor();
+      lowCut.type = "highpass";
+      lowCut.frequency.value = 32;
+      lowCut.Q.value = 0.55;
+      limiter.threshold.value = -17;
+      limiter.knee.value = 12;
+      limiter.ratio.value = 3.5;
+      limiter.attack.value = 0.004;
+      limiter.release.value = 0.17;
+      master.connect(lowCut);
+      lowCut.connect(limiter);
+      limiter.connect(ctx.destination);
+      const real = new Float32Array(8), imag = new Float32Array(8);
+      imag[1] = 1;
+      imag[2] = 0.16;
+      imag[3] = 0.065;
+      imag[5] = 0.022;
+      carrierWave = ctx.createPeriodicWave(real, imag, { disableNormalization: false });
+      noise = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * 2), ctx.sampleRate);
+      const samples = noise.getChannelData(0);
+      let seed = 0x44e1a9;
+      for (let i = 0; i < samples.length; i++) {
+        seed = Math.imul(seed, 1664525) + 1013904223 >>> 0;
+        samples[i] = seed / 2147483648 - 1;
+      }
+      ctx.onstatechange = () => {
+        if (ctx.state !== "running") enabled = false;
+        else enabled = wanted && !blocked;
+        sync();
+      };
+    }
+    function quiet(ticket) {
+      if (!ctx) return;
+      const t = ctx.currentTime;
+      hold(master.gain, t);
+      master.gain.setTargetAtTime(0, t, 0.008);
+      setTimeout(() => {
+        if (revision !== ticket || !blocked) return;
+        if (ctx.state === "running") ctx.suspend().then(sync).catch(sync);
+        else sync();
+      }, 45);
     }
     async function enable(value, persist = true) {
-      wanted = value;
-      if (value) {
-        create();
-        if (ctx)
-          try {
-            await ctx.resume();
-            enabled = ctx.state === "running";
-          } catch {
-            enabled = false;
-          }
-      } else {
+      const ticket = ++revision;
+      wanted = !!value;
+      blocked = !wanted;
+      if (persist) {
+        try { sessionStorage.setItem("ti_audio_muted", wanted ? "0" : "1"); } catch {}
+      }
+      if (!wanted) {
         enabled = false;
         cancel();
-        if (ctx) await ctx.suspend();
+        quiet(ticket);
+        sync();
+        return;
       }
-      if (persist)
-        try {
-          sessionStorage.setItem("ti_audio_muted", value ? "0" : "1");
-        } catch {
+      // Remember the preference while a paused/hidden surface stays silent.
+      // Its normal resume gesture will unlock the context after the block ends.
+      if (paused || lost || document.hidden || dialog.open) {
+        blocked = true;
+        enabled = false;
+        cancel();
+        quiet(ticket);
+        sync();
+        return;
+      }
+      create();
+      if (!ctx) {
+        sync();
+        return;
+      }
+      try {
+        await ctx.resume();
+        if (ticket !== revision) {
+          if (blocked || !wanted) ctx.suspend().catch(sync);
+          return;
         }
+        enabled = ctx.state === "running";
+        if (enabled) {
+          hold(master.gain, ctx.currentTime);
+          master.gain.setTargetAtTime(OUTPUT, ctx.currentTime, 0.018);
+        }
+      } catch {
+        enabled = false;
+      }
       sync();
     }
-    function receive(g, late = 0, kind = 0) {
-      if (kind < 0) return;
+    function receive(g, late = 0, kind = 0, signalMark = null) {
+      if (!Number.isFinite(g) || g <= 0 || !Number.isFinite(late) || kind < 0) return;
+      if (signalMark && (mark !== signalMark || signalMark.exhausted)) return;
       const freq = 1800 * g;
-      const tunedGain = Math.exp(
-        -0.5 * Math.pow(
-          (Math.log2(Math.max(1, freq)) - receiverLog) / receiverBandwidth,
-          2
-        )
-      );
-      if (!enabled || ctx?.state !== "running" || freq < 28 || tunedGain < 8e-3 || kind === 0 && voices.size >= 2 || late > 0.15)
+      const tunedGain = Math.exp(-0.5 * Math.pow((Math.log2(Math.max(1, freq)) - receiverLog) / receiverBandwidth, 2));
+      if (!enabled || blocked || !wanted || ctx?.state !== "running" || paused || lost || document.hidden || dialog.open || freq < 28 || freq > 12000 || tunedGain < 8e-3 || late > 0.15) return;
+      let liveReferences = 0;
+      for (const voice of voices) if (!voice.kind && !voice.stopping) liveReferences++;
+      if (!kind && liveReferences >= 2) return;
+      if (sources.size + 2 > SOURCE_LIMIT) {
+        // Preserve an arriving viewer response during a 25 ms fade handover.
+        // No reference is queued, and no extra propagation time enters the model.
+        if (kind && pending.length < 2) {
+          pending.push({ g, late, kind, mark: signalMark, arrived: ctx.currentTime });
+          deferredReplies++;
+          const reference = [...voices].find((voice) => !voice.kind && !voice.stopping);
+          const oldest = reference || [...voices].find((voice) => !voice.stopping);
+          if (oldest) retire(oldest);
+        } else if (kind) droppedReplies++;
         return;
-      if (voices.size >= 4) {
-        const old = references.values().next().value || voices.values().next().value;
-        try {
-          old.stop();
-        } catch {
-        }
-        voices.delete(old);
-        references.delete(old);
       }
-      const osc = ctx.createOscillator(), gain = ctx.createGain(), t = ctx.currentTime + 5e-3;
-      const duration = Math.min(
-        kind ? 2.8 : 1.5,
-        (kind ? 0.14 : 0.075) / Math.max(1e-3, g)
-      ), loud = (kind ? 0.13 : 0.018) * tunedGain * Math.pow(Math.min(1, g / 0.7), 0.3);
-      osc.type = "sine";
-      osc.frequency.value = freq;
+      const t = ctx.currentTime + 0.006;
+      const duration = signalMark ? MARK_WINDOW : Math.min(kind ? 4.8 : 1.8, (kind ? 0.24 : 0.08) / Math.max(1e-3, g));
+      const level = (kind ? 0.23 : 0.064) * tunedGain * Math.pow(Math.min(1, g / 0.7), 0.3);
+      const carrier = ctx.createOscillator(), grain = ctx.createBufferSource();
+      const edge = ctx.createBiquadFilter(), grainGain = ctx.createGain(), gain = ctx.createGain();
+      carrier.setPeriodicWave(carrierWave);
+      carrier.frequency.value = freq;
+      grain.buffer = noise;
+      grain.loop = true;
+      grain.playbackRate.value = Math.max(0.04, Math.min(2, g));
+      edge.type = "bandpass";
+      edge.frequency.value = Math.max(70, Math.min(7000, freq * 1.45));
+      edge.Q.value = 3.5;
+      grainGain.gain.value = kind ? 0.065 : 0.035;
       gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(loud, t + 0.015);
-      gain.gain.exponentialRampToValueAtTime(1e-4, t + duration);
-      osc.connect(gain);
+      // A reference/preview is one mark. A real viewer mark remains open until its
+      // actual release edge arrives; there is no fixed code inside the received signal.
+      if (signalMark) {
+        gain.gain.linearRampToValueAtTime(level, t + 0.009);
+      } else {
+        const ramp = Math.min(0.012 / Math.max(0.08, g), duration * 0.22);
+        gain.gain.linearRampToValueAtTime(level, t + ramp);
+        gain.gain.setValueAtTime(level * 0.72, Math.max(t + ramp, t + duration - ramp));
+        gain.gain.linearRampToValueAtTime(0, t + duration);
+      }
+      carrier.connect(gain);
+      grain.connect(edge);
+      edge.connect(grainGain);
+      grainGain.connect(gain);
       gain.connect(master);
-      voices.add(osc);
-      if (kind === 0) references.add(osc);
+      const voice = { sources: [carrier, grain], carrier, grain, edge, gain, kind, signalMark, stopping: false, remaining: 2 };
+      if (signalMark) signalVoice = voice;
+      voices.add(voice);
+      for (const source of voice.sources) {
+        sources.add(source);
+        source.onended = () => {
+          sources.delete(source);
+          source.disconnect();
+          voice.remaining--;
+          if (voice.remaining === 0) {
+            voices.delete(voice);
+            if (signalVoice === voice) {
+              signalVoice = null;
+              if (mark === signalMark) signalMark.exhausted = true;
+            }
+            edge.disconnect();
+            grainGain.disconnect();
+            gain.disconnect();
+          }
+          flushPending();
+        };
+        source.start(t);
+        source.stop(t + duration + 0.025);
+      }
       played++;
-      if (kind > 0) replyPlayed++;
+      if (kind) replyPlayed++;
+      else referencePlayed++;
       lastFrequency = freq;
-      osc.onended = () => {
-        voices.delete(osc);
-        references.delete(osc);
-        osc.disconnect();
-        gain.disconnect();
-      };
-      osc.start(t);
-      osc.stop(t + duration + 0.025);
+      lastDuration = duration;
     }
-    button.addEventListener(
-      "click",
-      () => enable(!wanted || ctx?.state !== "running")
-    );
+    function receiveEdge(g, late, kind, id, arrived) {
+      if (!Number.isFinite(arrived) || !Number.isFinite(kind) || !Number.isSafeInteger(id)) return;
+      if (kind < 0) {
+        edgeEnds++;
+        if (mark) {
+          lastMarkDuration = Math.max(0, arrived - mark.at);
+          lastAudibleDuration = Math.min(MARK_WINDOW, lastMarkDuration);
+        }
+        mark = null;
+        for (let i = pending.length - 1; i >= 0; i--) if (pending[i].mark) pending.splice(i, 1);
+        if (signalVoice) retire(signalVoice);
+        signalVoice = null;
+        return;
+      }
+      if (!enabled || blocked || !wanted || ctx?.state !== "running" || paused || lost || document.hidden || dialog.open || late > 0.15) return;
+      edgeStarts++;
+      if (signalVoice) retire(signalVoice);
+      signalVoice = null;
+      for (let i = pending.length - 1; i >= 0; i--) if (pending[i].mark) pending.splice(i, 1);
+      mark = { id, at: arrived, audioAt: ctx.currentTime, exhausted: false };
+      lastFollow = -Infinity;
+      receive(g, late, 1, mark);
+    }
+    function follow(g, observedAt) {
+      if (!mark || mark.exhausted || !ctx || !enabled || blocked || ctx.state !== "running" || !Number.isFinite(observedAt) || !Number.isFinite(g) || g <= 0) return;
+      const age = Math.max(0, observedAt - mark.at), t = ctx.currentTime;
+      if (age >= MARK_WINDOW || 1800 * g < 28) {
+        mark.exhausted = true;
+        lastAudibleDuration = Math.min(MARK_WINDOW, age);
+        for (let i = pending.length - 1; i >= 0; i--) if (pending[i].mark === mark) pending.splice(i, 1);
+        if (signalVoice) retire(signalVoice);
+        signalVoice = null;
+        return;
+      }
+      if (t - lastFollow < 1 / 30) return;
+      lastFollow = t;
+      if (!signalVoice) {
+        if (!pending.some((packet) => packet.mark === mark)) receive(g, 0, 1, mark);
+        return;
+      }
+      const freq = 1800 * g;
+      const tuned = Math.exp(-0.5 * Math.pow((Math.log2(Math.max(1, freq)) - receiverLog) / receiverBandwidth, 2));
+      const level = 0.23 * tuned * Math.pow(Math.min(1, g / 0.7), 0.3) * Math.exp(-age / 5.5);
+      signalVoice.carrier.frequency.setTargetAtTime(freq, t, 0.035);
+      signalVoice.grain.playbackRate.setTargetAtTime(Math.max(0.04, Math.min(2, g)), t, 0.035);
+      signalVoice.edge.frequency.setTargetAtTime(Math.max(70, Math.min(7000, freq * 1.45)), t, 0.035);
+      signalVoice.gain.gain.setTargetAtTime(level, t, 0.025);
+      lastFrequency = freq;
+      lastAudibleDuration = Math.min(MARK_WINDOW, age);
+    }
+    button.addEventListener("click", () => enable(!wanted || blocked || ctx?.state !== "running"));
     return {
       receive,
+      receiveEdge,
+      follow,
       cancel,
+      enable,
       gesture() {
-        if (wanted && ctx?.state !== "running") enable(true, false);
+        if (wanted && (blocked || ctx?.state !== "running")) enable(true, false);
       },
       toggle() {
-        enable(!wanted || ctx?.state !== "running");
+        enable(!wanted || blocked || ctx?.state !== "running");
       },
       suspend() {
+        const ticket = ++revision;
+        blocked = true;
+        enabled = false;
         cancel();
-        if (ctx?.state === "running") ctx.suspend();
+        quiet(ticket);
         sync();
       },
       snapshot: () => ({
         wanted,
-        enabled,
+        enabled: enabled && !blocked && ctx?.state === "running",
         state: ctx?.state || "uninitialized",
         voices: voices.size,
         played,
         replyPlayed,
         lastFrequency,
-        tunedFrequency: Math.pow(2, receiverLog)
+        tunedFrequency: Math.pow(2, receiverLog),
+        design: "received-contact-edges",
+        markOpen: !!mark && !mark.exhausted,
+        markId: mark?.id || null,
+        markArrival: mark?.at ?? null,
+        edgeStarts,
+        edgeEnds,
+        lastMarkDuration,
+        lastAudibleDuration,
+        markWindow: MARK_WINDOW,
+        activeSources: sources.size,
+        voiceLimit: SOURCE_LIMIT,
+        referencePlayed,
+        lastDuration,
+        pendingReplies: pending.length,
+        deferredReplies,
+        droppedReplies,
+        lastQueueDelay
       })
     };
   })();
@@ -29111,6 +30121,7 @@ void main() {
     const savedReplies = receiverField?.uniforms.uReplies.value.map(
       (v) => v.clone()
     );
+    const savedEnds = receiverField?.uniforms.uReplyEnd.value.clone();
     if (annulus) {
       scene.remove(annulus, absence);
       annulus.geometry.dispose();
@@ -29123,6 +30134,7 @@ void main() {
     diskUniforms = receiverField.uniforms;
     if (savedReplies)
       savedReplies.forEach((v, i) => diskUniforms.uReplies.value[i].copy(v));
+    if (savedEnds) diskUniforms.uReplyEnd.value.copy(savedEnds);
     scene.add(annulus);
     absence = new Mesh(
       new SphereGeometry(100, tiers[level].sphere, tiers[level].sphere / 2),
@@ -29190,8 +30202,12 @@ void main() {
     if (!model.hasImage) return;
     const image = model.image, r = image[2], g = image[8];
     const distance = 100 + 88 * Math.log(r);
+    const receivedDepth = clamp2(Math.log(R_START / r) / Math.log(R_START), 0, 1);
+    receivedScale = 0.14 + 0.86 * Math.pow(1 - receivedDepth, 0.85);
+    vessel.scale.setScalar((height > width ? 15 : 12) * receivedScale);
     vessel.position.copy(outward).multiplyScalar(distance).addScaledVector(normal, 72 + 0.55 * (distance - 100));
-    const exposure = Math.pow(clamp2(g / 0.7, 0, 1), 0.62) * fade(1e-3, 0.012, g);
+    const exposure = Math.pow(clamp2(g / 0.7, 0, 1), 0.62) * fade(1e-3, 0.012, g) * (0.72 + 0.28 * receivedScale);
+    receivedExposure = exposure;
     const redness = 1 - clamp2(g / 0.7, 0, 1);
     warm.setRGB(1, 1 - 0.67 * redness, 1 - 0.87 * redness);
     for (const { material, base } of hulls) {
@@ -29240,7 +30256,7 @@ void main() {
     if ((w !== width || h !== height) && contacts.size) release(false);
     width = w;
     height = h;
-    vessel.scale.setScalar(height > width ? 15 : 12);
+    vessel.scale.setScalar((height > width ? 15 : 12) * receivedScale);
     dpr = Math.min(devicePixelRatio || 1, tiers[level].dpr);
     renderer.setPixelRatio(dpr);
     renderer.setSize(width, height, false);
@@ -29268,6 +30284,12 @@ void main() {
     diskUniforms.uTuning.value = receiverLog - Math.log2(900);
     diskUniforms.uIntro.value = 0.25 + 0.75 * fade(0, 6, model.now);
     diskUniforms.uHold.value = heldArchive ? 1 : 0;
+    diskUniforms.uPacket.value.set(
+      model.receivedPackets ? model.lastPacket[0] : -1e3,
+      model.receivedPackets ? 1 : 0,
+      model.receivedPackets ? model.lastPacket[8] : 1,
+      model.receivedPackets ? model.lastPacket[1] : 0
+    );
     for (let i = 0; i < 2; i++)
       diskUniforms.uContact.value[i].set(
         contactPoints[i].x,
@@ -29283,6 +30305,7 @@ void main() {
     average = average * 0.97 + cost * 0.03;
     renderCount++;
     dirty = false;
+    journeyMemory?.tick();
     if (forced < 0 && model.now > 8 && level > 0) {
       slow = average > 20 ? slow + 1 : Math.max(0, slow - 2);
       if (slow > 100) {
@@ -29341,6 +30364,7 @@ void main() {
     held = 0;
     pointerDemand = 0;
     keys.clear();
+    signalHeld = false;
     dirty = true;
   }
   function locateContact(slot, x, y, weight) {
@@ -29391,7 +30415,6 @@ void main() {
       const [a, b] = contacts.values();
       pairSpan = Math.hypot(a.x - b.x, a.y - b.y);
       pairBandwidth = receiverBandwidth;
-      sendPulse(1);
     }
     pointerMark.style.left = `${e.clientX}px`;
     pointerMark.style.top = `${e.clientY}px`;
@@ -29457,7 +30480,7 @@ void main() {
     if (e.pointerId === pointer) {
       pointerDemand = 0;
       pointer = null;
-      if (!keys.size && transmitting) {
+      if (!keys.size && !contacts.size && !signalHeld && transmitting) {
         sendPulse(-1);
         transmitting = false;
       }
@@ -29474,9 +30497,12 @@ void main() {
     dirty = true;
   }
   function reset() {
+    journeyMemory?.newVoyage();
     release(false);
     audio.cancel();
     model.reset();
+    receivedScale = 1;
+    receivedExposure = 0;
     hintHidden = false;
     hint.classList.remove("faded");
     lastTelemetry = -1;
@@ -29491,7 +30517,8 @@ void main() {
     archiveHoldT = 0;
     replyCursor = 0;
     diskUniforms.uReplies.value.forEach((v) => v.set(-1e3, 0, 0, 0));
-    transmitting = false;
+    diskUniforms.uReplyEnd.value.set(-1, -1, -1, -1);
+    transmitting = signalHeld = false;
     pointerMark.style.width = "22px";
     emitted.textContent = received.textContent = "\u2014";
     signalLabel.textContent = "\uCCAB \uAD50\uC2E0\uC744 \uAE30\uB2E4\uB9BD\uB2C8\uB2E4";
@@ -29501,6 +30528,93 @@ void main() {
     dirty = true;
     audio.gesture();
     render();
+  }
+  function exportJourney() {
+    return {
+      version: 1,
+      model: model.exportState(),
+      receiverLog,
+      receiverBandwidth,
+      lastSentAt,
+      archiveHoldUntil,
+      archiveHoldT,
+      replyCursor,
+      memories: diskUniforms.uReplies.value.map((v) => v.toArray()),
+      memoryEnds: diskUniforms.uReplyEnd.value.toArray(),
+      controlActive: transmitting || signalHeld || held > 0
+    };
+  }
+  function restoreJourney(data) {
+    if (data?.version !== 1 || !Number.isFinite(data.receiverLog) || data.receiverLog < Math.log2(28) || data.receiverLog > Math.log2(2200) || !Number.isFinite(data.receiverBandwidth) || data.receiverBandwidth < 0.1 || data.receiverBandwidth > 12 || ![data.lastSentAt, data.archiveHoldUntil, data.archiveHoldT].every(
+      Number.isFinite
+    ) || !Number.isInteger(data.replyCursor) || data.replyCursor < 0 || !Array.isArray(data.memories) || data.memories.length !== 4 || !data.memories.every(
+      (v) => Array.isArray(v) && v.length === 4 && v.every(Number.isFinite) && v[0] <= data.model?.scalars?.now + 1e-8
+    ) || typeof data.controlActive !== "boolean")
+      return false;
+    const saved = data.model, received2 = saved?.scalars?.receivedReplies;
+    if (!(saved?.replies instanceof Float64Array) || !Number.isInteger(received2) || received2 < 0 || received2 * 12 > saved.replies.length || data.lastSentAt > saved.scalars.now + 1e-8 || data.archiveHoldUntil > saved.scalars.now + 8 + 1e-8 || data.archiveHoldT < 0)
+      return false;
+    const expected = Array.from({ length: 4 }, () => [-1e3, 0, 0, 0]);
+    const expectedEnds = [-1, -1, -1, -1];
+    let expectedCursor = 0;
+    for (let i = 0; i < received2; i++) {
+      const at = i * 12;
+      if (saved.replies[at + 10] > 0) {
+        expected[expectedCursor % 4] = [
+          saved.replies[at],
+          saved.replies[at + 10],
+          saved.replies[at + 8],
+          saved.replies[at + 1]
+        ];
+        expectedEnds[expectedCursor % 4] = -1;
+        expectedCursor++;
+      } else if (expectedCursor) {
+        expectedEnds[(expectedCursor - 1) % 4] = saved.replies[at];
+      }
+    }
+    // Legacy journeys have no closure array; derive it from their already received edges.
+    if (data.memoryEnds !== undefined && (!Array.isArray(data.memoryEnds) || data.memoryEnds.length !== 4 || !data.memoryEnds.every((n, i) => Number.isFinite(n) && n === expectedEnds[i]))) return false;
+    if (data.replyCursor !== expectedCursor || !data.memories.every((v, i) => v.every((n, j) => n === expected[i][j])))
+      return false;
+    if (data.archiveHoldUntil > 0) {
+      if (!(saved.frames instanceof Float64Array)) return false;
+      let witnessed = false;
+      for (let at = 0; at < saved.frames.length; at += 9)
+        if (saved.frames[at + 1] === data.archiveHoldT && saved.frames[at] <= data.archiveHoldUntil - 8 + 1e-7)
+          witnessed = true;
+      if (!witnessed) return false;
+    }
+    if (!model.restoreState(data.model)) return false;
+    receiverLog = data.receiverLog;
+    receiverBandwidth = data.receiverBandwidth;
+    lastSentAt = data.lastSentAt;
+    archiveHoldUntil = data.archiveHoldUntil;
+    archiveHoldT = data.archiveHoldT;
+    replyCursor = data.replyCursor;
+    data.memories.forEach((v, i) => diskUniforms.uReplies.value[i].fromArray(v));
+    diskUniforms.uReplyEnd.value.fromArray(expectedEnds);
+    if (data.controlActive) {
+      model.command(0, true);
+      model.ping(-1);
+    }
+    transmitting = signalHeld = false;
+    held = pointerDemand = 0;
+    contacts.clear();
+    keys.clear();
+    lastTelemetry = -1;
+    lastTick = lastDraw = 0;
+    dirty = true;
+    return true;
+  }
+  function observedSummary() {
+    const s = model.snapshot();
+    const result = [`\uBC1C\uC2E0 \uC2E0\uD638 ${s.pings}\uD68C \xB7 \uC218\uC2E0 \uC751\uB2F5 ${s.receivedReplies}\uD68C`];
+    if (model.hasImage) {
+      result.push(`\uAD00\uCE21\uB41C \uD0D0\uC0AC\uC120 \uC2DC\uAC01 ${clock(model.image[4] * TIME_SCALE)}`);
+      result.push(`\uC218\uC2E0 \uC8FC\uD30C\uC218 \uBE44 ${model.image[8].toFixed(3)}`);
+    } else result.push("\uD0D0\uC0AC\uC120\uC758 \uCCAB \uAE30\uB85D\uC744 \uAE30\uB2E4\uB9BD\uB2C8\uB2E4.");
+    result.push("\uC544\uC9C1 \uBAA8\uB984: \uD604\uC7AC \uC6D0\uACA9 \uC0C1\uD0DC\uC640 \uB3C4\uCC29\uD558\uC9C0 \uC54A\uC740 \uC751\uB2F5");
+    return result;
   }
   function setPaused(value) {
     release(false);
@@ -29516,8 +30630,9 @@ void main() {
     dirty = true;
   }
   function receiveReply(reply, late) {
-    audio.receive(reply[8], late, reply[10]);
+    audio.receiveEdge(reply[8], late, reply[10], reply[11], reply[0]);
     if (reply[10] > 0) {
+      diskUniforms.uReplyEnd.value.setComponent(replyCursor % 4, -1);
       diskUniforms.uReplies.value[replyCursor % 4].set(
         reply[0],
         reply[10],
@@ -29525,6 +30640,8 @@ void main() {
         reply[1]
       );
       replyCursor++;
+    } else if (replyCursor) {
+      diskUniforms.uReplyEnd.value.setComponent((replyCursor - 1) % 4, reply[0]);
     }
   }
   function update(seconds) {
@@ -29533,6 +30650,7 @@ void main() {
       contactWeights[i] += (contactTargets[i] - contactWeights[i]) * (1 - Math.exp(-seconds / 0.085));
     if (result.newPackets)
       audio.receive(model.lastPacket[8], model.now - model.lastPacket[0]);
+    if (model.hasImage) audio.follow(model.image[8], model.now);
     if (result.signature) {
       archiveHoldT = model.hasImage ? model.image[1] : 0;
       archiveHoldUntil = model.now + 8;
@@ -29648,7 +30766,11 @@ void main() {
         if (e.code === "Enter" && !e.repeat) {
           audio.gesture();
           hideHint();
-          sendPulse(1);
+          signalHeld = true;
+          if (!transmitting) {
+            sendPulse(1);
+            transmitting = true;
+          }
           say("\uC2E0\uD638\uB97C \uBCF4\uB0C8\uC2B5\uB2C8\uB2E4", 2);
         }
         if (["ArrowLeft", "ArrowRight"].includes(e.code)) {
@@ -29667,10 +30789,17 @@ void main() {
       }
     });
     addEventListener("keyup", (e) => {
+      if (e.code === "Enter") {
+        signalHeld = false;
+        if (!keys.size && !contacts.size && transmitting) {
+          sendPulse(-1);
+          transmitting = false;
+        }
+      }
       if (keys.has(e.code)) {
         keys.delete(e.code);
         send(keys.size ? 1 : pointerDemand, true);
-        if (!keys.size && pointerDemand === 0 && transmitting) {
+        if (!keys.size && !contacts.size && !signalHeld && transmitting) {
           sendPulse(-1);
           transmitting = false;
         }
@@ -29702,17 +30831,31 @@ void main() {
       lastTick = lastDraw = 0;
       if (!paused) audio.gesture();
     });
-    ready = true;
-    render();
-    loading.classList.add("done");
-    loading.setAttribute("aria-hidden", "true");
-    requestAnimationFrame(tick);
+    journeyMemory = createExhibitionMemory({
+      id: "delay",
+      canvas: () => renderer.domElement,
+      paint: render,
+      now: () => model.now,
+      summary: observedSummary,
+      continuation: exportJourney,
+      restore: restoreJourney,
+      resumeCycle: true,
+      requiresBinaryStorage: true
+    });
+    journeyMemory.start().then(() => {
+      ready = true;
+      render();
+      loading.classList.add("done");
+      loading.setAttribute("aria-hidden", "true");
+      requestAnimationFrame(tick);
+    });
     if (inspect || testMode)
       window.DELAY = {
         get ready() {
           return ready;
         },
         renderer,
+        audioEngine: audio,
         snapshot: () => ({
           ...model.snapshot(),
           quality: names[level],
@@ -29728,6 +30871,14 @@ void main() {
           audio: audio.snapshot(),
           vessel: vessel.position.toArray(),
           vesselVisible: vessel.visible,
+          receivedScale,
+          receivedExposure,
+          replyMemories: diskUniforms.uReplies.value.map((v) => v.toArray()),
+          replyEnds: diskUniforms.uReplyEnd.value.toArray(),
+          signalHeld,
+          senderGate: transmitting,
+          receivedLayer: diskUniforms.uPacket.value.toArray(),
+          receiverVisual: "received-time-strata",
           camera: camera.position.toArray(),
           held,
           receiverFrequency: Math.pow(2, receiverLog),
@@ -29741,7 +30892,8 @@ void main() {
           fullFrameField: true,
           hullNDC: vesselNDC.copy(vessel.position).project(camera).toArray(),
           transmitting,
-          lastSentAt
+          lastSentAt,
+          exhibitionMemory: journeyMemory?.snapshot()
         }),
         advance(seconds) {
           const n = Math.ceil(seconds * 60);
@@ -29750,7 +30902,8 @@ void main() {
           return this.snapshot();
         },
         reset,
-        records: () => model.records()
+        records: () => model.records(),
+        saveJourney: () => journeyMemory.checkpoint()
       };
   } catch (error2) {
     console.error(error2);
