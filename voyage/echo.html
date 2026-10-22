@@ -10,9 +10,9 @@
     <link rel="icon" href="data:," />
     <meta
       name="description"
-      content="두 중력권 사이의 항해. 손끝의 짧은 추력과 긴 관성 항행이 두 세계 사이의 통과 가능성을 바꾼다. 김건우의 인터랙티브 작품."
+      content="소수의 응답. 두 관측점의 소수 항 응답이 만나고 상쇄하며 하나의 면을 이룬다. 김건우의 인터랙티브 작품."
     />
-    <title>DUAL GALAXY / TRANSFER · 김건우</title>
+    <title>RIEMANN DREAMS / PHASE ECHO · 김건우</title>
     <style>
       :root {
   color-scheme: dark;
@@ -539,25 +539,67 @@ body[data-artwork="abyss"].ready canvas {
   }
 }
 
+/* The four-part sequence is wayfinding; it does not alter the artwork surface. */
+header .series-context {
+  margin: 0 0 7px;
+  color: #8e9da7;
+  font-size: var(--ui-small);
+  line-height: 1.6;
+  letter-spacing: 0.08em;
+  word-break: keep-all;
+}
+footer nav.series-nav {
+  bottom: calc(var(--ui-bottom) + 78px);
+  gap: 18px;
+}
+.series-nav a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  color: #a3b2bb;
+  font-size: var(--ui-text);
+  line-height: 1.5;
+  letter-spacing: 0.025em;
+  white-space: nowrap;
+  pointer-events: auto;
+}
+.series-nav a:hover,
+.series-nav a:focus-visible {
+  color: #eef2f3;
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+@media (max-width: 640px) {
+  #hint {
+    bottom: calc(var(--ui-bottom) + 128px);
+  }
+  footer nav.series-nav {
+    gap: 16px;
+  }
+}
+
     </style>
   </head>
-  <body data-artwork="transfer">
+  <body data-artwork="echo">
     <div
       id="view"
       role="application"
       tabindex="0"
-      aria-label="두 중력권 사이의 항해. 누른 채 움직이면 그 방향으로 추진하며 놓으면 관성 항행합니다. 키보드는 좌우 방향키로 자세 변경, 스페이스로 추진, P로 일시 정지합니다."
+      aria-label="소수의 응답. 한 손가락으로 관측점 A를, 두 번째 손가락으로 관측점 B를 움직입니다. 마우스는 드래그로 A, Shift와 드래그로 B를 움직입니다. 방향키로 A, Shift와 방향키로 B를 조절하고, 손을 멈춘 뒤 응답을 기다리십시오. P는 일시 정지입니다."
     ></div>
     <header>
-      <h1>DUAL GALAXY / TRANSFER</h1>
-      <p>추력과 중력이 바꾸는 두 세계의 통로</p>
+      <p class="series-context">항해의 조건 · 01 / 04</p>
+      <h1>RIEMANN DREAMS / PHASE ECHO</h1>
+      <p>두 관측의 소수 응답이 만드는 간섭</p>
     </header>
 
     <div id="hint" aria-label="조작법">
-      당겨서 추진하고, 놓으면 관성으로 항행합니다.<span class="mouse-help"
-        >Shift와 드래그는 자세, Space는 추진을 조절합니다.</span
+      관측점을 움직여 두 응답을 비교합니다.<span class="mouse-help"
+        >드래그는 A, Shift와 드래그는 B를 움직입니다.</span
       ><span class="touch-help"
-        >두 손가락을 회전하면 주 추진 없이 자세를 바꿉니다.</span
+        >한 손가락은 A, 두 번째 손가락은 B를 움직입니다.</span
       >
     </div>
     <aside id="telemetry" aria-label="작품 데이터">
@@ -567,17 +609,22 @@ body[data-artwork="abyss"].ready canvas {
           <dd data-readout="time">00:00</dd>
         </div>
         <div>
-          <dt>야코비 C</dt>
-          <dd data-readout="a" data-digits="3">4.018</dd>
+          <dt>소수</dt>
+          <dd>300</dd>
         </div>
         <div>
-          <dt>추진제</dt>
-          <dd data-readout="b" data-unit="%">100%</dd>
+          <dt>위상 일치</dt>
+          <dd data-readout="a" data-unit="%" data-digits="1">0.0%</dd>
         </div>
       </dl>
       <p id="notice" role="status" aria-live="polite"></p>
     </aside>
-    <div id="cursor" aria-hidden="true"></div>
+    <div id="cursor" class="contact-mark" aria-hidden="true">
+      <span>A</span>
+    </div>
+    <div id="cursor-b" class="contact-mark" aria-hidden="true">
+      <span>B</span>
+    </div>
     <footer>
       <span id="credit">© 2026 KIM GUNWOO</span>
       <nav aria-label="작품 메뉴">
@@ -595,87 +642,106 @@ body[data-artwork="abyss"].ready canvas {
         ><button id="restart" type="button">새 항해</button
         ><button id="about" type="button">기록</button>
       </nav>
+      <nav class="series-nav" aria-label="항해의 조건 작품 이동">
+        <a class="series-archive" href="../field-archive.html?from=voyage/echo.html#voyage-conditions" aria-label="FIELD ARCHIVE의 항해의 조건으로 돌아가기">FIELD ARCHIVE</a>
+        <a class="series-next" href="transfer.html">다음 작품 · TRANSFER</a>
+      </nav>
     </footer>
-    <div id="loading" role="status">항행 준비 중</div>
+    <div id="loading" role="status">수신계 준비 중</div>
     <dialog id="record" aria-labelledby="record-title">
       <button id="close" autofocus>닫기</button>
-      <h2 id="record-title">두 중력권 사이의 항해</h2>
+      <h2 id="record-title">소수의 응답</h2>
       <p>
-        탐사선은 원하는 곳으로 곧장 움직이지 않습니다. 손끝의 추력은 속도를
-        바꾸지만, 손을 놓은 뒤의 항로는 두 중력권의 관계가 결정합니다. 건너갈 수
-        있는 길이 열려도 반드시 건너가는 것은 아닙니다.
+        한 관측점에서 드러난 면이 다른 관측점에서는 갈라집니다. 두 손이 서로
+        다른 응답을 만들고, 손을 멈춘 뒤에도 늦게 도착한 기록이 표면을 바꿉니다.
+        두 관측이 서로 다른 동안에도 형상은 지속됩니다. 잠깐의 일치는 완결이
+        아니라 다시 달라질 수 있는 관계입니다.
       </p>
-      <h3>관측</h3>
+      <h3>접촉과 관측</h3>
       <p>
-        화면을 누른 채 당기십시오. 당기는 방향과 거리가 추력의 방향과 세기를
-        정하고, 손을 놓으면 관성 항행합니다. 접촉 중에만 추력을 중지한 뒤의 짧은
-        예상 궤적이 점선으로 나타났다가 손을 놓으면 짧게 사라집니다. 지나온 항적은
-        연속선으로 남습니다. 두 손가락의 회전 또는 Shift와 드래그는 주 추진
-        없이 자세를 조절합니다. 추진제는 한정되어 있습니다. 좌우 방향키로 자세를
-        바꾸고 스페이스 키로 추진할 수도 있습니다. P는 일시 정지, R은 새 항해,
-        M은 사운드입니다.
-      </p>
-      <h3>A · 물리 모형</h3>
-      <p>
-        질량이 같은 두 점질량이 공통 질량중심 주위를 원운동하는 평면 원형 제한
-        삼체 문제를 사용합니다. 탐사선의 질량은 두 천체의 운동에 영향을 주지 않는다고
-        가정합니다. 추력이 없을 때는 야코비 상수가 보존됩니다. 추력을 가하면 이 값이
-        달라져, 두 천체 사이의 라그랑주점 L1 부근에서 운동 가능 영역이 연결되거나
-        분리될 수 있습니다. 실제 천체계의 항법 자료를 재현한 것은 아닙니다.
-      </p>
-      <h3>B · 수치 근사</h3>
-      <p>
-        64비트 부동소수점 수와 4차 룽게–쿠타 방법으로 운동을 수치 적분합니다.
-        한 번의 계산 간격은 무차원 시간으로 1/2400 이하입니다. 중심체에 가까워지면
-        간격을 더 줄이고, 미리 정한 접근 한계에 도달하면 교신을 마칩니다.
-        은하 전체의 중력이나 별들 사이의 상호작용은
-        계산하지 않습니다.
-      </p>
-      <h3>C · 예술적 해석</h3>
-      <p>
-        무채색의 항성 흐름과 접힌 퍼텐셜 층은 19회 작품 「Dual Galaxy」의 두
-        영역을 확장했습니다. 두 영역의 외곽은 화면 밖으로 이어지며, 깊이와
-        밀도로 구분합니다. 층의 경계는 실제 야코비 상수의 변화를 따라 열리고
-        닫힙니다. 마우스의 위치는 관측 시차를 바꾸며, 추력 없이도 깊이를 살필 수
-        있습니다. 관측자는 탐사선을 따라갑니다. 나선의 전단 회전, 탐사선의 가시
-        크기, 퍼텐셜을 높이로 옮긴 접힘, 전시 시간은 예술적 배치입니다. 소리는
-        진공 속 외부음이 아닌 선내 구조음과 교신의 해석입니다. 실제 추력에 따라
-        저역 선체 공명과 거친 마찰음이 켜지고, 야코비 상수와 통로 부근의 위치가
-        음색을 바꿉니다. 무추력 구간에는 추진음이 사라집니다. 실제 전이에는 짧은
-        압력이 빠지는 소리와 두 번의 릴레이 작동음이, 냉각·교신 전환에는 작은 기계음이 남습니다.
-        음높이·공명·가청 크기는 작품을 위한 해석이며 지속적인 배경음은 없습니다.
+        한 손가락으로 A를 움직이고, 두 번째 손가락으로 B를 움직입니다. 한
+        손가락만 사용할 때는 고정된 B와 비교합니다. 마우스로는 드래그로 A를,
+        Shift를 누른 드래그로 B를 움직입니다. 각 관측점은 손을 놓은 자리에
+        남습니다.
       </p>
       <p>
-        다른 중력권으로 건너간 뒤에도 기체의 작은 상태 표시등은 장치의 가동과 정지를
-        나타냅니다. 별도의 전력·열 모형에서 저장 에너지와 온도를 계산하고,
-        열 제어·관측·교신에 필요한 전력을 배분합니다. 전력이 부족하거나 온도가 높으면
-        관측 장치가 대기합니다. 에너지 수지와
-        복사 방열의 관계를 사용하지만, 장치의 용량·출력·임계값은 작품을 위한
-        가상 설정입니다. 실제 기체나 생명유지 장치의 성능을 예측하지 않으며,
-        추진제와 궤도 계산은 이 모형과 분리됩니다.
+        새 항해에서는 마지막으로 완전히 수신된 관측 하나를 B의 출발값으로
+        이어받습니다. 아직 도착 중인 변화는 기준값으로 삼지 않습니다. B도 두
+        번째 손가락이나 Shift와 드래그로 계속 바꿀 수 있습니다.
       </p>
       <p>
-        전이는 정해진 시각에 일어나지 않습니다. 추력으로 속도가 바뀌고, 탐사선이
-        L1 근방을 통과하여 다른 궤도 영역에 진입해야 한 번의 교신이 남습니다.
+        수신면은 화면 바깥까지 이어지고, 손을 놓은 뒤에는 마지막 응답의 흔적이
+        남습니다. 접촉한 부근의 면은 즉시 휘어집니다. 두 관측의 수신 응답은 각기
+        다른 간격으로 도착해 틈과 간섭 무늬를 바꿉니다. 두 관측점을 좌우로
+        어긋나게 움직인 뒤, 비슷한 가로 위치에서 멈추고 기다려 보십시오.
+      </p>
+      <p>
+        방향키는 A, Shift와 방향키는 B를 조절합니다. Enter는 두 관측을 다시
+        송신합니다. P는 일시 정지, R은 새 항해, M은 소리입니다. 작품 기록을 여는
+        동안에는 관측 시간이 멈춥니다.
+      </p>
+      <h3>A · 수학적 관계</h3>
+      <p>
+        복소수 s = σ + it의 실수부가 σ &gt; 1일 때, 리만 제타 함수는 모든 소수 p에
+        대한 오일러곱 ζ(s) = ∏(1 − p⁻ˢ)⁻¹로 나타낼 수 있습니다. 두 관측점에서
+        각 소수에 대응하는 복소 로그항 Lₚ(s) = −log(1 − p⁻ˢ)를 계산합니다.
+      </p>
+      <h3>B · 유한 계산</h3>
+      <p>
+        두 관측 모두 2부터 1987까지, 처음 300개의 소수를 사용합니다. 계산 범위는
+        σ = 1.12~1.65, t = 6~90입니다. 복소 로그항의 합으로 유한곱을 계산하고,
+        일정한 시간 간격으로 저장한 관측값 사이를 보간합니다. 이 계산은 무한곱
+        전체나 제타 함수의 비자명한 영점을 구하는 것이 아니며, 리만 가설을
+        증명하는 작업도 아닙니다.
+      </p>
+      <h3>C · 두 응답의 합성</h3>
+      <p>
+        각 소수에 대한 두 복소 로그항을 Aₚ, Bₚ로 두고, 그 합과 상대 위상으로
+        수신면을 구성합니다. 소수의 로그값과 면의 세로 위치에 대응하는 경로 위상
+        θ를 더해 |Aₚ + Bₚ exp(iθ)|²를 계산하고, (|Aₚ| + |Bₚ|)²로 나누어 명암을
+        정합니다. 이는 두 복소 응답을 시각적으로 합성하는 규칙이며, 새로운
+        제타 함수의 공식이나 실제 광학 장치의 시뮬레이션이 아닙니다.
+      </p>
+      <p>
+        이웃한 소수의 차이는 면 사이의 간격을, 복소 로그항은 길이와 깊이를 결정합니다. 두
+        응답의 상대 위상 차이가 각 수직 면의 가운데에 짧은 틈을 열고, 정렬되면 그
+        틈과 깊이가 함께 닫힙니다. 이 틈은 위상 차이를 공간으로 옮긴 예술적 표현입니다. 수신
+        지연이 긴 항을 더 깊이 배치해 응답의 시간차를 공간으로 펼칩니다. 전면의
+        간섭 구조는 마지막 수신값을 낮은 대비로 유지하며, 새 기록이 도착하면 그
+        구조가 바뀝니다. 새 응답이 도착한 항은 잠깐 드러났다가 낮은 대비의 기록으로
+        남습니다. 수신 뒤 경과한 시간에 따라 각 항의 밝기를 조절합니다. 손을
+        멈춘 뒤에도 각 소수의 로그값에 따른 경로 위상은 천천히 변합니다. 접촉 부근의 탄성 변형,
+        관측별 수신 지연, 경로 위상, 화면 진폭의 압축은 예술적 해석입니다. 소수
+        자체가 물리적으로 진동한다고 설명하지 않습니다.
+      </p>
+      <p>
+        두 관측이 한 차례 벌어졌다가, 지연된 응답의 상대 위상이 충분히 일치한
+        상태로 안정되면 전면의 위상에 따른 깊이가 잠시 하나로 정렬됩니다. 접촉이
+        만드는 국소 변형은 계속 남습니다. 관측을 시작한 뒤 한 번만 발생하며,
+        고정된 시각에 예약하지 않습니다. 온전히 수신된 기준 관측은 기다린 시간에
+        관계없이 비교에 참여합니다. 이후에도 새로운 접촉에 반응합니다.
+      </p>
+      <p>
+        소리는 새로 도착한 두 응답의 차이를 짧은 유리 공명으로 옮깁니다.
+        대표로 선택한 소수 여덟 개의 로그값은 음높이를, 항의 크기는 소리의 세기를 정합니다.
+        A와 B의 상대 위상은 좌우 음상의 간격과 미세한 맥놀이로 들리며, 각 응답은 모형이 계산한
+        수신 시각에 울립니다. 음색과 가청 음역은 예술적 해석입니다. 두 관측이
+        정렬되는 사건 동안에는 8.5초의 침묵이 생깁니다. 지속적인 배경음은 없으며,
+        소리 버튼으로 활성화합니다.
       </p>
       <h3>자료</h3>
       <p>
         <a
-          href="https://ssd-api.jpl.nasa.gov/doc/periodic_orbits.html"
+          href="https://dlmf.nist.gov/27.4.E3"
           target="_blank"
           rel="noopener noreferrer"
-          >NASA/JPL · 제한 삼체 문제의 궤도와 좌표계</a
-        ><br /><a
-          href="https://ntrs.nasa.gov/citations/20150021066"
-          target="_blank"
-          rel="noopener noreferrer"
-          >NASA · 야코비 상수와 L1 통로</a
+          >NIST DLMF · 리만 제타 함수의 오일러곱</a
         >
       </p>
       <p class="credits">
-        HIGH / MID / LOW는 같은 항행 계산을 공유합니다. 표본 수와 화면 해상도만
-        달라집니다. Three.js · MIT License. 기존 「Dual Galaxy」와 탐사선의
-        형상을 바탕으로 한 독립 작품.
+        HIGH / MID / LOW 모두 두 관측과 300개 소수, 같은 간섭 계산과 사건 조건을
+        유지합니다. 면의 세분화·화면 해상도·표시 빈도만 다릅니다. 단일 HTML ·
+        외부 파일 없이 실행. Three.js · MIT License. 김건우, 2026.
       </p>
     </dialog>
     <script type="module">
@@ -2296,11 +2362,11 @@ THE SOFTWARE.
      * @param {number} angle - The angle in radians.
      * @return {Quaternion} A reference to this quaternion.
      */
-    setFromAxisAngle(axis2, angle) {
+    setFromAxisAngle(axis, angle) {
       const halfAngle = angle / 2, s = Math.sin(halfAngle);
-      this._x = axis2.x * s;
-      this._y = axis2.y * s;
-      this._z = axis2.z * s;
+      this._x = axis.x * s;
+      this._y = axis.y * s;
+      this._z = axis.z * s;
       this._w = Math.cos(halfAngle);
       this._onChangeCallback();
       return this;
@@ -2929,8 +2995,8 @@ THE SOFTWARE.
      * @param {number} angle - The angle in radians.
      * @return {Vector3} A reference to this vector.
      */
-    applyAxisAngle(axis2, angle) {
-      return this.applyQuaternion(_quaternion$5.setFromAxisAngle(axis2, angle));
+    applyAxisAngle(axis, angle) {
+      return this.applyQuaternion(_quaternion$5.setFromAxisAngle(axis, angle));
     }
     /**
      * Multiplies this vector with the given 3x3 matrix.
@@ -6494,11 +6560,11 @@ THE SOFTWARE.
      * @param {number} angle - The rotation in radians.
      * @return {Matrix4} A reference to this matrix.
      */
-    makeRotationAxis(axis2, angle) {
+    makeRotationAxis(axis, angle) {
       const c = Math.cos(angle);
       const s = Math.sin(angle);
       const t = 1 - c;
-      const x = axis2.x, y = axis2.y, z = axis2.z;
+      const x = axis.x, y = axis.y, z = axis.z;
       const tx = t * x, ty = t * y;
       this.set(
         tx * x + c,
@@ -7173,8 +7239,8 @@ THE SOFTWARE.
      * @param {Layers} layers - The layers to test.
      * @return {boolean } Whether this and the given layers object have at least one layer in common or not.
      */
-    test(layers) {
-      return (this.mask & layers.mask) !== 0;
+    test(layers2) {
+      return (this.mask & layers2.mask) !== 0;
     }
     /**
      * Returns `true` if the given layer is enabled.
@@ -7389,8 +7455,8 @@ THE SOFTWARE.
      * @param {Vector3} axis - The (normalized) axis vector.
      * @param {number} angle - The angle in radians.
      */
-    setRotationFromAxisAngle(axis2, angle) {
-      this.quaternion.setFromAxisAngle(axis2, angle);
+    setRotationFromAxisAngle(axis, angle) {
+      this.quaternion.setFromAxisAngle(axis, angle);
     }
     /**
      * Sets the given rotation represented as Euler angles to the 3D object.
@@ -7424,8 +7490,8 @@ THE SOFTWARE.
      * @param {number} angle - The angle in radians.
      * @return {Object3D} A reference to this instance.
      */
-    rotateOnAxis(axis2, angle) {
-      _q1.setFromAxisAngle(axis2, angle);
+    rotateOnAxis(axis, angle) {
+      _q1.setFromAxisAngle(axis, angle);
       this.quaternion.multiply(_q1);
       return this;
     }
@@ -7436,8 +7502,8 @@ THE SOFTWARE.
      * @param {number} angle - The angle in radians.
      * @return {Object3D} A reference to this instance.
      */
-    rotateOnWorldAxis(axis2, angle) {
-      _q1.setFromAxisAngle(axis2, angle);
+    rotateOnWorldAxis(axis, angle) {
+      _q1.setFromAxisAngle(axis, angle);
       this.quaternion.premultiply(_q1);
       return this;
     }
@@ -7475,8 +7541,8 @@ THE SOFTWARE.
      * @param {number} distance - The distance in world units.
      * @return {Object3D} A reference to this instance.
      */
-    translateOnAxis(axis2, distance) {
-      _v1$6.copy(axis2).applyQuaternion(this.quaternion);
+    translateOnAxis(axis, distance) {
+      _v1$6.copy(axis).applyQuaternion(this.quaternion);
       this.position.add(_v1$6.multiplyScalar(distance));
       return this;
     }
@@ -11605,6 +11671,505 @@ THE SOFTWARE.
       this.dispatchEvent({ type: "dispose" });
     }
   };
+  var InterleavedBuffer = class {
+    /**
+     * Constructs a new interleaved buffer.
+     *
+     * @param {TypedArray} array - A typed array with a shared buffer storing attribute data.
+     * @param {number} stride - The number of typed-array elements per vertex.
+     */
+    constructor(array, stride) {
+      this.isInterleavedBuffer = true;
+      this.array = array;
+      this.stride = stride;
+      this.count = array !== void 0 ? array.length / stride : 0;
+      this.usage = StaticDrawUsage;
+      this.updateRanges = [];
+      this.version = 0;
+      this.uuid = generateUUID();
+    }
+    /**
+     * A callback function that is executed after the renderer has transferred the attribute array
+     * data to the GPU.
+     */
+    onUploadCallback() {
+    }
+    /**
+     * Flag to indicate that this attribute has changed and should be re-sent to
+     * the GPU. Set this to `true` when you modify the value of the array.
+     *
+     * @type {number}
+     * @default false
+     * @param {boolean} value
+     */
+    set needsUpdate(value) {
+      if (value === true) this.version++;
+    }
+    /**
+     * Sets the usage of this interleaved buffer.
+     *
+     * @param {(StaticDrawUsage|DynamicDrawUsage|StreamDrawUsage|StaticReadUsage|DynamicReadUsage|StreamReadUsage|StaticCopyUsage|DynamicCopyUsage|StreamCopyUsage)} value - The usage to set.
+     * @return {InterleavedBuffer} A reference to this interleaved buffer.
+     */
+    setUsage(value) {
+      this.usage = value;
+      return this;
+    }
+    /**
+     * Adds a range of data in the data array to be updated on the GPU.
+     *
+     * @param {number} start - Position at which to start update.
+     * @param {number} count - The number of components to update.
+     */
+    addUpdateRange(start, count) {
+      this.updateRanges.push({ start, count });
+    }
+    /**
+     * Clears the update ranges.
+     */
+    clearUpdateRanges() {
+      this.updateRanges.length = 0;
+    }
+    /**
+     * Copies the values of the given interleaved buffer to this instance.
+     *
+     * @param {InterleavedBuffer} source - The interleaved buffer to copy.
+     * @return {InterleavedBuffer} A reference to this instance.
+     */
+    copy(source) {
+      this.array = new source.array.constructor(source.array);
+      this.count = source.count;
+      this.stride = source.stride;
+      this.usage = source.usage;
+      return this;
+    }
+    /**
+     * Copies a vector from the given interleaved buffer to this one. The start
+     * and destination position in the attribute buffers are represented by the
+     * given indices.
+     *
+     * @param {number} index1 - The destination index into this interleaved buffer.
+     * @param {InterleavedBuffer} interleavedBuffer - The interleaved buffer to copy from.
+     * @param {number} index2 - The source index into the given interleaved buffer.
+     * @return {InterleavedBuffer} A reference to this instance.
+     */
+    copyAt(index1, interleavedBuffer, index2) {
+      index1 *= this.stride;
+      index2 *= interleavedBuffer.stride;
+      for (let i = 0, l = this.stride; i < l; i++) {
+        this.array[index1 + i] = interleavedBuffer.array[index2 + i];
+      }
+      return this;
+    }
+    /**
+     * Sets the given array data in the interleaved buffer.
+     *
+     * @param {(TypedArray|Array)} value - The array data to set.
+     * @param {number} [offset=0] - The offset in this interleaved buffer's array.
+     * @return {InterleavedBuffer} A reference to this instance.
+     */
+    set(value, offset = 0) {
+      this.array.set(value, offset);
+      return this;
+    }
+    /**
+     * Returns a new interleaved buffer with copied values from this instance.
+     *
+     * @param {Object} [data] - An object with shared array buffers that allows to retain shared structures.
+     * @return {InterleavedBuffer} A clone of this instance.
+     */
+    clone(data) {
+      if (data.arrayBuffers === void 0) {
+        data.arrayBuffers = {};
+      }
+      if (this.array.buffer._uuid === void 0) {
+        this.array.buffer._uuid = generateUUID();
+      }
+      if (data.arrayBuffers[this.array.buffer._uuid] === void 0) {
+        data.arrayBuffers[this.array.buffer._uuid] = this.array.slice(0).buffer;
+      }
+      const array = new this.array.constructor(data.arrayBuffers[this.array.buffer._uuid]);
+      const ib = new this.constructor(array, this.stride);
+      ib.setUsage(this.usage);
+      return ib;
+    }
+    /**
+     * Sets the given callback function that is executed after the Renderer has transferred
+     * the array data to the GPU. Can be used to perform clean-up operations after
+     * the upload when data are not needed anymore on the CPU side.
+     *
+     * @param {Function} callback - The `onUpload()` callback.
+     * @return {InterleavedBuffer} A reference to this instance.
+     */
+    onUpload(callback) {
+      this.onUploadCallback = callback;
+      return this;
+    }
+    /**
+     * Serializes the interleaved buffer into JSON.
+     *
+     * @param {Object} [data] - An optional value holding meta information about the serialization.
+     * @return {Object} A JSON object representing the serialized interleaved buffer.
+     */
+    toJSON(data) {
+      if (data.arrayBuffers === void 0) {
+        data.arrayBuffers = {};
+      }
+      if (this.array.buffer._uuid === void 0) {
+        this.array.buffer._uuid = generateUUID();
+      }
+      if (data.arrayBuffers[this.array.buffer._uuid] === void 0) {
+        data.arrayBuffers[this.array.buffer._uuid] = Array.from(new Uint32Array(this.array.buffer));
+      }
+      return {
+        uuid: this.uuid,
+        buffer: this.array.buffer._uuid,
+        type: this.array.constructor.name,
+        stride: this.stride
+      };
+    }
+  };
+  var _vector$8 = /* @__PURE__ */ new Vector3();
+  var InterleavedBufferAttribute = class _InterleavedBufferAttribute {
+    /**
+     * Constructs a new interleaved buffer attribute.
+     *
+     * @param {InterleavedBuffer} interleavedBuffer - The buffer holding the interleaved data.
+     * @param {number} itemSize - The item size.
+     * @param {number} offset - The attribute offset into the buffer.
+     * @param {boolean} [normalized=false] - Whether the data are normalized or not.
+     */
+    constructor(interleavedBuffer, itemSize, offset, normalized = false) {
+      this.isInterleavedBufferAttribute = true;
+      this.name = "";
+      this.data = interleavedBuffer;
+      this.itemSize = itemSize;
+      this.offset = offset;
+      this.normalized = normalized;
+    }
+    /**
+     * The item count of this buffer attribute.
+     *
+     * @type {number}
+     * @readonly
+     */
+    get count() {
+      return this.data.count;
+    }
+    /**
+     * The array holding the interleaved buffer attribute data.
+     *
+     * @type {TypedArray}
+     */
+    get array() {
+      return this.data.array;
+    }
+    /**
+     * Flag to indicate that this attribute has changed and should be re-sent to
+     * the GPU. Set this to `true` when you modify the value of the array.
+     *
+     * @type {number}
+     * @default false
+     * @param {boolean} value
+     */
+    set needsUpdate(value) {
+      this.data.needsUpdate = value;
+    }
+    /**
+     * Applies the given 4x4 matrix to the given attribute. Only works with
+     * item size `3`.
+     *
+     * @param {Matrix4} m - The matrix to apply.
+     * @return {InterleavedBufferAttribute} A reference to this instance.
+     */
+    applyMatrix4(m) {
+      for (let i = 0, l = this.data.count; i < l; i++) {
+        _vector$8.fromBufferAttribute(this, i);
+        _vector$8.applyMatrix4(m);
+        this.setXYZ(i, _vector$8.x, _vector$8.y, _vector$8.z);
+      }
+      return this;
+    }
+    /**
+     * Applies the given 3x3 normal matrix to the given attribute. Only works with
+     * item size `3`.
+     *
+     * @param {Matrix3} m - The normal matrix to apply.
+     * @return {InterleavedBufferAttribute} A reference to this instance.
+     */
+    applyNormalMatrix(m) {
+      for (let i = 0, l = this.count; i < l; i++) {
+        _vector$8.fromBufferAttribute(this, i);
+        _vector$8.applyNormalMatrix(m);
+        this.setXYZ(i, _vector$8.x, _vector$8.y, _vector$8.z);
+      }
+      return this;
+    }
+    /**
+     * Applies the given 4x4 matrix to the given attribute. Only works with
+     * item size `3` and with direction vectors.
+     *
+     * @param {Matrix4} m - The matrix to apply.
+     * @return {InterleavedBufferAttribute} A reference to this instance.
+     */
+    transformDirection(m) {
+      for (let i = 0, l = this.count; i < l; i++) {
+        _vector$8.fromBufferAttribute(this, i);
+        _vector$8.transformDirection(m);
+        this.setXYZ(i, _vector$8.x, _vector$8.y, _vector$8.z);
+      }
+      return this;
+    }
+    /**
+     * Returns the given component of the vector at the given index.
+     *
+     * @param {number} index - The index into the buffer attribute.
+     * @param {number} component - The component index.
+     * @return {number} The returned value.
+     */
+    getComponent(index, component) {
+      let value = this.array[index * this.data.stride + this.offset + component];
+      if (this.normalized) value = denormalize(value, this.array);
+      return value;
+    }
+    /**
+     * Sets the given value to the given component of the vector at the given index.
+     *
+     * @param {number} index - The index into the buffer attribute.
+     * @param {number} component - The component index.
+     * @param {number} value - The value to set.
+     * @return {InterleavedBufferAttribute} A reference to this instance.
+     */
+    setComponent(index, component, value) {
+      if (this.normalized) value = normalize(value, this.array);
+      this.data.array[index * this.data.stride + this.offset + component] = value;
+      return this;
+    }
+    /**
+     * Sets the x component of the vector at the given index.
+     *
+     * @param {number} index - The index into the buffer attribute.
+     * @param {number} x - The value to set.
+     * @return {InterleavedBufferAttribute} A reference to this instance.
+     */
+    setX(index, x) {
+      if (this.normalized) x = normalize(x, this.array);
+      this.data.array[index * this.data.stride + this.offset] = x;
+      return this;
+    }
+    /**
+     * Sets the y component of the vector at the given index.
+     *
+     * @param {number} index - The index into the buffer attribute.
+     * @param {number} y - The value to set.
+     * @return {InterleavedBufferAttribute} A reference to this instance.
+     */
+    setY(index, y) {
+      if (this.normalized) y = normalize(y, this.array);
+      this.data.array[index * this.data.stride + this.offset + 1] = y;
+      return this;
+    }
+    /**
+     * Sets the z component of the vector at the given index.
+     *
+     * @param {number} index - The index into the buffer attribute.
+     * @param {number} z - The value to set.
+     * @return {InterleavedBufferAttribute} A reference to this instance.
+     */
+    setZ(index, z) {
+      if (this.normalized) z = normalize(z, this.array);
+      this.data.array[index * this.data.stride + this.offset + 2] = z;
+      return this;
+    }
+    /**
+     * Sets the w component of the vector at the given index.
+     *
+     * @param {number} index - The index into the buffer attribute.
+     * @param {number} w - The value to set.
+     * @return {InterleavedBufferAttribute} A reference to this instance.
+     */
+    setW(index, w) {
+      if (this.normalized) w = normalize(w, this.array);
+      this.data.array[index * this.data.stride + this.offset + 3] = w;
+      return this;
+    }
+    /**
+     * Returns the x component of the vector at the given index.
+     *
+     * @param {number} index - The index into the buffer attribute.
+     * @return {number} The x component.
+     */
+    getX(index) {
+      let x = this.data.array[index * this.data.stride + this.offset];
+      if (this.normalized) x = denormalize(x, this.array);
+      return x;
+    }
+    /**
+     * Returns the y component of the vector at the given index.
+     *
+     * @param {number} index - The index into the buffer attribute.
+     * @return {number} The y component.
+     */
+    getY(index) {
+      let y = this.data.array[index * this.data.stride + this.offset + 1];
+      if (this.normalized) y = denormalize(y, this.array);
+      return y;
+    }
+    /**
+     * Returns the z component of the vector at the given index.
+     *
+     * @param {number} index - The index into the buffer attribute.
+     * @return {number} The z component.
+     */
+    getZ(index) {
+      let z = this.data.array[index * this.data.stride + this.offset + 2];
+      if (this.normalized) z = denormalize(z, this.array);
+      return z;
+    }
+    /**
+     * Returns the w component of the vector at the given index.
+     *
+     * @param {number} index - The index into the buffer attribute.
+     * @return {number} The w component.
+     */
+    getW(index) {
+      let w = this.data.array[index * this.data.stride + this.offset + 3];
+      if (this.normalized) w = denormalize(w, this.array);
+      return w;
+    }
+    /**
+     * Sets the x and y component of the vector at the given index.
+     *
+     * @param {number} index - The index into the buffer attribute.
+     * @param {number} x - The value for the x component to set.
+     * @param {number} y - The value for the y component to set.
+     * @return {InterleavedBufferAttribute} A reference to this instance.
+     */
+    setXY(index, x, y) {
+      index = index * this.data.stride + this.offset;
+      if (this.normalized) {
+        x = normalize(x, this.array);
+        y = normalize(y, this.array);
+      }
+      this.data.array[index + 0] = x;
+      this.data.array[index + 1] = y;
+      return this;
+    }
+    /**
+     * Sets the x, y and z component of the vector at the given index.
+     *
+     * @param {number} index - The index into the buffer attribute.
+     * @param {number} x - The value for the x component to set.
+     * @param {number} y - The value for the y component to set.
+     * @param {number} z - The value for the z component to set.
+     * @return {InterleavedBufferAttribute} A reference to this instance.
+     */
+    setXYZ(index, x, y, z) {
+      index = index * this.data.stride + this.offset;
+      if (this.normalized) {
+        x = normalize(x, this.array);
+        y = normalize(y, this.array);
+        z = normalize(z, this.array);
+      }
+      this.data.array[index + 0] = x;
+      this.data.array[index + 1] = y;
+      this.data.array[index + 2] = z;
+      return this;
+    }
+    /**
+     * Sets the x, y, z and w component of the vector at the given index.
+     *
+     * @param {number} index - The index into the buffer attribute.
+     * @param {number} x - The value for the x component to set.
+     * @param {number} y - The value for the y component to set.
+     * @param {number} z - The value for the z component to set.
+     * @param {number} w - The value for the w component to set.
+     * @return {InterleavedBufferAttribute} A reference to this instance.
+     */
+    setXYZW(index, x, y, z, w) {
+      index = index * this.data.stride + this.offset;
+      if (this.normalized) {
+        x = normalize(x, this.array);
+        y = normalize(y, this.array);
+        z = normalize(z, this.array);
+        w = normalize(w, this.array);
+      }
+      this.data.array[index + 0] = x;
+      this.data.array[index + 1] = y;
+      this.data.array[index + 2] = z;
+      this.data.array[index + 3] = w;
+      return this;
+    }
+    /**
+     * Returns a new buffer attribute with copied values from this instance.
+     *
+     * If no parameter is provided, cloning an interleaved buffer attribute will de-interleave buffer data.
+     *
+     * @param {Object} [data] - An object with interleaved buffers that allows to retain the interleaved property.
+     * @return {BufferAttribute|InterleavedBufferAttribute} A clone of this instance.
+     */
+    clone(data) {
+      if (data === void 0) {
+        log("InterleavedBufferAttribute.clone(): Cloning an interleaved buffer attribute will de-interleave buffer data.");
+        const array = [];
+        for (let i = 0; i < this.count; i++) {
+          const index = i * this.data.stride + this.offset;
+          for (let j = 0; j < this.itemSize; j++) {
+            array.push(this.data.array[index + j]);
+          }
+        }
+        return new BufferAttribute(new this.array.constructor(array), this.itemSize, this.normalized);
+      } else {
+        if (data.interleavedBuffers === void 0) {
+          data.interleavedBuffers = {};
+        }
+        if (data.interleavedBuffers[this.data.uuid] === void 0) {
+          data.interleavedBuffers[this.data.uuid] = this.data.clone(data);
+        }
+        return new _InterleavedBufferAttribute(data.interleavedBuffers[this.data.uuid], this.itemSize, this.offset, this.normalized);
+      }
+    }
+    /**
+     * Serializes the buffer attribute into JSON.
+     *
+     * If no parameter is provided, cloning an interleaved buffer attribute will de-interleave buffer data.
+     *
+     * @param {Object} [data] - An optional value holding meta information about the serialization.
+     * @return {Object} A JSON object representing the serialized buffer attribute.
+     */
+    toJSON(data) {
+      if (data === void 0) {
+        log("InterleavedBufferAttribute.toJSON(): Serializing an interleaved buffer attribute will de-interleave buffer data.");
+        const array = [];
+        for (let i = 0; i < this.count; i++) {
+          const index = i * this.data.stride + this.offset;
+          for (let j = 0; j < this.itemSize; j++) {
+            array.push(this.data.array[index + j]);
+          }
+        }
+        return {
+          itemSize: this.itemSize,
+          type: this.array.constructor.name,
+          array,
+          normalized: this.normalized
+        };
+      } else {
+        if (data.interleavedBuffers === void 0) {
+          data.interleavedBuffers = {};
+        }
+        if (data.interleavedBuffers[this.data.uuid] === void 0) {
+          data.interleavedBuffers[this.data.uuid] = this.data.toJSON(data);
+        }
+        return {
+          isInterleavedBufferAttribute: true,
+          itemSize: this.itemSize,
+          data: this.data.uuid,
+          offset: this.offset,
+          normalized: this.normalized
+        };
+      }
+    }
+  };
   var _materialId = 0;
   var Material = class extends EventDispatcher {
     /**
@@ -12882,6 +13447,32 @@ THE SOFTWARE.
       this.unpackAlignment = 1;
     }
   };
+  var InstancedBufferAttribute = class extends BufferAttribute {
+    /**
+     * Constructs a new instanced buffer attribute.
+     *
+     * @param {TypedArray} array - The array holding the attribute data.
+     * @param {number} itemSize - The item size.
+     * @param {boolean} [normalized=false] - Whether the data are normalized or not.
+     * @param {number} [meshPerAttribute=1] - How often a value of this buffer attribute should be repeated.
+     */
+    constructor(array, itemSize, normalized, meshPerAttribute = 1) {
+      super(array, itemSize, normalized);
+      this.isInstancedBufferAttribute = true;
+      this.meshPerAttribute = meshPerAttribute;
+    }
+    copy(source) {
+      super.copy(source);
+      this.meshPerAttribute = source.meshPerAttribute;
+      return this;
+    }
+    toJSON() {
+      const data = super.toJSON();
+      data.meshPerAttribute = this.meshPerAttribute;
+      data.isInstancedBufferAttribute = true;
+      return data;
+    }
+  };
   var _vector1 = /* @__PURE__ */ new Vector3();
   var _vector2 = /* @__PURE__ */ new Vector3();
   var _normalMatrix = /* @__PURE__ */ new Matrix3();
@@ -13302,196 +13893,6 @@ THE SOFTWARE.
       return new this.constructor().copy(this);
     }
   };
-  var LineBasicMaterial = class extends Material {
-    /**
-     * Constructs a new line basic material.
-     *
-     * @param {Object} [parameters] - An object with one or more properties
-     * defining the material's appearance. Any property of the material
-     * (including any property from inherited materials) can be passed
-     * in here. Color values can be passed any type of value accepted
-     * by {@link Color#set}.
-     */
-    constructor(parameters) {
-      super();
-      this.isLineBasicMaterial = true;
-      this.type = "LineBasicMaterial";
-      this.color = new Color(16777215);
-      this.map = null;
-      this.linewidth = 1;
-      this.linecap = "round";
-      this.linejoin = "round";
-      this.fog = true;
-      this.setValues(parameters);
-    }
-    copy(source) {
-      super.copy(source);
-      this.color.copy(source.color);
-      this.map = source.map;
-      this.linewidth = source.linewidth;
-      this.linecap = source.linecap;
-      this.linejoin = source.linejoin;
-      this.fog = source.fog;
-      return this;
-    }
-  };
-  var _vStart = /* @__PURE__ */ new Vector3();
-  var _vEnd = /* @__PURE__ */ new Vector3();
-  var _inverseMatrix$1 = /* @__PURE__ */ new Matrix4();
-  var _ray$1 = /* @__PURE__ */ new Ray();
-  var _sphere$1 = /* @__PURE__ */ new Sphere();
-  var _intersectPointOnRay = /* @__PURE__ */ new Vector3();
-  var _intersectPointOnSegment = /* @__PURE__ */ new Vector3();
-  var Line = class extends Object3D {
-    /**
-     * Constructs a new line.
-     *
-     * @param {BufferGeometry} [geometry] - The line geometry.
-     * @param {Material|Array<Material>} [material] - The line material.
-     */
-    constructor(geometry = new BufferGeometry(), material = new LineBasicMaterial()) {
-      super();
-      this.isLine = true;
-      this.type = "Line";
-      this.geometry = geometry;
-      this.material = material;
-      this.morphTargetDictionary = void 0;
-      this.morphTargetInfluences = void 0;
-      this.updateMorphTargets();
-    }
-    copy(source, recursive) {
-      super.copy(source, recursive);
-      this.material = Array.isArray(source.material) ? source.material.slice() : source.material;
-      this.geometry = source.geometry;
-      return this;
-    }
-    /**
-     * Computes an array of distance values which are necessary for rendering dashed lines.
-     * For each vertex in the geometry, the method calculates the cumulative length from the
-     * current point to the very beginning of the line.
-     *
-     * @return {Line} A reference to this line.
-     */
-    computeLineDistances() {
-      const geometry = this.geometry;
-      if (geometry.index === null) {
-        const positionAttribute = geometry.attributes.position;
-        const lineDistances = [0];
-        for (let i = 1, l = positionAttribute.count; i < l; i++) {
-          _vStart.fromBufferAttribute(positionAttribute, i - 1);
-          _vEnd.fromBufferAttribute(positionAttribute, i);
-          lineDistances[i] = lineDistances[i - 1];
-          lineDistances[i] += _vStart.distanceTo(_vEnd);
-        }
-        geometry.setAttribute("lineDistance", new Float32BufferAttribute(lineDistances, 1));
-      } else {
-        warn("Line.computeLineDistances(): Computation only possible with non-indexed BufferGeometry.");
-      }
-      return this;
-    }
-    /**
-     * Computes intersection points between a casted ray and this line.
-     *
-     * @param {Raycaster} raycaster - The raycaster.
-     * @param {Array<Object>} intersects - The target array that holds the intersection points.
-     */
-    raycast(raycaster, intersects) {
-      const geometry = this.geometry;
-      const matrixWorld = this.matrixWorld;
-      const threshold = raycaster.params.Line.threshold;
-      const drawRange = geometry.drawRange;
-      if (geometry.boundingSphere === null) geometry.computeBoundingSphere();
-      _sphere$1.copy(geometry.boundingSphere);
-      _sphere$1.applyMatrix4(matrixWorld);
-      _sphere$1.radius += threshold;
-      if (raycaster.ray.intersectsSphere(_sphere$1) === false) return;
-      _inverseMatrix$1.copy(matrixWorld).invert();
-      _ray$1.copy(raycaster.ray).applyMatrix4(_inverseMatrix$1);
-      const localThreshold = threshold / ((this.scale.x + this.scale.y + this.scale.z) / 3);
-      const localThresholdSq = localThreshold * localThreshold;
-      const step = this.isLineSegments ? 2 : 1;
-      const index = geometry.index;
-      const attributes = geometry.attributes;
-      const positionAttribute = attributes.position;
-      if (index !== null) {
-        const start = Math.max(0, drawRange.start);
-        const end = Math.min(index.count, drawRange.start + drawRange.count);
-        for (let i = start, l = end - 1; i < l; i += step) {
-          const a = index.getX(i);
-          const b = index.getX(i + 1);
-          const intersect2 = checkIntersection(this, raycaster, _ray$1, localThresholdSq, a, b, i);
-          if (intersect2) {
-            intersects.push(intersect2);
-          }
-        }
-        if (this.isLineLoop) {
-          const a = index.getX(end - 1);
-          const b = index.getX(start);
-          const intersect2 = checkIntersection(this, raycaster, _ray$1, localThresholdSq, a, b, end - 1);
-          if (intersect2) {
-            intersects.push(intersect2);
-          }
-        }
-      } else {
-        const start = Math.max(0, drawRange.start);
-        const end = Math.min(positionAttribute.count, drawRange.start + drawRange.count);
-        for (let i = start, l = end - 1; i < l; i += step) {
-          const intersect2 = checkIntersection(this, raycaster, _ray$1, localThresholdSq, i, i + 1, i);
-          if (intersect2) {
-            intersects.push(intersect2);
-          }
-        }
-        if (this.isLineLoop) {
-          const intersect2 = checkIntersection(this, raycaster, _ray$1, localThresholdSq, end - 1, start, end - 1);
-          if (intersect2) {
-            intersects.push(intersect2);
-          }
-        }
-      }
-    }
-    /**
-     * Sets the values of {@link Line#morphTargetDictionary} and {@link Line#morphTargetInfluences}
-     * to make sure existing morph targets can influence this 3D object.
-     */
-    updateMorphTargets() {
-      const geometry = this.geometry;
-      const morphAttributes = geometry.morphAttributes;
-      const keys2 = Object.keys(morphAttributes);
-      if (keys2.length > 0) {
-        const morphAttribute = morphAttributes[keys2[0]];
-        if (morphAttribute !== void 0) {
-          this.morphTargetInfluences = [];
-          this.morphTargetDictionary = {};
-          for (let m = 0, ml = morphAttribute.length; m < ml; m++) {
-            const name = morphAttribute[m].name || String(m);
-            this.morphTargetInfluences.push(0);
-            this.morphTargetDictionary[name] = m;
-          }
-        }
-      }
-    }
-  };
-  function checkIntersection(object, raycaster, ray2, thresholdSq, a, b, i) {
-    const positionAttribute = object.geometry.attributes.position;
-    _vStart.fromBufferAttribute(positionAttribute, a);
-    _vEnd.fromBufferAttribute(positionAttribute, b);
-    const distSq = ray2.distanceSqToSegment(_vStart, _vEnd, _intersectPointOnRay, _intersectPointOnSegment);
-    if (distSq > thresholdSq) return;
-    _intersectPointOnRay.applyMatrix4(object.matrixWorld);
-    const distance = raycaster.ray.origin.distanceTo(_intersectPointOnRay);
-    if (distance < raycaster.near || distance > raycaster.far) return;
-    return {
-      distance,
-      // What do we want? intersection point on the ray or on the segment??
-      // point: raycaster.ray.at( distance ),
-      point: _intersectPointOnSegment.clone().applyMatrix4(object.matrixWorld),
-      index: i,
-      face: null,
-      faceIndex: null,
-      barycoord: null,
-      object
-    };
-  }
   var PointsMaterial = class extends Material {
     /**
      * Constructs a new points material.
@@ -14221,10 +14622,10 @@ THE SOFTWARE.
     }
     return dst;
   }
-  function mergeUniforms(uniforms) {
+  function mergeUniforms(uniforms2) {
     const merged = {};
-    for (let u = 0; u < uniforms.length; u++) {
-      const tmp = cloneUniforms(uniforms[u]);
+    for (let u = 0; u < uniforms2.length; u++) {
+      const tmp = cloneUniforms(uniforms2[u]);
       for (const p in tmp) {
         merged[p] = tmp[p];
       }
@@ -16120,63 +16521,6 @@ THE SOFTWARE.
       return data;
     }
   };
-  var PointLightShadow = class extends LightShadow {
-    /**
-     * Constructs a new point light shadow.
-     */
-    constructor() {
-      super(new PerspectiveCamera(90, 1, 0.5, 500));
-      this.isPointLightShadow = true;
-    }
-  };
-  var PointLight = class extends Light {
-    /**
-     * Constructs a new point light.
-     *
-     * @param {(number|Color|string)} [color=0xffffff] - The light's color.
-     * @param {number} [intensity=1] - The light's strength/intensity measured in candela (cd).
-     * @param {number} [distance=0] - Maximum range of the light. `0` means no limit.
-     * @param {number} [decay=2] - The amount the light dims along the distance of the light.
-     */
-    constructor(color, intensity, distance = 0, decay = 2) {
-      super(color, intensity);
-      this.isPointLight = true;
-      this.type = "PointLight";
-      this.distance = distance;
-      this.decay = decay;
-      this.shadow = new PointLightShadow();
-    }
-    /**
-     * The light's power. Power is the luminous power of the light measured in lumens (lm).
-     * Changing the power will also change the light's intensity.
-     *
-     * @type {number}
-     */
-    get power() {
-      return this.intensity * 4 * Math.PI;
-    }
-    set power(power) {
-      this.intensity = power / (4 * Math.PI);
-    }
-    dispose() {
-      super.dispose();
-      this.shadow.dispose();
-    }
-    copy(source, recursive) {
-      super.copy(source, recursive);
-      this.distance = source.distance;
-      this.decay = source.decay;
-      this.shadow = source.shadow.clone();
-      return this;
-    }
-    toJSON(meta) {
-      const data = super.toJSON(meta);
-      data.object.distance = this.distance;
-      data.object.decay = this.decay;
-      data.object.shadow = this.shadow.toJSON();
-      return data;
-    }
-  };
   var OrthographicCamera = class extends Camera {
     /**
      * Constructs a new orthographic camera.
@@ -16332,6 +16676,28 @@ THE SOFTWARE.
       const data = super.toJSON(meta);
       data.object.shadow = this.shadow.toJSON();
       data.object.target = this.target.uuid;
+      return data;
+    }
+  };
+  var InstancedBufferGeometry = class extends BufferGeometry {
+    /**
+     * Constructs a new instanced buffer geometry.
+     */
+    constructor() {
+      super();
+      this.isInstancedBufferGeometry = true;
+      this.type = "InstancedBufferGeometry";
+      this.instanceCount = Infinity;
+    }
+    copy(source) {
+      super.copy(source);
+      this.instanceCount = source.instanceCount;
+      return this;
+    }
+    toJSON() {
+      const data = super.toJSON();
+      data.instanceCount = this.instanceCount;
+      data.isInstancedBufferGeometry = true;
       return data;
     }
   };
@@ -16903,6 +17269,36 @@ THE SOFTWARE.
     ]
   ];
   var _controlInterpolantsResultBuffer = new Float32Array(1);
+  var InstancedInterleavedBuffer = class extends InterleavedBuffer {
+    /**
+     * Constructs a new instanced interleaved buffer.
+     *
+     * @param {TypedArray} array - A typed array with a shared buffer storing attribute data.
+     * @param {number} stride - The number of typed-array elements per vertex.
+     * @param {number} [meshPerAttribute=1] - Defines how often a value of this interleaved buffer should be repeated.
+     */
+    constructor(array, stride, meshPerAttribute = 1) {
+      super(array, stride);
+      this.isInstancedInterleavedBuffer = true;
+      this.meshPerAttribute = meshPerAttribute;
+    }
+    copy(source) {
+      super.copy(source);
+      this.meshPerAttribute = source.meshPerAttribute;
+      return this;
+    }
+    clone(data) {
+      const ib = super.clone(data);
+      ib.meshPerAttribute = this.meshPerAttribute;
+      return ib;
+    }
+    toJSON(data) {
+      const json = super.toJSON(data);
+      json.isInstancedInterleavedBuffer = true;
+      json.meshPerAttribute = this.meshPerAttribute;
+      return json;
+    }
+  };
   var _matrix = /* @__PURE__ */ new Matrix4();
   var Raycaster = class {
     /**
@@ -19124,8 +19520,8 @@ THE SOFTWARE.
       const material = isCubeTexture ? this._cubemapMaterial : this._equirectMaterial;
       const mesh = this._lodMeshes[0];
       mesh.material = material;
-      const uniforms = material.uniforms;
-      uniforms["envMap"].value = texture;
+      const uniforms2 = material.uniforms;
+      uniforms2["envMap"].value = texture;
       const size = this._cubeSize;
       _setViewport(cubeUVRenderTarget, 0, 0, 3 * size, 2 * size);
       renderer2.setRenderTarget(cubeUVRenderTarget);
@@ -22220,14 +22616,14 @@ THE SOFTWARE.
     }
     function getUniforms(material) {
       const shaderID = shaderIDs[material.type];
-      let uniforms;
+      let uniforms2;
       if (shaderID) {
         const shader = ShaderLib[shaderID];
-        uniforms = UniformsUtils.clone(shader.uniforms);
+        uniforms2 = UniformsUtils.clone(shader.uniforms);
       } else {
-        uniforms = material.uniforms;
+        uniforms2 = material.uniforms;
       }
-      return uniforms;
+      return uniforms2;
     }
     function acquireProgram(parameters, cacheKey) {
       let program = programsMap.get(cacheKey);
@@ -22455,16 +22851,16 @@ THE SOFTWARE.
         if (lights[light.id] !== void 0) {
           return lights[light.id];
         }
-        let uniforms;
+        let uniforms2;
         switch (light.type) {
           case "DirectionalLight":
-            uniforms = {
+            uniforms2 = {
               direction: new Vector3(),
               color: new Color()
             };
             break;
           case "SpotLight":
-            uniforms = {
+            uniforms2 = {
               position: new Vector3(),
               direction: new Vector3(),
               color: new Color(),
@@ -22475,7 +22871,7 @@ THE SOFTWARE.
             };
             break;
           case "PointLight":
-            uniforms = {
+            uniforms2 = {
               position: new Vector3(),
               color: new Color(),
               distance: 0,
@@ -22483,14 +22879,14 @@ THE SOFTWARE.
             };
             break;
           case "HemisphereLight":
-            uniforms = {
+            uniforms2 = {
               direction: new Vector3(),
               skyColor: new Color(),
               groundColor: new Color()
             };
             break;
           case "RectAreaLight":
-            uniforms = {
+            uniforms2 = {
               color: new Color(),
               position: new Vector3(),
               halfWidth: new Vector3(),
@@ -22498,8 +22894,8 @@ THE SOFTWARE.
             };
             break;
         }
-        lights[light.id] = uniforms;
-        return uniforms;
+        lights[light.id] = uniforms2;
+        return uniforms2;
       }
     };
   }
@@ -22510,10 +22906,10 @@ THE SOFTWARE.
         if (lights[light.id] !== void 0) {
           return lights[light.id];
         }
-        let uniforms;
+        let uniforms2;
         switch (light.type) {
           case "DirectionalLight":
-            uniforms = {
+            uniforms2 = {
               shadowIntensity: 1,
               shadowBias: 0,
               shadowNormalBias: 0,
@@ -22522,7 +22918,7 @@ THE SOFTWARE.
             };
             break;
           case "SpotLight":
-            uniforms = {
+            uniforms2 = {
               shadowIntensity: 1,
               shadowBias: 0,
               shadowNormalBias: 0,
@@ -22531,7 +22927,7 @@ THE SOFTWARE.
             };
             break;
           case "PointLight":
-            uniforms = {
+            uniforms2 = {
               shadowIntensity: 1,
               shadowBias: 0,
               shadowNormalBias: 0,
@@ -22542,8 +22938,8 @@ THE SOFTWARE.
             };
             break;
         }
-        lights[light.id] = uniforms;
-        return uniforms;
+        lights[light.id] = uniforms2;
+        return uniforms2;
       }
     };
   }
@@ -22632,8 +23028,8 @@ THE SOFTWARE.
           }
           numLightProbes++;
         } else if (light.isDirectionalLight) {
-          const uniforms = cache.get(light);
-          uniforms.color.copy(light.color).multiplyScalar(light.intensity);
+          const uniforms2 = cache.get(light);
+          uniforms2.color.copy(light.color).multiplyScalar(light.intensity);
           if (light.castShadow) {
             const shadow = light.shadow;
             const shadowUniforms = shadowCache.get(light);
@@ -22647,17 +23043,17 @@ THE SOFTWARE.
             state.directionalShadowMatrix[directionalLength] = light.shadow.matrix;
             numDirectionalShadows++;
           }
-          state.directional[directionalLength] = uniforms;
+          state.directional[directionalLength] = uniforms2;
           directionalLength++;
         } else if (light.isSpotLight) {
-          const uniforms = cache.get(light);
-          uniforms.position.setFromMatrixPosition(light.matrixWorld);
-          uniforms.color.copy(color).multiplyScalar(intensity);
-          uniforms.distance = distance;
-          uniforms.coneCos = Math.cos(light.angle);
-          uniforms.penumbraCos = Math.cos(light.angle * (1 - light.penumbra));
-          uniforms.decay = light.decay;
-          state.spot[spotLength] = uniforms;
+          const uniforms2 = cache.get(light);
+          uniforms2.position.setFromMatrixPosition(light.matrixWorld);
+          uniforms2.color.copy(color).multiplyScalar(intensity);
+          uniforms2.distance = distance;
+          uniforms2.coneCos = Math.cos(light.angle);
+          uniforms2.penumbraCos = Math.cos(light.angle * (1 - light.penumbra));
+          uniforms2.decay = light.decay;
+          state.spot[spotLength] = uniforms2;
           const shadow = light.shadow;
           if (light.map) {
             state.spotLightMap[numSpotMaps] = light.map;
@@ -22679,17 +23075,17 @@ THE SOFTWARE.
           }
           spotLength++;
         } else if (light.isRectAreaLight) {
-          const uniforms = cache.get(light);
-          uniforms.color.copy(color).multiplyScalar(intensity);
-          uniforms.halfWidth.set(light.width * 0.5, 0, 0);
-          uniforms.halfHeight.set(0, light.height * 0.5, 0);
-          state.rectArea[rectAreaLength] = uniforms;
+          const uniforms2 = cache.get(light);
+          uniforms2.color.copy(color).multiplyScalar(intensity);
+          uniforms2.halfWidth.set(light.width * 0.5, 0, 0);
+          uniforms2.halfHeight.set(0, light.height * 0.5, 0);
+          state.rectArea[rectAreaLength] = uniforms2;
           rectAreaLength++;
         } else if (light.isPointLight) {
-          const uniforms = cache.get(light);
-          uniforms.color.copy(light.color).multiplyScalar(light.intensity);
-          uniforms.distance = light.distance;
-          uniforms.decay = light.decay;
+          const uniforms2 = cache.get(light);
+          uniforms2.color.copy(light.color).multiplyScalar(light.intensity);
+          uniforms2.distance = light.distance;
+          uniforms2.decay = light.decay;
           if (light.castShadow) {
             const shadow = light.shadow;
             const shadowUniforms = shadowCache.get(light);
@@ -22705,13 +23101,13 @@ THE SOFTWARE.
             state.pointShadowMatrix[pointLength] = light.shadow.matrix;
             numPointShadows++;
           }
-          state.point[pointLength] = uniforms;
+          state.point[pointLength] = uniforms2;
           pointLength++;
         } else if (light.isHemisphereLight) {
-          const uniforms = cache.get(light);
-          uniforms.skyColor.copy(light.color).multiplyScalar(intensity);
-          uniforms.groundColor.copy(light.groundColor).multiplyScalar(intensity);
-          state.hemi[hemiLength] = uniforms;
+          const uniforms2 = cache.get(light);
+          uniforms2.skyColor.copy(light.color).multiplyScalar(intensity);
+          uniforms2.groundColor.copy(light.groundColor).multiplyScalar(intensity);
+          state.hemi[hemiLength] = uniforms2;
           hemiLength++;
         }
       }
@@ -22769,43 +23165,43 @@ THE SOFTWARE.
       for (let i = 0, l = lights.length; i < l; i++) {
         const light = lights[i];
         if (light.isDirectionalLight) {
-          const uniforms = state.directional[directionalLength];
-          uniforms.direction.setFromMatrixPosition(light.matrixWorld);
+          const uniforms2 = state.directional[directionalLength];
+          uniforms2.direction.setFromMatrixPosition(light.matrixWorld);
           vector3.setFromMatrixPosition(light.target.matrixWorld);
-          uniforms.direction.sub(vector3);
-          uniforms.direction.transformDirection(viewMatrix);
+          uniforms2.direction.sub(vector3);
+          uniforms2.direction.transformDirection(viewMatrix);
           directionalLength++;
         } else if (light.isSpotLight) {
-          const uniforms = state.spot[spotLength];
-          uniforms.position.setFromMatrixPosition(light.matrixWorld);
-          uniforms.position.applyMatrix4(viewMatrix);
-          uniforms.direction.setFromMatrixPosition(light.matrixWorld);
+          const uniforms2 = state.spot[spotLength];
+          uniforms2.position.setFromMatrixPosition(light.matrixWorld);
+          uniforms2.position.applyMatrix4(viewMatrix);
+          uniforms2.direction.setFromMatrixPosition(light.matrixWorld);
           vector3.setFromMatrixPosition(light.target.matrixWorld);
-          uniforms.direction.sub(vector3);
-          uniforms.direction.transformDirection(viewMatrix);
+          uniforms2.direction.sub(vector3);
+          uniforms2.direction.transformDirection(viewMatrix);
           spotLength++;
         } else if (light.isRectAreaLight) {
-          const uniforms = state.rectArea[rectAreaLength];
-          uniforms.position.setFromMatrixPosition(light.matrixWorld);
-          uniforms.position.applyMatrix4(viewMatrix);
+          const uniforms2 = state.rectArea[rectAreaLength];
+          uniforms2.position.setFromMatrixPosition(light.matrixWorld);
+          uniforms2.position.applyMatrix4(viewMatrix);
           matrix42.identity();
           matrix4.copy(light.matrixWorld);
           matrix4.premultiply(viewMatrix);
           matrix42.extractRotation(matrix4);
-          uniforms.halfWidth.set(light.width * 0.5, 0, 0);
-          uniforms.halfHeight.set(0, light.height * 0.5, 0);
-          uniforms.halfWidth.applyMatrix4(matrix42);
-          uniforms.halfHeight.applyMatrix4(matrix42);
+          uniforms2.halfWidth.set(light.width * 0.5, 0, 0);
+          uniforms2.halfHeight.set(0, light.height * 0.5, 0);
+          uniforms2.halfWidth.applyMatrix4(matrix42);
+          uniforms2.halfHeight.applyMatrix4(matrix42);
           rectAreaLength++;
         } else if (light.isPointLight) {
-          const uniforms = state.point[pointLength];
-          uniforms.position.setFromMatrixPosition(light.matrixWorld);
-          uniforms.position.applyMatrix4(viewMatrix);
+          const uniforms2 = state.point[pointLength];
+          uniforms2.position.setFromMatrixPosition(light.matrixWorld);
+          uniforms2.position.applyMatrix4(viewMatrix);
           pointLength++;
         } else if (light.isHemisphereLight) {
-          const uniforms = state.hemi[hemiLength];
-          uniforms.direction.setFromMatrixPosition(light.matrixWorld);
-          uniforms.direction.transformDirection(viewMatrix);
+          const uniforms2 = state.hemi[hemiLength];
+          uniforms2.direction.setFromMatrixPosition(light.matrixWorld);
+          uniforms2.direction.transformDirection(viewMatrix);
           hemiLength++;
         }
       }
@@ -25532,7 +25928,7 @@ void main() {
       let referenceSpaceType = "local-floor";
       let foveation = 1;
       let customReferenceSpace = null;
-      let pose = null;
+      let pose2 = null;
       let glBinding = null;
       let glProjLayer = null;
       let glBaseLayer = null;
@@ -25822,7 +26218,7 @@ void main() {
           camera2.projectionMatrixInverse.copy(camera2.projectionMatrix).invert();
         }
       }
-      function updateCamera2(camera2, parent) {
+      function updateCamera(camera2, parent) {
         if (parent === null) {
           camera2.matrixWorld.copy(camera2.matrix);
         } else {
@@ -25853,9 +26249,9 @@ void main() {
         cameraR.layers.mask = cameraXR.layers.mask & -3;
         const parent = camera2.parent;
         const cameras2 = cameraXR.cameras;
-        updateCamera2(cameraXR, parent);
+        updateCamera(cameraXR, parent);
         for (let i = 0; i < cameras2.length; i++) {
-          updateCamera2(cameras2[i], parent);
+          updateCamera(cameras2[i], parent);
         }
         if (cameras2.length === 2) {
           setProjectionFromUnion(cameraXR, cameraL, cameraR);
@@ -25910,10 +26306,10 @@ void main() {
       };
       let onAnimationFrameCallback = null;
       function onAnimationFrame(time, frame) {
-        pose = frame.getViewerPose(customReferenceSpace || referenceSpace);
+        pose2 = frame.getViewerPose(customReferenceSpace || referenceSpace);
         xrFrame = frame;
-        if (pose !== null) {
-          const views = pose.views;
+        if (pose2 !== null) {
+          const views = pose2.views;
           if (glBaseLayer !== null) {
             renderer2.setRenderTargetFramebuffer(newRenderTarget, glBaseLayer.framebuffer);
             renderer2.setRenderTarget(newRenderTarget);
@@ -26019,304 +26415,304 @@ void main() {
       }
       uniform.value.copy(map.matrix);
     }
-    function refreshFogUniforms(uniforms, fog) {
-      fog.color.getRGB(uniforms.fogColor.value, getUnlitUniformColorSpace(renderer2));
+    function refreshFogUniforms(uniforms2, fog) {
+      fog.color.getRGB(uniforms2.fogColor.value, getUnlitUniformColorSpace(renderer2));
       if (fog.isFog) {
-        uniforms.fogNear.value = fog.near;
-        uniforms.fogFar.value = fog.far;
+        uniforms2.fogNear.value = fog.near;
+        uniforms2.fogFar.value = fog.far;
       } else if (fog.isFogExp2) {
-        uniforms.fogDensity.value = fog.density;
+        uniforms2.fogDensity.value = fog.density;
       }
     }
-    function refreshMaterialUniforms(uniforms, material, pixelRatio, height2, transmissionRenderTarget) {
+    function refreshMaterialUniforms(uniforms2, material, pixelRatio, height2, transmissionRenderTarget) {
       if (material.isNodeMaterial) {
         material.uniformsNeedUpdate = false;
       } else if (material.isMeshBasicMaterial) {
-        refreshUniformsCommon(uniforms, material);
+        refreshUniformsCommon(uniforms2, material);
       } else if (material.isMeshLambertMaterial) {
-        refreshUniformsCommon(uniforms, material);
+        refreshUniformsCommon(uniforms2, material);
         if (material.envMap) {
-          uniforms.envMapIntensity.value = material.envMapIntensity;
+          uniforms2.envMapIntensity.value = material.envMapIntensity;
         }
       } else if (material.isMeshToonMaterial) {
-        refreshUniformsCommon(uniforms, material);
-        refreshUniformsToon(uniforms, material);
+        refreshUniformsCommon(uniforms2, material);
+        refreshUniformsToon(uniforms2, material);
       } else if (material.isMeshPhongMaterial) {
-        refreshUniformsCommon(uniforms, material);
-        refreshUniformsPhong(uniforms, material);
+        refreshUniformsCommon(uniforms2, material);
+        refreshUniformsPhong(uniforms2, material);
         if (material.envMap) {
-          uniforms.envMapIntensity.value = material.envMapIntensity;
+          uniforms2.envMapIntensity.value = material.envMapIntensity;
         }
       } else if (material.isMeshStandardMaterial) {
-        refreshUniformsCommon(uniforms, material);
-        refreshUniformsStandard(uniforms, material);
+        refreshUniformsCommon(uniforms2, material);
+        refreshUniformsStandard(uniforms2, material);
         if (material.isMeshPhysicalMaterial) {
-          refreshUniformsPhysical(uniforms, material, transmissionRenderTarget);
+          refreshUniformsPhysical(uniforms2, material, transmissionRenderTarget);
         }
       } else if (material.isMeshMatcapMaterial) {
-        refreshUniformsCommon(uniforms, material);
-        refreshUniformsMatcap(uniforms, material);
+        refreshUniformsCommon(uniforms2, material);
+        refreshUniformsMatcap(uniforms2, material);
       } else if (material.isMeshDepthMaterial) {
-        refreshUniformsCommon(uniforms, material);
+        refreshUniformsCommon(uniforms2, material);
       } else if (material.isMeshDistanceMaterial) {
-        refreshUniformsCommon(uniforms, material);
-        refreshUniformsDistance(uniforms, material);
+        refreshUniformsCommon(uniforms2, material);
+        refreshUniformsDistance(uniforms2, material);
       } else if (material.isMeshNormalMaterial) {
-        refreshUniformsCommon(uniforms, material);
+        refreshUniformsCommon(uniforms2, material);
       } else if (material.isLineBasicMaterial) {
-        refreshUniformsLine(uniforms, material);
+        refreshUniformsLine(uniforms2, material);
         if (material.isLineDashedMaterial) {
-          refreshUniformsDash(uniforms, material);
+          refreshUniformsDash(uniforms2, material);
         }
       } else if (material.isPointsMaterial) {
-        refreshUniformsPoints(uniforms, material, pixelRatio, height2);
+        refreshUniformsPoints(uniforms2, material, pixelRatio, height2);
       } else if (material.isSpriteMaterial) {
-        refreshUniformsSprites(uniforms, material);
+        refreshUniformsSprites(uniforms2, material);
       } else if (material.isShadowMaterial) {
-        uniforms.color.value.copy(material.color);
-        uniforms.opacity.value = material.opacity;
+        uniforms2.color.value.copy(material.color);
+        uniforms2.opacity.value = material.opacity;
       } else if (material.isShaderMaterial) {
         material.uniformsNeedUpdate = false;
       }
     }
-    function refreshUniformsCommon(uniforms, material) {
-      uniforms.opacity.value = material.opacity;
+    function refreshUniformsCommon(uniforms2, material) {
+      uniforms2.opacity.value = material.opacity;
       if (material.color) {
-        uniforms.diffuse.value.copy(material.color);
+        uniforms2.diffuse.value.copy(material.color);
       }
       if (material.emissive) {
-        uniforms.emissive.value.copy(material.emissive).multiplyScalar(material.emissiveIntensity);
+        uniforms2.emissive.value.copy(material.emissive).multiplyScalar(material.emissiveIntensity);
       }
       if (material.map) {
-        uniforms.map.value = material.map;
-        refreshTransformUniform(material.map, uniforms.mapTransform);
+        uniforms2.map.value = material.map;
+        refreshTransformUniform(material.map, uniforms2.mapTransform);
       }
       if (material.alphaMap) {
-        uniforms.alphaMap.value = material.alphaMap;
-        refreshTransformUniform(material.alphaMap, uniforms.alphaMapTransform);
+        uniforms2.alphaMap.value = material.alphaMap;
+        refreshTransformUniform(material.alphaMap, uniforms2.alphaMapTransform);
       }
       if (material.bumpMap) {
-        uniforms.bumpMap.value = material.bumpMap;
-        refreshTransformUniform(material.bumpMap, uniforms.bumpMapTransform);
-        uniforms.bumpScale.value = material.bumpScale;
+        uniforms2.bumpMap.value = material.bumpMap;
+        refreshTransformUniform(material.bumpMap, uniforms2.bumpMapTransform);
+        uniforms2.bumpScale.value = material.bumpScale;
         if (material.side === BackSide) {
-          uniforms.bumpScale.value *= -1;
+          uniforms2.bumpScale.value *= -1;
         }
       }
       if (material.normalMap) {
-        uniforms.normalMap.value = material.normalMap;
-        refreshTransformUniform(material.normalMap, uniforms.normalMapTransform);
-        uniforms.normalScale.value.copy(material.normalScale);
+        uniforms2.normalMap.value = material.normalMap;
+        refreshTransformUniform(material.normalMap, uniforms2.normalMapTransform);
+        uniforms2.normalScale.value.copy(material.normalScale);
         if (material.side === BackSide) {
-          uniforms.normalScale.value.negate();
+          uniforms2.normalScale.value.negate();
         }
       }
       if (material.displacementMap) {
-        uniforms.displacementMap.value = material.displacementMap;
-        refreshTransformUniform(material.displacementMap, uniforms.displacementMapTransform);
-        uniforms.displacementScale.value = material.displacementScale;
-        uniforms.displacementBias.value = material.displacementBias;
+        uniforms2.displacementMap.value = material.displacementMap;
+        refreshTransformUniform(material.displacementMap, uniforms2.displacementMapTransform);
+        uniforms2.displacementScale.value = material.displacementScale;
+        uniforms2.displacementBias.value = material.displacementBias;
       }
       if (material.emissiveMap) {
-        uniforms.emissiveMap.value = material.emissiveMap;
-        refreshTransformUniform(material.emissiveMap, uniforms.emissiveMapTransform);
+        uniforms2.emissiveMap.value = material.emissiveMap;
+        refreshTransformUniform(material.emissiveMap, uniforms2.emissiveMapTransform);
       }
       if (material.specularMap) {
-        uniforms.specularMap.value = material.specularMap;
-        refreshTransformUniform(material.specularMap, uniforms.specularMapTransform);
+        uniforms2.specularMap.value = material.specularMap;
+        refreshTransformUniform(material.specularMap, uniforms2.specularMapTransform);
       }
       if (material.alphaTest > 0) {
-        uniforms.alphaTest.value = material.alphaTest;
+        uniforms2.alphaTest.value = material.alphaTest;
       }
       const materialProperties = properties.get(material);
       const envMap = materialProperties.envMap;
       const envMapRotation = materialProperties.envMapRotation;
       if (envMap) {
-        uniforms.envMap.value = envMap;
-        uniforms.envMapRotation.value.setFromMatrix4(_m12.makeRotationFromEuler(envMapRotation)).transpose();
+        uniforms2.envMap.value = envMap;
+        uniforms2.envMapRotation.value.setFromMatrix4(_m12.makeRotationFromEuler(envMapRotation)).transpose();
         if (envMap.isCubeTexture && envMap.isRenderTargetTexture === false) {
-          uniforms.envMapRotation.value.premultiply(_m);
+          uniforms2.envMapRotation.value.premultiply(_m);
         }
-        uniforms.reflectivity.value = material.reflectivity;
-        uniforms.ior.value = material.ior;
-        uniforms.refractionRatio.value = material.refractionRatio;
+        uniforms2.reflectivity.value = material.reflectivity;
+        uniforms2.ior.value = material.ior;
+        uniforms2.refractionRatio.value = material.refractionRatio;
       }
       if (material.lightMap) {
-        uniforms.lightMap.value = material.lightMap;
-        uniforms.lightMapIntensity.value = material.lightMapIntensity;
-        refreshTransformUniform(material.lightMap, uniforms.lightMapTransform);
+        uniforms2.lightMap.value = material.lightMap;
+        uniforms2.lightMapIntensity.value = material.lightMapIntensity;
+        refreshTransformUniform(material.lightMap, uniforms2.lightMapTransform);
       }
       if (material.aoMap) {
-        uniforms.aoMap.value = material.aoMap;
-        uniforms.aoMapIntensity.value = material.aoMapIntensity;
-        refreshTransformUniform(material.aoMap, uniforms.aoMapTransform);
+        uniforms2.aoMap.value = material.aoMap;
+        uniforms2.aoMapIntensity.value = material.aoMapIntensity;
+        refreshTransformUniform(material.aoMap, uniforms2.aoMapTransform);
       }
     }
-    function refreshUniformsLine(uniforms, material) {
-      uniforms.diffuse.value.copy(material.color);
-      uniforms.opacity.value = material.opacity;
+    function refreshUniformsLine(uniforms2, material) {
+      uniforms2.diffuse.value.copy(material.color);
+      uniforms2.opacity.value = material.opacity;
       if (material.map) {
-        uniforms.map.value = material.map;
-        refreshTransformUniform(material.map, uniforms.mapTransform);
+        uniforms2.map.value = material.map;
+        refreshTransformUniform(material.map, uniforms2.mapTransform);
       }
     }
-    function refreshUniformsDash(uniforms, material) {
-      uniforms.dashSize.value = material.dashSize;
-      uniforms.totalSize.value = material.dashSize + material.gapSize;
-      uniforms.scale.value = material.scale;
+    function refreshUniformsDash(uniforms2, material) {
+      uniforms2.dashSize.value = material.dashSize;
+      uniforms2.totalSize.value = material.dashSize + material.gapSize;
+      uniforms2.scale.value = material.scale;
     }
-    function refreshUniformsPoints(uniforms, material, pixelRatio, height2) {
-      uniforms.diffuse.value.copy(material.color);
-      uniforms.opacity.value = material.opacity;
-      uniforms.size.value = material.size * pixelRatio;
-      uniforms.scale.value = height2 * 0.5;
+    function refreshUniformsPoints(uniforms2, material, pixelRatio, height2) {
+      uniforms2.diffuse.value.copy(material.color);
+      uniforms2.opacity.value = material.opacity;
+      uniforms2.size.value = material.size * pixelRatio;
+      uniforms2.scale.value = height2 * 0.5;
       if (material.map) {
-        uniforms.map.value = material.map;
-        refreshTransformUniform(material.map, uniforms.uvTransform);
+        uniforms2.map.value = material.map;
+        refreshTransformUniform(material.map, uniforms2.uvTransform);
       }
       if (material.alphaMap) {
-        uniforms.alphaMap.value = material.alphaMap;
-        refreshTransformUniform(material.alphaMap, uniforms.alphaMapTransform);
+        uniforms2.alphaMap.value = material.alphaMap;
+        refreshTransformUniform(material.alphaMap, uniforms2.alphaMapTransform);
       }
       if (material.alphaTest > 0) {
-        uniforms.alphaTest.value = material.alphaTest;
+        uniforms2.alphaTest.value = material.alphaTest;
       }
     }
-    function refreshUniformsSprites(uniforms, material) {
-      uniforms.diffuse.value.copy(material.color);
-      uniforms.opacity.value = material.opacity;
-      uniforms.rotation.value = material.rotation;
+    function refreshUniformsSprites(uniforms2, material) {
+      uniforms2.diffuse.value.copy(material.color);
+      uniforms2.opacity.value = material.opacity;
+      uniforms2.rotation.value = material.rotation;
       if (material.map) {
-        uniforms.map.value = material.map;
-        refreshTransformUniform(material.map, uniforms.mapTransform);
+        uniforms2.map.value = material.map;
+        refreshTransformUniform(material.map, uniforms2.mapTransform);
       }
       if (material.alphaMap) {
-        uniforms.alphaMap.value = material.alphaMap;
-        refreshTransformUniform(material.alphaMap, uniforms.alphaMapTransform);
+        uniforms2.alphaMap.value = material.alphaMap;
+        refreshTransformUniform(material.alphaMap, uniforms2.alphaMapTransform);
       }
       if (material.alphaTest > 0) {
-        uniforms.alphaTest.value = material.alphaTest;
+        uniforms2.alphaTest.value = material.alphaTest;
       }
     }
-    function refreshUniformsPhong(uniforms, material) {
-      uniforms.specular.value.copy(material.specular);
-      uniforms.shininess.value = Math.max(material.shininess, 1e-4);
+    function refreshUniformsPhong(uniforms2, material) {
+      uniforms2.specular.value.copy(material.specular);
+      uniforms2.shininess.value = Math.max(material.shininess, 1e-4);
     }
-    function refreshUniformsToon(uniforms, material) {
+    function refreshUniformsToon(uniforms2, material) {
       if (material.gradientMap) {
-        uniforms.gradientMap.value = material.gradientMap;
+        uniforms2.gradientMap.value = material.gradientMap;
       }
     }
-    function refreshUniformsStandard(uniforms, material) {
-      uniforms.metalness.value = material.metalness;
+    function refreshUniformsStandard(uniforms2, material) {
+      uniforms2.metalness.value = material.metalness;
       if (material.metalnessMap) {
-        uniforms.metalnessMap.value = material.metalnessMap;
-        refreshTransformUniform(material.metalnessMap, uniforms.metalnessMapTransform);
+        uniforms2.metalnessMap.value = material.metalnessMap;
+        refreshTransformUniform(material.metalnessMap, uniforms2.metalnessMapTransform);
       }
-      uniforms.roughness.value = material.roughness;
+      uniforms2.roughness.value = material.roughness;
       if (material.roughnessMap) {
-        uniforms.roughnessMap.value = material.roughnessMap;
-        refreshTransformUniform(material.roughnessMap, uniforms.roughnessMapTransform);
+        uniforms2.roughnessMap.value = material.roughnessMap;
+        refreshTransformUniform(material.roughnessMap, uniforms2.roughnessMapTransform);
       }
       if (material.envMap) {
-        uniforms.envMapIntensity.value = material.envMapIntensity;
+        uniforms2.envMapIntensity.value = material.envMapIntensity;
       }
     }
-    function refreshUniformsPhysical(uniforms, material, transmissionRenderTarget) {
-      uniforms.ior.value = material.ior;
+    function refreshUniformsPhysical(uniforms2, material, transmissionRenderTarget) {
+      uniforms2.ior.value = material.ior;
       if (material.sheen > 0) {
-        uniforms.sheenColor.value.copy(material.sheenColor).multiplyScalar(material.sheen);
-        uniforms.sheenRoughness.value = material.sheenRoughness;
+        uniforms2.sheenColor.value.copy(material.sheenColor).multiplyScalar(material.sheen);
+        uniforms2.sheenRoughness.value = material.sheenRoughness;
         if (material.sheenColorMap) {
-          uniforms.sheenColorMap.value = material.sheenColorMap;
-          refreshTransformUniform(material.sheenColorMap, uniforms.sheenColorMapTransform);
+          uniforms2.sheenColorMap.value = material.sheenColorMap;
+          refreshTransformUniform(material.sheenColorMap, uniforms2.sheenColorMapTransform);
         }
         if (material.sheenRoughnessMap) {
-          uniforms.sheenRoughnessMap.value = material.sheenRoughnessMap;
-          refreshTransformUniform(material.sheenRoughnessMap, uniforms.sheenRoughnessMapTransform);
+          uniforms2.sheenRoughnessMap.value = material.sheenRoughnessMap;
+          refreshTransformUniform(material.sheenRoughnessMap, uniforms2.sheenRoughnessMapTransform);
         }
       }
       if (material.clearcoat > 0) {
-        uniforms.clearcoat.value = material.clearcoat;
-        uniforms.clearcoatRoughness.value = material.clearcoatRoughness;
+        uniforms2.clearcoat.value = material.clearcoat;
+        uniforms2.clearcoatRoughness.value = material.clearcoatRoughness;
         if (material.clearcoatMap) {
-          uniforms.clearcoatMap.value = material.clearcoatMap;
-          refreshTransformUniform(material.clearcoatMap, uniforms.clearcoatMapTransform);
+          uniforms2.clearcoatMap.value = material.clearcoatMap;
+          refreshTransformUniform(material.clearcoatMap, uniforms2.clearcoatMapTransform);
         }
         if (material.clearcoatRoughnessMap) {
-          uniforms.clearcoatRoughnessMap.value = material.clearcoatRoughnessMap;
-          refreshTransformUniform(material.clearcoatRoughnessMap, uniforms.clearcoatRoughnessMapTransform);
+          uniforms2.clearcoatRoughnessMap.value = material.clearcoatRoughnessMap;
+          refreshTransformUniform(material.clearcoatRoughnessMap, uniforms2.clearcoatRoughnessMapTransform);
         }
         if (material.clearcoatNormalMap) {
-          uniforms.clearcoatNormalMap.value = material.clearcoatNormalMap;
-          refreshTransformUniform(material.clearcoatNormalMap, uniforms.clearcoatNormalMapTransform);
-          uniforms.clearcoatNormalScale.value.copy(material.clearcoatNormalScale);
+          uniforms2.clearcoatNormalMap.value = material.clearcoatNormalMap;
+          refreshTransformUniform(material.clearcoatNormalMap, uniforms2.clearcoatNormalMapTransform);
+          uniforms2.clearcoatNormalScale.value.copy(material.clearcoatNormalScale);
           if (material.side === BackSide) {
-            uniforms.clearcoatNormalScale.value.negate();
+            uniforms2.clearcoatNormalScale.value.negate();
           }
         }
       }
       if (material.dispersion > 0) {
-        uniforms.dispersion.value = material.dispersion;
+        uniforms2.dispersion.value = material.dispersion;
       }
       if (material.iridescence > 0) {
-        uniforms.iridescence.value = material.iridescence;
-        uniforms.iridescenceIOR.value = material.iridescenceIOR;
-        uniforms.iridescenceThicknessMinimum.value = material.iridescenceThicknessRange[0];
-        uniforms.iridescenceThicknessMaximum.value = material.iridescenceThicknessRange[1];
+        uniforms2.iridescence.value = material.iridescence;
+        uniforms2.iridescenceIOR.value = material.iridescenceIOR;
+        uniforms2.iridescenceThicknessMinimum.value = material.iridescenceThicknessRange[0];
+        uniforms2.iridescenceThicknessMaximum.value = material.iridescenceThicknessRange[1];
         if (material.iridescenceMap) {
-          uniforms.iridescenceMap.value = material.iridescenceMap;
-          refreshTransformUniform(material.iridescenceMap, uniforms.iridescenceMapTransform);
+          uniforms2.iridescenceMap.value = material.iridescenceMap;
+          refreshTransformUniform(material.iridescenceMap, uniforms2.iridescenceMapTransform);
         }
         if (material.iridescenceThicknessMap) {
-          uniforms.iridescenceThicknessMap.value = material.iridescenceThicknessMap;
-          refreshTransformUniform(material.iridescenceThicknessMap, uniforms.iridescenceThicknessMapTransform);
+          uniforms2.iridescenceThicknessMap.value = material.iridescenceThicknessMap;
+          refreshTransformUniform(material.iridescenceThicknessMap, uniforms2.iridescenceThicknessMapTransform);
         }
       }
       if (material.transmission > 0) {
-        uniforms.transmission.value = material.transmission;
-        uniforms.transmissionSamplerMap.value = transmissionRenderTarget.texture;
-        uniforms.transmissionSamplerSize.value.set(transmissionRenderTarget.width, transmissionRenderTarget.height);
+        uniforms2.transmission.value = material.transmission;
+        uniforms2.transmissionSamplerMap.value = transmissionRenderTarget.texture;
+        uniforms2.transmissionSamplerSize.value.set(transmissionRenderTarget.width, transmissionRenderTarget.height);
         if (material.transmissionMap) {
-          uniforms.transmissionMap.value = material.transmissionMap;
-          refreshTransformUniform(material.transmissionMap, uniforms.transmissionMapTransform);
+          uniforms2.transmissionMap.value = material.transmissionMap;
+          refreshTransformUniform(material.transmissionMap, uniforms2.transmissionMapTransform);
         }
-        uniforms.thickness.value = material.thickness;
+        uniforms2.thickness.value = material.thickness;
         if (material.thicknessMap) {
-          uniforms.thicknessMap.value = material.thicknessMap;
-          refreshTransformUniform(material.thicknessMap, uniforms.thicknessMapTransform);
+          uniforms2.thicknessMap.value = material.thicknessMap;
+          refreshTransformUniform(material.thicknessMap, uniforms2.thicknessMapTransform);
         }
-        uniforms.attenuationDistance.value = material.attenuationDistance;
-        uniforms.attenuationColor.value.copy(material.attenuationColor);
+        uniforms2.attenuationDistance.value = material.attenuationDistance;
+        uniforms2.attenuationColor.value.copy(material.attenuationColor);
       }
       if (material.anisotropy > 0) {
-        uniforms.anisotropyVector.value.set(material.anisotropy * Math.cos(material.anisotropyRotation), material.anisotropy * Math.sin(material.anisotropyRotation));
+        uniforms2.anisotropyVector.value.set(material.anisotropy * Math.cos(material.anisotropyRotation), material.anisotropy * Math.sin(material.anisotropyRotation));
         if (material.anisotropyMap) {
-          uniforms.anisotropyMap.value = material.anisotropyMap;
-          refreshTransformUniform(material.anisotropyMap, uniforms.anisotropyMapTransform);
+          uniforms2.anisotropyMap.value = material.anisotropyMap;
+          refreshTransformUniform(material.anisotropyMap, uniforms2.anisotropyMapTransform);
         }
       }
-      uniforms.specularIntensity.value = material.specularIntensity;
-      uniforms.specularColor.value.copy(material.specularColor);
+      uniforms2.specularIntensity.value = material.specularIntensity;
+      uniforms2.specularColor.value.copy(material.specularColor);
       if (material.specularColorMap) {
-        uniforms.specularColorMap.value = material.specularColorMap;
-        refreshTransformUniform(material.specularColorMap, uniforms.specularColorMapTransform);
+        uniforms2.specularColorMap.value = material.specularColorMap;
+        refreshTransformUniform(material.specularColorMap, uniforms2.specularColorMapTransform);
       }
       if (material.specularIntensityMap) {
-        uniforms.specularIntensityMap.value = material.specularIntensityMap;
-        refreshTransformUniform(material.specularIntensityMap, uniforms.specularIntensityMapTransform);
+        uniforms2.specularIntensityMap.value = material.specularIntensityMap;
+        refreshTransformUniform(material.specularIntensityMap, uniforms2.specularIntensityMapTransform);
       }
     }
-    function refreshUniformsMatcap(uniforms, material) {
+    function refreshUniformsMatcap(uniforms2, material) {
       if (material.matcap) {
-        uniforms.matcap.value = material.matcap;
+        uniforms2.matcap.value = material.matcap;
       }
     }
-    function refreshUniformsDistance(uniforms, material) {
+    function refreshUniformsDistance(uniforms2, material) {
       const light = properties.get(material).light;
-      uniforms.referencePosition.value.setFromMatrixPosition(light.matrixWorld);
-      uniforms.nearDistance.value = light.shadow.camera.near;
-      uniforms.farDistance.value = light.shadow.camera.far;
+      uniforms2.referencePosition.value.setFromMatrixPosition(light.matrixWorld);
+      uniforms2.nearDistance.value = light.shadow.camera.near;
+      uniforms2.farDistance.value = light.shadow.camera.far;
     }
     return {
       refreshFogUniforms,
@@ -26372,11 +26768,11 @@ void main() {
     }
     function updateBufferData(uniformsGroup) {
       const buffer = buffers[uniformsGroup.id];
-      const uniforms = uniformsGroup.uniforms;
+      const uniforms2 = uniformsGroup.uniforms;
       const cache = uniformsGroup.__cache;
       gl.bindBuffer(gl.UNIFORM_BUFFER, buffer);
-      for (let i = 0, il = uniforms.length; i < il; i++) {
-        const uniformItem = uniforms[i];
+      for (let i = 0, il = uniforms2.length; i < il; i++) {
+        const uniformItem = uniforms2[i];
         if (Array.isArray(uniformItem)) {
           for (let j = 0, jl = uniformItem.length; j < jl; j++) {
             updateUniform(uniformItem[j], i, j, cache);
@@ -26460,11 +26856,11 @@ void main() {
       return false;
     }
     function prepareUniformsGroup(uniformsGroup) {
-      const uniforms = uniformsGroup.uniforms;
+      const uniforms2 = uniformsGroup.uniforms;
       let offset = 0;
       const chunkSize = 16;
-      for (let i = 0, l = uniforms.length; i < l; i++) {
-        const uniformArray = Array.isArray(uniforms[i]) ? uniforms[i] : [uniforms[i]];
+      for (let i = 0, l = uniforms2.length; i < l; i++) {
+        const uniformArray = Array.isArray(uniforms2[i]) ? uniforms2[i] : [uniforms2[i]];
         for (let j = 0, jl = uniformArray.length; j < jl; j++) {
           const uniform = uniformArray[j];
           const values = Array.isArray(uniform.value) ? uniform.value : [uniform.value];
@@ -27576,9 +27972,9 @@ void main() {
             const counts = object._multiDrawCounts;
             const drawCount2 = object._multiDrawCount;
             const bytesPerElement = index ? attributes.get(index).bytesPerElement : 1;
-            const uniforms = properties.get(material).currentProgram.getUniforms();
+            const uniforms2 = properties.get(material).currentProgram.getUniforms();
             for (let i = 0; i < drawCount2; i++) {
-              uniforms.setValue(_gl, "_gl_DrawID", i);
+              uniforms2.setValue(_gl, "_gl_DrawID", i);
               renderer2.render(starts[i] / bytesPerElement, counts[i]);
             }
           } else {
@@ -28005,30 +28401,30 @@ void main() {
           programs.set(programCacheKey, program);
           materialProperties.uniforms = parameters2.uniforms;
         }
-        const uniforms = materialProperties.uniforms;
+        const uniforms2 = materialProperties.uniforms;
         if (!material.isShaderMaterial && !material.isRawShaderMaterial || material.clipping === true) {
-          uniforms.clippingPlanes = clipping.uniform;
+          uniforms2.clippingPlanes = clipping.uniform;
         }
         updateCommonMaterialProperties(material, parameters2);
         materialProperties.needsLights = materialNeedsLights(material);
         materialProperties.lightsStateVersion = lightsStateVersion;
         if (materialProperties.needsLights) {
-          uniforms.ambientLightColor.value = lights.state.ambient;
-          uniforms.lightProbe.value = lights.state.probe;
-          uniforms.directionalLights.value = lights.state.directional;
-          uniforms.directionalLightShadows.value = lights.state.directionalShadow;
-          uniforms.spotLights.value = lights.state.spot;
-          uniforms.spotLightShadows.value = lights.state.spotShadow;
-          uniforms.rectAreaLights.value = lights.state.rectArea;
-          uniforms.ltc_1.value = lights.state.rectAreaLTC1;
-          uniforms.ltc_2.value = lights.state.rectAreaLTC2;
-          uniforms.pointLights.value = lights.state.point;
-          uniforms.pointLightShadows.value = lights.state.pointShadow;
-          uniforms.hemisphereLights.value = lights.state.hemi;
-          uniforms.directionalShadowMatrix.value = lights.state.directionalShadowMatrix;
-          uniforms.spotLightMatrix.value = lights.state.spotLightMatrix;
-          uniforms.spotLightMap.value = lights.state.spotLightMap;
-          uniforms.pointShadowMatrix.value = lights.state.pointShadowMatrix;
+          uniforms2.ambientLightColor.value = lights.state.ambient;
+          uniforms2.lightProbe.value = lights.state.probe;
+          uniforms2.directionalLights.value = lights.state.directional;
+          uniforms2.directionalLightShadows.value = lights.state.directionalShadow;
+          uniforms2.spotLights.value = lights.state.spot;
+          uniforms2.spotLightShadows.value = lights.state.spotShadow;
+          uniforms2.rectAreaLights.value = lights.state.rectArea;
+          uniforms2.ltc_1.value = lights.state.rectAreaLTC1;
+          uniforms2.ltc_2.value = lights.state.rectAreaLTC2;
+          uniforms2.pointLights.value = lights.state.point;
+          uniforms2.pointLightShadows.value = lights.state.pointShadow;
+          uniforms2.hemisphereLights.value = lights.state.hemi;
+          uniforms2.directionalShadowMatrix.value = lights.state.directionalShadowMatrix;
+          uniforms2.spotLightMatrix.value = lights.state.spotLightMatrix;
+          uniforms2.spotLightMap.value = lights.state.spotLightMap;
+          uniforms2.pointShadowMatrix.value = lights.state.pointShadowMatrix;
         }
         materialProperties.lightProbeGrid = currentRenderState.state.lightProbeGridArray.length > 0;
         materialProperties.currentProgram = program;
@@ -28296,17 +28692,17 @@ void main() {
         }
         return program;
       }
-      function markUniformsLightsNeedsUpdate(uniforms, value) {
-        uniforms.ambientLightColor.needsUpdate = value;
-        uniforms.lightProbe.needsUpdate = value;
-        uniforms.directionalLights.needsUpdate = value;
-        uniforms.directionalLightShadows.needsUpdate = value;
-        uniforms.pointLights.needsUpdate = value;
-        uniforms.pointLightShadows.needsUpdate = value;
-        uniforms.spotLights.needsUpdate = value;
-        uniforms.spotLightShadows.needsUpdate = value;
-        uniforms.rectAreaLights.needsUpdate = value;
-        uniforms.hemisphereLights.needsUpdate = value;
+      function markUniformsLightsNeedsUpdate(uniforms2, value) {
+        uniforms2.ambientLightColor.needsUpdate = value;
+        uniforms2.lightProbe.needsUpdate = value;
+        uniforms2.directionalLights.needsUpdate = value;
+        uniforms2.directionalLightShadows.needsUpdate = value;
+        uniforms2.pointLights.needsUpdate = value;
+        uniforms2.pointLightShadows.needsUpdate = value;
+        uniforms2.spotLights.needsUpdate = value;
+        uniforms2.spotLightShadows.needsUpdate = value;
+        uniforms2.rectAreaLights.needsUpdate = value;
+        uniforms2.hemisphereLights.needsUpdate = value;
       }
       function materialNeedsLights(material) {
         return material.isMeshLambertMaterial || material.isMeshToonMaterial || material.isMeshPhongMaterial || material.isMeshStandardMaterial || material.isShadowMaterial || material.isShaderMaterial && material.lights === true;
@@ -28697,7 +29093,7 @@ void main() {
   };
 
   // quiet-stars.mjs
-  var STAR_COUNTS = [4200, 7500, 12e3];
+  var STAR_COUNTS = [900, 1500, 2400];
   function createQuietStars(level2, seed = 1687585) {
     const capacity = STAR_COUNTS[level2];
     let state = seed >>> 0;
@@ -28716,7 +29112,7 @@ void main() {
       positions[i * 3 + 1] = z;
       positions[i * 3 + 2] = radial * Math.sin(theta);
       appearance[i * 3] = 0.65 + 0.5 * Math.pow(luminance, 9);
-      appearance[i * 3 + 1] = 0.24 + 0.46 * Math.pow(luminance, 4);
+      appearance[i * 3 + 1] = 0.10 + 0.16 * Math.pow(luminance, 4);
       appearance[i * 3 + 2] = random();
     }
     const geometry = new BufferGeometry();
@@ -28726,9 +29122,9 @@ void main() {
       new BufferAttribute(appearance, 3)
     );
     geometry.setDrawRange(0, capacity);
-    const uniforms = { uPixelRatio: { value: 1 } };
+    const uniforms2 = { uPixelRatio: { value: 1 } };
     const material = new ShaderMaterial({
-      uniforms,
+      uniforms: uniforms2,
       transparent: true,
       depthTest: true,
       depthWrite: false,
@@ -28765,7 +29161,7 @@ void main() {
       points,
       setQuality(next, pixelRatio) {
         geometry.setDrawRange(0, Math.min(capacity, STAR_COUNTS[next]));
-        uniforms.uPixelRatio.value = pixelRatio;
+        uniforms2.uPixelRatio.value = pixelRatio;
       },
       snapshot() {
         return {
@@ -28795,7 +29191,7 @@ void main() {
     let saveAt = -Infinity, writing = null, saveAgain = false, serial = 0;
     let cycle = 1, interventionAt = null, released = false, frames = [];
     let lastCapture = -Infinity, loadedPayload = null, statusNode, listNode;
-    const urls = [], contacts = /* @__PURE__ */ new Set(), keys2 = /* @__PURE__ */ new Set();
+    const urls = [], contacts2 = /* @__PURE__ */ new Set(), keys2 = /* @__PURE__ */ new Set();
     let afterFrame = 0, refreshNeeded = false;
     const isTest = new URLSearchParams(location.search).has("test");
     const allowPersistence = !isTest || new URLSearchParams(location.search).has("persist");
@@ -29163,7 +29559,7 @@ void main() {
       released = false;
     }
     function afterInput() {
-      if (!loaded || contacts.size || keys2.size || interventionAt === null)
+      if (!loaded || contacts2.size || keys2.size || interventionAt === null)
         return;
       released = true;
       if (afterFrame) cancelAnimationFrame(afterFrame);
@@ -29187,13 +29583,13 @@ void main() {
         "pointerdown",
         (e) => {
           if (e.button > 0 || !eventTarget(e)) return;
-          contacts.add(e.pointerId);
+          contacts2.add(e.pointerId);
           beforeInput();
         },
         true
       );
       const finish = (e) => {
-        if (contacts.delete(e.pointerId)) afterInput();
+        if (contacts2.delete(e.pointerId)) afterInput();
       };
       addEventListener("pointerup", finish);
       addEventListener("pointercancel", finish);
@@ -29224,7 +29620,7 @@ void main() {
           { capture: true, passive: true }
         );
       const suspendInput = () => {
-        contacts.clear();
+        contacts2.clear();
         keys2.clear();
         afterInput();
         checkpoint();
@@ -29257,7 +29653,7 @@ void main() {
       cycle++;
       interventionAt = null;
       released = false;
-      contacts.clear();
+      contacts2.clear();
       keys2.clear();
       lastCapture = -Infinity;
       trim();
@@ -29317,675 +29713,8 @@ void main() {
     };
   }
 
-  // transfer/operations.mjs
-  var OP_STEP = 1 / 60;
-  var BUS_CAPACITY = 1800;
-  var GENERATOR_POWER = 18;
-  var THERMAL_CAPACITY = 55;
-  var SIGMA = 5670374419e-17;
-  var INITIAL_ENERGY = 1200;
-  var INITIAL_TEMPERATURE = 291;
-  var clamp2 = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
-  function createOperations() {
-    const s = {
-      elapsed: 0,
-      remainder: 0,
-      energy: INITIAL_ENERGY,
-      temperature: INITIAL_TEMPERATURE,
-      pumpRequested: false,
-      pump: false,
-      surveyEnabled: true,
-      survey: 0,
-      transmission: 0,
-      backlog: 0,
-      packets: 0,
-      transitions: 0,
-      transferred: false,
-      postTransferTime: 0,
-      generated: 0,
-      consumed: 0,
-      curtailed: 0,
-      heatIn: 0,
-      heatOut: 0,
-      maxElectricError: 0,
-      maxThermalError: 0
-    };
-    function reset2() {
-      Object.assign(s, {
-        elapsed: 0,
-        remainder: 0,
-        energy: INITIAL_ENERGY,
-        temperature: INITIAL_TEMPERATURE,
-        pumpRequested: false,
-        pump: false,
-        surveyEnabled: true,
-        survey: 0,
-        transmission: 0,
-        backlog: 0,
-        packets: 0,
-        transitions: 0,
-        transferred: false,
-        postTransferTime: 0,
-        generated: 0,
-        consumed: 0,
-        curtailed: 0,
-        heatIn: 0,
-        heatOut: 0,
-        maxElectricError: 0,
-        maxThermalError: 0
-      });
-    }
-    function update2(seconds, throttle = 0, transferred = false, connected = true) {
-      if (!Number.isFinite(seconds) || seconds < 0) return;
-      s.remainder += seconds;
-      throttle = clamp2(throttle, 0, 1);
-      while (s.remainder >= OP_STEP - 1e-10) {
-        s.remainder -= OP_STEP;
-        s.elapsed += OP_STEP;
-        if (!connected) continue;
-        s.transferred || (s.transferred = transferred);
-        if (s.transferred) s.postTransferTime += OP_STEP;
-        if (s.temperature >= 294) s.pumpRequested = true;
-        else if (s.temperature <= 290) s.pumpRequested = false;
-        if (s.energy < BUS_CAPACITY * 0.3) s.surveyEnabled = false;
-        else if (s.energy > BUS_CAPACITY * 0.55) s.surveyEnabled = true;
-        s.backlog = Math.min(2, s.backlog + OP_STEP * (0.025 + throttle * 0.1));
-        if (s.transmission === 0 && s.backlog >= 1 && s.energy >= 600 && s.temperature < 295) {
-          s.transmission = 1.4;
-          s.backlog -= 1;
-          s.packets++;
-          s.transitions++;
-        }
-        let available = s.energy / OP_STEP + GENERATOR_POWER;
-        const base = Math.min(9, available);
-        available -= base;
-        const pump = s.pumpRequested && s.energy > BUS_CAPACITY * 0.08 ? Math.min(8, available) : 0;
-        available -= pump;
-        const tx = s.transmission > 0 ? Math.min(6, available) : 0;
-        available -= tx;
-        const survey = s.surveyEnabled ? Math.min(24 * throttle, available) : 0;
-        const total = base + pump + tx + survey;
-        const generation = Math.min(
-          GENERATOR_POWER,
-          Math.max(0, (BUS_CAPACITY - s.energy) / OP_STEP + total)
-        );
-        s.energy += OP_STEP * (generation - total);
-        s.generated += generation * OP_STEP;
-        s.consumed += total * OP_STEP;
-        s.curtailed += (GENERATOR_POWER - generation) * OP_STEP;
-        const running = pump > 0.1;
-        if (running !== s.pump) s.transitions++;
-        s.pump = running;
-        s.survey = survey / 24;
-        s.transmission = Math.max(0, s.transmission - OP_STEP * (tx / 6));
-        const area = 0.018 + pump / 8 * 0.057;
-        const qIn = 4 + base + pump + survey + tx * 0.35;
-        const qOut = Math.min(
-          0.82 * SIGMA * area * (s.temperature ** 4 - 3 ** 4),
-          (s.temperature - 3) * THERMAL_CAPACITY / OP_STEP + qIn
-        );
-        s.temperature += OP_STEP * (qIn - qOut) / THERMAL_CAPACITY;
-        s.heatIn += OP_STEP * qIn;
-        s.heatOut += OP_STEP * qOut;
-        s.maxElectricError = Math.max(
-          s.maxElectricError,
-          Math.abs(s.energy - INITIAL_ENERGY - s.generated + s.consumed)
-        );
-        s.maxThermalError = Math.max(
-          s.maxThermalError,
-          Math.abs(
-            (s.temperature - INITIAL_TEMPERATURE) * THERMAL_CAPACITY - s.heatIn + s.heatOut
-          )
-        );
-      }
-    }
-    return {
-      s,
-      update: update2,
-      reset: reset2,
-      snapshot: () => ({
-        ...s,
-        charge: s.energy / BUS_CAPACITY,
-        mode: s.pump ? "cooling" : s.surveyEnabled ? "observe" : "reserve",
-        finite: Object.values(s).every(
-          (v) => typeof v !== "number" || Number.isFinite(v)
-        )
-      })
-    };
-  }
-
-  // transfer/physics.mjs
-  var MU = 0.5;
-  var RATE = 1 / 32;
-  var C1 = 4;
-  var MAX_THRUST = 0.32;
-  var INITIAL_FUEL = 0.46;
-  var MAX_STEP = 1 / 2400;
-  var COLLISION_RADIUS = 0.045;
-  var clamp3 = (x, a, b) => Math.max(a, Math.min(b, x));
-  var wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
-  function potential(x, y) {
-    return 0.5 * (x * x + y * y) + (1 - MU) / Math.hypot(x + MU, y) + MU / Math.hypot(x - 1 + MU, y);
-  }
-  function jacobi(s) {
-    return 2 * potential(s[0], s[1]) - s[2] * s[2] - s[3] * s[3];
-  }
-  function derivative(s, out, ax = 0, ay = 0) {
-    const x = s[0], y = s[1], vx = s[2], vy = s[3];
-    const r1 = Math.hypot(x + MU, y), r2 = Math.hypot(x - 1 + MU, y);
-    const a = (1 - MU) / (r1 * r1 * r1), b = MU / (r2 * r2 * r2);
-    out[0] = vx;
-    out[1] = vy;
-    out[2] = x + 2 * vy - a * (x + MU) - b * (x - 1 + MU) + ax;
-    out[3] = y - 2 * vx - (a + b) * y + ay;
-    out[4] = 2 * (vx * ax + vy * ay);
-  }
-  function createIntegrator() {
-    const k1 = new Float64Array(5), k2 = k1.slice(), k3 = k1.slice(), k4 = k1.slice(), q = k1.slice();
-    return function step(s, h, ax = 0, ay = 0) {
-      derivative(s, k1, ax, ay);
-      for (let i = 0; i < 5; i++) q[i] = s[i] + h * 0.5 * k1[i];
-      derivative(q, k2, ax, ay);
-      for (let i = 0; i < 5; i++) q[i] = s[i] + h * 0.5 * k2[i];
-      derivative(q, k3, ax, ay);
-      for (let i = 0; i < 5; i++) q[i] = s[i] + h * k3[i];
-      derivative(q, k4, ax, ay);
-      for (let i = 0; i < 5; i++)
-        s[i] += h * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]) / 6;
-    };
-  }
-  function initialState() {
-    const r = 0.26, phi = 1.2, x = -0.5 + r * Math.cos(phi), y = r * Math.sin(phi);
-    const v = Math.sqrt(2 * potential(x, y) - 4.018);
-    return new Float64Array([x, y, -Math.sin(phi) * v, Math.cos(phi) * v, 0]);
-  }
-  function createSimulation() {
-    const step = createIntegrator();
-    const s = initialState();
-    let elapsed = 0, physicalTime = 0, fuel = INITIAL_FUEL, heading = 0, throttle = 0, desiredHeading = 0, holding = false, pointing = false, requestedPower = 1, active = false, transferred = false, crossed = false, crossAt = 0, crossingY = 0, eventAt = null, status = "coast", inputCount = 0, initialC = jacobi(s), coastC = initialC, maxDrift = 0, maxWorkError = 0;
-    const result = { event: false, collision: false, escaped: false };
-    function reset2() {
-      s.set(initialState());
-      elapsed = physicalTime = 0;
-      fuel = INITIAL_FUEL;
-      heading = Math.atan2(s[3], s[2]);
-      desiredHeading = heading;
-      throttle = 0;
-      holding = pointing = active = transferred = crossed = false;
-      requestedPower = 1;
-      eventAt = null;
-      crossAt = crossingY = 0;
-      status = "coast";
-      inputCount = 0;
-      initialC = coastC = jacobi(s);
-      maxDrift = maxWorkError = 0;
-    }
-    reset2();
-    function input(held2, angle = desiredHeading, orient = held2, power = 1) {
-      if (held2 && !holding) inputCount++;
-      holding = held2;
-      pointing = orient;
-      desiredHeading = angle;
-      requestedPower = clamp3(power, 0, 1);
-    }
-    function update2(seconds) {
-      result.event = result.collision = result.escaped = false;
-      if (status === "collision" || status === "escaped") return result;
-      let left = Math.max(0, seconds) * RATE;
-      while (left > 1e-12) {
-        const near = Math.min(
-          Math.hypot(s[0] + MU, s[1]),
-          Math.hypot(s[0] - 1 + MU, s[1])
-        );
-        const h = Math.min(left, MAX_STEP, Math.sqrt(near * near * near) * 0.025);
-        if (near < COLLISION_RADIUS) {
-          status = "collision";
-          result.collision = true;
-          throttle = 0;
-          break;
-        }
-        const realH = h / RATE;
-        if (pointing) {
-          heading += clamp3(
-            wrap(desiredHeading - heading),
-            -1.25 * realH,
-            1.25 * realH
-          );
-        } else heading -= h;
-        heading = wrap(heading);
-        const target = holding && fuel > 1e-10 ? requestedPower : 0;
-        throttle += clamp3(target - throttle, -realH * 12, realH * 5);
-        let a = Math.min(MAX_THRUST * throttle, fuel / h);
-        if (fuel <= 1e-10) a = 0;
-        if (a > 0 && !active) active = true;
-        else if (a === 0 && active) {
-          active = false;
-          coastC = jacobi(s);
-        }
-        const previousX = s[0], previousY = s[1];
-        step(s, h, a * Math.cos(heading), a * Math.sin(heading));
-        fuel = Math.max(0, fuel - a * h);
-        physicalTime += h;
-        elapsed += realH;
-        left -= h;
-        const C = jacobi(s);
-        if (!active) maxDrift = Math.max(maxDrift, Math.abs(C - coastC));
-        maxWorkError = Math.max(maxWorkError, Math.abs(C + s[4] - initialC));
-        if (!transferred && previousX < 0 && s[0] >= 0 && C < C1 && inputCount > 0) {
-          const f = -previousX / (s[0] - previousX);
-          crossingY = previousY + (s[1] - previousY) * f;
-          if (Math.abs(crossingY) < 0.22) {
-            crossed = true;
-            crossAt = physicalTime;
-          }
-        }
-        if (crossed && !transferred && s[0] > 0.11 && Math.abs(s[1]) < 0.48 && physicalTime - crossAt > 0.08) {
-          transferred = true;
-          eventAt = elapsed;
-          result.event = true;
-          status = "transferred";
-        }
-        if (Math.hypot(s[0], s[1]) > 3) {
-          status = "escaped";
-          result.escaped = true;
-          throttle = 0;
-          break;
-        }
-        if (!Number.isFinite(C)) throw new Error("Nonfinite CR3BP state");
-      }
-      return result;
-    }
-    return {
-      s,
-      update: update2,
-      input,
-      reset: reset2,
-      get heading() {
-        return heading;
-      },
-      get throttle() {
-        return throttle;
-      },
-      get elapsed() {
-        return elapsed;
-      },
-      get fuel() {
-        return fuel;
-      },
-      get transferred() {
-        return transferred;
-      },
-      get status() {
-        return status;
-      },
-      get eventAt() {
-        return eventAt;
-      },
-      snapshot() {
-        return {
-          state: Array.from(s),
-          elapsed,
-          physicalTime,
-          fuel,
-          heading,
-          throttle,
-          holding,
-          requestedPower,
-          inputCount,
-          status,
-          transferred,
-          eventAt,
-          crossingY,
-          jacobi: jacobi(s),
-          initialC,
-          C1,
-          gatewayOpen: jacobi(s) < C1,
-          maxCoastDrift: maxDrift,
-          maxWorkError,
-          finite: Array.from(s).every(Number.isFinite)
-        };
-      }
-    };
-  }
-
-  // transfer/main.mjs
-  var hud = createReadout();
-  var quietSky;
-  var journeyMemory;
-  var params = new URLSearchParams(location.search);
-  var inspect = params.has("inspect");
-  var host = document.getElementById("view");
-  var loading = document.getElementById("loading");
-  var notice = document.getElementById("notice");
-  var hint = document.getElementById("hint");
-  var pointerMark = document.getElementById("cursor");
-  var dialog = document.getElementById("record");
-  var sim = createSimulation();
-  var operations = createOperations();
-  var S = 1180;
+  // echo/vessel.mjs
   var up = new Vector3(0, 1, 0);
-  var axis = new Vector3();
-  var qualityNames = ["LOW", "MID", "HIGH"];
-  var tiers = [
-    { count: 14e3, field: 56, dpr: 1, fps: 30 },
-    { count: 3e4, field: 88, dpr: 1.3, fps: 60 },
-    { count: 54e3, field: 128, dpr: 1.6, fps: 60 }
-  ];
-  var requested = qualityNames.indexOf(
-    (params.get("quality") || "").toUpperCase()
-  );
-  var coarse = matchMedia("(pointer:coarse)").matches;
-  var level = requested >= 0 ? requested : Math.min(innerWidth, innerHeight) < 640 || (navigator.deviceMemory || 8) <= 4 ? 0 : coarse || (navigator.hardwareConcurrency || 8) <= 6 || (devicePixelRatio || 1) > 1.8 ? 1 : 2;
-  var renderer;
-  var scene;
-  var camera;
-  var stars;
-  var field;
-  var vessel;
-  var plume;
-  var glow;
-  var servicePanel;
-  var qualityChanges = 0;
-  var width = innerWidth;
-  var height = innerHeight;
-  var dpr = 1;
-  var paused = false;
-  var lost = false;
-  var ready = false;
-  var lastTick = 0;
-  var lastDraw = 0;
-  var averageCost = 0;
-  var slowTime = 0;
-  var renderCount = 0;
-  var uiClock = 0;
-  var noticeUntil = 0;
-  var pointer = null;
-  var anchorX = 0;
-  var anchorY = 0;
-  var desired = sim.heading;
-  var held = false;
-  var inputPower = 0;
-  var anchorHeading = 0;
-  var pairOffset = 0;
-  var cameraDistance = 780;
-  var previewOpacity = 0;
-  var lastPrediction = -100;
-  var keys = /* @__PURE__ */ new Set();
-  var touches = /* @__PURE__ */ new Map();
-  var observer = new Vector2();
-  var observerTarget = new Vector2();
-  var focus = new Vector3();
-  var focusTarget = new Vector3();
-  var predictionState = new Float64Array(5);
-  var predictionData = new Float32Array(65 * 3);
-  var predictionStep = createIntegrator();
-  var prediction;
-  var predictionUniforms = { uOpacity: { value: 0 } };
-  // The trail contains observed past states, never forecast states. Its bounded
-  // buffer is identical at every quality tier and updated only every 0.32 s.
-  var transitTrail;
-  var trailCount = 0;
-  var trailAt = -Infinity;
-  var TRAIL_CAPACITY = 160;
-  var trailData = new Float32Array(TRAIL_CAPACITY * 3);
-  var trailCoast = new Float32Array(TRAIL_CAPACITY);
-  var trailUniforms = { uCount: { value: 1 }, uFade: { value: 0 } };
-  var ray = new Raycaster();
-  var plane = new Plane(up, 0);
-  var ndc = new Vector2();
-  var hitA = new Vector3();
-  var hitB = new Vector3();
-  var projected = new Vector3();
-  var shipQ = new Quaternion();
-  var starUniforms = {
-    uScale: { value: S },
-    uTime: { value: 0 },
-    uJacobi: { value: 4.018 },
-    uPixel: { value: 1 },
-    uHeight: { value: height },
-    uFade: { value: 0 }
-  };
-  var fieldUniforms = { uC: { value: 4.018 }, uFade: { value: 0 } };
-  function say(text, seconds = 5) {
-    notice.textContent = text;
-    notice.classList.toggle("visible", !!text);
-    noticeUntil = sim.elapsed + seconds;
-  }
-  // TRANSFER · INERTIAL HULL
-  // Artistic sonification of actual throttle, Jacobi neck geometry and service
-  // transitions. These are imagined cabin vibrations, never sound in a vacuum.
-  // The three running sources are gain-gated by thrust. Coasting has no drone.
-  var audio = (() => {
-    let ctx = null, master = null, compressor = null, noiseGain = null;
-    let noiseFilter = null, hullGain = null, ribGain = null, hull = null, rib = null;
-    let enabled = false, wanted = false, revision = 0, suspendTimer = null, pendingSuspend = null;
-    let lastServiceVersion = 0, lastServiceSound = -Infinity, serviceSounds = 0, transferSounds = 0;
-    let eventArmed = true, lastControlTime = -Infinity, previousThrottle = 0;
-    let hissBuffer = null, relayBuffer = null, pressureBuffer = null;
-    const serviceVoices = new Set(), voices = new Set(), voiceLimit = 8;
-    const levels = { thrust: 0, shell: 0, ribs: 0, openness: 0 };
-    const button = document.getElementById("sound");
-    const clampAudio = (x, lo, hi) => Math.max(lo, Math.min(hi, Number.isFinite(x) ? x : lo));
-    try { wanted = sessionStorage.getItem("ti_audio_muted") === "0"; } catch {}
-    function blocked() {
-      return paused || lost || document.hidden || dialog.open;
-    }
-    function sync() {
-      const running = enabled && ctx?.state === "running";
-      button.setAttribute("aria-pressed", String(running));
-      button.setAttribute("aria-label", running ? "사운드 끄기" : wanted ? "사운드 재개" : "사운드 켜기");
-      button.title = button.getAttribute("aria-label");
-    }
-    function smooth(param, value, seconds = 0.045) {
-      if (!ctx || !param) return;
-      const t = ctx.currentTime;
-      param.cancelScheduledValues(t);
-      param.setTargetAtTime(value, t, seconds);
-    }
-    function create() {
-      if (ctx) return;
-      const AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) return;
-      ctx = new AC({ latencyHint: "interactive" });
-      master = ctx.createGain();
-      master.gain.value = 0;
-      const highpass = ctx.createBiquadFilter();
-      highpass.type = "highpass";
-      highpass.frequency.value = 34;
-      highpass.Q.value = 0.55;
-      const lowpass = ctx.createBiquadFilter();
-      lowpass.type = "lowpass";
-      lowpass.frequency.value = 3600;
-      lowpass.Q.value = 0.5;
-      compressor = ctx.createDynamicsCompressor();
-      compressor.threshold.value = -12;
-      compressor.knee.value = 12;
-      compressor.ratio.value = 3;
-      compressor.attack.value = 0.006;
-      compressor.release.value = 0.18;
-      master.connect(highpass); highpass.connect(lowpass);
-      lowpass.connect(compressor); compressor.connect(ctx.destination);
-      function buffer(seconds, fill) {
-        const b = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * seconds), ctx.sampleRate);
-        const data = b.getChannelData(0);
-        let seed = 41329;
-        for (let i = 0; i < data.length; i++) {
-          seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
-          data[i] = fill(i / ctx.sampleRate, seed / 4294967296 * 2 - 1);
-        }
-        return b;
-      }
-      // Buffers are prepared once. No random arrays or synthesis in the frame loop.
-      hissBuffer = buffer(2, (t, n) => n * 0.7);
-      relayBuffer = buffer(0.12, (t, n) => {
-        const attack = Math.min(1, t / 0.0015);
-        return attack * (n * Math.exp(-t * 130) * 0.35 +
-          Math.sin(2 * Math.PI * 287 * t) * Math.exp(-t * 62) * 0.45 +
-          Math.sin(2 * Math.PI * 631 * t) * Math.exp(-t * 88) * 0.12);
-      });
-      pressureBuffer = buffer(0.64, (t, n) => n * Math.min(1, t / 0.014) * Math.exp(-t * 8));
-      const source = ctx.createBufferSource();
-      source.buffer = hissBuffer; source.loop = true;
-      noiseFilter = ctx.createBiquadFilter();
-      noiseFilter.type = "bandpass";
-      noiseFilter.frequency.value = 240; noiseFilter.Q.value = 0.8;
-      noiseGain = ctx.createGain(); noiseGain.gain.value = 0;
-      source.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(master);
-      hull = ctx.createOscillator(); hull.type = "sine"; hull.frequency.value = 64;
-      rib = ctx.createOscillator(); rib.type = "sine"; rib.frequency.value = 107;
-      hullGain = ctx.createGain(); hullGain.gain.value = 0;
-      ribGain = ctx.createGain(); ribGain.gain.value = 0;
-      hull.connect(hullGain); hullGain.connect(master);
-      rib.connect(ribGain); ribGain.connect(master);
-      source.start(); hull.start(); rib.start();
-      ctx.onstatechange = () => { if (ctx.state !== "running") enabled = false; sync(); };
-    }
-    function quietEngine() {
-      levels.thrust = levels.shell = levels.ribs = 0;
-      if (!ctx) return;
-      smooth(noiseGain.gain, 0, 0.018);
-      smooth(hullGain.gain, 0, 0.018);
-      smooth(ribGain.gain, 0, 0.018);
-    }
-    function cancel() {
-      quietEngine();
-      if (!ctx) return;
-      const t = ctx.currentTime;
-      for (const v of voices) {
-        if (v.ending) continue;
-        v.ending = true;
-        const param = v.gain.gain;
-        param.cancelScheduledValues(t);
-        param.setTargetAtTime(0, t, 0.006);
-        try { v.source.stop(t + 0.032); } catch {}
-      }
-    }
-    function suspend() {
-      const ticket = ++revision;
-      enabled = false;
-      clearTimeout(suspendTimer);
-      cancel();
-      if (ctx) {
-        smooth(master.gain, 0, 0.009);
-        suspendTimer = setTimeout(() => {
-          if (ticket !== revision || enabled || ctx.state !== "running") return;
-          pendingSuspend = ctx.suspend().catch(() => {}).finally(() => { pendingSuspend = null; sync(); });
-        }, 45);
-      }
-      sync();
-    }
-    async function enable(value, persist = true) {
-      wanted = !!value;
-      if (persist) { try { sessionStorage.setItem("ti_audio_muted", wanted ? "0" : "1"); } catch {} }
-      if (!wanted || blocked()) { suspend(); return; }
-      const ticket = ++revision;
-      clearTimeout(suspendTimer);
-      create();
-      if (!ctx) { sync(); return; }
-      try {
-        if (pendingSuspend) await pendingSuspend;
-        await ctx.resume();
-        if (ticket !== revision || !wanted) return;
-        enabled = ctx.state === "running" && !blocked();
-        if (!enabled) { suspend(); return; }
-        smooth(master.gain, enabled ? 0.62 : 0, 0.025);
-        lastControlTime = -Infinity;
-        update2();
-      } catch { if (ticket === revision) enabled = false; }
-      sync();
-    }
-    function shot(buffer, volume, at, rate = 1, pan = 0, frequency = 0) {
-      if (!ctx || !enabled || ctx.state !== "running" || blocked() || voices.size >= voiceLimit) return false;
-      const t = ctx.currentTime + at;
-      const source = ctx.createBufferSource(), gain = ctx.createGain(), panner = ctx.createStereoPanner();
-      source.buffer = buffer; source.playbackRate.value = rate;
-      const duration = buffer.duration / rate;
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(volume, t + 0.004);
-      gain.gain.setValueAtTime(volume, t + Math.max(0.005, duration - 0.025));
-      gain.gain.linearRampToValueAtTime(0, t + duration);
-      panner.pan.value = pan;
-      const filter = frequency ? ctx.createBiquadFilter() : null;
-      if (filter) { filter.type = "bandpass"; filter.frequency.value = frequency; filter.Q.value = 0.75; source.connect(filter); filter.connect(gain); }
-      else source.connect(gain);
-      gain.connect(panner); panner.connect(master);
-      const v = { source, gain, ending: false };
-      voices.add(v);
-      source.onended = () => {
-        voices.delete(v); serviceVoices.delete(v);
-        source.disconnect(); filter?.disconnect(); gain.disconnect(); panner.disconnect();
-      };
-      source.start(t); source.stop(t + duration + 0.012);
-      return v;
-    }
-    function update2() {
-      const version = operations.s.transitions;
-      const changed = version !== lastServiceVersion;
-      lastServiceVersion = version;
-      if (!ctx || !enabled || ctx.state !== "running") return;
-      if (blocked()) { cancel(); return; }
-      const t = ctx.currentTime;
-      if (changed && t - lastServiceSound > 0.3 && serviceVoices.size < 3 && sim.status !== "collision" && (!sim.transferred || sim.elapsed - sim.eventAt > 4.5)) {
-        lastServiceSound = t;
-        const tx = operations.s.transmission > 0;
-        const v = shot(relayBuffer, (tx ? 0.105 : 0.09) * (sim.transferred ? 0.65 : 0.35), 0.004,
-          tx ? 1.55 : operations.s.pump ? 0.73 : 1.05, tx ? 0.34 : -0.24);
-        if (v) { serviceVoices.add(v); serviceSounds++; }
-      }
-      // Throttle is simulated, never cursor distance. Jacobi/proximity only color
-      // the running engine; they cannot create sound during inertial travel.
-      const throttle = clampAudio(sim.throttle, 0, 1);
-      if (t - lastControlTime < 1 / 30 && Math.abs(throttle - previousThrottle) < 0.025) return;
-      lastControlTime = t; previousThrottle = throttle;
-      const openness = clampAudio((C1 - jacobi(sim.s)) * 0.8, 0, 1);
-      const throat = Math.exp(-Math.abs(sim.s[0]) * 5 - Math.abs(sim.s[1]) * 3);
-      const running = sim.status !== "collision" && sim.status !== "escaped" && throttle > 0.001;
-      levels.openness = openness;
-      levels.thrust = running ? 0.44 * Math.pow(throttle, 0.8) : 0;
-      levels.shell = running ? 0.14 * Math.pow(throttle, 1.35) : 0;
-      levels.ribs = running ? 0.055 * throttle : 0;
-      smooth(noiseGain.gain, levels.thrust, running ? 0.045 : 0.018);
-      smooth(hullGain.gain, levels.shell, running ? 0.06 : 0.018);
-      smooth(ribGain.gain, levels.ribs, running ? 0.055 : 0.018);
-      smooth(noiseFilter.frequency, 180 + throttle * 450 + openness * throat * 130, 0.08);
-      smooth(noiseFilter.Q, 0.65 + openness * throat * 1.1, 0.09);
-      smooth(hull.frequency, 63 + throttle * 19 + openness * throat * 5, 0.12);
-      smooth(rib.frequency, 108 + throttle * 29 - openness * throat * 6, 0.12);
-    }
-    function event() {
-      if (!eventArmed) return;
-      eventArmed = false;
-      if (!ctx || !enabled || ctx.state !== "running" || blocked()) return;
-      // The gate is confirmed by physics. A pressure release and two dry relays
-      // mark its one-time passage; no victory chord or artificial acceleration.
-      const v = shot(pressureBuffer, 0.38, 0.008, 0.9, 0, 460);
-      shot(relayBuffer, 0.20, 0.035, 0.66, -0.3);
-      shot(relayBuffer, 0.14, 0.235, 0.88, 0.3);
-      if (v) transferSounds++;
-    }
-    function gesture() {
-      if (wanted && (!enabled || ctx?.state !== "running")) enable(true, false);
-    }
-    button.addEventListener("click", () => enable(!wanted || ctx?.state !== "running"));
-    return {
-      enable, gesture, update: update2, event, cancel, suspend,
-      toggle() { enable(!wanted || ctx?.state !== "running"); },
-      resetService() {
-        cancel(); lastServiceVersion = 0; lastServiceSound = -Infinity;
-        eventArmed = true; lastControlTime = -Infinity; previousThrottle = 0;
-        levels.openness = 0;
-        gesture();
-      },
-      snapshot: () => ({
-        wanted, enabled, state: ctx?.state || "uninitialized",
-        design: "inertial-hull", serviceSounds, serviceVoices: serviceVoices.size,
-        transferSounds, voices: voices.size, activeSources: voices.size,
-        voiceLimit, continuousSources: ctx ? 3 : 0, continuousLevels: { ...levels },
-        compressorReduction: compressor?.reduction || 0
-      })
-    };
-  })();
-
   function createVessel() {
     const root = new Group(), batches = /* @__PURE__ */ new Map();
     const white = new MeshStandardMaterial({
@@ -30004,18 +29733,16 @@ void main() {
       metalness: 0.62
     });
     const foil = new MeshStandardMaterial({
-      color: 6579294,
+      color: 7958102,
       roughness: 0.73,
       metalness: 0.52,
       flatShading: true
     });
     const glass = new MeshStandardMaterial({
-      color: 2698800,
+      color: 1454139,
       roughness: 0.25,
       metalness: 0.48
     });
-    servicePanel = glass;
-    servicePanel.emissive.setRGB(0.32, 0.37, 0.35);
     function add(g, m, x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0) {
       const o = new Object3D();
       o.position.set(x, y, z);
@@ -30161,562 +29888,1056 @@ void main() {
     );
     label.position.set(0, 0.95, 1.87);
     root.add(label);
-    const pmat = new ShaderMaterial({
-      transparent: true,
-      depthWrite: false,
-      side: DoubleSide,
-      uniforms: { uPower: { value: 0 } },
-      vertexShader: "varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}",
-      fragmentShader: "uniform float uPower;varying vec2 vUv;void main(){float t=1.-vUv.y;float w=.36*(1.-t*.65);float a=exp(-pow((vUv.x-.5)/w,2.)*2.)*pow(1.-t,2.)*uPower;gl_FragColor=vec4(mix(vec3(.43,.46,.47),vec3(.78,.79,.78),pow(1.-t,3.)),a*.55);}"
-    });
-    plume = new Mesh(new PlaneGeometry(0.82, 2.4), pmat);
-    plume.position.y = -2.22;
-    root.add(plume);
-    glow = new Mesh(
-      new CylinderGeometry(0.23, 0.3, 0.04, 12),
-      new MeshBasicMaterial({
-        color: 12041661,
-        transparent: true,
-        opacity: 0
-      })
-    );
-    glow.position.y = -1.14;
-    root.add(glow);
     return root;
   }
-  function createStars() {
-    let seed = 58143;
-    const random = () => {
-      seed = Math.imul(seed, 1664525) + 1013904223 >>> 0;
-      return seed / 4294967296;
-    };
-    const count = tiers[level].count, a = new Float32Array(count * 4), b = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      const side = i % 2, r = 0.045 + Math.pow(random(), 0.56) * 0.64, arm = (i >> 1) % 3;
-      const theta = arm * (Math.PI * 2 / 3) + Math.log(r / 0.045) * 4.1 + (random() - 0.5) * (0.16 + r * 0.5);
-      a[i * 4] = r;
-      a[i * 4 + 1] = theta;
-      a[i * 4 + 2] = side;
-      a[i * 4 + 3] = (random() - 0.5) * (3e-3 + r * 0.025);
-      b[i * 3] = 0.52 + random() * 0.48;
-      b[i * 3 + 1] = random();
-      b[i * 3 + 2] = 0.7 + random() * 0.6;
+
+  // echo/model.mjs
+  var COUNT = 300;
+  var SIGMA_MIN = 1.12;
+  var SIGMA_MAX = 1.65;
+  var TAU_MIN = 6;
+  var TAU_MAX = 90;
+  var clamp2 = (x, a, b) => Math.max(a, Math.min(b, x));
+  var PRIMES = (() => {
+    const values = [];
+    for (let n = 2; values.length < COUNT; n++) {
+      let prime = true;
+      for (let d = 2; d * d <= n; d++)
+        if (n % d === 0) {
+          prime = false;
+          break;
+        }
+      if (prime) values.push(n);
     }
-    const geometry = new BufferGeometry();
-    geometry.setAttribute(
-      "position",
-      new BufferAttribute(new Float32Array(count * 3), 3)
-    );
-    geometry.setAttribute("aOrbit", new BufferAttribute(a, 4));
-    geometry.setAttribute("aTone", new BufferAttribute(b, 3));
-    const material = new ShaderMaterial({
-      uniforms: starUniforms,
-      transparent: true,
-      depthWrite: false,
-      blending: NormalBlending,
-      toneMapped: false,
-      vertexShader: `attribute vec4 aOrbit;attribute vec3 aTone;uniform float uTime,uPixel,uHeight,uJacobi,uFade,uScale;varying vec3 vColor;varying float vAlpha;
- void main(){
-  float r=aOrbit.x,side=aOrbit.z;
-  float angle=aOrbit.y+(sqrt(.5/(r*r*r))-1.)*uTime*.14;
-  float center=mix(-.5,.5,side);
-  vec2 local=vec2(cos(angle),sin(angle))*r,q=local+vec2(center,0.);
-  float omega=dot(q,q)+1./max(length(q+vec2(.5,0.)),.001)+1./max(length(q-vec2(.5,0.)),.001);
-  float allowed=smoothstep(-.025,.02,omega-uJacobi);
-  float coreFade=smoothstep(.045,.11,r),outerFade=1.-smoothstep(.56,.7,r);
-  float strata=.65+.35*pow(.5+.5*sin(aOrbit.y*2.+r*24.),2.);
-  vec3 silver=vec3(.66,.68,.67),graphite=vec3(.47,.49,.50);
-  vec3 c=mix(silver,graphite,side);c=mix(c,vec3(.76,.77,.76),pow(aTone.y,14.)*.4);
-  float passage=1.-.86*exp(-pow(q.x/.30,4.)-q.y*q.y/.017);
-  vColor=c;vAlpha=(.20+.38*aTone.x)*allowed*coreFade*outerFade*strata*passage*uFade;
-  float tilt=mix(.10,-.14,side);
-  float elevation=aOrbit.w+local.y*tilt+sin(angle*2.+side*1.3)*r*r*.075+atan((omega-uJacobi)*.7)*.1;
-  vec4 mv=modelViewMatrix*vec4(q.x*uScale,elevation*uScale,-q.y*uScale,1.);
-  vAlpha*=mix(.22,1.,exp(-max(-mv.z-250.,0.)/1200.));
-  gl_Position=projectionMatrix*mv;gl_PointSize=clamp(uPixel*aTone.z*(1.+.018*uHeight/max(1.,-mv.z)),.65,2.5);
- }`,
-      fragmentShader: `varying vec3 vColor;varying float vAlpha;void main(){float r=length(gl_PointCoord-.5)*2.;if(r>1.)discard;float a=(1.-smoothstep(.2,1.,r))*vAlpha;gl_FragColor=vec4(vColor,a);}`
-    });
-    const points = new Points(geometry, material);
-    points.frustumCulled = false;
-    return points;
+    return Object.freeze(values);
+  })();
+  var LOGS = Float64Array.from(PRIMES, Math.log);
+  function createResponse() {
+    return {
+      re: new Float64Array(COUNT),
+      im: new Float64Array(COUNT),
+      amplitude: new Float64Array(COUNT),
+      phase: new Float64Array(COUNT),
+      sumRe: 0,
+      sumIm: 0,
+      coherence: 0,
+      meanPhase: 0,
+      productRe: 0,
+      productIm: 0,
+      total: 0
+    };
   }
-  function createField() {
-    const material = new ShaderMaterial({
-      uniforms: fieldUniforms,
+  function evaluate(sigma, tau, out = createResponse()) {
+    let re = 0, im = 0, total = 0;
+    for (let i = 0; i < COUNT; i++) {
+      const rho = Math.exp(-sigma * LOGS[i]), angle = tau * LOGS[i];
+      const x = rho * Math.cos(angle), y = -rho * Math.sin(angle);
+      const a = -0.5 * Math.log1p(-2 * x + rho * rho), b = Math.atan2(y, 1 - x);
+      out.re[i] = a;
+      out.im[i] = b;
+      out.amplitude[i] = Math.hypot(a, b);
+      out.phase[i] = Math.atan2(b, a);
+      re += a;
+      im += b;
+      total += out.amplitude[i];
+    }
+    out.sumRe = re;
+    out.sumIm = im;
+    out.total = total;
+    out.coherence = Math.hypot(re, im) / total;
+    out.meanPhase = Math.atan2(im, re);
+    const magnitude = Math.exp(re);
+    out.productRe = magnitude * Math.cos(im);
+    out.productIm = magnitude * Math.sin(im);
+    return out;
+  }
+  var THRESHOLD = 0.965;
+  var INITIAL_SIGMA = 1.35;
+  var INITIAL_TAU = 23.4;
+  var H = 1 / 60;
+  var DELAYS = Float64Array.from(LOGS, (l) => 0.45 + 0.28 * l);
+  var DELAYS_B = Float64Array.from(LOGS, (l) => 0.64 + 0.31 * l);
+  var MAX_DELAY = Math.max(...DELAYS_B);
+  var HISTORY = 512;
+  function normalizeObservation(value) {
+    if (!value || value.version !== 1 || !Number.isFinite(value.sigma) || !Number.isFinite(value.tau) || value.sigma < SIGMA_MIN || value.sigma > SIGMA_MAX || value.tau < TAU_MIN || value.tau > TAU_MAX)
+      return null;
+    return { version: 1, sigma: value.sigma, tau: value.tau };
+  }
+  var smooth = (a, b, x) => {
+    const t = clamp2((x - a) / (b - a), 0, 1);
+    return t * t * (3 - 2 * t);
+  };
+  function combine(a, b, out) {
+    let agreement = 0, total = 0, result = 0, sumRe = 0, sumIm = 0;
+    for (let i = 0; i < COUNT; i++) {
+      const ar = a.re[i], ai = a.im[i], br = b.re[i], bi = b.im[i], aa = Math.hypot(ar, ai), ab = Math.hypot(br, bi), sum = aa + ab;
+      const cosine = clamp2((ar * br + ai * bi) / Math.max(1e-30, aa * ab), -1, 1);
+      out.re[i] = (ar + br) * 0.5;
+      out.im[i] = (ai + bi) * 0.5;
+      out.amplitude[i] = Math.hypot(out.re[i], out.im[i]);
+      out.phase[i] = Math.atan2(out.im[i], out.re[i]);
+      sumRe += out.re[i];
+      sumIm += out.im[i];
+      agreement += (1 + cosine) * 0.5;
+      result += out.amplitude[i] * 2;
+      total += sum;
+    }
+    out.sumRe = sumRe;
+    out.sumIm = sumIm;
+    out.meanPhase = Math.atan2(sumIm, sumRe);
+    out.agreement = agreement / COUNT;
+    out.visibility = result / Math.max(1e-30, total);
+    return out;
+  }
+  function channel(name) {
+    return {
+      name,
+      sigma: INITIAL_SIGMA,
+      tau: INITIAL_TAU,
+      targetSigma: INITIAL_SIGMA,
+      targetTau: INITIAL_TAU,
+      current: createResponse(),
+      received: createResponse(),
+      sHistory: new Float64Array(HISTORY),
+      tHistory: new Float64Array(HISTORY),
+      txHistory: new Float64Array(HISTORY),
+      versionHistory: new Float64Array(HISTORY),
+      receivedTau: new Float64Array(COUNT),
+      lastTransmit: -100,
+      lastChange: -100,
+      transmissions: 0,
+      held: false,
+      receivedObservation: null,
+      receivedObservationVersion: 0
+    };
+  }
+  function createEcho() {
+    const channels = [channel("A"), channel("B")], mixed = createResponse(), currentMix = createResponse();
+    const visual = new Float32Array(COUNT * 8), envelope = new Float32Array(COUNT * 2), arrivalVersion = new Float64Array(COUNT * 2);
+    let now = 0, clock = 0, cursor = 0, dirty2 = 0, eventAt = null, eventCount = 0, stable = 0, interactions = 0, explored = false, lastMotion = -100, lastTransmit = -100, transmissions = 0;
+    function fill() {
+      for (let arm = 0; arm < 2; arm++) {
+        const c = channels[arm], delays = arm ? DELAYS_B : DELAYS;
+        let minimumSigma = Infinity, maximumSigma = -Infinity, minimumTau = Infinity, maximumTau = -Infinity, minimumVersion = Infinity;
+        for (let i = 0; i < COUNT; i++) {
+          const sample = cursor - delays[i] / H, lo = Math.floor(sample), f = sample - lo, a = (lo % HISTORY + HISTORY) % HISTORY, b = (a + 1) % HISTORY;
+          const s = c.sHistory[a] + (c.sHistory[b] - c.sHistory[a]) * f, t = c.tHistory[a] + (c.tHistory[b] - c.tHistory[a]) * f;
+          minimumSigma = Math.min(minimumSigma, s);
+          maximumSigma = Math.max(maximumSigma, s);
+          minimumTau = Math.min(minimumTau, t);
+          maximumTau = Math.max(maximumTau, t);
+          minimumVersion = Math.min(minimumVersion, c.versionHistory[a]);
+          c.receivedTau[i] = t;
+          const rho = Math.exp(-s * LOGS[i]), angle = t * LOGS[i], x = rho * Math.cos(angle), y = -rho * Math.sin(angle);
+          const re = -0.5 * Math.log1p(-2 * x + rho * rho), im = Math.atan2(y, 1 - x), amp = Math.hypot(re, im);
+          c.received.re[i] = re;
+          c.received.im[i] = im;
+          c.received.amplitude[i] = amp;
+          c.received.phase[i] = Math.atan2(im, re);
+          const age = now - delays[i] - c.txHistory[a];
+          envelope[i * 2 + arm] = c.versionHistory[a] > 0 ? (1 - smooth(0.8, 2.8, age)) * smooth(0, 0.14, age) : 0;
+          arrivalVersion[i * 2 + arm] = c.versionHistory[a];
+        }
+        if (minimumVersion > c.receivedObservationVersion && maximumSigma - minimumSigma < 1e-8 && maximumTau - minimumTau < 1e-7) {
+          c.receivedObservation = {
+            version: 1,
+            sigma: (minimumSigma + maximumSigma) * 0.5,
+            tau: (minimumTau + maximumTau) * 0.5,
+            receivedAt: now,
+            source: c.name
+          };
+          c.receivedObservationVersion = minimumVersion;
+        }
+      }
+      combine(channels[0].received, channels[1].received, mixed);
+      for (let i = 0; i < COUNT; i++) {
+        const a = channels[0].received, b = channels[1].received, aa = a.amplitude[i], ab = b.amplitude[i], at = i * 8;
+        const phaseDiff = Math.atan2(
+          a.im[i] * b.re[i] - a.re[i] * b.im[i],
+          a.re[i] * b.re[i] + a.im[i] * b.im[i]
+        );
+        visual[at] = a.phase[i];
+        visual[at + 1] = b.phase[i];
+        visual[at + 2] = Math.pow(Math.log1p((aa + ab) * 5e5) / 13, 0.6);
+        visual[at + 3] = aa / Math.max(1e-30, aa + ab);
+        visual[at + 4] = phaseDiff;
+        visual[at + 5] = envelope[i * 2];
+        visual[at + 6] = envelope[i * 2 + 1];
+        visual[at + 7] = channels[0].receivedTau[i] - channels[1].receivedTau[i];
+      }
+      dirty2++;
+    }
+    function reset2(reference = null) {
+      const inherited = normalizeObservation(reference);
+      now = clock = cursor = stable = interactions = transmissions = 0;
+      eventAt = null;
+      eventCount = 0;
+      explored = false;
+      lastMotion = lastTransmit = -100;
+      for (let arm = 0; arm < channels.length; arm++) {
+        const c = channels[arm];
+        c.sigma = c.targetSigma = arm === 1 && inherited ? inherited.sigma : INITIAL_SIGMA;
+        c.tau = c.targetTau = arm === 1 && inherited ? inherited.tau : INITIAL_TAU;
+        c.lastTransmit = c.lastChange = -100;
+        c.transmissions = 0;
+        c.held = false;
+        c.receivedObservation = null;
+        c.receivedObservationVersion = 0;
+        c.sHistory.fill(c.sigma);
+        c.tHistory.fill(c.tau);
+        c.txHistory.fill(-100);
+        c.versionHistory.fill(0);
+        evaluate(c.sigma, c.tau, c.current);
+      }
+      combine(channels[0].current, channels[1].current, currentMix);
+      fill();
+    }
+    function transmit(arm = 0) {
+      const c = channels[arm];
+      c.lastTransmit = now;
+      c.transmissions++;
+      lastTransmit = now;
+      transmissions++;
+      return c.transmissions;
+    }
+    function begin(arm = 0) {
+      const c = channels[arm];
+      c.held = true;
+      if (channels[1 - arm].transmissions === 0) transmit(1 - arm);
+      transmit(arm);
+      interactions++;
+    }
+    function aim(arm, s, t) {
+      const c = channels[arm], ns = clamp2(s, SIGMA_MIN, SIGMA_MAX), nt = clamp2(t, TAU_MIN, TAU_MAX);
+      if (Math.abs(ns - c.targetSigma) < 1e-9 && Math.abs(nt - c.targetTau) < 1e-8)
+        return;
+      c.targetSigma = ns;
+      c.targetTau = nt;
+      c.lastChange = lastMotion = now;
+      interactions++;
+      if (Math.abs(channels[0].targetTau - channels[1].targetTau) > 1.2 || Math.abs(channels[0].targetSigma - channels[1].targetSigma) > 0.09)
+        explored = true;
+      if (now - c.lastTransmit > 0.18) transmit(arm);
+    }
+    function end(arm = 0, final = true) {
+      const c = channels[arm];
+      if (c.held && final) transmit(arm);
+      c.held = false;
+    }
+    function update2(seconds) {
+      clock += Math.max(0, seconds);
+      let event = false;
+      while (clock >= H - 1e-10) {
+        clock -= H;
+        now += H;
+        cursor = (cursor + 1) % HISTORY;
+        let unsettled = false;
+        for (const c of channels) {
+          const blend = 1 - Math.exp(-11 * H);
+          c.sigma += (c.targetSigma - c.sigma) * blend;
+          c.tau += (c.targetTau - c.tau) * blend;
+          if (Math.abs(c.targetSigma - c.sigma) < 1e-9) c.sigma = c.targetSigma;
+          if (Math.abs(c.targetTau - c.tau) < 1e-8) c.tau = c.targetTau;
+          c.sHistory[cursor] = c.sigma;
+          c.tHistory[cursor] = c.tau;
+          c.txHistory[cursor] = c.lastTransmit;
+          c.versionHistory[cursor] = c.transmissions;
+          if (Math.abs(c.targetSigma - c.sigma) > 1e-6 || Math.abs(c.targetTau - c.tau) > 1e-5)
+            unsettled = true;
+        }
+        if (unsettled || now - lastMotion < MAX_DELAY + 2 || now - lastTransmit < MAX_DELAY + 11) {
+          for (const c of channels) evaluate(c.sigma, c.tau, c.current);
+          combine(channels[0].current, channels[1].current, currentMix);
+          fill();
+        }
+        const matured = channels.every(
+          (c) => c.transmissions > 0 && c.receivedObservationVersion === c.transmissions && now - c.lastTransmit > MAX_DELAY + 0.2
+        );
+        if (eventAt === null && explored && matured && !unsettled && now - lastMotion > 0.8 && mixed.agreement >= THRESHOLD && mixed.visibility >= 0.93)
+          stable += H;
+        else stable = 0;
+        if (eventAt === null && stable >= 0.8) {
+          eventAt = now;
+          eventCount++;
+          event = true;
+        }
+      }
+      return event;
+    }
+    reset2();
+    return {
+      channels,
+      mixed,
+      currentMix,
+      visual,
+      envelope,
+      arrivalVersion,
+      update: update2,
+      reset: reset2,
+      begin,
+      aim,
+      end,
+      transmit,
+      receivedObservation() {
+        const a = channels[0].receivedObservation, b = channels[1].receivedObservation;
+        const latest = !a ? b : !b || a.receivedAt >= b.receivedAt ? a : b;
+        return latest ? { ...latest } : null;
+      },
+      get now() {
+        return now;
+      },
+      get dirty() {
+        return dirty2;
+      },
+      get eventAt() {
+        return eventAt;
+      },
+      get lastTransmit() {
+        return lastTransmit;
+      },
+      get transmissions() {
+        return transmissions;
+      },
+      get lastMotion() {
+        return lastMotion;
+      },
+      snapshot: () => ({
+        now,
+        eventAt,
+        eventCount,
+        explored,
+        interactions,
+        lastMotion,
+        lastTransmit,
+        transmissions,
+        agreement: mixed.agreement,
+        visibility: mixed.visibility,
+        currentAgreement: currentMix.agreement,
+        threshold: THRESHOLD,
+        primeCount: COUNT,
+        lastPrime: PRIMES.at(-1),
+        arms: channels.map((c) => ({
+          name: c.name,
+          sigma: c.sigma,
+          tau: c.tau,
+          targetSigma: c.targetSigma,
+          targetTau: c.targetTau,
+          lastTransmit: c.lastTransmit,
+          transmissions: c.transmissions,
+          held: c.held,
+          product: [c.current.productRe, c.current.productIm]
+        })),
+        finite: visual.every(Number.isFinite) && envelope.every(Number.isFinite) && channels.every(
+          (c) => Number.isFinite(c.sigma) && Number.isFinite(c.tau)
+        )
+      })
+    };
+  }
+
+  // echo/main.mjs
+  var hud = createReadout();
+  var quietSky;
+  var journeyMemory;
+  var params = new URLSearchParams(location.search);
+  var testMode = params.has("test");
+  var model = createEcho();
+  var host = document.getElementById("view");
+  var loading = document.getElementById("loading");
+  var inheritedObservation = null;
+  var hint = document.getElementById("hint");
+  var notice = document.getElementById("notice");
+  var dialog = document.getElementById("record");
+  var marks = [
+    document.getElementById("cursor"),
+    document.getElementById("cursor-b")
+  ];
+  var names = ["LOW", "MID", "HIGH"];
+  var tiers = [
+    { segments: 16, dpr: 1, fps: 30 },
+    { segments: 32, dpr: 1.3, fps: 60 },
+    { segments: 64, dpr: 1.6, fps: 60 }
+  ];
+  var forced = names.indexOf((params.get("quality") || "").toUpperCase());
+  var level = forced >= 0 ? forced : Math.min(innerWidth, innerHeight) < 640 || (navigator.deviceMemory || 8) <= 4 ? 0 : matchMedia("(pointer:coarse)").matches || (navigator.hardwareConcurrency || 8) <= 6 || devicePixelRatio > 1.8 ? 1 : 2;
+  var renderer;
+  var scene;
+  var camera;
+  var layers;
+  var responseA;
+  var responseB;
+  var vessel;
+  var led;
+  var ready = false;
+  var lost = false;
+  var paused = false;
+  var width = innerWidth;
+  var height = innerHeight;
+  var dpr = 1;
+  var lastTick = 0;
+  var lastDraw = 0;
+  var renderCount = 0;
+  var lastResponse = -1;
+  var dirty = true;
+  var average = 0;
+  var slow = 0;
+  var qualityChanges = 0;
+  var hintHidden = false;
+  var noticeUntil = 0;
+  var lastPointerMotion = -100;
+  var lastIdleFrame = -1;
+  var pointers = /* @__PURE__ */ new Map();
+  var keyArms = /* @__PURE__ */ new Map();
+  var keys = /* @__PURE__ */ new Set();
+  var projected = new Vector3();
+  var fieldOrigin = new Vector3();
+  var pose = new Quaternion();
+  var bodyEuler = new Euler();
+  var ray = new Raycaster();
+  var plane = new Plane(new Vector3(0, 0, 1), 0);
+  var ndc = new Vector2();
+  var hit = new Vector3();
+  var contacts = [0, 1].map((arm) => ({
+    arm,
+    id: null,
+    x: 0,
+    y: 0,
+    lastX: 0,
+    lastY: 0,
+    lastAt: 0,
+    weight: 0,
+    target: 0,
+    point: new Vector2(arm ? 100 : -100, 0),
+    depth: 70
+  }));
+  var uniforms = {
+    uTime: { value: 0 },
+    uIntro: { value: 0 },
+    uAlign: { value: 0 },
+    uAgreement: { value: 0 },
+    uSpan: { value: new Vector2(1e3, 650) },
+    uPixelWorld: { value: 1 },
+    uPointA: { value: contacts[0].point },
+    uPointB: { value: contacts[1].point },
+    uTouch: { value: new Vector2() },
+    uDepth: { value: new Vector2(70, 70) },
+    uDelayRange: {
+      value: new Vector2(
+        (DELAYS[0] + DELAYS_B[0]) * 0.5,
+        (DELAYS[COUNT - 1] + DELAYS_B[COUNT - 1]) * 0.5
+      )
+    }
+  };
+  var smooth2 = (a, b, x) => {
+    const u = clamp2((x - a) / (b - a), 0, 1);
+    return u * u * (3 - 2 * u);
+  };
+  function say(text, duration = 5) {
+    notice.textContent = text;
+    notice.classList.toggle("visible", !!text);
+    noticeUntil = model.now + duration;
+  }
+  function hideHint() {
+    if (!hintHidden) {
+      hintHidden = true;
+      hint.classList.add("faded");
+    }
+  }
+  function alignment() {
+    if (model.eventAt === null) return 0;
+    const age = model.now - model.eventAt;
+    return smooth2(0, 1.4, age) * (1 - smooth2(4, 8.5, age));
+  }
+  // Sound is an artistic sonification of received prime terms, not a physical
+  // oscillation of primes. Eight representative terms keep the full model intact.
+  // Arrival times come from the model; magnitude/phase set touch, beat and width.
+  var audio = (() => {
+    let ctx = null, master = null, wanted = false, enabled = false;
+    let played = 0, lastPlay = -100, epoch = 0, cursor = 0, suppressed = 0;
+    const voiceLimit = 8, voices = new Map();
+    const indices = [0, 1, 3, 8, 20, 59, 149, 299];
+    const seen = new Float64Array(indices.length * 2), buffers = [];
+    const button = document.getElementById("sound");
+    try {
+      wanted = sessionStorage.getItem("ti_audio_muted") === "0";
+    } catch {
+    }
+    function allowed() {
+      return !paused && !lost && !document.hidden && !dialog.open;
+    }
+    function sync() {
+      const on = enabled && wanted && ctx?.state === "running" && allowed();
+      button.setAttribute("aria-pressed", String(on));
+      button.setAttribute("aria-label", on ? "사운드 끄기" : wanted ? "사운드 재개" : "사운드 켜기");
+      button.title = button.getAttribute("aria-label");
+    }
+    function hold(param, now) {
+      if (param.cancelAndHoldAtTime) param.cancelAndHoldAtTime(now);
+      else {
+        const value = param.value;
+        param.cancelScheduledValues(now);
+        param.setValueAtTime(value, now);
+      }
+    }
+    function dispose(source) {
+      const voice = voices.get(source);
+      if (!voice) return;
+      voices.delete(source);
+      source.disconnect();
+      voice.gain.disconnect();
+      voice.pan.disconnect();
+    }
+    function cancel() {
+      if (!ctx) return;
+      const t = ctx.currentTime;
+      for (const [source, voice] of voices) {
+        if (ctx.state === "running") {
+          hold(voice.gain.gain, t);
+          voice.gain.gain.linearRampToValueAtTime(0, t + 0.018);
+          try { source.stop(t + 0.02); } catch {
+          }
+        } else {
+          try { source.stop(); } catch {
+          }
+          dispose(source);
+        }
+      }
+    }
+    function create() {
+      if (ctx) return;
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      ctx = new AC({ latencyHint: "interactive" });
+      master = ctx.createGain();
+      master.gain.value = 0;
+      const compressor = ctx.createDynamicsCompressor();
+      compressor.threshold.value = -17;
+      compressor.knee.value = 9;
+      compressor.ratio.value = 3.5;
+      compressor.attack.value = 0.004;
+      compressor.release.value = 0.16;
+      const highpass = ctx.createBiquadFilter();
+      highpass.type = "highpass";
+      highpass.frequency.value = 95;
+      highpass.Q.value = 0.5;
+      master.connect(highpass);
+      highpass.connect(compressor);
+      compressor.connect(ctx.destination);
+      // Fixed modal impulses: no random field or continuous oscillator is running.
+      const sampleRate = 22050, duration = 0.82, partials = [1, 2.756, 5.404], weights = [0.7, 0.23, 0.1];
+      for (let j = 0; j < indices.length; j++) {
+        const buffer = ctx.createBuffer(1, Math.ceil(sampleRate * duration), sampleRate);
+        const data = buffer.getChannelData(0), frequency = 142 + LOGS[indices[j]] * 52;
+        for (let n = 0; n < data.length; n++) {
+          const t = n / sampleRate;
+          const attack = 1 - Math.exp(-t * 720), end = Math.min(1, (duration - t) / 0.045);
+          let value = 0;
+          for (let h = 0; h < partials.length; h++)
+            value += Math.sin(2 * Math.PI * frequency * partials[h] * t) * Math.exp(-t * (5.2 + h * 3.4)) * weights[h];
+          data[n] = value * attack * end;
+        }
+        buffers.push(buffer);
+      }
+      ctx.onstatechange = sync;
+    }
+    async function enable(value, persist = true) {
+      const token = ++epoch;
+      wanted = value;
+      if (persist)
+        try { sessionStorage.setItem("ti_audio_muted", value ? "0" : "1"); } catch {
+        }
+      if (!value) {
+        enabled = false;
+        cancel();
+        if (ctx) {
+          hold(master.gain, ctx.currentTime);
+          master.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.024);
+          sync();
+          await new Promise((resolve) => setTimeout(resolve, 32));
+          if (token === epoch && !wanted && ctx.state !== "closed")
+            try { await ctx.suspend(); } catch {
+            }
+        }
+      } else {
+        create();
+        if (ctx) {
+          try {
+            await ctx.resume();
+            if (token !== epoch || !wanted) return;
+            enabled = ctx.state === "running" && allowed();
+            hold(master.gain, ctx.currentTime);
+            master.gain.linearRampToValueAtTime(enabled ? 0.66 : 0, ctx.currentTime + 0.035);
+            if (!enabled) await ctx.suspend();
+          } catch {
+            if (token === epoch) enabled = false;
+          }
+        }
+      }
+      if (token === epoch) sync();
+    }
+    function suspend() {
+      const token = ++epoch;
+      enabled = false;
+      cancel();
+      if (ctx) {
+        hold(master.gain, ctx.currentTime);
+        master.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.024);
+        if (ctx.state === "running")
+          setTimeout(() => {
+            if (token === epoch && !enabled)
+              ctx.suspend().catch(() => {});
+          }, 32);
+      }
+      sync();
+    }
+    function sound(j, arm, disagreement, envelope) {
+      const i = indices[j], received = model.channels[arm].received;
+      const magnitude = Math.pow(clamp2(Math.log1p(received.amplitude[i] * 2500) / 7.5, 0, 1), 0.55);
+      const gain = ctx.createGain(), pan = ctx.createStereoPanner(), source = ctx.createBufferSource();
+      const t = ctx.currentTime + 0.003, side = arm ? 1 : -1;
+      source.buffer = buffers[j];
+      // Phase discrepancy becomes a small beating interval; it is an audible mapping.
+      source.detune.value = side * 13 * Math.sin(model.visual[i * 8 + 4] * 0.5);
+      pan.pan.value = side * (0.25 + 0.48 * disagreement);
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.375 * (0.35 + 0.65 * magnitude) * disagreement * envelope, t + 0.006);
+      gain.gain.setValueAtTime(0.375 * (0.35 + 0.65 * magnitude) * disagreement * envelope, t + 0.72);
+      gain.gain.linearRampToValueAtTime(0, t + 0.8);
+      source.connect(gain);
+      gain.connect(pan);
+      pan.connect(master);
+      voices.set(source, { gain, pan });
+      source.onended = () => dispose(source);
+      source.start(t);
+      source.stop(t + 0.82);
+      played++;
+    }
+    function update2() {
+      const silence = model.eventAt !== null && model.now - model.eventAt < 8.5;
+      const running = enabled && ctx?.state === "running" && allowed() && !silence;
+      // Rotate the scan origin so low primes cannot monopolize a limited voice budget.
+      for (let step = 0; step < indices.length; step++) {
+        const j = (cursor + step) % indices.length, i = indices[j];
+        const disagreement = Math.abs(Math.sin(model.visual[i * 8 + 4] * 0.5));
+        for (let arm = 0; arm < 2; arm++) {
+          const at = j * 2 + arm, version = model.arrivalVersion[i * 2 + arm];
+          const envelope = model.envelope[i * 2 + arm];
+          if (seen[at] === version || envelope < 0.08) continue;
+          seen[at] = version;
+          if (!running || disagreement < 0.1 || voices.size >= voiceLimit || model.now - lastPlay < 0.055) {
+            suppressed++;
+            continue;
+          }
+          sound(j, arm, disagreement, envelope);
+          lastPlay = model.now;
+        }
+      }
+      cursor = (cursor + 1) % indices.length;
+    }
+    button.addEventListener("click", () => enable(!wanted || ctx?.state !== "running"));
+    sync();
+    return {
+      enable,
+      update: update2,
+      cancel,
+      reset() {
+        cancel();
+        seen.fill(0);
+        lastPlay = -100;
+        cursor = 0;
+      },
+      gesture() {
+        if (wanted && (!enabled || ctx?.state !== "running")) enable(true, false);
+      },
+      toggle() {
+        enable(!wanted || ctx?.state !== "running");
+      },
+      suspend,
+      get context() { return ctx; },
+      snapshot: () => ({
+        wanted,
+        enabled,
+        state: ctx?.state || "uninitialized",
+        voices: voices.size,
+        activeSources: voices.size,
+        voiceLimit,
+        played,
+        suppressed,
+        sampledPrimeTerms: indices.length,
+        design: "phase-pairs",
+        alignmentSilence: model.eventAt !== null && model.now - model.eventAt < 8.5,
+        continuousSources: 0
+      })
+    };
+  })();
+
+  function buildLayers() {
+    if (layers) {
+      scene.remove(layers);
+      layers.geometry.dispose();
+      layers.material.dispose();
+    }
+    const base = new PlaneGeometry(1, 1, 1, tiers[level].segments), g = new InstancedBufferGeometry();
+    g.index = base.index;
+    g.setAttribute("position", base.attributes.position);
+    g.setAttribute("uv", base.attributes.uv);
+    g.instanceCount = COUNT;
+    const primeData = new Float32Array(COUNT * 4), delayData = new Float32Array(COUNT * 2), spacing = new Float64Array(COUNT);
+    let sum = 0;
+    for (let i = 0; i < COUNT; i++) {
+      sum += 0.5 + Math.pow(PRIMES[i] - (PRIMES[i - 1] || 0), 0.85);
+      spacing[i] = sum;
+    }
+    for (let i = 0; i < COUNT; i++) {
+      delayData.set([DELAYS[i], DELAYS_B[i]], i * 2);
+      primeData[i * 4] = -1 + 2 * (spacing[i] - spacing[0]) / (sum - spacing[0]);
+      primeData[i * 4 + 1] = LOGS[i];
+      primeData[i * 4 + 2] = Math.sqrt(PRIMES[i] - (PRIMES[i - 1] || 0));
+      primeData[i * 4 + 3] = i;
+    }
+    g.setAttribute("aPrime", new InstancedBufferAttribute(primeData, 4));
+    g.setAttribute("aDelay", new InstancedBufferAttribute(delayData, 2));
+    const data = new InstancedInterleavedBuffer(model.visual, 8);
+    data.setUsage(DynamicDrawUsage);
+    responseA = new InterleavedBufferAttribute(data, 4, 0);
+    responseB = new InterleavedBufferAttribute(data, 4, 4);
+    g.setAttribute("aA", responseA);
+    g.setAttribute("aB", responseB);
+    const mat = new ShaderMaterial({
+      uniforms,
       transparent: true,
       depthWrite: false,
       side: DoubleSide,
       toneMapped: false,
       vertexShader: `
-      uniform float uC; varying vec2 p; varying float vDepth;
-      void main(){
-        p=uv*vec2(3.8,3.2)-vec2(1.9,1.6);
-        float r1=max(length(p+vec2(.5,0.)),.035);
-        float r2=max(length(p-vec2(.5,0.)),.035);
-        float f=dot(p,p)+1./r1+1./r2-uC;
-        float h=atan(f*.7)*76.;
-        vec4 eye=modelViewMatrix*vec4(position.xy,h,1.);
-        vDepth=-eye.z;
-        gl_Position=projectionMatrix*eye;
-      }`,
+ attribute vec4 aPrime,aA,aB;attribute vec2 aDelay;uniform float uTime,uIntro,uAlign,uAgreement,uPixelWorld;uniform vec2 uSpan,uPointA,uPointB,uTouch,uDepth,uDelayRange;
+ varying vec2 vUv,vPosition;varying vec4 vPair;varying float vAlpha,vPath,vAlign,vCarrier,vDrift,vContact;varying vec3 vColor;
+ void main(){
+  float pa=aA.x,pb=aA.y,strength=clamp(aA.z,0.,1.),ratio=aA.w,diff=aB.x,e=uAlign;
+  float phaseCenter=atan(ratio*sin(pa)+(1.-ratio)*sin(pb),ratio*cos(pa)+(1.-ratio)*cos(pb));
+  float division=abs(sin(diff*.5));
+  float delayDepth=clamp((.5*(aDelay.x+aDelay.y)-uDelayRange.x)/(uDelayRange.y-uDelayRange.x),0.,1.);
+  float height=mix(.42+strength*.34,.76,e)*uSpan.y;
+  float width=max((.84+min(aPrime.z,6.)*.13)*uSpan.x/500.,uPixelWorld*.82);
+  float drift=-uTime*.022*sqrt(aPrime.y);
+  float carrier=(uv.y-.5)*aPrime.y*1.2+drift;
+  vec3 p=position;
+  p.x=p.x*width+aPrime.x*uSpan.x*.48+sin(carrier+phaseCenter)*uSpan.x*.008*division*(1.-e);
+  p.y=p.y*height+sin(phaseCenter)*uSpan.y*.012*(1.-e);
+  p.z=(sin(phaseCenter+carrier*.25)*uSpan.x*.055+division*(uv.y-.5)*uSpan.x*.075+cos(aPrime.y*.8)*12.+aPrime.z*.9-delayDepth*180.)*(1.-e);
+  vec2 da=p.xy-uPointA,db=p.xy-uPointB;
+  vec2 support=vec2(uSpan.x*.16,uSpan.y*.19);
+  float pullA=exp(-dot(da/support,da/support)*2.)*uTouch.x;
+  float pullB=exp(-dot(db/support,db/support)*2.)*uTouch.y;
+  p.z+=pullA*uDepth.x+pullB*uDepth.y;
+  p.xy+=da/max(length(da),1.)*pullA*12.-db/max(length(db),1.)*pullB*12.;
+  float signal=max(aB.y,aB.z);
+  vAlpha=(.28+.46*strength)*mix(.30+.70*signal,.88,e)*uIntro*mix(1.,.78,delayDepth*(1.-e));
+  vPair=vec4(ratio,diff,aB.y,aB.z);vPath=aB.w*aPrime.y*.18;vCarrier=aPrime.y*1.2;vDrift=drift;
+  vContact=max(pullA,pullB);
+  vColor=mix(vec3(.58,.64,.64),vec3(.78,.80,.76),e*.7+strength*.15);vUv=uv;vPosition=p.xy;vAlign=e;
+  gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.);
+ }`,
       fragmentShader: `
-      uniform float uC,uFade; varying vec2 p; varying float vDepth;
-      void main(){
-        float r1=max(length(p+vec2(.5,0.)),.035);
-        float r2=max(length(p-vec2(.5,0.)),.035);
-        float f=dot(p,p)+1./r1+1./r2-uC;
-        float phase=sign(f)*log(1.+abs(f)*5.)*3.4;
-        float width=max(fwidth(phase),.025);
-        float contour=1.-smoothstep(width*.35,width*1.4,abs(fract(phase+.5)-.5));
-        float neck=exp(-pow(p.x/.32,2.)-pow(p.y/.28,2.));
-        float w=max(fwidth(f),.0005)*(1.+neck*.9);
-        float boundary=exp(-pow(f/w,2.)*.7);
-        float quiet=exp(-abs(f)*.5);
-        float allowed=smoothstep(-.02,.025,f);
-        float edge=(1.-smoothstep(1.6,1.9,abs(p.x)))*(1.-smoothstep(1.25,1.6,abs(p.y)));
-        float cores=smoothstep(.045,.11,min(r1,r2));
-        float distanceFade=mix(.18,1.,exp(-max(vDepth-300.,0.)/1450.));
-        float a=(contour*(.02+.055*quiet)*(.35+.65*allowed)+boundary*(.20+.50*neck))*edge*cores*distanceFade*uFade;
-        vec3 color=mix(vec3(.39,.42,.43),vec3(.72,.74,.71),allowed);
-        color=mix(color,vec3(.82,.83,.79),boundary*.7);
-        gl_FragColor=vec4(color,a);
-      }`
+ varying vec2 vUv,vPosition;varying vec4 vPair;varying float vAlpha,vPath,vAlign,vCarrier,vDrift,vContact;varying vec3 vColor;
+ void main(){
+  // A quiet retained image is present even after the transmission envelope fades.
+  float a=vPair.x*sqrt(.3+.7*max(vPair.z,0.)),b=(1.-vPair.x)*sqrt(.3+.7*max(vPair.w,0.));
+  float denominator=max(1e-6,(a+b)*(a+b));
+  float theta=vPair.y+((vUv.y-.5)*(vCarrier+vPath)+vDrift)*(1.-vAlign);
+  float intensity=clamp((a*a+b*b+2.*a*b*cos(theta))/denominator,0.,1.);
+  float aa=max(fwidth(intensity),.004);
+  float mask=smoothstep(.035-aa,.20+aa,intensity);
+  float edge=smoothstep(0.,.02,vUv.y)*(1.-smoothstep(.98,1.,vUv.y));
+  float light=(.18+.82*pow(intensity,.65))*mask;
+  float focalClear=mix(.25,1.,smoothstep(.6,1.4,length(vPosition/vec2(25.,20.))));
+  float sideEdge=smoothstep(0.,.15,vUv.x)*(1.-smoothstep(.85,1.,vUv.x));
+  // Relative phase opens a small absence between the two halves of each received term.
+  // Alignment closes that absence while retaining the prime spacing.
+  float halfGap=abs(sin(vPair.y*.5))*.08*(1.-vAlign);
+  float phaseGap=mix(1.,smoothstep(halfGap,halfGap+.016,abs(vUv.y-.5)),smoothstep(.012,.035,halfGap));
+  gl_FragColor=vec4(vColor*(1.+vContact*.18),vAlpha*light*edge*focalClear*sideEdge*phaseGap);
+ }`
     });
-    const n = tiers[level].field;
-    const mesh = new Mesh(
-      new PlaneGeometry(3.8 * S, 3.2 * S, n, Math.round(n * 0.84)),
-      material
-    );
-    mesh.rotation.x = -Math.PI / 2;
-    mesh.position.y = -4;
-    mesh.frustumCulled = false;
-    return mesh;
+    layers = new Mesh(g, mat);
+    layers.frustumCulled = false;
+    layers.position.copy(fieldOrigin);
+    scene.add(layers);
+    lastResponse = -1;
+    dirty = true;
   }
-  function applyQuality() {
-    const q = tiers[level];
-    dpr = Math.min(devicePixelRatio || 1, q.dpr);
+  function applyQuality(rebuild = false) {
+    dpr = Math.min(devicePixelRatio || 1, tiers[level].dpr);
     renderer.setPixelRatio(dpr);
     renderer.setSize(width, height, false);
     quietSky?.setQuality(level, renderer.getPixelRatio());
-    stars.geometry.setDrawRange(0, q.count);
-    starUniforms.uPixel.value = dpr;
-    starUniforms.uHeight.value = height;
-  }
-  function updateCamera(dt = 0, snap = false) {
-    const portrait = width < height;
-    focusTarget.set(
-      sim.s[0] * S * 0.96,
-      Math.atan((sim.s[2] ** 2 + sim.s[3] ** 2) * 0.7) * 38,
-      -sim.s[1] * S * 0.88
-    );
-    if (snap) focus.copy(focusTarget);
-    else focus.lerp(focusTarget, 1 - Math.exp(-dt / 0.95));
-    observer.lerp(observerTarget, 1 - Math.exp(-dt / 0.32));
-    camera.position.set(
-      focus.x + cameraDistance * (0.08 + observer.x * 0.13),
-      focus.y + cameraDistance * (0.52 + observer.y * 0.055),
-      focus.z + cameraDistance * 0.86
-    );
-    camera.lookAt(focus);
-    camera.updateMatrixWorld();
+    if (rebuild) buildLayers();
+    dirty = true;
   }
   function resize() {
     if (!renderer) return;
-    const rect = host.getBoundingClientRect();
-    width = Math.max(1, rect.width);
-    height = Math.max(1, rect.height);
-    const portrait = width < height;
+    width = Math.max(1, host.clientWidth);
+    height = Math.max(1, host.clientHeight);
     camera.aspect = width / height;
-    camera.fov = portrait ? 46 : 43;
-    camera.up.set(portrait ? 1 : 0, portrait ? 0 : 1, 0);
+    camera.fov = width < height ? 45 : 42;
     camera.updateProjectionMatrix();
-    cameraDistance = portrait ? 790 : height < 500 ? 650 : 710;
-    observerTarget.set(0, 0);
-    observer.set(0, 0);
-    release();
-    updateCamera(0, true);
+    const portrait = width < height;
+    camera.up.set(portrait ? 1 : 0, portrait ? 0 : 1, 0);
+    const halfHeight = 315;
+    const distance = halfHeight / Math.tan(MathUtils.degToRad(camera.fov * 0.5));
+    const planeHeight = 2 * halfHeight, planeWidth = planeHeight * camera.aspect;
+    uniforms.uSpan.value.set(
+      portrait ? planeHeight : planeWidth,
+      portrait ? planeWidth : planeHeight
+    );
+    uniforms.uPixelWorld.value = 2 * halfHeight / height;
+    camera.position.set(distance * 0.2, distance * 0.08, distance);
+    camera.lookAt(0, 0, 0);
+    camera.updateMatrixWorld();
     applyQuality();
     lastDraw = 0;
   }
-  function createPrediction() {
-    const g = new BufferGeometry();
-    const index = new Float32Array(65);
-    for (let i = 0; i < 65; i++) index[i] = i / 64;
-    g.setAttribute("aFuture", new BufferAttribute(index, 1));
-    g.setAttribute(
-      "position",
-      new BufferAttribute(predictionData, 3).setUsage(
-        DynamicDrawUsage
-      )
+  function updateVessel(dt = 0, snap = false) {
+    const c = model.channels[0];
+    fieldOrigin.set((c.sigma - 1.35) * 18, 0, 0);
+    vessel.position.copy(fieldOrigin);
+    layers.position.copy(fieldOrigin);
+    vessel.scale.setScalar(3.9);
+    bodyEuler.set(
+      0.27 + (c.sigma - 1.35) * 0.15,
+      0.3 + Math.sin(model.mixed.meanPhase) * 0.12,
+      -0.08
     );
-    g.setDrawRange(0, 0);
-    prediction = new Line(
-      g,
-      new ShaderMaterial({
-        uniforms: predictionUniforms,
-        transparent: true,
-        depthWrite: false,
-        toneMapped: false,
-        vertexShader: `
-          attribute float aFuture;varying float vFuture;
-          void main(){vFuture=aFuture;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
-        fragmentShader: `
-          uniform float uOpacity;varying float vFuture;
-          void main(){
-            float dash=1.-smoothstep(.48,.57,fract(vFuture*14.));
-            float fade=1.-smoothstep(.15,1.,vFuture);
-            gl_FragColor=vec4(vec3(.61,.65,.64),uOpacity*dash*fade);
-          }`
-      })
-    );
-    prediction.frustumCulled = false;
-    scene.add(prediction);
-  }
-  function createTransitTrail() {
-    const geometry = new BufferGeometry(), index = new Float32Array(TRAIL_CAPACITY);
-    for (let i = 0; i < TRAIL_CAPACITY; i++) index[i] = i;
-    geometry.setAttribute("position", new BufferAttribute(trailData, 3).setUsage(DynamicDrawUsage));
-    geometry.setAttribute("aCoast", new BufferAttribute(trailCoast, 1).setUsage(DynamicDrawUsage));
-    geometry.setAttribute("aIndex", new BufferAttribute(index, 1));
-    geometry.setDrawRange(0, 0);
-    transitTrail = new Line(geometry, new ShaderMaterial({
-      uniforms: trailUniforms,
-      transparent: true,
-      depthWrite: false,
-      toneMapped: false,
-      vertexShader: `
-        attribute float aIndex,aCoast;uniform float uCount;
-        varying float vAge,vCoast;
-        void main(){
-          vAge=aIndex/max(1.,uCount-1.);vCoast=aCoast;
-          gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);
-        }`,
-      fragmentShader: `
-        uniform float uFade;varying float vAge,vCoast;
-        void main(){
-          float alpha=(.055+.20*pow(vAge,1.6))*mix(.43,1.,vCoast)*uFade;
-          gl_FragColor=vec4(vec3(.67,.69,.65),alpha);
-        }`
-    }));
-    transitTrail.frustumCulled = false;
-    scene.add(transitTrail);
-    recordTransitTrail(true);
-  }
-  function recordTransitTrail(force = false) {
-    if (!transitTrail || !force && sim.elapsed - trailAt < 0.32) return;
-    if (!force && sim.elapsed <= trailAt) return;
-    trailAt = sim.elapsed;
-    let index = trailCount;
-    if (trailCount === TRAIL_CAPACITY) {
-      trailData.copyWithin(0, 3);
-      trailCoast.copyWithin(0, 1);
-      index = TRAIL_CAPACITY - 1;
-    } else trailCount++;
-    trailData[index * 3] = sim.s[0] * S;
-    trailData[index * 3 + 1] = 8 + Math.atan((sim.s[2] ** 2 + sim.s[3] ** 2) * 0.7) * 76;
-    trailData[index * 3 + 2] = -sim.s[1] * S;
-    trailCoast[index] = sim.throttle < 0.02 ? 1 : 0;
-    transitTrail.geometry.attributes.position.needsUpdate = true;
-    transitTrail.geometry.attributes.aCoast.needsUpdate = true;
-    transitTrail.geometry.setDrawRange(0, trailCount);
-    trailUniforms.uCount.value = trailCount;
-  }
-  function resetTransitTrail() {
-    trailCount = 0;
-    trailAt = -Infinity;
-    transitTrail?.geometry.setDrawRange(0, 0);
-    recordTransitTrail(true);
-  }
-  function updatePrediction() {
-    if (!prediction) return;
-    if (pointer !== null && uiClock - lastPrediction > 0.1) {
-      lastPrediction = uiClock;
-      predictionState.set(sim.s);
-      let fuel = sim.fuel, t = 0, count = 0;
-      for (let i = 0; i <= 64; i++) {
-        if (Math.min(
-          Math.hypot(predictionState[0] + 0.5, predictionState[1]),
-          Math.hypot(predictionState[0] - 0.5, predictionState[1])
-        ) < 0.055)
-          break;
-        predictionData[i * 3] = predictionState[0] * S;
-        predictionData[i * 3 + 1] = 8 + Math.atan(
-          (predictionState[2] * predictionState[2] + predictionState[3] * predictionState[3]) * 0.7
-        ) * 76;
-        predictionData[i * 3 + 2] = -predictionState[1] * S;
-        count++;
-        let left = 8 / 64 * RATE;
-        while (left > 1e-12) {
-          const h = Math.min(left, MAX_STEP), realH = h / RATE;
-          const thrust = Math.min(
-            MAX_THRUST * Math.max(0, sim.throttle - t * 12),
-            fuel / h
-          ), heading = sim.heading - t * RATE;
-          predictionStep(
-            predictionState,
-            h,
-            thrust * Math.cos(heading),
-            thrust * Math.sin(heading)
-          );
-          fuel = Math.max(0, fuel - thrust * h);
-          t += realH;
-          left -= h;
-        }
-      }
-      prediction.geometry.attributes.position.needsUpdate = true;
-      prediction.geometry.setDrawRange(0, count);
-    }
-    predictionUniforms.uOpacity.value = previewOpacity * 0.36;
+    pose.setFromEuler(bodyEuler);
+    if (snap) vessel.quaternion.copy(pose);
+    else vessel.quaternion.slerp(pose, 1 - Math.exp(-2.2 * dt));
+    led.material.opacity = model.now - model.lastTransmit < 0.12 ? 0.38 : 0.045;
   }
   function render() {
-    const C = jacobi(sim.s), age = sim.elapsed;
-    starUniforms.uTime.value = age * RATE;
-    starUniforms.uJacobi.value = C;
-    starUniforms.uFade.value = MathUtils.smootherstep(age + 0.6, 0, 8);
-    fieldUniforms.uC.value = C;
-    fieldUniforms.uFade.value = MathUtils.smootherstep(age + 1.2, 0, 5);
-    trailUniforms.uFade.value = MathUtils.smootherstep(age, 0, 3);
-    vessel.position.set(
-      sim.s[0] * S,
-      8 + Math.atan((sim.s[2] * sim.s[2] + sim.s[3] * sim.s[3]) * 0.7) * 76,
-      -sim.s[1] * S
-    );
-    axis.set(Math.cos(sim.heading), 0, -Math.sin(sim.heading));
-    shipQ.setFromUnitVectors(up, axis);
-    vessel.quaternion.copy(shipQ);
-    const scale = width < height ? 5 : 4.8;
-    vessel.scale.setScalar(scale);
-    vessel.visible = sim.status !== "collision";
-    plume.material.uniforms.uPower.value = sim.throttle;
-    plume.visible = sim.throttle > 5e-3;
-    glow.material.opacity = sim.throttle * 0.75;
-    const thermal = clamp3((operations.s.temperature - 290) / 8, 0, 1);
-    servicePanel.emissive.setRGB(
-      0.32 + thermal * 0.1,
-      0.37,
-      0.35 - thermal * 0.08
-    );
-    servicePanel.emissiveIntensity = 0.015 + (operations.s.pump ? 0.06 : 0) + Math.min(1, operations.s.transmission / 0.25) * 0.08;
-    updatePrediction();
-    hud.update(sim.elapsed, C, sim.fuel / INITIAL_FUEL * 100);
+    uniforms.uTime.value = model.now;
+    uniforms.uIntro.value = smooth2(0, 3, model.now + 0.3);
+    uniforms.uAlign.value = alignment();
+    uniforms.uAgreement.value = model.mixed.agreement;
+    uniforms.uTouch.value.set(contacts[0].weight, contacts[1].weight);
+    uniforms.uDepth.value.set(contacts[0].depth, contacts[1].depth);
+    if (lastResponse !== model.dirty) {
+      responseA.data.needsUpdate = true;
+      lastResponse = model.dirty;
+    }
+    hud.update(model.now, model.mixed.agreement * 100);
     renderer.render(scene, camera);
     renderCount++;
+    dirty = false;
     journeyMemory?.tick();
   }
-  function release() {
-    for (const id of touches.keys())
-      try {
-        host.releasePointerCapture(id);
-      } catch {
-      }
-    touches.clear();
-    pointer = null;
-    held = false;
-    inputPower = 0;
-    keys.delete("Space");
-    sim.input(false, desired);
-    pointerMark.classList.remove("active");
-  }
-  function screenPoint(x, y, out) {
+  function setPosition(arm, x, y) {
+    const c = contacts[arm];
+    c.x = x;
+    c.y = y;
+    marks[arm].style.left = `${x}px`;
+    marks[arm].style.top = `${y}px`;
     const r = host.getBoundingClientRect();
-    ndc.set((x - r.left) / r.width * 2 - 1, 1 - (y - r.top) / r.height * 2);
+    ndc.set((x - r.left) / r.width * 2 - 1, -(y - r.top) / r.height * 2 + 1);
     ray.setFromCamera(ndc, camera);
-    return ray.ray.intersectPlane(plane, out);
+    if (ray.ray.intersectPlane(plane, hit))
+      c.point.set(
+        clamp2(
+          hit.x - fieldOrigin.x,
+          -uniforms.uSpan.value.x * 0.85,
+          uniforms.uSpan.value.x * 0.85
+        ),
+        clamp2(
+          hit.y - fieldOrigin.y,
+          -uniforms.uSpan.value.y * 0.85,
+          uniforms.uSpan.value.y * 0.85
+        )
+      );
+    const u = clamp2((x - r.left) / r.width, 0.08, 0.92), v = clamp2((y - r.top) / r.height, 0.12, 0.84);
+    model.aim(
+      arm,
+      SIGMA_MAX - (v - 0.12) / 0.72 * (SIGMA_MAX - SIGMA_MIN),
+      TAU_MIN + (u - 0.08) / 0.84 * (TAU_MAX - TAU_MIN)
+    );
+    dirty = true;
   }
   function pointerDown(e) {
-    if (e.button > 0 || paused || lost || dialog.open || touches.size >= 2 || touches.has(e.pointerId))
+    if (e.button > 0 || paused || lost || dialog.open || pointers.size >= 2)
       return;
+    const occupied = [...pointers.values()];
+    let arm;
+    if (e.pointerType === "mouse") arm = e.shiftKey ? 1 : 0;
+    else arm = !occupied.includes(0) ? 0 : 1;
+    if (occupied.includes(arm)) return;
     e.preventDefault();
     host.focus({ preventScroll: true });
-    touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    pointers.set(e.pointerId, arm);
+    const c = contacts[arm];
+    c.id = e.pointerId;
+    c.target = 1;
+    c.lastX = e.clientX;
+    c.lastY = e.clientY;
+    c.lastAt = performance.now();
     try {
       host.setPointerCapture(e.pointerId);
     } catch {
     }
-    if (touches.size === 1) {
-      pointer = e.pointerId;
-      anchorX = e.clientX;
-      anchorY = e.clientY;
-      anchorHeading = desired = sim.heading;
-      inputPower = 0;
-      held = false;
-    } else {
-      const [a, b] = [...touches.values()];
-      if (screenPoint(a.x, a.y, hitA) && screenPoint(b.x, b.y, hitB))
-        pairOffset = desired - Math.atan2(-(hitB.z - hitA.z), hitB.x - hitA.x);
-      inputPower = 0;
-      held = false;
-    }
-    sim.input(false, desired, true, 0);
+    model.begin(arm);
+    setPosition(arm, e.clientX, e.clientY);
+    marks[arm].classList.add("active");
+    lastPointerMotion = model.now;
+    hideHint();
     audio.gesture();
-    hint.classList.add("faded");
-    pointerMark.style.left = e.clientX + "px";
-    pointerMark.style.top = e.clientY + "px";
-    pointerMark.classList.add("active");
-    lastPrediction = -100;
   }
   function pointerMove(e) {
-    const point = touches.get(e.pointerId);
-    if (!point) {
-      if (e.pointerType !== "touch" && !dialog.open && !lost) {
-        observerTarget.set(
-          clamp3((e.clientX / width - 0.5) * 2, -1, 1),
-          clamp3((0.5 - e.clientY / height) * 2, -1, 1)
-        );
-      }
-      return;
-    }
+    const arm = pointers.get(e.pointerId);
+    if (arm === void 0) return;
     e.preventDefault();
-    point.x = e.clientX;
-    point.y = e.clientY;
-    if (touches.size === 2) {
-      const [a, b] = [...touches.values()];
-      if (screenPoint(a.x, a.y, hitA) && screenPoint(b.x, b.y, hitB))
-        desired = Math.atan2(-(hitB.z - hitA.z), hitB.x - hitA.x) + pairOffset;
-      inputPower = 0;
-      held = false;
-      sim.input(false, desired, true, 0);
-    } else if (e.shiftKey) {
-      desired = anchorHeading + (e.clientX - anchorX) / Math.min(width, height) * Math.PI * 1.5;
-      inputPower = 0;
-      held = false;
-      sim.input(false, desired, true, 0);
-    } else {
-      const distance = Math.hypot(e.clientX - anchorX, e.clientY - anchorY);
-      if (distance > 6 && screenPoint(anchorX, anchorY, hitA) && screenPoint(e.clientX, e.clientY, hitB))
-        desired = Math.atan2(-(hitB.z - hitA.z), hitB.x - hitA.x);
-      inputPower = clamp3((distance - 6) / (Math.min(width, height) * 0.22), 0, 1);
-      held = inputPower > 0;
-      sim.input(held, desired, true, inputPower);
-    }
-    pointerMark.style.left = e.clientX + "px";
-    pointerMark.style.top = e.clientY + "px";
+    const c = contacts[arm], t = performance.now(), dt = Math.max(0.01, (t - c.lastAt) / 1e3);
+    const speed = Math.hypot(e.clientX - c.lastX, e.clientY - c.lastY) / dt / Math.min(width, height);
+    c.depth = 70 + Math.min(75, speed * 16);
+    c.lastX = e.clientX;
+    c.lastY = e.clientY;
+    c.lastAt = t;
+    setPosition(arm, e.clientX, e.clientY);
+    lastPointerMotion = model.now;
   }
-  function pointerUp(e) {
-    if (!touches.has(e.pointerId)) return;
-    touches.delete(e.pointerId);
+  function releasePointer(id, final = true) {
+    const arm = pointers.get(id);
+    if (arm === void 0) return;
+    pointers.delete(id);
+    const c = contacts[arm];
+    c.id = null;
+    c.target = 0;
+    model.end(arm, final);
+    marks[arm].classList.remove("active");
     try {
-      host.releasePointerCapture(e.pointerId);
+      host.releasePointerCapture(id);
     } catch {
     }
-    inputPower = 0;
-    held = false;
-    sim.input(false, desired, true, 0);
-    if (!touches.size) {
-      pointer = null;
-      pointerMark.classList.remove("active");
-    } else {
-      const [id, p] = touches.entries().next().value;
-      pointer = id;
-      anchorX = p.x;
-      anchorY = p.y;
-      anchorHeading = desired;
+    dirty = true;
+  }
+  function releaseAll(final = false) {
+    for (const id of [...pointers.keys()]) releasePointer(id, final);
+    for (let arm = 0; arm < 2; arm++) {
+      model.end(arm, final);
+      contacts[arm].target = 0;
+      marks[arm].classList.remove("active");
     }
+    keys.clear();
+    keyArms.clear();
+  }
+  function getObservationHandoff() {
+    return normalizeObservation(model.receivedObservation()) || normalizeObservation(inheritedObservation);
+  }
+  function startObservation(reference = null, gesture = true) {
+    releaseAll(false);
+    audio.reset();
+    inheritedObservation = normalizeObservation(reference);
+    model.reset(inheritedObservation);
+    for (const c of contacts) c.weight = c.target = 0;
+    hintHidden = false;
+    hint.classList.remove("faded");
+    say("");
+    paused = false;
+    lastTick = lastDraw = 0;
+    dirty = true;
+    updateVessel(0, true);
+    if (gesture) audio.gesture();
+    render();
   }
   function reset() {
     journeyMemory?.newVoyage();
-    release();
-    keys.clear();
-    paused = false;
-    sim.reset();
-    resetTransitTrail();
-    operations.reset();
-    audio.resetService();
-    desired = sim.heading;
-    updateCamera(0, true);
-    previewOpacity = 0;
-    lastPrediction = -100;
-    uiClock = 0;
-    noticeUntil = 0;
-    say("");
-    hint.classList.remove("faded");
-    lastTick = lastDraw = 0;
-    audio.update();
-    render();
+    startObservation(getObservationHandoff());
+  }
+  function restoreObservationHandoff(payload) {
+    const reference = normalizeObservation(payload);
+    if (!reference) return false;
+    startObservation(reference, false);
+    return true;
   }
   function setPaused(value) {
+    releaseAll(false);
     paused = value;
-    release();
     lastTick = lastDraw = 0;
-    if (value) audio.suspend();
-    else audio.gesture();
-    audio.update();
-    say(value ? "\uAD00\uCE21 \uC77C\uC2DC \uC815\uC9C0" : "", Infinity);
+    if (value) {
+      audio.suspend();
+      say("\uAD00\uCE21 \uC77C\uC2DC \uC815\uC9C0", Infinity);
+    } else {
+      say("");
+      audio.gesture();
+    }
+    dirty = true;
   }
   function update(dt) {
-    if (keys.has("ArrowLeft") || keys.has("KeyA")) desired += dt * 1.25;
-    if (keys.has("ArrowRight") || keys.has("KeyD")) desired -= dt * 1.25;
-    const steering = keys.has("ArrowLeft") || keys.has("ArrowRight") || keys.has("KeyA") || keys.has("KeyD");
-    if (pointer === null) {
-      held = keys.has("Space");
-      sim.input(held, desired, held || steering);
+    for (let arm = 0; arm < 2; arm++) {
+      const h = (keyArms.get("ArrowRight") === arm ? 1 : 0) - (keyArms.get("ArrowLeft") === arm ? 1 : 0);
+      const v = (keyArms.get("ArrowUp") === arm ? 1 : 0) - (keyArms.get("ArrowDown") === arm ? 1 : 0);
+      if (h || v) {
+        const c = model.channels[arm];
+        model.aim(arm, c.targetSigma + v * 0.15 * dt, c.targetTau + h * 10 * dt);
+        dirty = true;
+      }
     }
-    const result = sim.update(dt);
-    recordTransitTrail();
-    operations.update(
-      dt,
-      sim.throttle,
-      sim.transferred,
-      sim.status !== "collision"
-    );
-    updateCamera(dt);
-    previewOpacity += ((pointer !== null ? 1 : 0) - previewOpacity) * (1 - Math.exp(-dt / (pointer !== null ? 0.10 : 0.38)));
-    if (result.event) {
-      say("\uC804\uC774 \uD655\uC778 \xB7 \uB450 \uBC88\uC9F8 \uC911\uB825\uAD8C\uC758 \uD56D\uB85C\uC5D0 \uC9C4\uC785\uD588\uC2B5\uB2C8\uB2E4.", 9);
-      audio.event();
-    } else if (result.collision) {
-      release();
-      say("\uC911\uC2EC\uCCB4 \uC811\uADFC \uD55C\uACC4 \xB7 \uAD50\uC2E0\uC774 \uB04A\uACBC\uC2B5\uB2C8\uB2E4.", Infinity);
-    } else if (result.escaped) {
-      release();
-      say("\uB450 \uC911\uB825\uAD8C\uC744 \uBC97\uC5B4\uB0AC\uC2B5\uB2C8\uB2E4.", Infinity);
-    } else if (sim.fuel < 1e-8 && notice.textContent !== "\uCD94\uC9C4\uC81C \uC18C\uC9C4 \xB7 \uAD00\uC131 \uD56D\uD589 \uC911" && !sim.transferred) {
-      say("\uCD94\uC9C4\uC81C \uC18C\uC9C4 \xB7 \uAD00\uC131 \uD56D\uD589 \uC911", Infinity);
+    const activeBefore = model.now - model.lastTransmit < MAX_DELAY + 11 || model.now - model.lastMotion < MAX_DELAY + 2;
+    if (model.update(dt)) {
+      say("\uC11C\uB85C \uB2E4\uB978 \uB450 \uAD00\uCE21\uC774 \uC7A0\uC2DC \uD558\uB098\uC758 \uBA74\uC73C\uB85C \uBAA8\uC785\uB2C8\uB2E4", 7);
+      audio.cancel();
+      dirty = true;
     }
-    if (sim.elapsed > 12) hint.classList.add("faded");
-    if (sim.elapsed > noticeUntil && noticeUntil !== 0)
-      notice.classList.remove("visible");
     audio.update();
-    uiClock += dt;
+    const idleFrame = Math.floor(model.now * 12);
+    if (idleFrame !== lastIdleFrame) {
+      lastIdleFrame = idleFrame;
+      dirty = true;
+    }
+    for (const c of contacts) {
+      const before = c.weight;
+      c.weight += (c.target - c.weight) * (1 - Math.exp(-dt / (c.target ? 0.065 : 0.65)));
+      if (Math.abs(c.weight - c.target) < 1e-4) c.weight = c.target;
+      if (Math.abs(c.weight - before) > 1e-5) dirty = true;
+    }
+    if (activeBefore || pointers.size || keys.size || model.now < 5 || model.eventAt !== null && model.now - model.eventAt < 9) {
+      updateVessel(dt);
+      dirty = true;
+    }
+    if (model.now > 18) hideHint();
+    if (noticeUntil > 0 && model.now > noticeUntil) say("");
   }
-  function tick(now) {
+  function tick(time) {
     requestAnimationFrame(tick);
-    if (!ready || paused || lost || document.hidden || dialog.open) {
+    if (!ready || lost || document.hidden || dialog.open) {
       lastTick = lastDraw = 0;
       return;
     }
-    const dt = lastTick ? Math.min((now - lastTick) * 1e-3, 0.06) : 0;
-    lastTick = now;
-    if (!params.has("test")) update(dt);
-    const ms = now - lastDraw;
-    if (ms + 1 < 1e3 / tiers[level].fps) return;
-    lastDraw = now;
-    const began = performance.now();
+    const frameMs = lastTick ? Math.max(0, time - lastTick) : 1e3 / 60;
+    const dt = Math.min(0.07, frameMs / 1e3);
+    lastTick = time;
+    if (!paused && !testMode) update(dt);
+    if (time - lastDraw < 1e3 / tiers[level].fps - 0.7 || !dirty) return;
+    const start = performance.now();
     render();
-    const cost = performance.now() - began;
-    averageCost = averageCost * 0.96 + cost * 0.04;
-    if (renderCount > 120 && requested < 0) {
-      slowTime = averageCost > (level === 2 ? 14 : 22) || ms > (level === 2 ? 26 : 38) ? slowTime + Math.min(ms / 1e3, 0.1) : Math.max(0, slowTime - 0.03);
-      if (slowTime > 6 && level > 0) {
+    const cost = performance.now() - start;
+    lastDraw = time;
+    average = average * 0.96 + cost * 0.04;
+    if (forced < 0 && !paused && !testMode && model.now > 5 && level > 0) {
+      // The 12 Hz retained image is intentional. Judge callback pressure, not
+      // the elapsed time between sparse draws of an otherwise healthy scene.
+      const frameBudget = Math.max(45, 1e3 / tiers[level].fps * 1.6);
+      slow = average > 18 || frameMs > frameBudget ? slow + Math.min(0.1, frameMs / 1e3) : Math.max(0, slow - 0.03);
+      if (slow > 6) {
         level--;
         qualityChanges++;
-        slowTime = 0;
-        scene.remove(field);
-        field.geometry.dispose();
-        field.material.dispose();
-        field = createField();
-        scene.add(field);
-        applyQuality();
+        slow = 0;
+        applyQuality(true);
       }
     }
   }
   try {
     scene = new Scene();
-    scene.background = new Color(197637);
+    scene.background = new Color(198153);
     quietSky = createQuietStars(level);
     scene.add(quietSky.points);
-    camera = new PerspectiveCamera(43, width / height, 0.1, 6e3);
+    camera = new PerspectiveCamera(42, width / height, 0.1, 6e3);
     renderer = new WebGLRenderer({
       antialias: level > 0,
       alpha: false,
@@ -30726,55 +30947,45 @@ void main() {
     renderer.toneMapping = ACESFilmicToneMapping;
     renderer.toneMappingExposure = 0.95;
     host.appendChild(renderer.domElement);
-    stars = createStars();
-    field = createField();
-    scene.add(field, stars);
-    createPrediction();
-    createTransitTrail();
+    buildLayers();
     vessel = createVessel();
     scene.add(vessel);
-    const ambient = new HemisphereLight(12172476, 2105890, 1);
-    scene.add(ambient);
-    const warm = new PointLight(13027525, 46e3, 0, 2);
-    warm.position.set(-S * 0.5, 50, 35);
-    scene.add(warm);
-    const cool = new PointLight(10331044, 46e3, 0, 2);
-    cool.position.set(S * 0.5, 50, -35);
-    scene.add(cool);
-    const key = new DirectionalLight(14277850, 3.4);
-    key.position.set(140, 220, 160);
+    led = new Mesh(
+      new SphereGeometry(0.13, 8, 6),
+      new MeshBasicMaterial({
+        color: 9414063,
+        transparent: true,
+        opacity: 0.08
+      })
+    );
+    led.position.set(-0.65, 2.83, 0);
+    vessel.add(led);
+    scene.add(new HemisphereLight(11780812, 1450024, 0.85));
+    const key = new DirectionalLight(14477293, 2.2);
+    key.position.set(120, 280, 400);
     scene.add(key);
-    const observerLight = new DirectionalLight(12568004, 1.3);
-    observerLight.position.set(0, 400, 520);
-    scene.add(observerLight);
-    for (const [side, color] of [
-      [-0.5, 7633528],
-      [0.5, 6581100]
-    ]) {
-      const core = new Mesh(
-        new SphereGeometry(1.1, 12, 8),
-        new MeshBasicMaterial({ color })
-      );
-      core.position.x = side * S;
-      scene.add(core);
-    }
+    const edge = new DirectionalLight(9216944, 0.65);
+    edge.position.set(-260, -20, -100);
+    scene.add(edge);
     resize();
-    const observerSize = new ResizeObserver(resize);
-    observerSize.observe(host);
-    addEventListener("resize", resize);
-    addEventListener("orientationchange", () => requestAnimationFrame(resize));
+    updateVessel(0, true);
+    new ResizeObserver(resize).observe(host);
+    addEventListener("resize", () => {
+      releaseAll(false);
+      resize();
+    });
     host.addEventListener("pointerdown", pointerDown);
     host.addEventListener("pointermove", pointerMove);
-    host.addEventListener("pointerleave", () => {
-      if (!touches.size) observerTarget.set(0, 0);
-    });
-    for (const name of ["pointerup", "pointercancel", "lostpointercapture"])
-      host.addEventListener(name, pointerUp);
+    for (const event of ["pointerup", "pointercancel", "lostpointercapture"])
+      host.addEventListener(
+        event,
+        (e) => releasePointer(e.pointerId, event === "pointerup")
+      );
     host.addEventListener("contextmenu", (e) => e.preventDefault());
     renderer.domElement.addEventListener("webglcontextlost", (e) => {
       e.preventDefault();
       lost = true;
-      release();
+      releaseAll(false);
       audio.suspend();
       loading.textContent = "\uD654\uBA74 \uBCF5\uC6D0 \uB300\uAE30 \uC911";
       loading.classList.remove("done");
@@ -30791,13 +31002,14 @@ void main() {
     addEventListener("keydown", (e) => {
       if (dialog.open || e.target.closest("input,textarea,[contenteditable=true]"))
         return;
-      if (e.code === "Space" && e.target.closest("button,a")) return;
+      if (["Enter", "Space"].includes(e.code) && e.target.closest("button,a"))
+        return;
       if ([
-        "Space",
         "ArrowLeft",
         "ArrowRight",
-        "KeyA",
-        "KeyD",
+        "ArrowUp",
+        "ArrowDown",
+        "Enter",
         "KeyP",
         "KeyR",
         "KeyM"
@@ -30806,34 +31018,43 @@ void main() {
       if (e.code === "KeyP" && !e.repeat) setPaused(!paused);
       else if (e.code === "KeyR" && !e.repeat) reset();
       else if (e.code === "KeyM" && !e.repeat) audio.toggle();
-      else if (!paused) {
-        if (!keys.size) desired = sim.heading;
-        keys.add(e.code);
-        if (e.code === "Space") {
+      else if (!paused && !lost) {
+        if (e.key === "Shift") keys.add("Shift");
+        if (e.code.startsWith("Arrow")) {
+          const arm = e.shiftKey ? 1 : 0;
+          if (!keys.has(e.code)) {
+            model.begin(arm);
+            hideHint();
+            audio.gesture();
+          }
+          if (!keyArms.has(e.code)) keyArms.set(e.code, arm);
+          keys.add(e.code);
+        }
+        if (e.code === "Enter" && !e.repeat) {
+          model.transmit(0);
+          model.transmit(1);
+          hideHint();
           audio.gesture();
-          hint.classList.add("faded");
+          dirty = true;
         }
       }
     });
     addEventListener("keyup", (e) => {
       keys.delete(e.code);
-      if (e.code === "Space" && pointer === null) {
-        held = false;
-        sim.input(false, desired);
-      }
+      if (e.key === "Shift") keys.delete("Shift");
+      const arm = keyArms.get(e.code);
+      keyArms.delete(e.code);
+      if (arm !== void 0 && ![...keyArms.values()].includes(arm) && contacts[arm].id === null)
+        model.end(arm, true);
     });
-    addEventListener("blur", () => {
-      keys.clear();
-      release();
-    });
+    addEventListener("blur", () => releaseAll(false));
     document.addEventListener("visibilitychange", () => {
-      keys.clear();
-      release();
+      releaseAll(false);
       lastTick = lastDraw = 0;
       if (document.hidden) audio.suspend();
     });
     addEventListener("pagehide", () => {
-      release();
+      releaseAll(false);
       audio.suspend();
     });
     addEventListener("pageshow", () => {
@@ -30842,28 +31063,28 @@ void main() {
     });
     document.getElementById("restart").addEventListener("click", reset);
     document.getElementById("about").addEventListener("click", () => {
-      release();
-      audio.update();
+      releaseAll(false);
       dialog.showModal();
-      lastTick = lastDraw = 0;
       audio.suspend();
+      lastTick = lastDraw = 0;
     });
     document.getElementById("close").addEventListener("click", () => dialog.close());
     dialog.addEventListener("close", () => {
       lastTick = lastDraw = 0;
-      audio.gesture();
+      if (!paused) audio.gesture();
     });
     journeyMemory = createExhibitionMemory({
-      id: "transfer",
+      id: "echo",
       canvas: () => renderer.domElement,
       paint: render,
-      now: () => sim.elapsed,
+      now: () => model.now,
       summary: () => [
-        `${sim.transferred ? "\uC804\uC774 \uC774\uD6C4\uC5D0\uB3C4 \uD56D\uD589 \uC911" : "\uB450 \uC911\uB825\uAD8C \uC0AC\uC774\uB97C \uD56D\uD589 \uC911"} \xB7 \uCD94\uC9C4\uC81C ${Math.round(sim.fuel / INITIAL_FUEL * 100)}%`,
-        `\uC11C\uBE44\uC2A4 \uC804\uB825 \uC800\uC7A5 ${Math.round(operations.snapshot().charge * 100)}% \xB7 \uC628\uB3C4 ${operations.s.temperature.toFixed(1)} K`,
-        `\uC6B4\uC804 \uC0C1\uD0DC: ${{ cooling: "\uB0C9\uAC01 \uC6B4\uC804", observe: "\uAD00\uCE21 \uC6B4\uC804", reserve: "\uAD00\uCE21 \uBD80\uD558 \uB300\uAE30" }[operations.snapshot().mode]}`
+        `\uC218\uC2E0\uB41C \uC704\uC0C1 \uC77C\uCE58 ${(model.mixed.agreement * 100).toFixed(1)}%`,
+        inheritedObservation ? `\uC774\uC5B4\uBC1B\uC740 \uAD00\uCE21 \u03C3 ${inheritedObservation.sigma.toFixed(3)} \xB7 t ${inheritedObservation.tau.toFixed(2)}` : "\uCCAB \uAD00\uCE21\uC5D0\uC11C \uC2DC\uC791\uD588\uC2B5\uB2C8\uB2E4.",
+        "\uCC28\uC774\uAC00 \uB0A8\uB294 \uC0C1\uD0DC\uB3C4 \uD558\uB098\uC758 \uC9C0\uC18D \uAC00\uB2A5\uD55C \uD615\uC0C1\uC785\uB2C8\uB2E4."
       ],
-      continuation: () => null
+      continuation: getObservationHandoff,
+      restore: restoreObservationHandoff
     });
     journeyMemory.start().then(() => {
       ready = true;
@@ -30872,49 +31093,46 @@ void main() {
       loading.setAttribute("aria-hidden", "true");
       requestAnimationFrame(tick);
     });
-    if (inspect || params.has("test"))
-      window.TRANSFER = {
+    if (params.has("inspect") || testMode)
+      window.ECHO = {
+        get ready() {
+          return ready;
+        },
+        renderer,
         audioEngine: audio,
         snapshot: () => ({
-          ...sim.snapshot(),
-          operations: operations.snapshot(),
-          quality: qualityNames[level],
+          ...model.snapshot(),
+          inheritedObservation: normalizeObservation(inheritedObservation),
           exhibitionMemory: journeyMemory?.snapshot(),
+          latestReceivedObservation: model.receivedObservation(),
+          quality: names[level],
           stellarBackground: quietSky.snapshot(),
-          starCount: tiers[level].count,
           qualityChanges,
           paused,
           lost,
+          dpr,
+          viewport: [width, height],
           renderCount,
           drawCalls: renderer.info.render.calls,
           triangles: renderer.info.render.triangles,
-          points: renderer.info.render.points,
-          dpr,
-          viewport: [width, height],
           audio: audio.snapshot(),
-          vesselPosition: vessel.position.toArray(),
+          alignment: alignment(),
+          pointers: pointers.size,
+          contacts: contacts.map((c) => ({
+            id: c.id,
+            weight: c.weight,
+            target: c.target,
+            point: c.point.toArray()
+          })),
           camera: camera.position.toArray(),
-          cameraUp: camera.up.toArray(),
-          fov: camera.fov,
-          desiredHeading: desired,
-          inputPower,
-          contacts: touches.size,
-          previewOpacity,
-          predictionSamples: prediction.geometry.drawRange.count,
-          predictionFinite: predictionData.every(Number.isFinite),
-          observerFocus: focus.toArray(),
-          sceneScale: S,
-          palette: "near-achromatic",
-          observer: observer.toArray(),
-          observerTarget: observerTarget.toArray(),
-          fieldSegments: tiers[level].field,
-          fieldModel: "Jacobi potential strata",
-          visualRule: "ship-following frame / continuous history / fading prediction",
-          trailSamples: trailCount,
-          trailCapacity: TRAIL_CAPACITY,
-          trailSampleInterval: 0.32,
-          trailFinite: trailData.every(Number.isFinite),
-          hullNDC: projected.copy(vessel.position).project(camera).toArray()
+          vesselPosition: vessel.position.toArray(),
+          fieldOrigin: layers.position.toArray(),
+          filamentLengthScale: 0.76,
+          visualGrammar: "prime-columns / phase-gap",
+          vesselScale: 3.9,
+          fieldSpan: uniforms.uSpan.value.toArray(),
+          fullFrame: true,
+          keyboardArms: [...keyArms.entries()]
         }),
         advance(seconds) {
           const n = Math.ceil(seconds * 60);
@@ -30922,12 +31140,11 @@ void main() {
           render();
           return this.snapshot();
         },
-        get ready() {
-          return ready;
-        },
         reset,
+        getObservationHandoff,
+        restoreObservationHandoff,
         saveJourney: () => journeyMemory.checkpoint(),
-        renderer
+        model
       };
   } catch (error2) {
     console.error(error2);

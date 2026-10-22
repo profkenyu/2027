@@ -575,7 +575,8 @@
       .vehicle-archive dd {
         margin: 0;
       }
-      .has-place-history .footer {
+      .has-place-history .footer,
+      .has-voyage-series .footer {
         position: relative;
         inset: auto;
         margin: 0 var(--pad) 20px;
@@ -741,9 +742,105 @@
           font-size: 12px;
         }
       }
+      .voyage-conditions {
+        position: relative;
+        z-index: 10;
+        margin: 0 var(--pad) 48px;
+        padding: 30px 0 36px;
+        border-top: 1px solid #d2d2cd;
+        background: var(--paper);
+        scroll-margin-top: calc(120px + env(safe-area-inset-top));
+      }
+      .voyage-heading {
+        display: flex;
+        align-items: baseline;
+        gap: 16px;
+        margin-bottom: 14px;
+      }
+      .voyage-heading h2 {
+        margin: 0;
+        font-size: clamp(23px, 2.1vw, 30px);
+        font-weight: 400;
+        letter-spacing: -0.04em;
+      }
+      .voyage-heading span {
+        color: var(--dim);
+        font-size: 12px;
+      }
+      .voyage-intro {
+        margin: 0 0 28px;
+        color: var(--dim);
+        font-size: 14px;
+        line-height: 1.8;
+        word-break: keep-all;
+      }
+      .voyage-list {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 18px 28px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .voyage-list li {
+        min-width: 0;
+      }
+      .voyage-list a {
+        display: grid;
+        grid-template-columns: 24px minmax(0, 1fr);
+        align-items: start;
+        gap: 10px;
+        min-height: 72px;
+        padding: 10px 0;
+        text-decoration: none;
+        touch-action: manipulation;
+      }
+      .voyage-number {
+        padding-top: 4px;
+        color: var(--dim);
+        font: 12px/1.5 monospace;
+      }
+      .voyage-work {
+        display: grid;
+        gap: 7px;
+      }
+      .voyage-work strong {
+        font-size: 18px;
+        font-weight: 400;
+        letter-spacing: 0.05em;
+      }
+      .voyage-work span {
+        color: var(--dim);
+        font-size: 13px;
+        line-height: 1.7;
+        word-break: keep-all;
+      }
+      .voyage-list a:hover strong,
+      .voyage-list a:focus-visible strong {
+        text-decoration: underline;
+        text-underline-offset: 5px;
+      }
+      @media (max-width: 1000px) {
+        .voyage-list {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+      @media (max-width: 600px) {
+        .voyage-conditions {
+          margin-bottom: 28px;
+          padding-top: 24px;
+        }
+        .voyage-list {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 8px;
+        }
+        .voyage-list a {
+          min-height: 76px;
+        }
+      }
     </style></head
   >
-  <body>
+  <body class="has-voyage-series">
     <main>
       <header class="site-header">
         <h1 class="monogram" aria-label="Field Archive / Coordinate Records">
@@ -792,6 +889,39 @@
           <p id="fa-observation-data"></p>
         </section>
         <div id="fa-selection" class="selection-line" aria-hidden="true"></div>
+      </section>
+      <section class="voyage-conditions" id="voyage-conditions" aria-labelledby="voyage-title">
+        <div class="voyage-heading">
+          <h2 id="voyage-title">항해의 조건</h2>
+          <span>4부작</span>
+        </div>
+        <p class="voyage-intro">관측과 이동, 응답과 소멸을 다루는 네 개의 항해.</p>
+        <ol class="voyage-list" aria-label="항해의 조건 관람 순서">
+          <li>
+            <a href="voyage/echo.html">
+              <span class="voyage-number" aria-hidden="true">01</span>
+              <span class="voyage-work"><strong>ECHO</strong><span>두 관측의 어긋남과 일치</span></span>
+            </a>
+          </li>
+          <li>
+            <a href="voyage/transfer.html">
+              <span class="voyage-number" aria-hidden="true">02</span>
+              <span class="voyage-work"><strong>TRANSFER</strong><span>작은 추력이 바꾸는 항로</span></span>
+            </a>
+          </li>
+          <li>
+            <a href="voyage/delay.html">
+              <span class="voyage-number" aria-hidden="true">03</span>
+              <span class="voyage-work"><strong>DELAY</strong><span>늦게 돌아오는 나의 신호</span></span>
+            </a>
+          </li>
+          <li>
+            <a href="voyage/abyss.html">
+              <span class="voyage-number" aria-hidden="true">04</span>
+              <span class="voyage-work"><strong>ABYSS</strong><span>되돌릴 수 없는 경계</span></span>
+            </a>
+          </li>
+        </ol>
       </section>
       <footer class="footer">
         <span>©2026 KIM GUNWOO. ALL RIGHTS RESERVED.</span>
@@ -2411,8 +2541,12 @@
           if (returnLink) returnLink.href = returnPage;
           const post = readPostMission();
           if (post && returnLink) returnLink.href = POST_PHASES[post.phase].file;
+          const fromVoyage = /^voyage\/(?:echo|transfer|delay|abyss)\.html$/.test(
+            new URLSearchParams(location.search).get("from") || "",
+          );
           returnLink?.addEventListener("click", (event) => {
             if (
+              fromVoyage ||
               event.button !== 0 ||
               event.metaKey ||
               event.ctrlKey ||
