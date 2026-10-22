@@ -30477,7 +30477,7 @@ void main() {
       fragmentShader: `
         uniform float uFade;varying float vAge,vCoast;
         void main(){
-          float alpha=(.055+.20*pow(vAge,1.6))*mix(.43,1.,vCoast)*uFade;
+          float alpha=(.075+.18*pow(vAge,1.6))*mix(.43,1.,vCoast)*uFade;
           gl_FragColor=vec4(vec3(.67,.69,.65),alpha);
         }`
     }));
@@ -30549,7 +30549,7 @@ void main() {
       prediction.geometry.attributes.position.needsUpdate = true;
       prediction.geometry.setDrawRange(0, count);
     }
-    predictionUniforms.uOpacity.value = previewOpacity * 0.36;
+    predictionUniforms.uOpacity.value = previewOpacity * 0.22;
   }
   function render() {
     const C = jacobi(sim.s), age = sim.elapsed;

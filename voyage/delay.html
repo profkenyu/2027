@@ -29179,9 +29179,10 @@ void main() {
       vec3 graphite=vec3(.013,.017,.020),silver=vec3(.48,.51,.52);
       vec3 warm=vec3(.48,.34,.23);
       vec3 ink=mix(silver,warm,(1.-clamp(uG,0.,1.))*.55);
-      float scaffold=mainLine*.055*received;
+      float fresh=received*exp(-max(0.,uNow-uPacket.x)*.08);
+      float scaffold=mainLine*.055*fresh;
       float layers=receipt.x*(.28+.72*aperture)+receipt.y;
-      vec3 color=graphite*(.24+.18*aperture)+ink*(scaffold+layers*(1.+.18*uHold)+touch*.075);
+      vec3 color=graphite*(.08+.34*fresh)*(.6+.4*aperture)+ink*(scaffold+layers*(1.+.18*uHold)+touch*.075);
       float density=(.62+.18*aperture)*inner*envelope*uIntro;
       gl_FragColor=vec4(color,density);
       #include <tonemapping_fragment>

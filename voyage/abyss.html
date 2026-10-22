@@ -29286,7 +29286,7 @@ void main() {
         s.turn += (s.targetTurn - s.turn) * (1 - Math.exp(-H / 0.18));
         s.press += ((s.held ? 1 : 0) - s.press) * (1 - Math.exp(-H / (s.held ? 0.065 : 0.6)));
         const observerRate = s.captured ? 0 : s.held ? 0.045 : 0.18;
-        s.cameraRate += (observerRate - s.cameraRate) * (1 - Math.exp(-H / 0.9));
+        s.cameraRate += (observerRate - s.cameraRate) * (1 - Math.exp(-H / (s.captured ? 3.2 : 0.9)));
         s.cameraPhase += s.cameraRate * H;
         if (!s.captured && s.targetProgress === 1 && s.progress > 0.9985) {
           s.progress = 1;

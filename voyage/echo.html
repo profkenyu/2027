@@ -30668,7 +30668,7 @@ void main() {
   p.z+=pullA*uDepth.x+pullB*uDepth.y;
   p.xy+=da/max(length(da),1.)*pullA*12.-db/max(length(db),1.)*pullB*12.;
   float signal=max(aB.y,aB.z);
-  vAlpha=(.28+.46*strength)*mix(.30+.70*signal,.88,e)*uIntro*mix(1.,.78,delayDepth*(1.-e));
+  vAlpha=(.28+.46*strength)*mix(.07+.93*smoothstep(.02,.65,signal),.88,e)*uIntro*mix(1.,.78,delayDepth*(1.-e));
   vPair=vec4(ratio,diff,aB.y,aB.z);vPath=aB.w*aPrime.y*.18;vCarrier=aPrime.y*1.2;vDrift=drift;
   vContact=max(pullA,pullB);
   vColor=mix(vec3(.58,.64,.64),vec3(.78,.80,.76),e*.7+strength*.15);vUv=uv;vPosition=p.xy;vAlign=e;

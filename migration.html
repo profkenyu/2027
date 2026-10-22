@@ -46285,7 +46285,8 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
         passageLateral = new Vector3(),
         passageSight = new Vector3();
       function ringDollyProgress(u) {
-        let p = MathUtils.clamp(u, 0, 1),
+        let raw = MathUtils.clamp(u, 0, 1),
+          p = raw + 0.095 * Math.sin(2 * Math.PI * raw) * Math.sin(Math.PI * raw) ** 2,
           r = 0.15,
           edge = (q) => {
             let v = q / r;
@@ -46336,7 +46337,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
         } else if (shot === "ring-passage") {
           let progress = ringDollyProgress((t - CUTS[1]) / (CUTS[2] - CUTS[1])),
             aftReveal = MathUtils.smootherstep(progress, 0.5, 1);
-          ((camera2.fov = portrait ? 63 : 50),
+          ((camera2.fov = (portrait ? 63 : 50) - 5 * Math.sin(Math.PI * progress) ** 4),
             camera2.position
               .copy(referenceArk.position)
               .add(
@@ -46421,7 +46422,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
         if (t < 30) {
           let portrait = camera2.aspect < 1,
             ship = fleet2[0];
-          ((camera2.near = 1), (camera2.fov = portrait ? 68 : 56));
+          ((camera2.near = 1), (camera2.fov = portrait ? 64 : 52));
           let offset = openingPassageOffset(t);
           camera2.position.set(0, -185, -2800 + offset / ship.scale.z);
           let axial = camera2.position.z,
@@ -66525,6 +66526,14 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
               };
       }
 
+
+function migrationListeningGain(band,t) {
+ const smooth=(x)=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)};
+ const direct=band==='body'||band==='air';
+ const fade=1-smooth((t-(direct?82:88))/(direct?8:10));
+ const returnGain=smooth((t-108)/8);
+ return Math.max(fade,returnGain);
+}
       // works/shared/journey-audio.js
       var TIERS = {
           high: { decay: 12, echo: !0 },
@@ -66714,7 +66723,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
                 ? Math.max(0, 1 - (environment2.time - environment2.eventAt) / 8)
                 : 1,
             music = environment2 ? (phase2 === "ending" ? 0 : eventFade) : 1;
-          for (let band of BANDS) ramp(graph.gates[band].gain, score[band] * music, now3);
+          for (let band of BANDS) ramp(graph.gates[band].gain, score[band] * music * (phase2 === "migration" ? migrationListeningGain(band, seconds2) : 1), now3);
           if (environment2) {
             let fade = Math.min(1, Math.max(0, (environment2.time - 20) / 16));
             (ramp(
