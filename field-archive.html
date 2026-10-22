@@ -839,6 +839,31 @@
         }
       }
     </style>
+    <style id="voyage-emphasis">
+      .voyage-conditions {
+        margin: 0 0 48px;
+        padding: clamp(40px, 5vw, 68px) var(--pad) clamp(42px, 5vw, 72px);
+        border-top: 0;
+        background: #0a1115;
+        color: #dae5e8;
+      }
+      .voyage-heading { margin-bottom: 18px; }
+      .voyage-heading h2 { color: #e1eaed; }
+      .voyage-heading span { color: #68adb5; }
+      .voyage-intro { color: #9aafb7; margin-bottom: 38px; }
+      .voyage-list { gap: 22px 28px; }
+      .voyage-list a { color: #dae5e8; }
+      .voyage-number { color: #68adb5; }
+      .voyage-work span { color: #9aafb7; }
+      .voyage-list a:hover strong,
+      .voyage-list a:focus-visible strong { color: #a1e2e8; }
+      .voyage-list a:focus-visible { outline: none; }
+      @media (max-width: 600px) {
+        .voyage-conditions { margin-bottom: 28px; padding-top: 36px; padding-bottom: 36px; }
+        .voyage-intro { margin-bottom: 24px; }
+        .voyage-list { gap: 8px; }
+      }
+    </style>
     <style id="site-typography">
       html:root { --site-type-min: 9px; --site-nav-size: 10px; }
       body #vehicle-preview-link,
@@ -919,7 +944,7 @@
             href="preview.html?from=field-archive.html"
             aria-label="로버 · 탐사선 · 이주선 외장 보기"
             >PREVIEW</a
-          ><a class="back" href="planet-01.html" data-return>Return to Mission</a></div
+          ><a class="back" href="planet-01.html" data-return>RETURN</a></div
         >
       </header>
       <section class="archive" aria-label="Coordinate observation records">
@@ -950,25 +975,25 @@
           <li>
             <a href="voyage/echo.html">
               <span class="voyage-number" aria-hidden="true">01</span>
-              <span class="voyage-work"><strong>ECHO</strong><span>두 관측의 어긋남과 일치</span></span>
+              <span class="voyage-work"><strong>ECHO</strong><span>관측의 일치와 어긋남</span></span>
             </a>
           </li>
           <li>
             <a href="voyage/transfer.html">
               <span class="voyage-number" aria-hidden="true">02</span>
-              <span class="voyage-work"><strong>TRANSFER</strong><span>작은 추력이 바꾸는 항로</span></span>
+              <span class="voyage-work"><strong>TRANSFER</strong><span>추력이 바꾸는 항로</span></span>
             </a>
           </li>
           <li>
             <a href="voyage/delay.html">
               <span class="voyage-number" aria-hidden="true">03</span>
-              <span class="voyage-work"><strong>DELAY</strong><span>늦게 돌아오는 나의 신호</span></span>
+              <span class="voyage-work"><strong>DELAY</strong><span>딜레이되는 신호</span></span>
             </a>
           </li>
           <li>
             <a href="voyage/abyss.html">
               <span class="voyage-number" aria-hidden="true">04</span>
-              <span class="voyage-work"><strong>ABYSS</strong><span>되돌릴 수 없는 경계</span></span>
+              <span class="voyage-work"><strong>ABYSS</strong><span>돌이킬 수 없는 경계</span></span>
             </a>
           </li>
         </ol>
