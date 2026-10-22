@@ -9,9 +9,9 @@
     <meta name="theme-color" content="#030507" />
     <meta
       name="description"
-      content="LAMBERT W / ABYSS — 두 실수 가지가 만드는 경계와 되돌릴 수 없는 항해. 김건우의 인터랙티브 작품."
+      content="LAMBERT W / ABYSS — 두 실수 가지가 만드는 경계와 되돌릴 수 없는 항해"
     />
-    <title>LAMBERT W / ABYSS · 김건우</title>
+    <title>LAMBERT W / ABYSS</title>
     <link rel="icon" href="data:," />
     <style>
       :root {
@@ -581,7 +581,43 @@ footer nav.series-nav {
 }
 
     </style>
-  </head>
+  
+    <style id="site-typography">
+      html:root { --site-type-min: 9px; --site-nav-size: 10px; }
+      body #vehicle-preview-link,
+      body .preview-actions #vehicle-preview-link,
+      body #journey-links #vehicle-preview-link,
+      body footer nav a,
+      body footer nav.series-nav a,
+      body .preview-actions .back,
+      body .topbar a,
+      body #ti-ending-archive { font-size: var(--site-nav-size); }
+      body #ti-copyright,
+      body footer #credit,
+      body .footer > span { font-size: 9px; }
+      @media (max-width: 760px), (pointer: coarse) and (max-width: 1024px) {
+        html:root { --site-type-min: 6px; --site-nav-size: 9px; }
+        body #ti-copyright,
+        body footer #credit,
+        body .footer > span { font-size: 8px; }
+      }
+
+      html:root { --ui-title: 14px; --ui-text: 10.5px; --ui-small: 9px; }
+      body dialog { font-size: 11.5px; }
+      body dialog h2 { font-size: 15px; }
+      body dialog h3,
+      body .memory-cycles h4 { font-size: 10.5px; }
+      body dialog .credits,
+      body .memory-grid figcaption { font-size: 9px; }
+      body #experience-log .memory-status { font-size: 10px; }
+      @media (max-height: 500px) {
+        html:root { --ui-title: 12.5px; --ui-text: 10px; --ui-small: 9px; }
+      }
+      @media (max-width: 760px), (pointer: coarse) and (max-width: 1024px) {
+        html:root { --ui-title: 12.5px; --ui-text: 10px; --ui-small: 8.5px; }
+      }
+    </style>
+</head>
   <body data-artwork="abyss">
     <div class="matte top" aria-hidden="true"></div>
     <div class="matte bottom" aria-hidden="true"></div>

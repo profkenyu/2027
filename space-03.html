@@ -164,7 +164,38 @@
         text-decoration: underline;
         text-underline-offset: 4px;
       }
-    </style></head
+    </style>
+    <style id="site-typography">
+      html:root { --site-type-min: 9px; --site-nav-size: 10px; }
+      body #vehicle-preview-link,
+      body .preview-actions #vehicle-preview-link,
+      body #journey-links #vehicle-preview-link,
+      body footer nav a,
+      body footer nav.series-nav a,
+      body .preview-actions .back,
+      body .topbar a,
+      body #ti-ending-archive { font-size: var(--site-nav-size); }
+      body #ti-copyright,
+      body footer #credit,
+      body .footer > span { font-size: 9px; }
+      @media (max-width: 760px), (pointer: coarse) and (max-width: 1024px) {
+        html:root { --site-type-min: 6px; --site-nav-size: 9px; }
+        body #ti-copyright,
+        body footer #credit,
+        body .footer > span { font-size: 8px; }
+      }
+
+      body header,
+      body footer { font-size: 10px; }
+      body header span,
+      body #loading { font-size: 9px; }
+      body #error { font-size: 11.5px; }
+      @media (max-width: 760px), (pointer: coarse) and (max-width: 1024px) {
+        body header,
+        body footer { font-size: 9px; }
+      }
+    </style>
+</head
   >
   <body data-passage="3">
     <div class="matte top"></div>
@@ -1070,6 +1101,96 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
         },
       });
 
+      // Classic companion scripts can read local model files when file: fetch is
+      // unavailable. Served pages retain the normal JSON request and cache policy.
+      const registryKey = Symbol.for("terra-incognita.local-models");
+      const pendingModels = new Map();
+
+      function abortError() {
+        return new DOMException("Model request aborted", "AbortError");
+      }
+
+      function localModelRequest(url) {
+        let settled = false;
+        let finish;
+        const script = document.createElement("script");
+        const entry = {
+          consumers: 0,
+          promise: new Promise((resolve, reject) => {
+            finish = (error, payload) => {
+              if (settled) return;
+              settled = true;
+              script.onload = script.onerror = null;
+              script.remove();
+              pendingModels.delete(url.href);
+              if (error) reject(error);
+              else resolve(payload);
+            };
+          }),
+          cancel() {
+            finish(abortError());
+          },
+          start() {
+            const companion = new URL(url);
+            companion.pathname = companion.pathname.replace(/\.json$/, ".js");
+            script.async = true;
+            script.src = companion.href;
+            script.onload = () => {
+              const payload = globalThis[registryKey]?.get(url.href);
+              if (payload === undefined)
+                finish(new Error("Local model companion did not register its payload"));
+              else finish(null, payload);
+            };
+            script.onerror = () => finish(new Error("Local model companion could not be loaded"));
+            try {
+              document.head.append(script);
+            } catch (error) {
+              finish(error);
+            }
+          },
+        };
+        pendingModels.set(url.href, entry);
+        return entry;
+      }
+
+      async function readModelPayload(url, { signal, cache } = {}) {
+        url = new URL(url, document.baseURI);
+        if (signal?.aborted) throw abortError();
+        if (url.protocol !== "file:") {
+          const response = await fetch(url, { signal, cache });
+          if (!response.ok) throw new Error(`Model request failed: ${response.status}`);
+          return response.json();
+        }
+        const registry = (globalThis[registryKey] ??= new Map());
+        if (cache === "reload") registry.delete(url.href);
+        else if (registry.has(url.href)) return registry.get(url.href);
+        let entry = pendingModels.get(url.href);
+        const start = !entry;
+        if (!entry) entry = localModelRequest(url);
+        entry.consumers++;
+        return new Promise((resolve, reject) => {
+          let active = true;
+          const cleanup = () => {
+            if (!active) return false;
+            active = false;
+            entry.consumers--;
+            signal?.removeEventListener("abort", onAbort);
+            return true;
+          };
+          const onAbort = () => {
+            if (!cleanup()) return;
+            reject(abortError());
+            if (!entry.consumers) entry.cancel();
+          };
+          signal?.addEventListener("abort", onAbort, { once: true });
+          entry.promise.then(
+            (payload) => { if (cleanup()) resolve(payload); },
+            (error) => { if (cleanup()) reject(error); },
+          );
+          if (start) entry.start();
+        });
+      }
+
       // works/shared/model-loader.js
       async function loadSceneModel(kind, tier2, { reload = !1 } = {}) {
         let asset = SCENE_MODEL_ASSETS[kind]?.[tier2];
@@ -1078,12 +1199,10 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
           controller = new AbortController(),
           timeout = setTimeout(() => controller.abort(), 45e3);
         try {
-          let response2 = await fetch(new URL(`${kind}/${asset.file}`, base), {
+          let payload = await readModelPayload(new URL(`${kind}/${asset.file}`, base), {
             signal: controller.signal,
             cache: reload ? "reload" : "force-cache",
           });
-          if (!response2.ok) throw new Error(`Model request failed: ${response2.status}`);
-          let payload = await response2.json();
           if (
             payload.version !== 1 ||
             payload.kind !== kind ||

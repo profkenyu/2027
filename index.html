@@ -480,7 +480,7 @@
       @media (pointer: coarse), (max-width: 760px) {
         #ti-prologue .controls {
           bottom: calc(var(--frame-bottom) + 18px);
-          font-size: 8px;
+          font-size: max(var(--site-type-min), 8px);
         }
         body.ti-mobile #ti-prologue #ti-mobile-start {
           display: inline-flex;
@@ -523,7 +523,7 @@
         #ti-prologue .controls {
           bottom: calc(var(--frame-bottom) + 12px);
           width: calc(var(--viewport-width) - var(--safe-left) - var(--safe-right) - 28px);
-          font-size: 7px;
+          font-size: max(var(--site-type-min), 7px);
           line-height: 1.55;
           letter-spacing: 0.12em;
         }
@@ -561,7 +561,7 @@
         }
         #ti-prologue .controls {
           bottom: calc(var(--frame-bottom) + 10px);
-          font-size: 7px;
+          font-size: max(var(--site-type-min), 7px);
           line-height: 1.55;
         }
       }
@@ -616,7 +616,7 @@
         }
         body.ti-mobile #ti-prologue .mission {
           margin-top: 8px;
-          font-size: 7px;
+          font-size: max(var(--site-type-min), 7px);
           letter-spacing: 0.14em;
         }
         body.ti-mobile #ti-prologue #ti-mobile-start {
@@ -900,7 +900,73 @@
           font-size: 11px;
         }
       }
-    </style></head
+    </style>
+    <style id="site-typography">
+      html:root { --site-type-min: 9px; --site-nav-size: 10px; }
+      body #vehicle-preview-link,
+      body .preview-actions #vehicle-preview-link,
+      body #journey-links #vehicle-preview-link,
+      body footer nav a,
+      body footer nav.series-nav a,
+      body .preview-actions .back,
+      body .topbar a,
+      body #ti-ending-archive { font-size: var(--site-nav-size); }
+      body #ti-copyright,
+      body footer #credit,
+      body .footer > span { font-size: 9px; }
+      @media (max-width: 760px), (pointer: coarse) and (max-width: 1024px) {
+        html:root { --site-type-min: 6px; --site-nav-size: 9px; }
+        body #ti-copyright,
+        body footer #credit,
+        body .footer > span { font-size: 8px; }
+      }
+
+      body #ti-prologue h1 { font-size: clamp(12px, 1.22vw, 16px); }
+      body #ti-prologue .ko { font-size: clamp(12.5px, 1.08vw, 14px); }
+      body #ti-prologue .en { font-size: clamp(12.5px, 1vw, 14px); }
+      body #ti-prologue .mission { font-size: 9px; }
+      body #ti-prologue .controls { font-size: 10.5px; }
+      body.ti-mobile #ti-prologue .controls .control-name,
+      body #ti-prologue .controls .control-name { font-size: 10.5px; }
+      body.ti-mobile #ti-prologue .controls .control-detail,
+      body #ti-prologue .controls .control-detail { font-size: 10px; }
+      body #ti-prologue .controls kbd { font-size: 9px; }
+      body #ti-prologue #ti-start,
+      body #ti-prologue #ti-mobile-start { font-size: 9.5px; }
+      body #ti-restart { font-size: 10px; }
+      body #ti-opening-blueprints .bp-head,
+      body #ti-opening-blueprints .bp-view-label,
+      body #ti-opening-blueprints .bp-index,
+      body #ti-opening-blueprints .bp-summary,
+      body #ti-opening-blueprints dt,
+      body #ti-opening-blueprints dd,
+      body #ti-opening-blueprints .bp-parts,
+      body #ti-opening-blueprints .bp-foot,
+      body #ti-opening-blueprints .bp-noise::before,
+      body #ti-opening-blueprints .bp-noise::after { font-size: var(--site-type-min); }
+      body #ti-opening-blueprints .bp-spec { overflow: auto; }
+      body #ti-opening-blueprints .bp-spec > * { flex-shrink: 0; }
+      @media (max-height: 700px) {
+        body #ti-prologue h1 { font-size: 9.5px; }
+        body #ti-prologue .ko { font-size: clamp(11.5px, 1.22vw, 13px); }
+        body #ti-prologue .en { font-size: clamp(10.5px, 1.05vw, 12px); }
+      }
+      @media (max-width: 760px), (pointer: coarse) and (max-width: 1024px) {
+        body #ti-prologue h1 { font-size: 10.5px; }
+        body #ti-prologue .ko { font-size: 11.5px; }
+        body #ti-prologue .en { font-size: 10.5px; }
+        body.ti-mobile #ti-prologue .controls .control-name,
+      body #ti-prologue .controls .control-name,
+        body.ti-mobile #ti-prologue .controls .control-detail,
+      body #ti-prologue .controls .control-detail { font-size: 10px; }
+      }
+      @media (max-height: 520px) and (orientation: landscape) {
+        body.ti-mobile #ti-prologue .ko { font-size: 10.5px; }
+        body.ti-mobile #ti-prologue .en { font-size: 9.5px; }
+        body.ti-mobile #ti-prologue .mission { font-size: max(var(--site-type-min), 6px); }
+      }
+    </style>
+</head
   >
   <body
     ><img
@@ -17301,6 +17367,9 @@ void main() {
       }
 
       // works/terra_incognita/opening-blueprints.js
+      // Keep drawing annotations on the same minimum scale as the site UI.
+      var blueprintTypeMedia = matchMedia("(max-width: 760px), (pointer: coarse) and (max-width: 1024px)");
+      function blueprintTextFloor() { return blueprintTypeMedia.matches ? 6 : 9; }
       var clamp01 = (value) => Math.max(0, Math.min(1, value)),
         PHOSPHOR = "#85f2a8",
         PHOSPHOR_RGB = "139,255,169",
@@ -18424,7 +18493,7 @@ body.ti-prologue-out #ti-opening-blueprints.bp-residual-title {
               ((ctx.fillStyle = i === pips ? PHOSPHOR : "#2b2e32"),
                 ctx.fillRect(w - pad - 15 + i * 9, pad + 1, 4, 4));
             ((ctx.fillStyle = "rgba(217,221,226,.38)"),
-              (ctx.font = "500 6px 'DM Mono', ui-monospace, monospace"),
+              (ctx.font = `500 ${blueprintTextFloor()}px 'DM Mono', ui-monospace, monospace`),
               (ctx.textAlign = "left"),
               ctx.fillText(
                 `${String(Math.round(clamp01(phase2) * 100)).padStart(3, "0")}% PLATE RESOLUTION`,
@@ -18634,7 +18703,7 @@ body.ti-prologue-out #ti-opening-blueprints.bp-residual-title {
         let bottom = rect.y + rect.h * 0.5 + (b.maxY - b.minY) * scale * 0.5;
         ((ctx.strokeStyle = "rgba(139,255,169,.25)"), ctx.beginPath());
         for (let x of [x1, x2]) (ctx.moveTo(x, bottom + 2), ctx.lineTo(x, y + 4));
-        (ctx.stroke(), (ctx.font = "6px 'DM Mono',monospace"), (ctx.textAlign = "center"));
+        (ctx.stroke(), (ctx.font = `${blueprintTextFloor()}px 'DM Mono',monospace`), (ctx.textAlign = "center"));
         let label = `${axis} ${value.toFixed(1)} / SCENE UNITS`,
           width = ctx.measureText(label).width + 8;
         ((ctx.fillStyle = "#070809"),
@@ -18852,7 +18921,7 @@ body.ti-prologue-out #ti-opening-blueprints.bp-residual-title {
       }
       function drawViewLabel(ctx, rect, label) {
         ((ctx.fillStyle = "rgba(217,221,226,.34)"),
-          (ctx.font = "500 6px 'DM Mono', ui-monospace, monospace"),
+          (ctx.font = `500 ${blueprintTextFloor()}px 'DM Mono', ui-monospace, monospace`),
           (ctx.textAlign = "left"),
           ctx.fillText(label, rect.x + 7, rect.y + 12),
           (ctx.fillStyle = `rgba(${PHOSPHOR_RGB},.48)`),
@@ -18874,8 +18943,8 @@ body.ti-prologue-out #ti-opening-blueprints.bp-residual-title {
           labelWidth = Math.max(72, Math.min(142, rect.w * 0.31)),
           top = rect.y + Math.max(34, rect.h * 0.14),
           bottom = rect.y + rect.h - Math.max(22, rect.h * 0.09),
-          nameSize = rect.w < 390 ? 4.8 : 5.8,
-          detailSize = rect.w < 390 ? 4.2 : 5,
+          nameSize = Math.max(blueprintTextFloor(), rect.w < 390 ? 4.8 : 5.8),
+          detailSize = Math.max(blueprintTextFloor(), rect.w < 390 ? 4.2 : 5),
           visible = 0;
         (ctx.save(),
           ctx.beginPath(),
@@ -22533,6 +22602,96 @@ body.ti-prologue-out #ti-opening-blueprints.bp-residual-title {
         },
       });
 
+      // Classic companion scripts can read local model files when file: fetch is
+      // unavailable. Served pages retain the normal JSON request and cache policy.
+      const registryKey = Symbol.for("terra-incognita.local-models");
+      const pendingModels = new Map();
+
+      function abortError() {
+        return new DOMException("Model request aborted", "AbortError");
+      }
+
+      function localModelRequest(url) {
+        let settled = false;
+        let finish;
+        const script = document.createElement("script");
+        const entry = {
+          consumers: 0,
+          promise: new Promise((resolve, reject) => {
+            finish = (error, payload) => {
+              if (settled) return;
+              settled = true;
+              script.onload = script.onerror = null;
+              script.remove();
+              pendingModels.delete(url.href);
+              if (error) reject(error);
+              else resolve(payload);
+            };
+          }),
+          cancel() {
+            finish(abortError());
+          },
+          start() {
+            const companion = new URL(url);
+            companion.pathname = companion.pathname.replace(/\.json$/, ".js");
+            script.async = true;
+            script.src = companion.href;
+            script.onload = () => {
+              const payload = globalThis[registryKey]?.get(url.href);
+              if (payload === undefined)
+                finish(new Error("Local model companion did not register its payload"));
+              else finish(null, payload);
+            };
+            script.onerror = () => finish(new Error("Local model companion could not be loaded"));
+            try {
+              document.head.append(script);
+            } catch (error) {
+              finish(error);
+            }
+          },
+        };
+        pendingModels.set(url.href, entry);
+        return entry;
+      }
+
+      async function readModelPayload(url, { signal, cache } = {}) {
+        url = new URL(url, document.baseURI);
+        if (signal?.aborted) throw abortError();
+        if (url.protocol !== "file:") {
+          const response = await fetch(url, { signal, cache });
+          if (!response.ok) throw new Error(`Model request failed: ${response.status}`);
+          return response.json();
+        }
+        const registry = (globalThis[registryKey] ??= new Map());
+        if (cache === "reload") registry.delete(url.href);
+        else if (registry.has(url.href)) return registry.get(url.href);
+        let entry = pendingModels.get(url.href);
+        const start = !entry;
+        if (!entry) entry = localModelRequest(url);
+        entry.consumers++;
+        return new Promise((resolve, reject) => {
+          let active = true;
+          const cleanup = () => {
+            if (!active) return false;
+            active = false;
+            entry.consumers--;
+            signal?.removeEventListener("abort", onAbort);
+            return true;
+          };
+          const onAbort = () => {
+            if (!cleanup()) return;
+            reject(abortError());
+            if (!entry.consumers) entry.cancel();
+          };
+          signal?.addEventListener("abort", onAbort, { once: true });
+          entry.promise.then(
+            (payload) => { if (cleanup()) resolve(payload); },
+            (error) => { if (cleanup()) reject(error); },
+          );
+          if (start) entry.start();
+        });
+      }
+
       // works/shared/model-loader.js
       async function loadSceneModel(kind, tier2, { reload = !1 } = {}) {
         let asset = SCENE_MODEL_ASSETS[kind]?.[tier2];
@@ -22541,12 +22700,10 @@ body.ti-prologue-out #ti-opening-blueprints.bp-residual-title {
           controller = new AbortController(),
           timeout = setTimeout(() => controller.abort(), 45e3);
         try {
-          let response = await fetch(new URL(`${kind}/${asset.file}`, base), {
+          let payload = await readModelPayload(new URL(`${kind}/${asset.file}`, base), {
             signal: controller.signal,
             cache: reload ? "reload" : "force-cache",
           });
-          if (!response.ok) throw new Error(`Model request failed: ${response.status}`);
-          let payload = await response.json();
           if (
             payload.version !== 1 ||
             payload.kind !== kind ||

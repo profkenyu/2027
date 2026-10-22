@@ -283,7 +283,45 @@
         text-decoration: underline;
         text-underline-offset: 4px;
       }
-    </style></head
+    </style>
+    <style id="site-typography">
+      html:root { --site-type-min: 9px; --site-nav-size: 10px; }
+      body #vehicle-preview-link,
+      body .preview-actions #vehicle-preview-link,
+      body #journey-links #vehicle-preview-link,
+      body footer nav a,
+      body footer nav.series-nav a,
+      body .preview-actions .back,
+      body .topbar a,
+      body #ti-ending-archive { font-size: var(--site-nav-size); }
+      body #ti-copyright,
+      body footer #credit,
+      body .footer > span { font-size: 9px; }
+      @media (max-width: 760px), (pointer: coarse) and (max-width: 1024px) {
+        html:root { --site-type-min: 6px; --site-nav-size: 9px; }
+        body #ti-copyright,
+        body footer #credit,
+        body .footer > span { font-size: 8px; }
+      }
+
+      body { font-size: 11.5px; }
+      body header { font-size: 9px; }
+      body footer { font-size: 10px; }
+      body #loading { font-size: 10.5px; }
+      body #line { font-size: clamp(12.5px, 1.1vw, 18px); }
+      body #arrival-intro [lang="en"],
+      body #line [lang="en"] { font-size: clamp(16px, 1.85vw, 26px); }
+      body #arrival-intro [lang="ko"],
+      body #line [lang="ko"] { font-size: clamp(10.5px, .875vw, 14px); }
+      @media (max-width: 760px), (pointer: coarse) and (max-width: 1024px) {
+        body #line { font-size: 12.5px; }
+        body #arrival-intro [lang="en"],
+        body #line [lang="en"] { font-size: 16px; }
+        body #arrival-intro [lang="ko"],
+        body #line [lang="ko"] { font-size: 11.5px; }
+      }
+    </style>
+</head
   >
   <body data-phase="ending">
     <div id="cut" aria-hidden="true"></div>
