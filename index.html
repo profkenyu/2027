@@ -22367,7 +22367,8 @@ body.ti-prologue-out #ti-opening-blueprints.bp-residual-title {
             : new Timeline(parameters).init();
 
       // works/terra_incognita/anime-rituals.js
-      var clamp012 = (value) => Math.max(0, Math.min(1, value)),
+      var ritualCadenceStep = (t) => Math.floor(Math.max(0, Math.min(1, t))),
+        clamp012 = (value) => Math.max(0, Math.min(1, value)),
         smooth2 = (value) => {
           let p = clamp012(value);
           return p * p * (3 - 2 * p);
@@ -22419,9 +22420,9 @@ body.ti-prologue-out #ti-opening-blueprints.bp-residual-title {
                   ((this.completionActive = !1), this._finishCompletion());
                 },
               })
-                .add(this.completion, { cadence: 1, duration: 105, ease: "steps(1)" }, 0)
-                .add(this.completion, { cadence: 2, duration: 185, ease: "steps(1)" }, 115)
-                .add(this.completion, { cadence: 3, duration: 310, ease: "steps(1)" }, 310)
+                .add(this.completion, { cadence: 1, duration: 105, ease: ritualCadenceStep }, 0)
+                .add(this.completion, { cadence: 2, duration: 185, ease: ritualCadenceStep }, 115)
+                .add(this.completion, { cadence: 3, duration: 310, ease: ritualCadenceStep }, 310)
                 .add(this.completion, { silence: 1, duration: 420, ease: "inOut(2)" }, 0)));
           }
           beginTitleBinding() {
@@ -23090,8 +23091,9 @@ body.ti-prologue-out #ti-opening-blueprints.bp-residual-title {
           CANDIDATE_STATIONS.every((s) => d.observations.includes(s.id))
         );
       }
-      function readCandidate(storage2 = globalThis.sessionStorage) {
+      function readCandidate(storage2) {
         try {
+          if (storage2 === undefined) storage2 = globalThis.sessionStorage;
           let s = JSON.parse(storage2.getItem(CANDIDATE_KEY) || "null");
           return s?.version !== 1 ||
             !/^[0-9a-f]{6}$/i.test(s.seed) ||
@@ -23140,8 +23142,9 @@ body.ti-prologue-out #ti-opening-blueprints.bp-residual-title {
           return null;
         }
       }
-      function clearCandidate(storage2 = globalThis.sessionStorage) {
+      function clearCandidate(storage2) {
         try {
+          if (storage2 === undefined) storage2 = globalThis.sessionStorage;
           storage2.removeItem(CANDIDATE_KEY);
         } catch {}
       }

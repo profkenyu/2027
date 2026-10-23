@@ -41994,6 +41994,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
     shipMaterial("titanium", tier),
     dark,
   ];
+  let sharedPressureGeometry, sharedPressureFittings;
   const create = (index) => {
     const root = new Group();
     root.name = `ark-${index + 1}`;
@@ -42592,8 +42593,16 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
             rotation: frame.rotation.toArray()});
         }
     } else {
-      const pressure = pressureVesselGeometry(12, 66, tier),
-        pressureDetails = [];
+      sharedPressureGeometry ??= pressureVesselGeometry(12, 66, tier);
+      sharedPressureFittings ??= pressureVesselFittings(12, 66, tier);
+      const pressureDetails = [], placement = new Matrix4();
+      const pressureModules = new InstancedMesh(sharedPressureGeometry, ivory, 8);
+      pressureModules.name = "pressure-module";
+      pressureModules.castShadow = pressureModules.receiveShadow = true;
+      pressureModules.userData.blueprintPart = 1;
+      pressureModules.userData.moduleCount = 8;
+      const unitScale = new Vector3(1, 1, 1);
+      let moduleIndex = 0;
       for (const side of [-1, 1]) {
         // The capsule's narrow stern carries one aft pair; three pairs sit ahead
         // of the cabin. The removed foremost pair is not restored.
@@ -42601,15 +42610,15 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
         for (let j = 0; j < stations.length; j++) {
           const z = stations[j], x = side * (capsule ? (j === 0 ? 54 : 70) : 80);
           const frame = payloadFrame(x, z, 31, 75), put = frame.boxAt;
-          const pod = new Mesh(pressure, ivory);
-          pod.name = "pressure-module";
-          pod.position.copy(frame.at(0, 12, 0));
-          pod.quaternion.copy(frame.rotation);
-          pod.castShadow = pod.receiveShadow = true;
-          root.add(pod);
-          for (const g of pressureVesselFittings(12, 66, tier)) {
+          const position = frame.at(0, 12, 0);
+          placement.compose(position, frame.rotation, unitScale);
+          pressureModules.setMatrixAt(moduleIndex++, placement);
+          missionPayloads.push({role: payloadRole, side, position: position.toArray(),
+            size: [24, 24, 66], bottom: frame.base, rotation: frame.rotation.toArray()});
+          for (const source of sharedPressureFittings) {
+            const g = source.clone();
             g.applyQuaternion(frame.rotation);
-            g.translate(...pod.position.toArray());
+            g.translate(...position.toArray());
             pressureDetails.push(g);
           }
           put(1, 0, 0, 0, 31, 4, 75);
@@ -42631,6 +42640,9 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           for (const dz of [-26, 26]) put(0, 0, 29.4, dz, 30, 0.8, 2.4);
         }
       }
+      pressureModules.instanceMatrix.needsUpdate = true;
+      pressureModules.computeBoundingSphere();
+      root.add(pressureModules);
       root.add(
         mergedShipDetail(pressureDetails, steel, "pressure-module-welds", 1),
       );
@@ -43027,7 +43039,9 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
     markFleet(root, tier, index);
     return root;
   };
-  return Array.from({ length: count }, (_, i) => create(i));
+  const fleet = Array.from({ length: count }, (_, i) => create(i));
+  sharedPressureFittings?.forEach((geometry) => geometry.dispose());
+  return fleet;
 }
 
       // works/first_dawn/cruciform-tail.js
@@ -69697,7 +69711,7 @@ vShieldFinish=shieldFinish;`,
           (renderer.toneMapping = ACESFilmicToneMapping),
           (renderer.toneMappingExposure = 1.05),
           (renderer.shadowMap.enabled = !0),
-          (renderer.shadowMap.type = PCFSoftShadowMap),
+          (renderer.shadowMap.type = PCFShadowMap),
           (shadowBudget = createShadowBudget(renderer, tier)),
           document.body.prepend(renderer.domElement),
           (scene = new Scene()),

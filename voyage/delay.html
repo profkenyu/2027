@@ -30285,8 +30285,7 @@ function updateVessel() {
     height = h;
     vessel.scale.setScalar((height > width ? 15 : 12) * receivedScale);
     dpr = Math.min(devicePixelRatio || 1, tiers[level].dpr);
-    renderer.setPixelRatio(dpr);
-    renderer.setSize(width, height, false);
+    resizeArtworkBuffer(renderer, width, height, dpr);
     quietSky?.setQuality(level, renderer.getPixelRatio());
     camera.aspect = width / height;
     camera.fov = 54;
@@ -30692,8 +30691,53 @@ function updateVessel() {
     if (model.now > 20) hideHint();
     dirty = true;
   }
+  // Stop scheduling frames while the artwork cannot be viewed. Simulation clocks
+// are reset by each work's existing lifecycle handlers; presentation stays intact.
+function createArtworkLoop(callback, canRun) {
+  let frame = 0, started = false, pageActive = true;
+  function cancel() {
+    if (frame) cancelAnimationFrame(frame);
+    frame = 0;
+  }
+  function queue() {
+    if (started && pageActive && !document.hidden && !frame)
+      frame = requestAnimationFrame(step);
+  }
+  function step(time) {
+    frame = 0;
+    if (!started || !pageActive || document.hidden || !canRun()) return;
+    callback(time);
+    queue();
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) cancel();
+    else queue();
+  });
+  addEventListener('pagehide', () => { pageActive = false; cancel(); });
+  addEventListener('pageshow', () => { pageActive = true; queue(); });
+  document.getElementById('record')?.addEventListener('close', queue);
+  document.addEventListener('webglcontextlost', cancel, true);
+  document.addEventListener('webglcontextrestored', queue, true);
+  return { start() { started = true; queue(); } };
+}
+
+// A ratio change previously resized the buffer, followed by a second resize.
+// Update both dimensions and DPR atomically, and keep repeated viewport events cheap.
+function resizeArtworkBuffer(renderer, width, height, ratio, updateStyle = false) {
+  const canvas = renderer.domElement;
+  if (renderer.getPixelRatio() !== ratio ||
+      canvas.width !== Math.floor(width * ratio) ||
+      canvas.height !== Math.floor(height * ratio))
+    renderer.setDrawingBufferSize(width, height, ratio);
+  if (updateStyle) {
+    const cssWidth = `${width}px`, cssHeight = `${height}px`;
+    if (canvas.style.width !== cssWidth) canvas.style.width = cssWidth;
+    if (canvas.style.height !== cssHeight) canvas.style.height = cssHeight;
+  }
+}
+
+  const artworkLoop = createArtworkLoop(tick, () => ready && !lost && !dialog.open);
   function tick(timestamp) {
-    requestAnimationFrame(tick);
     if (!ready || lost || document.hidden || dialog.open) {
       lastTick = lastDraw = 0;
       return;
@@ -30875,7 +30919,7 @@ function updateVessel() {
       render();
       loading.classList.add("done");
       loading.setAttribute("aria-hidden", "true");
-      requestAnimationFrame(tick);
+      artworkLoop.start();
     });
     if (inspect || testMode)
       window.DELAY = {

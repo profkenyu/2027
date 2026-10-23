@@ -35631,8 +35631,9 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           CANDIDATE_STATIONS.every((s) => d.observations.includes(s.id))
         );
       }
-      function readCandidate(storage2 = globalThis.sessionStorage) {
+      function readCandidate(storage2) {
         try {
+          if (storage2 === undefined) storage2 = globalThis.sessionStorage;
           let s = JSON.parse(storage2.getItem(CANDIDATE_KEY) || "null");
           return s?.version !== 1 ||
             !/^[0-9a-f]{6}$/i.test(s.seed) ||
@@ -35681,8 +35682,9 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           return null;
         }
       }
-      function saveCandidate(s, storage2 = globalThis.sessionStorage) {
+      function saveCandidate(s, storage2) {
         try {
+          if (storage2 === undefined) storage2 = globalThis.sessionStorage;
           return (storage2.setItem(CANDIDATE_KEY, JSON.stringify(s)), !0);
         } catch {
           return !1;
@@ -58556,7 +58558,7 @@ TF-NAV-01 / AU · X +1.2846 · Y −0.0821 · Z +0.4368
           (renderer.toneMapping = ACESFilmicToneMapping),
           (renderer.toneMappingExposure = 1.05),
           (renderer.shadowMap.enabled = !0),
-          (renderer.shadowMap.type = PCFSoftShadowMap),
+          (renderer.shadowMap.type = PCFShadowMap),
           (shadowBudget = createShadowBudget(renderer, tier)),
           document.body.prepend(renderer.domElement),
           (scene = new Scene()),

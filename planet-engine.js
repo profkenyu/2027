@@ -57616,6 +57616,12 @@ body.tx-active #fh-keys {
         low.connect(filter),
         edge.connect(filter),
         filter.connect(bus).connect(this.master),
+        edge.addEventListener("ended", () => {
+          low.disconnect();
+          edge.disconnect();
+          filter.disconnect();
+          bus.disconnect();
+        }, { once: true }),
         low.start(t),
         edge.start(t),
         low.stop(t + duration + 0.05),
@@ -61272,6 +61278,11 @@ body.ti-voyage #ti-transfer-trigger {
 }
 #ti-shot-cue.locked {
   color: rgba(192, 21, 42, .78);
+}
+@media (max-width: 760px), (pointer: coarse) and (max-height: 520px) {
+  #ti-shot-cue {
+    top: max(calc(env(safe-area-inset-top) + 4px), calc(var(--frame-top) - 20px));
+  }
 }
 `,
     ShotDirector = class {
@@ -67579,6 +67590,7 @@ body.ti-voyage #ti-transfer-trigger {
       let p = clamp019(value);
       return p * p * (3 - 2 * p);
     },
+    ritualCadenceStep = (t) => Math.floor(Math.max(0, Math.min(1, t))),
     AnimeRituals = class {
       constructor() {
         ((this.root = document.getElementById("ti-prologue")),
@@ -67626,9 +67638,9 @@ body.ti-voyage #ti-transfer-trigger {
               ((this.completionActive = !1), this._finishCompletion());
             },
           })
-            .add(this.completion, { cadence: 1, duration: 105, ease: "steps(1)" }, 0)
-            .add(this.completion, { cadence: 2, duration: 185, ease: "steps(1)" }, 115)
-            .add(this.completion, { cadence: 3, duration: 310, ease: "steps(1)" }, 310)
+            .add(this.completion, { cadence: 1, duration: 105, ease: ritualCadenceStep }, 0)
+            .add(this.completion, { cadence: 2, duration: 185, ease: ritualCadenceStep }, 115)
+            .add(this.completion, { cadence: 3, duration: 310, ease: ritualCadenceStep }, 310)
             .add(this.completion, { silence: 1, duration: 420, ease: "inOut(2)" }, 0)));
       }
       beginTitleBinding() {
@@ -68222,15 +68234,17 @@ body.ti-voyage #ti-transfer-trigger {
       e.geology.records.length === 3
     );
   }
-  function saveCandidate(s, storage4 = globalThis.sessionStorage) {
+  function saveCandidate(s, storage4) {
     try {
+      if (storage4 === undefined) storage4 = globalThis.sessionStorage;
       return (storage4.setItem(CANDIDATE_KEY, JSON.stringify(s)), !0);
     } catch {
       return !1;
     }
   }
-  function clearCandidate(storage4 = globalThis.sessionStorage) {
+  function clearCandidate(storage4) {
     try {
+      if (storage4 === undefined) storage4 = globalThis.sessionStorage;
       storage4.removeItem(CANDIDATE_KEY);
     } catch {}
   }
@@ -68315,10 +68329,12 @@ body.ti-voyage #ti-transfer-trigger {
   (async () => {
     let nextVehicleProbe = 0,
       vehicleRecorder = createVehicleRecorder(),
-      vehicleHistory = createVehicleHistory(
-        sessionStorage,
-        new URLSearchParams(location.search).has("fresh"),
-      );
+      historyStorage = null;
+    try { historyStorage = sessionStorage; } catch {}
+    const vehicleHistory = createVehicleHistory(
+      historyStorage,
+      new URLSearchParams(location.search).has("fresh"),
+    );
     (addEventListener("pagehide", () => vehicleHistory.persist()),
       (window.TI_VEHICLE_HISTORY = () => ({
         ...vehicleHistory.snapshot(),
@@ -69820,63 +69836,115 @@ body.ti-voyage #ti-transfer-trigger {
         (checkpointRestored = !0),
         (kiosk.last = now2));
     }
-    let resume = () => {
-        let now2 = performance.now();
-        if (finalTableau?.pausedAt != null) {
-          let paused = now2 - finalTableau.pausedAt;
-          ((finalTableau.t0 += paused),
-            docking.active && (docking.t0 += paused),
-            fleetUplink.active && (fleetUplink.t0 += paused),
-            (finalTableau.pausedAt = null));
+    let lifecyclePausedAt = null;
+    function shiftSceneClocks(delta) {
+      // These are scene timestamps, not durations or saved observation times.
+      // Move their origin together so a hidden tab cannot finish a visible event.
+      const shift = (target, fields) => {
+        if (!target) return;
+        for (const field of fields) {
+          const value = target[field];
+          if (Number.isFinite(value) && (value !== 0 || field === "t0"))
+            target[field] = value + delta;
         }
-        if (completionTableau?.pausedAt != null) {
-          ((completionTableau.t0 += now2 - completionTableau.pausedAt),
-            (completionTableau.pausedAt = null));
-          let remaining = Math.max(0, COMPLETION_TABLEAU_MS - (now2 - completionTableau.t0) - 350);
-          remaining > 0 && captions.force(COMPLETION_CAPTION, now2, remaining);
-        }
-        (archiveMode &&
-          (document.body.classList.add("ti-terminal"),
-          adaptive.lockAt(archivePacer.dpr),
-          archivePacer.reset()),
-          archivePacer.reset(),
-          document.body.classList.remove("ti-paused"),
-          ambient?.resume(),
-          animeRituals?.resume(),
-          completionTableau &&
-            restoration?.setCompletionRegistration(
-              lander?.setCompletionHighlight(
-                restoration.registrationReduced
-                  ? 1
-                  : (now2 - completionTableau.t0) / COMPLETION_TABLEAU_MS,
-              ),
-              (now2 - completionTableau.t0) / COMPLETION_TABLEAU_MS,
-            ),
-          matterPassage?.resume(now2),
-          running || ((running = !0), (tPrev = now2), loopGeneration++),
-          queueLoop(loopGeneration),
-          mobileControl?.recalibrate());
-      },
-      pause = () => {
-        let now2 = performance.now();
-        ((running = !1),
-          loopGeneration++,
-          rafId && (cancelAnimationFrame(rafId), (rafId = 0)),
-          document.body.classList.add("ti-paused"),
-          ambient?.suspend(),
-          animeRituals?.suspend(),
-          completionTableau &&
-            completionTableau.pausedAt == null &&
-            (completionTableau.pausedAt = now2),
-          finalTableau && finalTableau.pausedAt == null && (finalTableau.pausedAt = now2),
-          matterPassage?.suspend(now2));
       };
-    (addEventListener("pageshow", resume),
-      addEventListener("pagehide", pause),
-      document.addEventListener("visibilitychange", () =>
-        document.visibilityState === "visible" ? resume() : pause(),
-      ),
-      document.visibilityState === "hidden" && pause());
+      const later = (value) => Number.isFinite(value) && value !== 0 ? value + delta : value;
+      for (const timer of [openingShot, completionTableau, finalTableau]) shift(timer, ["t0"]);
+      shift(pendingArrival, ["at"]);
+      driveReleaseAt = later(driveReleaseAt);
+      failureResetAt = later(failureResetAt);
+      nextAutoPauseAt = later(nextAutoPauseAt);
+      autoPauseUntil = later(autoPauseUntil);
+      dockedHoldUntil = later(dockedHoldUntil);
+      lastExplorerIntent = later(lastExplorerIntent);
+      resourceSignalAt = later(resourceSignalAt);
+      nextVehicleProbe = later(nextVehicleProbe);
+      shift(restoration, ["holdUntil"]);
+      shift(restoration?.event, ["t0", "committedAt"]);
+      if (!restoration?.subtraction?.complete) shift(restoration?.subtraction, ["t0"]);
+      shift(waterMission, ["startedAt", "confirmedAt"]);
+      shift(waterMission?.event, ["t0"]);
+      shift(geologicalMemory, ["startedAt", "completedAt"]);
+      shift(geologicalMemory?.event, ["t0"]);
+      if (docking?.active) shift(docking, ["t0"]);
+      if (voyage?.active) shift(voyage, ["t0", "nextExhaustDustAt"]);
+      if (fleetUplink?.active) shift(fleetUplink, ["t0"]);
+      shift(shotDirector, ["lastManualAt", "lastExperienceAt", "lastCutAt"]);
+      shift(shotDirector?.transition, ["t0"]);
+      shift(captions, ["hideAt", "forcedUntil"]);
+      shift(kiosk, ["last", "t0"]);
+      shift(survey, ["last", "lastRecord", "completedAt", "t0"]);
+      shift(minimap, ["lastTrail", "lastScan"]);
+      shift(rover, ["acquisitionGlowStart"]);
+      shift(lander?.purge, ["last", "nextBurst", "burstStart", "forcedUntil"]);
+      for (const part of lander?.parts || [])
+        if (part.state === "materialising") shift(part, ["started"]);
+    }
+    const resume = () => {
+      if (document.hidden) return;
+      const now = performance.now();
+      if (lifecyclePausedAt != null) shiftSceneClocks(Math.max(0, now - lifecyclePausedAt));
+      lifecyclePausedAt = null;
+      if (finalTableau) finalTableau.pausedAt = null;
+      if (completionTableau?.pausedAt != null) {
+        completionTableau.pausedAt = null;
+        const remaining = Math.max(
+          0,
+          COMPLETION_TABLEAU_MS - (now - completionTableau.t0) - 350,
+        );
+        if (remaining > 0) captions.force(COMPLETION_CAPTION, now, remaining);
+      }
+      if (archiveMode) {
+        document.body.classList.add("ti-terminal");
+        adaptive.lockAt(archivePacer.dpr);
+        archivePacer.reset();
+      }
+      archivePacer.reset();
+      document.body.classList.remove("ti-paused");
+      ambient?.resume();
+      animeRituals?.resume();
+      if (completionTableau)
+        restoration?.setCompletionRegistration(
+          lander?.setCompletionHighlight(
+            restoration.registrationReduced
+              ? 1
+              : (now - completionTableau.t0) / COMPLETION_TABLEAU_MS,
+          ),
+          (now - completionTableau.t0) / COMPLETION_TABLEAU_MS,
+        );
+      matterPassage?.resume(now);
+      if (!running) {
+        running = true;
+        tPrev = now;
+        loopGeneration++;
+      }
+      queueLoop(loopGeneration);
+      mobileControl?.recalibrate();
+    };
+    const pause = () => {
+      const now = performance.now();
+      if (lifecyclePausedAt == null) lifecyclePausedAt = now;
+      running = false;
+      loopGeneration++;
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = 0;
+      }
+      document.body.classList.add("ti-paused");
+      ambient?.suspend();
+      animeRituals?.suspend();
+      if (completionTableau && completionTableau.pausedAt == null)
+        completionTableau.pausedAt = now;
+      if (finalTableau && finalTableau.pausedAt == null)
+        finalTableau.pausedAt = now;
+      matterPassage?.suspend(now);
+    };
+    addEventListener("pageshow", resume);
+    addEventListener("pagehide", pause);
+    document.addEventListener("visibilitychange", () =>
+      document.visibilityState === "visible" ? resume() : pause(),
+    );
+    if (document.visibilityState === "hidden") pause();
     async function rebuild() {
       let t0 = performance.now();
       await ground.recompute(renderer);
