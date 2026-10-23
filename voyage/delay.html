@@ -683,7 +683,7 @@ footer nav.series-nav {
       <p>
         당신이 두드린 리듬은 곧바로 돌아오지 않습니다. 탐사선까지 간 신호가 다시
         관측소에 도착할 때에는 간격이 늘어나고 수신음이 낮아집니다. 탐사선은
-        계속 나아가지만, 관측소가 받는 것은 언제나 과거의 기록입니다.
+        계속 나아가지만, 관측소가 받는 것은 언제나 과거의 기록입니다. 처음 보이는 기체는 알려진 출발 형상이며, 이후의 상태 변화는 도착한 영상 신호를 따릅니다.
       </p>
       <h3>관측</h3>
       <p>
@@ -732,6 +732,7 @@ footer nav.series-nav {
         방사 방향의 1차원 모형이며, 중력 렌즈 효과에 따른 영상은 계산하지 않습니다.
       </p>
       <h3>C · 예술적 해석</h3>
+      <p>주변 흐름의 안쪽이 빠르고 바깥쪽이 느리게 도는 표현은 「04-Odyssey: Archive」의 회전 규칙을 이어받았습니다. 이 회전은 시각적 환경의 연출이며, 회전하지 않는 블랙홀을 가정한 신호 지연 계산과 구분됩니다.</p>
       <p>
         선체는 관측소에 도착한 원격측정 자료로 재구성한 영상입니다. 크기·자세와
         화면상의 거리, 수신면의 명암·시간 간격, 시간 배율, 붉어지는 색과 노출은
@@ -28919,181 +28920,83 @@ void main() {
 
   // delay/vessel.mjs
   var up = new Vector3(0, 1, 0);
-  function createVessel() {
-    const root = new Group(), batches = /* @__PURE__ */ new Map();
-    const white = new MeshStandardMaterial({
-      color: 10266796,
-      roughness: 0.7,
-      metalness: 0.32
-    });
-    const graphite = new MeshStandardMaterial({
-      color: 1252900,
-      roughness: 0.78,
-      metalness: 0.2
-    });
-    const metal = new MeshStandardMaterial({
-      color: 7175299,
-      roughness: 0.44,
-      metalness: 0.62
-    });
-    const foil = new MeshStandardMaterial({
-      color: 7958102,
-      roughness: 0.73,
-      metalness: 0.52,
-      flatShading: true
-    });
-    const glass = new MeshStandardMaterial({
-      color: 1454139,
-      roughness: 0.25,
-      metalness: 0.48
-    });
-    function add(g, m, x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0) {
-      const o = new Object3D();
-      o.position.set(x, y, z);
-      o.rotation.set(rx, ry, rz);
-      o.updateMatrix();
-      g.applyMatrix4(o.matrix);
-      const flat = g.index ? g.toNonIndexed() : g;
-      if (flat !== g) g.dispose();
-      if (!batches.has(m)) batches.set(m, []);
-      batches.get(m).push(flat);
-    }
-    function rod(a, b, r = 0.045) {
-      const a3 = new Vector3(...a), b3 = new Vector3(...b), d = b3.clone().sub(a3), g = new CylinderGeometry(r, r, d.length(), 8);
-      g.applyQuaternion(
-        new Quaternion().setFromUnitVectors(up, d.normalize())
-      );
-      a3.add(b3).multiplyScalar(0.5);
-      add(g, metal, a3.x, a3.y, a3.z);
-    }
-    add(
-      new CylinderGeometry(1.65, 2.14, 0.83, 6),
-      white,
-      0,
-      0.92,
-      0,
-      0,
-      Math.PI / 6
-    );
-    add(
-      new CylinderGeometry(2.14, 1.32, 1.13, 6),
-      foil,
-      0,
-      -0.06,
-      0,
-      0,
-      Math.PI / 6
-    );
-    add(
-      new CylinderGeometry(1.51, 1.6, 0.16, 6),
-      graphite,
-      0,
-      1.4,
-      0,
-      0,
-      Math.PI / 6
-    );
-    add(new BoxGeometry(0.65, 0.35, 0.5), white, 0.35, 1.64, 0.05);
-    add(new BoxGeometry(0.3, 0.12, 0.24), glass, 0.35, 1.85, 0.05);
-    rod([-0.65, 1.45, 0], [-0.65, 2.65, 0], 0.023);
-    add(new CylinderGeometry(0.09, 0.09, 0.27, 8), metal, -0.65, 2.65, 0);
-    for (const side of [-1, 1]) {
-      rod([side * 1.6, 0.8, 0], [side * 2.8, 0.8, 0], 0.065);
-      add(
-        new BoxGeometry(1.7, 0.075, 2.25),
-        graphite,
-        side * 3.12,
-        0.81,
-        0,
-        0,
-        0,
-        side * 0.16
-      );
-      for (const z of [-1.1, 1.1])
-        add(
-          new BoxGeometry(1.74, 0.08, 0.035),
-          metal,
-          side * 3.12,
-          0.86,
-          z,
-          0,
-          0,
-          side * 0.16
-        );
-      for (let i = 0; i < 5; i++)
-        add(
-          new BoxGeometry(1.65, 0.012, 0.018),
-          metal,
-          side * 3.12,
-          0.87,
-          -0.82 + i * 0.41,
-          0,
-          0,
-          side * 0.16
-        );
-    }
-    for (let i = 0; i < 4; i++) {
-      const a = Math.PI / 4 + i * Math.PI / 2, c = Math.cos(a), s = Math.sin(a);
-      rod([c * 1.7, 0.4, s * 1.7], [c * 1.85, -1.05, s * 1.85], 0.075);
-      rod([c * 0.85, -0.65, s * 0.85], [c * 1.85, -1.05, s * 1.85], 0.04);
-      add(
-        new CylinderGeometry(0.29, 0.34, 0.11, 8),
-        graphite,
-        c * 1.85,
-        -1.1,
-        s * 1.85
-      );
-    }
-    for (let i = 0; i < 3; i++) {
-      const a = i * Math.PI * 2 / 3;
-      add(
-        new CylinderGeometry(0.16, 0.32, 0.48, 12, 1, true),
-        metal,
-        Math.cos(a) * 0.8,
-        -0.88,
-        Math.sin(a) * 0.8
-      );
-    }
-    for (const [m, list] of batches) {
-      const total = list.reduce((n2, g2) => n2 + g2.attributes.position.count, 0), p = new Float32Array(total * 3), n = p.slice();
-      let at = 0;
-      for (const g2 of list) {
-        p.set(g2.attributes.position.array, at);
-        n.set(g2.attributes.normal.array, at);
-        at += g2.attributes.position.array.length;
-        g2.dispose();
-      }
-      const g = new BufferGeometry();
-      g.setAttribute("position", new BufferAttribute(p, 3));
-      g.setAttribute("normal", new BufferAttribute(n, 3));
-      g.computeBoundingSphere();
-      root.add(new Mesh(g, m));
-    }
-    const canvas = document.createElement("canvas");
-    canvas.width = 512;
-    canvas.height = 128;
-    const cx = canvas.getContext("2d");
-    cx.clearRect(0, 0, 512, 128);
-    cx.fillStyle = "#c6ced1";
-    cx.font = "600 58px sans-serif";
-    cx.fillText("TR-Q1", 22, 72);
-    cx.font = "16px sans-serif";
-    cx.fillText("TERRAFORMING_PROJECT", 24, 108);
-    const texture = new CanvasTexture(canvas);
-    texture.colorSpace = SRGBColorSpace;
-    const label = new Mesh(
-      new PlaneGeometry(1.13, 0.28),
-      new MeshBasicMaterial({
-        map: texture,
-        transparent: true,
-        depthWrite: false,
-        side: DoubleSide
-      })
-    );
-    label.position.set(0, 0.95, 1.87);
-    root.add(label);
-    return root;
+  // Cruise configuration of TR-Q1. Geometry is a reduced visual derivative of
+// the mission lander, not a mass/thermal/structural engineering simulation.
+// Keep six folded legs, the closed rover ramp and one main + four small outlets.
+function createVessel() {
+  const root = new Group(), batches = new Map();
+  root.name = "TR-Q1-cruise";
+  root.userData.design = { id: "TR-Q1", configuration: "cruise", legs: 6, outlets: 5, ramp: "closed" };
+  const white = new MeshStandardMaterial({ color: 0xa4adb0, roughness: .72, metalness: .25 });
+  const dark = new MeshStandardMaterial({ color: 0x131e24, roughness: .82, metalness: .18 });
+  const metal = new MeshStandardMaterial({ color: 0x6d7c83, roughness: .48, metalness: .62 });
+  const foil = new MeshStandardMaterial({ color: 0x796e56, roughness: .78, metalness: .42 });
+  const glass = new MeshStandardMaterial({ color: 0x102630, roughness: .28, metalness: .35 });
+  root.servicePanelMaterial = glass;
+  const up = new Vector3(0, 1, 0);
+  function add(g, m, x=0, y=0, z=0, rx=0, ry=0, rz=0) {
+    const o = new Object3D(); o.position.set(x,y,z); o.rotation.set(rx,ry,rz); o.updateMatrix();
+    g.applyMatrix4(o.matrix); const flat=g.index?g.toNonIndexed():g;
+    if(flat!==g)g.dispose(); if(!batches.has(m))batches.set(m,[]); batches.get(m).push(flat);
   }
+  function rod(a,b,r=.045,m=metal) {
+    const v=new Vector3(...a),w=new Vector3(...b),d=w.clone().sub(v);
+    const g=new CylinderGeometry(r,r,d.length(),8);
+    g.applyQuaternion(new Quaternion().setFromUnitVectors(up,d.normalize()));
+    v.add(w).multiplyScalar(.5);add(g,m,v.x,v.y,v.z);
+  }
+  // Closed pressure shell, lower service skirt and ceramic roof.
+  add(new CylinderGeometry(1.96,1.96,.86,12),dark,0,-.23,0);
+  add(new CylinderGeometry(1.43,2.35,1.05,12),white,0,.72,0);
+  add(new CylinderGeometry(1.41,1.43,.15,12),dark,0,1.31,0);
+  add(new CylinderGeometry(1.98,1.98,.065,12),metal,0,-.63,0);
+  // A closed ramp occupies the same front sector as the mission lander.
+  add(new BoxGeometry(1.54,1.38,.12),metal,0,.12,-1.99);
+  add(new BoxGeometry(1.39,1.22,.13),dark,0,.12,-2.005);
+  for(const x of [-.56,.56])add(new BoxGeometry(.22,.08,.17),metal,x,-.58,-2.04);
+  for(const side of [-1,1]){
+    add(new BoxGeometry(.74,.3,.08),glass,side*1.12,.69,-1.72,0,side*.36);
+    // Folded thermal panels stay close to the shell, with visible hinge roots.
+    add(new BoxGeometry(.08,1.22,1.08),dark,side*2.26,.57,.16,0,0,side*.12);
+    rod([side*1.83,.08,.16],[side*2.26,.08,.16],.075);
+    rod([side*1.83,1.08,.16],[side*2.26,1.08,.16],.075);
+    add(new BoxGeometry(.12,.62,.54),foil,side*1.99,-.15,.64);
+  }
+  for(let i=0;i<6;i++){
+    const a=i*Math.PI/3,c=Math.cos(a),s=Math.sin(a);
+    const p=(r,y)=>[c*r,y,s*r];
+    rod(p(2.12,-.3),p(2.57,.25),.085,white);
+    rod(p(2.57,.25),p(2.5,1.14),.065);
+    rod(p(2.14,.1),p(2.5,.86),.035,dark);
+    add(new CylinderGeometry(.24,.29,.09,8),metal,c*2.5,1.16,s*2.5,Math.PI/2,0,a);
+    add(new BoxGeometry(.19,.18,.19),dark,c*2.13,-.26,s*2.13,0,-a);
+  }
+  // Actual nozzle topology is shared with the main lander.
+  const outlets=[[0,0,.55],[-.85,-.74,.18],[.85,-.74,.18],[-.85,.74,.18],[.85,.74,.18]];
+  for(const [x,z,r] of outlets){
+    add(new CylinderGeometry(r*.5,r,.38,12,1,true),metal,x,-.86,z);
+    add(new CylinderGeometry(r*.49,r*.49,.035,12),dark,x,-.69,z);
+  }
+  // One asymmetric sensor gives the craft an identity at small screen sizes.
+  add(new BoxGeometry(.98,.18,.39),white,0,1.48,0);
+  add(new BoxGeometry(.26,.22,.3),metal,.38,1.66,-.02);
+  add(new BoxGeometry(.18,.13,.035),glass,.38,1.68,-.19);
+  rod([-.47,1.44,.03],[-.47,2.08,.03],.025);
+  add(new CylinderGeometry(.06,.06,.16,8),metal,-.47,2.1,.03);
+  for(const [m,list] of batches){
+    const count=list.reduce((n,g)=>n+g.attributes.position.count,0),p=new Float32Array(count*3),n=new Float32Array(count*3);
+    let at=0;for(const g of list){p.set(g.attributes.position.array,at);n.set(g.attributes.normal.array,at);at+=g.attributes.position.array.length;g.dispose();}
+    const g=new BufferGeometry();g.setAttribute('position',new BufferAttribute(p,3));g.setAttribute('normal',new BufferAttribute(n,3));g.computeBoundingSphere();
+    root.add(new Mesh(g,m));
+  }
+  const canvas=document.createElement('canvas');canvas.width=256;canvas.height=64;
+  const ctx=canvas.getContext('2d');ctx.fillStyle='#b7c1c4';ctx.font='500 34px sans-serif';ctx.fillText('TR-Q1',12,44);
+  const texture=new Texture(canvas);texture.needsUpdate=true;texture.colorSpace=SRGBColorSpace;
+  const label=new Mesh(new PlaneGeometry(.82,.2),new MeshBasicMaterial({map:texture,transparent:true,depthWrite:false}));
+  label.position.set(0,.37,-2.08);label.rotation.y=Math.PI;root.add(label);
+  return root;
+}
+
 
   // delay/receiver-field.mjs
   function createReceiverField(segments) {
@@ -30200,7 +30103,45 @@ void main() {
   })();
   var receiverField;
   var diskUniforms;
+  var odysseyFlow;
+// C: differential orbital pattern from 04-Odyssey_Archive.html:
+// omega(r)=35/r+0.8 exp(-r/450). This is an authored rotating environment,
+// not a Kerr metric or a change to the radial Schwarzschild signal solver.
+function createOdysseyFlow(level) {
+  const count=[4000,9000,18000][level], data=new Float32Array(count*3);
+  let seed=240423;
+  const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+  for(let i=0;i<count;i++){
+    data[i*3]=180+Math.pow(random(),1.7)*720;
+    data[i*3+1]=random()*Math.PI*2;
+    data[i*3+2]=random();
+  }
+  const geometry=new BufferGeometry();
+  geometry.setAttribute('position',new BufferAttribute(new Float32Array(count*3),3));
+  geometry.setAttribute('aOrbit',new BufferAttribute(data,3));
+  const clock={value:0};
+  const material=new ShaderMaterial({
+    uniforms:{uOrbitTime:clock},transparent:true,depthWrite:false,
+    vertexShader:`attribute vec3 aOrbit;uniform float uOrbitTime;varying float vR,vSeed;
+    void main(){float r=aOrbit.x;float theta=aOrbit.y+(35./r+.8*exp(-r/450.))*uOrbitTime;
+      vec3 p=vec3(cos(theta)*r,sin(theta*5.+aOrbit.z*20.)*r*.012,sin(theta)*r);
+      vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;
+      gl_PointSize=clamp(1000./max(1.,-mv.z),.7,1.8);vR=r;vSeed=aOrbit.z;}`,
+    fragmentShader:`varying float vR,vSeed;void main(){float d=length(gl_PointCoord-.5);if(d>.5)discard;
+      float edge=1.-smoothstep(.06,.5,d);float inner=1.-smoothstep(180.,650.,vR);
+      vec3 silver=mix(vec3(.20,.27,.31),vec3(.68,.60,.46),inner);
+      gl_FragColor=vec4(silver,edge*(.16+.28*inner)*(.5+.5*vSeed));
+      #include <tonemapping_fragment>
+      #include <colorspace_fragment>
+    }`,
+  });
+  const points=new Points(geometry,material);points.name='odyssey-differential-flow';points.frustumCulled=false;
+  return {points,update(t){clock.value=t;},dispose(){geometry.dispose();material.dispose();}};
+}
+
   function buildSpace() {
+  if(odysseyFlow){scene.remove(odysseyFlow.points);odysseyFlow.dispose();}
+  odysseyFlow=createOdysseyFlow(level);scene.add(odysseyFlow.points);
     const savedReplies = receiverField?.uniforms.uReplies.value.map(
       (v) => v.clone()
     );
@@ -30254,12 +30195,11 @@ void main() {
         depthWrite: false
       })
     );
-    beacon.position.set(-0.65, 2.85, 0);
+    beacon.position.set(-0.47, 2.2, 0.03);
     vessel.add(beacon);
-    for (let i = 0; i < 3; i++) {
-      const a = i * Math.PI * 2 / 3;
+    for (const [x,z,r] of [[0,0,.55],[-.85,-.74,.18],[.85,-.74,.18],[-.85,.74,.18],[.85,.74,.18]]) {
       const glow = new Mesh(
-        new PlaneGeometry(0.48, 2.6),
+        new PlaneGeometry(r * 2.4, 2.6),
         new ShaderMaterial({
           uniforms: { uPower: { value: 0 }, uRed: { value: 0 } },
           side: DoubleSide,
@@ -30275,27 +30215,31 @@ void main() {
       }`
         })
       );
-      glow.position.set(Math.cos(a) * 0.8, -2.17, Math.sin(a) * 0.8);
+      glow.position.set(x, -2.35, z);
       vessel.add(glow);
       plumes.push(glow);
     }
   }
-  function updateVessel() {
-    vessel.visible = model.hasImage;
-    if (!model.hasImage) return;
-    const image = model.image, r = image[2], g = image[8];
+  const initialProbeImage = new Float64Array([0,0,R_START,0,0,0,0,0,.7]);
+function updateVessel() {
+    vessel.visible = true;
+    if (!model.hasImage) {
+      signalLabel.textContent = "영상 신호 수신 대기";
+
+    }
+    const image = model.hasImage ? model.image : initialProbeImage, r = image[2], g = image[8];
     const distance = 100 + 88 * Math.log(r);
     const receivedDepth = clamp2(Math.log(R_START / r) / Math.log(R_START), 0, 1);
     receivedScale = 0.14 + 0.86 * Math.pow(1 - receivedDepth, 0.85);
     vessel.scale.setScalar((height > width ? 15 : 12) * receivedScale);
     vessel.position.copy(outward).multiplyScalar(distance).addScaledVector(normal, 72 + 0.55 * (distance - 100));
     const exposure = Math.pow(clamp2(g / 0.7, 0, 1), 0.62) * fade(1e-3, 0.012, g) * (0.72 + 0.28 * receivedScale);
-    receivedExposure = exposure;
+    receivedExposure = model.hasImage ? exposure : 0;
     const redness = 1 - clamp2(g / 0.7, 0, 1);
     warm.setRGB(1, 1 - 0.67 * redness, 1 - 0.87 * redness);
     for (const { material, base } of hulls) {
       material.color.copy(base).multiply(warm);
-      material.opacity = exposure;
+      material.opacity = model.hasImage ? exposure : .64;
     }
     for (const plume of plumes) {
       plume.material.uniforms.uPower.value = image[5] * exposure;
@@ -30316,7 +30260,7 @@ void main() {
       if (model.receivedPackets || model.receivedReplies) {
         emitted.textContent = clock(packet[4] * TIME_SCALE);
         received.textContent = clock(packet[0]);
-        signalLabel.textContent = isReply ? "\uB0B4 \uC2E0\uD638\uC758 \uC751\uB2F5" : "\uAE30\uC900 \uAD50\uC2E0 \uC218\uC2E0";
+        signalLabel.textContent = isReply ? "\uB0B4 \uC2E0\uD638\uC758 \uC751\uB2F5" : "과거 영상 수신";
       }
     }
     const age = Math.max(0, model.now - packet[0]);
@@ -30363,6 +30307,7 @@ void main() {
     const heldArchive = model.now < archiveHoldUntil;
     diskUniforms.uArchiveT.value = heldArchive ? archiveHoldT : model.hasImage ? model.image[1] : 0;
     diskUniforms.uNow.value = model.now;
+  odysseyFlow.update(model.now);
     diskUniforms.uG.value = model.hasImage ? model.image[8] : 1;
     diskUniforms.uTuning.value = receiverLog - Math.log2(900);
     diskUniforms.uIntro.value = 0.25 + 0.75 * fade(0, 6, model.now);

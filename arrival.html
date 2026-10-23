@@ -37803,44 +37803,44 @@ void main() {
       var SCENE_MODEL_ASSETS = Object.freeze({
         opening: {
           high: {
-            file: "high-ec41d2100e6800f2.json",
-            bytes: 1977963,
+            file: "high-94f6c2806a726066.json",
+            bytes: 1971971,
           },
           mid: {
-            file: "mid-4f8046dc071c7a98.json",
-            bytes: 1977962,
+            file: "mid-b4f8da7d2e45644f.json",
+            bytes: 1971970,
           },
           low: {
-            file: "low-e460ba49749a89d3.json",
-            bytes: 1330511,
+            file: "low-eb036ab5f352cb74.json",
+            bytes: 1327015,
           },
         },
         transit: {
           high: {
-            file: "high-f05b1f714fac95e9.json",
-            bytes: 1292985,
+            file: "high-97ee82ab118416ef.json",
+            bytes: 1338201,
           },
           mid: {
-            file: "mid-99e227b6cb4d8646.json",
-            bytes: 1176776,
+            file: "mid-85f35e7a0949a014.json",
+            bytes: 1209320,
           },
           low: {
-            file: "low-d1af8b80728e1760.json",
-            bytes: 626406,
+            file: "low-3d2876fc50d76a19.json",
+            bytes: 646278,
           },
         },
         arrival: {
           high: {
-            file: "high-56cc497c0adf1413.json",
-            bytes: 1312691,
+            file: "high-42ecd1a9ba16cd20.json",
+            bytes: 1345811,
           },
           mid: {
-            file: "mid-6c55b7a24440196f.json",
-            bytes: 1192991,
+            file: "mid-8a4ff84d95afb74c.json",
+            bytes: 1216895,
           },
           low: {
-            file: "low-7909aeffbc5ec5fa.json",
-            bytes: 639167,
+            file: "low-cbf5dd61f2ebb744.json",
+            bytes: 653855,
           },
         },
       });
@@ -41945,706 +41945,1090 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
         (seed ^= seed + Math.imul(seed ^ (seed >>> 7), 61 | seed)),
         ((seed ^ (seed >>> 14)) >>> 0) / 4294967296
       );
-      function createFleet(tier2, count = 5) {
-        let toon = (color, extra = {}) =>
-            new MeshStandardMaterial({
-              color,
-              roughness: 0.72,
-              metalness: 0.18,
-              ...extra,
-            }),
-          armour = shipMaterial("white", tier2, { vertexColors: !0 }),
-          steel = shipMaterial("steel", tier2),
-          dark = shipMaterial("thermal", tier2),
-          ivory = shipMaterial("white", tier2),
-          foil = shipMaterial("foil", tier2),
-          radiatorSurface = shipMaterial("titanium", tier2, {
-            color: 6517118,
-            roughness: 0.67,
-            metalness: 0.58,
-          }),
-          glass = new MeshPhysicalMaterial({
-            color: 1188651,
-            metalness: 0,
-            roughness: 0.18,
-            ior: 1.46,
-            clearcoat: tier2 === "low" ? 0 : 0.8,
-            clearcoatRoughness: 0.12,
-            // Opaque dark interior approximation avoids transparent sorting and reveals no hollow hull.
-            transmission: 0,
-          }),
-          engine2 = toon(1385771, {
-            emissive: 5405064,
-            emissiveIntensity: 0.16,
-          }),
-          box = new RoundedBoxGeometry(1, 1, 1, 1, 0.055),
-          unitBox = new BoxGeometry(1, 1, 1),
-          cylinder2 = new CylinderGeometry(1, 1, 1, tier2 === "low" ? 8 : 12),
-          matrix = new Matrix4(),
-          quaternion = new Quaternion(),
-          materialList = [
-            steel,
-            dark,
-            ivory,
-            glass,
-            engine2,
-            foil,
-            foil,
-            shipMaterial("titanium", tier2),
-            dark,
+      function createFleet(tier, count = 5) {
+  // Physical surface response: ceramic shielding, recessed metal and MLI.
+  const toon = (color, extra = {}) =>
+    new MeshStandardMaterial({
+      color,
+      roughness: 0.72,
+      metalness: 0.18,
+      ...extra,
+    });
+  const armour = shipMaterial("white", tier, { vertexColors: true });
+  const steel = shipMaterial("steel", tier),
+    dark = shipMaterial("thermal", tier),
+    ivory = shipMaterial("white", tier);
+  const foil = shipMaterial("foil", tier),
+    radiatorSurface = shipMaterial("titanium", tier, {
+      color: 0x63717e,
+      roughness: 0.67,
+      metalness: 0.58,
+    });
+  const glass = new MeshPhysicalMaterial({
+    color: 0x12232b,
+    metalness: 0,
+    roughness: 0.18,
+    ior: 1.46,
+    clearcoat: tier === "low" ? 0 : 0.8,
+    clearcoatRoughness: 0.12,
+    // Opaque dark interior approximation avoids transparent sorting and reveals no hollow hull.
+    transmission: 0,
+  });
+  const engine = toon(0x15252b, {
+    emissive: 0x527988,
+    emissiveIntensity: 0.16,
+  });
+  const box = new RoundedBoxGeometry(1, 1, 1, 1, 0.055),
+    unitBox = new BoxGeometry(1, 1, 1);
+  const cylinder = new CylinderGeometry(1, 1, 1, tier === "low" ? 8 : 12);
+  const matrix = new Matrix4(),
+    quaternion = new Quaternion();
+  const materialList = [
+    steel,
+    dark,
+    ivory,
+    glass,
+    engine,
+    foil,
+    foil,
+    shipMaterial("titanium", tier),
+    dark,
+  ];
+  const create = (index) => {
+    const root = new Group();
+    root.name = `ark-${index + 1}`;
+    const rand = rng(719 + index * 101),
+      detail = tier === "high" ? 5 : tier === "mid" ? 3 : 1;
+    const carrier = index === 0,
+      capsule = index === 3;
+    const profile = capsule
+      ? [
+          [-520, 35, 28],
+          [-430, 100, 76],
+          [-240, 125, 86],
+          [70, 125, 86],
+          [350, 86, 60],
+          [520, 18, 18],
+        ]
+      : [
+          [-520, carrier ? 125 : 70, 34],
+          [-420, carrier ? 198 : 155, 56],
+          [-220, carrier ? 215 : 185, 62],
+          [80, carrier ? 180 : 122, 47],
+          [330, carrier ? 100 : 57, 27],
+          [525, carrier ? 38 : 10, 12],
+        ];
+    const section = (z) => {
+      const k = Math.min(
+        profile.length - 2,
+        Math.max(
+          0,
+          profile.findIndex(
+            (p, i) => i < profile.length - 1 && z <= profile[i + 1][0],
+          ),
+        ),
+      );
+      const a = profile[k],
+        b = profile[k + 1],
+        t = MathUtils.clamp((z - a[0]) / (b[0] - a[0]), 0, 1);
+      return {
+        w: MathUtils.lerp(a[1], b[1], t),
+        h: MathUtils.lerp(a[2], b[2], t),
+      };
+    };
+    const deck = (x, z) => {
+      const { w, h } = section(z);
+      return (
+        h *
+        (1 -
+          0.58 * MathUtils.clamp((Math.abs(x) / w - 0.72) / 0.28, 0, 1))
+      );
+    };
+    const joints = [];
+    let serviceBays = 0,
+      accessHatches = 0;
+    const meshParts = [],
+      instances = materialList.map(() => []),
+      fineInstances = materialList.map(() => []),
+      pipes = [];
+    const add = (m, x, y, z, sx, sy, sz, q = null) => {
+      matrix.compose(
+        new Vector3(x, y, z),
+        q || quaternion.identity(),
+        new Vector3(sx, sy, sz),
+      );
+      (Math.min(sx, sy, sz) <= 2.4 ? fineInstances : instances)[m].push(
+        matrix.clone(),
+      );
+    };
+    const ring = (w, h) => [
+      [-w * 0.72, h],
+      [w * 0.72, h],
+      [w, h * 0.42],
+      [w, -h * 0.45],
+      [w * 0.67, -h],
+      [-w * 0.67, -h],
+      [-w, -h * 0.45],
+      [-w, h * 0.42],
+    ];
+    const facet = (a, b, t, v) => {
+      const w = MathUtils.lerp(a[1], b[1], t),
+        h = MathUtils.lerp(a[2], b[2], t),
+        r = ring(w, h);
+      const k = Math.floor(v),
+        f = v - k,
+        p = r[k % 8],
+        q = r[(k + 1) % 8];
+      return new Vector3(
+        MathUtils.lerp(p[0], q[0], f),
+        MathUtils.lerp(p[1], q[1], f),
+        MathUtils.lerp(a[0], b[0], t),
+      );
+    };
+    // Closed bevelled plates. Their face normals catch real grazing illumination.
+    const plate = (corners, colour, thickness) => {
+      const centre = corners
+        .reduce((v, p) => v.add(p), new Vector3())
+        .multiplyScalar(0.25);
+      const n = new Vector3()
+        .subVectors(corners[1], corners[0])
+        .cross(new Vector3().subVectors(corners[3], corners[0]))
+        .normalize();
+      if (n.dot(new Vector3(centre.x, centre.y, 0)) < 0) {
+        corners.reverse();
+        n.negate();
+      }
+      const p = [];
+      for (const c of corners) p.push(...c.toArray());
+      for (const c of corners)
+        p.push(
+          ...c
+            .clone()
+            .lerp(centre, thickness > 0 ? 0.003 : 0)
+            .addScaledVector(n, thickness)
+            .toArray(),
+        );
+      const g = new BufferGeometry();
+      g.setAttribute("position", new Float32BufferAttribute(p, 3));
+      g.setIndex(
+        thickness === 0
+          ? [0, 1, 2, 0, 2, 3]
+          : [
+              0, 2, 1, 0, 3, 2, 4, 5, 6, 4, 6, 7, 0, 1, 5, 0, 5, 4, 1, 2, 6, 1,
+              6, 5, 2, 3, 7, 2, 7, 6, 3, 0, 4, 3, 4, 7,
+            ],
+      );
+      const flat = g.toNonIndexed();
+      g.dispose();
+      flat.computeVertexNormals();
+      const colors = [],
+        uvs = [];
+      const color = new Color(colour);
+      for (let i = 0; i < flat.attributes.position.count; i++) {
+        colors.push(color.r, color.g, color.b);
+        const p = flat.attributes.position;
+        uvs.push(p.getZ(i) / 90, (p.getX(i) + p.getY(i)) / 70);
+      }
+      // Finish variation is constant per fabricated plate, with a brushed axial direction.
+      // Keep the plate's value independent of mesh order and quality tier.
+      const finish =
+        0.5 +
+        0.5 *
+          Math.sin(
+            Math.round(centre.z) * 0.031 +
+              Math.abs(centre.x) * 0.017 +
+              centre.y * 0.029,
+          );
+      flat.setAttribute(
+        "shieldFinish",
+        new Float32BufferAttribute(
+          new Float32Array(flat.attributes.position.count).fill(finish),
+          1,
+        ),
+      );
+      flat.setAttribute("color", new Float32BufferAttribute(colors, 3));
+      flat.setAttribute("uv", new Float32BufferAttribute(uvs, 2));
+      meshParts.push(flat);
+      return { centre, n };
+    };
+    for (let s = 0; s < profile.length - 1; s++) {
+      const a = profile[s],
+        b = profile[s + 1];
+      for (let face = 0; face < 8; face++) {
+        plate(
+          [
+            facet(a, b, 0, face),
+            facet(a, b, 1, face),
+            facet(a, b, 1, face + 1),
+            facet(a, b, 0, face + 1),
           ],
-          create = (index) => {
-            let root = new Group();
-            root.name = `ark-${index + 1}`;
-            let rand = rng(719 + index * 101),
-              detail = tier2 === "high" ? 5 : tier2 === "mid" ? 3 : 1,
-              carrier = index === 0,
-              capsule = index === 3,
-              profile = capsule
-                ? [
-                    [-520, 35, 28],
-                    [-430, 100, 76],
-                    [-240, 125, 86],
-                    [70, 125, 86],
-                    [350, 86, 60],
-                    [520, 18, 18],
-                  ]
-                : [
-                    [-520, carrier ? 125 : 70, 34],
-                    [-420, carrier ? 198 : 155, 56],
-                    [-220, carrier ? 215 : 185, 62],
-                    [80, carrier ? 180 : 122, 47],
-                    [330, carrier ? 100 : 57, 27],
-                    [525, carrier ? 38 : 10, 12],
-                  ],
-              section = (z) => {
-                let k = Math.min(
-                    profile.length - 2,
-                    Math.max(
-                      0,
-                      profile.findIndex((p, i) => i < profile.length - 1 && z <= profile[i + 1][0]),
-                    ),
-                  ),
-                  a = profile[k],
-                  b = profile[k + 1],
-                  t = MathUtils.clamp((z - a[0]) / (b[0] - a[0]), 0, 1);
-                return {
-                  w: MathUtils.lerp(a[1], b[1], t),
-                  h: MathUtils.lerp(a[2], b[2], t),
-                };
-              },
-              deck = (x, z) => {
-                let { w, h } = section(z);
-                return h * (1 - 0.58 * MathUtils.clamp((Math.abs(x) / w - 0.72) / 0.28, 0, 1));
-              },
-              joints = [],
-              serviceBays = 0,
-              accessHatches = 0,
-              meshParts = [],
-              instances = materialList.map(() => []),
-              fineInstances = materialList.map(() => []),
-              pipes = [],
-              add = (m, x, y, z, sx, sy, sz, q = null) => {
-                (matrix.compose(
-                  new Vector3(x, y, z),
-                  q || quaternion.identity(),
-                  new Vector3(sx, sy, sz),
-                ),
-                  (Math.min(sx, sy, sz) <= 2.4 ? fineInstances : instances)[m].push(
-                    matrix.clone(),
-                  ));
-              },
-              ring = (w, h) => [
-                [-w * 0.72, h],
-                [w * 0.72, h],
-                [w, h * 0.42],
-                [w, -h * 0.45],
-                [w * 0.67, -h],
-                [-w * 0.67, -h],
-                [-w, -h * 0.45],
-                [-w, h * 0.42],
-              ],
-              facet = (a, b, t, v) => {
-                let w = MathUtils.lerp(a[1], b[1], t),
-                  h = MathUtils.lerp(a[2], b[2], t),
-                  r = ring(w, h),
-                  k = Math.floor(v),
-                  f = v - k,
-                  p = r[k % 8],
-                  q = r[(k + 1) % 8];
-                return new Vector3(
-                  MathUtils.lerp(p[0], q[0], f),
-                  MathUtils.lerp(p[1], q[1], f),
-                  MathUtils.lerp(a[0], b[0], t),
+          0x313a3e,
+          0,
+        );
+        // Stable, mirrored panel hierarchy across tiers: quiet shielding fields
+        // and smaller service plates near the aft machinery and axial channel.
+        const underside = face === 4;
+        const cuts = underside ? [0, 0.24, 0.43, 0.57, 0.76, 1] : [0, 0.5, 1];
+        const longitudinal =
+          s === 0 ? [0, 0.38, 1] : s === 1 ? [0, 0.28, 0.72, 1] : [0, 0.62, 1];
+        for (let col = 0; col < longitudinal.length - 1; col++)
+          for (let row = 0; row < cuts.length - 1; row++) {
+            const u0 = longitudinal[col] + 0.0018,
+              u1 = longitudinal[col + 1] - 0.0018;
+            const v0 = face + cuts[row] + 0.0016,
+              v1 = face + cuts[row + 1] - 0.0016;
+            const central = underside && row === 2;
+            const shade =
+              0.85 +
+              0.035 *
+                Math.sin(
+                  s * 1.7 +
+                    col * 0.83 +
+                    Math.min(row, cuts.length - 2 - row) * 0.71,
                 );
-              },
-              plate = (corners, colour, thickness) => {
-                let centre = corners
-                    .reduce((v, p2) => v.add(p2), new Vector3())
-                    .multiplyScalar(0.25),
-                  n = new Vector3()
-                    .subVectors(corners[1], corners[0])
-                    .cross(new Vector3().subVectors(corners[3], corners[0]))
-                    .normalize();
-                n.dot(new Vector3(centre.x, centre.y, 0)) < 0 && (corners.reverse(), n.negate());
-                let p = [];
-                for (let c of corners) p.push(...c.toArray());
-                for (let c of corners)
-                  p.push(
-                    ...c
-                      .clone()
-                      .lerp(centre, thickness > 0 ? 3e-3 : 0)
-                      .addScaledVector(n, thickness)
-                      .toArray(),
-                  );
-                let g = new BufferGeometry();
-                (g.setAttribute("position", new Float32BufferAttribute(p, 3)),
-                  g.setIndex(
-                    thickness === 0
-                      ? [0, 1, 2, 0, 2, 3]
-                      : [
-                          0, 2, 1, 0, 3, 2, 4, 5, 6, 4, 6, 7, 0, 1, 5, 0, 5, 4, 1, 2, 6, 1, 6, 5, 2,
-                          3, 7, 2, 7, 6, 3, 0, 4, 3, 4, 7,
-                        ],
-                  ));
-                let flat = g.toNonIndexed();
-                (g.dispose(), flat.computeVertexNormals());
-                let colors = [],
-                  uvs = [],
-                  color = new Color(colour);
-                for (let i = 0; i < flat.attributes.position.count; i++) {
-                  colors.push(color.r, color.g, color.b);
-                  let p2 = flat.attributes.position;
-                  uvs.push(p2.getZ(i) / 90, (p2.getX(i) + p2.getY(i)) / 70);
-                }
-                let finish =
-                  0.5 +
-                  0.5 *
-                    Math.sin(
-                      Math.round(centre.z) * 0.031 + Math.abs(centre.x) * 0.017 + centre.y * 0.029,
-                    );
-                return (
-                  flat.setAttribute(
-                    "shieldFinish",
-                    new Float32BufferAttribute(
-                      new Float32Array(flat.attributes.position.count).fill(finish),
-                      1,
-                    ),
-                  ),
-                  flat.setAttribute("color", new Float32BufferAttribute(colors, 3)),
-                  flat.setAttribute("uv", new Float32BufferAttribute(uvs, 2)),
-                  meshParts.push(flat),
-                  { centre, n }
-                );
-              };
-            for (let s = 0; s < profile.length - 1; s++) {
-              let a = profile[s],
-                b = profile[s + 1];
-              for (let face = 0; face < 8; face++) {
+            const corners = [
+              facet(a, b, u0, v0),
+              facet(a, b, u1, v0),
+              facet(a, b, u1, v1),
+              facet(a, b, u0, v1),
+            ];
+            const serviceBay =
+              (face === 2 || face === 6) && s === 1 && col === 0 && row === 0;
+            let centre, n;
+            if (serviceBay) {
+              // Closed backing remains the pressure wall; four raised shield strips
+              // reveal real depth, with rails bridging to the exposed subframe.
+              const um0 = u0 + (u1 - u0) * 0.14,
+                um1 = u1 - (u1 - u0) * 0.14;
+              const vm0 = v0 + (v1 - v0) * 0.22,
+                vm1 = v1 - (v1 - v0) * 0.22;
+              const strips = [
+                [u0, um0, v0, v1],
+                [um1, u1, v0, v1],
+                [um0, um1, v0, vm0],
+                [um0, um1, vm1, v1],
+              ];
+              for (const [ua, ub, va, vb] of strips)
                 plate(
                   [
-                    facet(a, b, 0, face),
-                    facet(a, b, 1, face),
-                    facet(a, b, 1, face + 1),
-                    facet(a, b, 0, face + 1),
+                    facet(a, b, ua, va),
+                    facet(a, b, ub, va),
+                    facet(a, b, ub, vb),
+                    facet(a, b, ua, vb),
                   ],
-                  3226174,
-                  0,
+                  new Color().setScalar(shade),
+                  4.2,
                 );
-                let underside = face === 4,
-                  cuts = underside ? [0, 0.24, 0.43, 0.57, 0.76, 1] : [0, 0.5, 1],
-                  longitudinal =
-                    s === 0 ? [0, 0.38, 1] : s === 1 ? [0, 0.28, 0.72, 1] : [0, 0.62, 1];
-                for (let col = 0; col < longitudinal.length - 1; col++)
-                  for (let row = 0; row < cuts.length - 1; row++) {
-                    let u0 = longitudinal[col] + 18e-4,
-                      u1 = longitudinal[col + 1] - 18e-4,
-                      v0 = face + cuts[row] + 16e-4,
-                      v1 = face + cuts[row + 1] - 16e-4,
-                      central = underside && row === 2,
-                      shade =
-                        0.85 +
-                        0.035 *
-                          Math.sin(
-                            s * 1.7 + col * 0.83 + Math.min(row, cuts.length - 2 - row) * 0.71,
-                          ),
-                      corners = [
-                        facet(a, b, u0, v0),
-                        facet(a, b, u1, v0),
-                        facet(a, b, u1, v1),
-                        facet(a, b, u0, v1),
-                      ],
-                      serviceBay = (face === 2 || face === 6) && s === 1 && col === 0 && row === 0,
-                      centre,
-                      n;
-                    if (serviceBay) {
-                      let um0 = u0 + (u1 - u0) * 0.14,
-                        um1 = u1 - (u1 - u0) * 0.14,
-                        vm0 = v0 + (v1 - v0) * 0.22,
-                        vm1 = v1 - (v1 - v0) * 0.22,
-                        strips = [
-                          [u0, um0, v0, v1],
-                          [um1, u1, v0, v1],
-                          [um0, um1, v0, vm0],
-                          [um0, um1, vm1, v1],
-                        ];
-                      for (let [ua, ub, va, vb] of strips)
-                        plate(
-                          [
-                            facet(a, b, ua, va),
-                            facet(a, b, ub, va),
-                            facet(a, b, ub, vb),
-                            facet(a, b, ua, vb),
-                          ],
-                          new Color().setScalar(shade),
-                          4.2,
-                        );
-                      ((centre = corners
-                        .reduce((v, p) => v.add(p), new Vector3())
-                        .multiplyScalar(0.25)),
-                        (n = new Vector3()
-                          .subVectors(corners[1], corners[0])
-                          .cross(new Vector3().subVectors(corners[3], corners[0]))
-                          .normalize()),
-                        n.dot(new Vector3(centre.x, centre.y, 0)) < 0 && n.negate());
-                      let q = new Quaternion().setFromUnitVectors(new Vector3(0, 0, 1), n);
-                      for (let dy of [-3, 3]) {
-                        let p = centre.clone().addScaledVector(n, 1.9);
-                        ((p.y += dy), add(0, p.x, p.y, p.z, 35, 0.7, 2.5, q));
-                      }
-                      serviceBays++;
-                    } else
-                      ({ centre, n } = plate(
-                        corners,
-                        new Color().setScalar(central ? 0.72 : shade),
-                        central ? 0.7 : 1.05,
-                      ));
-                    if ((face === 2 || face === 6) && s === 2 && col === 0 && row === 0) {
-                      let q = new Quaternion().setFromUnitVectors(new Vector3(0, 0, 1), n);
-                      (serviceHatch(
-                        (kind, ...args) => add({ steel: 0, dark: 1, paint: 2 }[kind], ...args),
-                        centre.clone().addScaledVector(n, 1.12),
-                        q,
-                        tier2,
-                      ),
-                        accessHatches++);
-                    }
-                    if (!central && !serviceBay && (underside || s === 0) && face !== 0) {
-                      let q = new Quaternion().setFromUnitVectors(new Vector3(0, 0, 1), n);
-                      for (let u of [u0 + (u1 - u0) * 0.09, u1 - (u1 - u0) * 0.09])
-                        for (let v of [v0 + (v1 - v0) * 0.12, v1 - (v1 - v0) * 0.12]) {
-                          let p = facet(a, b, u, v).addScaledVector(n, 1.22);
-                          add(
-                            0,
-                            p.x,
-                            p.y,
-                            p.z,
-                            ACCESS_SCALE.fastener,
-                            ACCESS_SCALE.fastener,
-                            0.18,
-                            q,
-                          );
-                        }
-                    }
-                    if (face === 2 || face === 6) {
-                      let q = new Quaternion().setFromUnitVectors(new Vector3(0, 0, 1), n);
-                      for (let j = 0; j < 3; j++)
-                        if (rand() > 0.3) {
-                          let p = centre.clone().addScaledVector(n, 1.9);
-                          ((p.z += (j - 1) * 5), add(3, p.x, p.y, p.z, 1.1, 0.65, 0.22, q));
-                        }
-                    }
-                  }
+              centre = corners
+                .reduce((v, p) => v.add(p), new Vector3())
+                .multiplyScalar(0.25);
+              n = new Vector3()
+                .subVectors(corners[1], corners[0])
+                .cross(new Vector3().subVectors(corners[3], corners[0]))
+                .normalize();
+              if (n.dot(new Vector3(centre.x, centre.y, 0)) < 0)
+                n.negate();
+              const q = new Quaternion().setFromUnitVectors(
+                new Vector3(0, 0, 1),
+                n,
+              );
+              for (const dy of [-3, 3]) {
+                const p = centre.clone().addScaledVector(n, 1.9);
+                p.y += dy;
+                add(0, p.x, p.y, p.z, 35, 0.7, 2.5, q);
               }
+              serviceBays++;
+            } else
+              ({ centre, n } = plate(
+                corners,
+                new Color().setScalar(central ? 0.72 : shade),
+                central ? 0.7 : 1.05,
+              ));
+            if (
+              (face === 2 || face === 6) &&
+              s === 2 &&
+              col === 0 &&
+              row === 0
+            ) {
+              const q = new Quaternion().setFromUnitVectors(
+                new Vector3(0, 0, 1),
+                n,
+              );
+              serviceHatch(
+                (kind, ...args) =>
+                  add({ steel: 0, dark: 1, paint: 2 }[kind], ...args),
+                centre.clone().addScaledVector(n, 1.12),
+                q,
+                tier,
+              );
+              accessHatches++;
             }
-            for (let end of [profile[0], profile.at(-1)]) {
-              let shape = new Shape();
-              (ring(end[1], end[2]).forEach(([x, y], i) =>
-                i ? shape.lineTo(x, y) : shape.moveTo(x, y),
-              ),
-                shape.closePath(),
-                end === profile[0] &&
-                  shape.holes.push(
-                    outletShape(end[1] * 0.66 - end[2] * 0.7 * 0.17, end[2] * 0.7 * 0.83),
-                  ));
-              let g = new ShapeGeometry(shape);
-              g.translate(0, 0, end[0]);
-              let mesh = new Mesh(g, ivory);
-              ((mesh.material = ivory), (mesh.material.side = DoubleSide), root.add(mesh));
-            }
-            let keel = (width, top, bottom, material, name, x = 0) => {
-              let positions = [],
-                indices = [];
-              for (let [z, w, h] of profile) {
-                let half = Math.min(width * 0.5, w * 0.4);
-                positions.push(
-                  x - half,
-                  -h - top,
-                  z,
-                  x + half,
-                  -h - top,
-                  z,
-                  x + half,
-                  -h - bottom,
-                  z,
-                  x - half,
-                  -h - bottom,
-                  z,
-                );
-              }
-              for (let k = 0; k < profile.length - 1; k++)
-                for (let side = 0; side < 4; side++) {
-                  let a = k * 4 + side,
-                    b = k * 4 + ((side + 1) % 4),
-                    c = b + 4,
-                    d = a + 4;
-                  indices.push(a, c, b, a, d, c);
-                }
-              let last = (profile.length - 1) * 4;
-              indices.push(0, 1, 2, 0, 2, 3, last, last + 2, last + 1, last, last + 3, last + 2);
-              let g = new BufferGeometry();
-              (g.setAttribute("position", new Float32BufferAttribute(positions, 3)),
-                g.setIndex(indices));
-              let flat = g.toNonIndexed();
-              (g.dispose(), flat.computeVertexNormals());
-              let uv = [],
-                pos = flat.attributes.position;
-              for (let i = 0; i < pos.count; i++)
-                uv.push(pos.getZ(i) / 90, (pos.getX(i) + pos.getY(i)) / 70);
-              flat.setAttribute("uv", new Float32BufferAttribute(uv, 2));
-              let mesh = new Mesh(flat, material);
-              ((mesh.name = name), (mesh.castShadow = mesh.receiveShadow = !0), root.add(mesh));
-            };
-            (keel(22, 0.8, 2.5, dark, "continuous-keel-recess"),
-              keel(6, 2.5, 3.4, steel, "continuous-keel-spine"));
-            for (let side of [-1, 1]) keel(1.8, 1, 3.9, steel, "keel-edge-rail", side * 10.5);
-            for (let z of [-390, -290, -190, -90, 10, 210, 310, 410]) {
-              let h = section(z).h,
-                k = profile.findIndex(
-                  (v, i) => i < profile.length - 1 && z >= v[0] && z < profile[i + 1][0],
-                ),
-                a = profile[k],
-                b = profile[k + 1],
-                q = new Quaternion().setFromAxisAngle(
-                  new Vector3(1, 0, 0),
-                  Math.atan2(b[2] - a[2], b[0] - a[0]),
-                );
-              add(0, 0, -h - 2.9, z, 19, 1.2, 2.3, q);
-            }
-            let nose = profile.at(-1)[0];
-            (add(1, 0, 4, nose, Math.min(48, profile.at(-1)[1] * 1.4), 14, 4),
-              add(0, 0, 5, nose + 2, 26, 2, 2));
-            for (let j = 0; j < 7; j++) add(3, (j - 3) * 3.4, 5, nose + 3.2, 1.5, 0.6, 0.2);
-            let beam = (a, b, r = 1.6) => {
-                let av = new Vector3(...a),
-                  bv = new Vector3(...b),
-                  d = bv.clone().sub(av);
-                (matrix.compose(
-                  av.add(bv).multiplyScalar(0.5),
-                  new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), d.clone().normalize()),
-                  new Vector3(r, d.length(), r),
-                ),
-                  pipes.push(matrix.clone()));
-              },
-              pressure = pressureVesselGeometry(12, 66, tier2),
-              pressureDetails = [];
-            for (let side of [-1, 1])
-              for (let j = 0; j < 5; j++) {
-                let z = -340 + j * 100,
-                  x =
-                    side *
-                    Math.min(
-                      carrier ? 139 : 95,
-                      section(z - 38).w * 0.68,
-                      section(z + 38).w * 0.68,
-                    ),
-                  y = Math.max(deck(x, z - 38), deck(x, z + 38)) + 20;
-                for (let dz2 of [-28, 28]) {
-                  let bottom = deck(x, z + dz2) - 2,
-                    top = y - 12;
-                  (add(0, x, (bottom + top) / 2, z + dz2, 18, top - bottom, 8),
-                    joints.push({
-                      kind: "pod",
-                      bottom,
-                      deck: deck(x, z + dz2),
-                      top,
-                      target: y - 12,
-                    }));
-                }
-                let pod = new Mesh(pressure, ivory);
-                ((pod.name = "pressure-module"),
-                  pod.position.set(x, y, z),
-                  (pod.castShadow = pod.receiveShadow = !0),
-                  root.add(pod));
-                for (let g of pressureVesselFittings(12, 66, tier2))
-                  (g.translate(x, y, z), pressureDetails.push(g));
-                add(1, x, y - 12, z, 31, 5, 75);
-                for (let dz2 of [-19, 19]) add(0, x, y + 11, z + dz2, 24, 2, 3);
-                if (
-                  (beam([x, y - 16, z - 43], [x, y - 16, z + 43], 2),
-                  beam([x, y - 16, z - 43], [x, y + 8, z], 1.2),
-                  j === 0 || j === 4)
-                ) {
-                  add(5, x, y + 2, z + 32.5, 10, 10, 1.4);
-                  for (let sideX of [-1, 1]) add(0, x + sideX * 5.7, y + 2, z + 32.8, 1, 10, 1.5);
-                }
-                for (let dz2 of [-25, 25])
-                  for (let sideX of [-1, 1]) add(0, x + sideX * 11.8, y, z + dz2, 2, 4, 3);
-                (add(0, x, y + 13, z, 27, 1.5, 58), add(2, x, y + 16, z, 29, 2, 55));
-                for (let dz2 of [-26, 26]) add(0, x, y + 17.4, z + dz2, 30, 0.8, 2.4);
-              }
-            root.add(mergedShipDetail(pressureDetails, steel, "pressure-module-welds", 1));
-            let bridgeBase = Math.min(deck(0, -315), deck(0, -265)) - 1.5,
-              bridgeTop = Math.max(deck(0, -315), deck(0, -265)) + 4,
-              bridgeY = bridgeTop + 8.5,
-              bridgeRoof = bridgeY + 9.5;
-            (add(0, 0, (bridgeBase + bridgeTop) / 2, -290, 108, bridgeTop - bridgeBase, 45),
-              joints.push({
-                kind: "bridge",
-                bottom: bridgeBase,
-                deck: deck(0, -290),
-                top: bridgeTop,
-                target: bridgeY - 9.5,
-              }));
-            let cabinPlan = new Shape();
-            (cabinPlan.moveTo(-64, -315),
-              cabinPlan.lineTo(64, -315),
-              cabinPlan.lineTo(64, -272),
-              cabinPlan.lineTo(0, -250),
-              cabinPlan.lineTo(-64, -272),
-              cabinPlan.closePath());
-            let cabinGeometry = new ExtrudeGeometry(cabinPlan, {
-              depth: 19,
-              bevelEnabled: !1,
-              steps: 1,
-            });
-            (cabinGeometry.rotateX(Math.PI / 2), cabinGeometry.translate(0, bridgeRoof, 0));
-            let cabin = new Mesh(cabinGeometry, ivory);
-            ((cabin.name = "shallow-v-bridge-shell"),
-              (cabin.castShadow = cabin.receiveShadow = !0),
-              root.add(cabin));
-            let glazingMaterial = new MeshPhysicalMaterial({
-              color: 1388862,
-              metalness: 0.3,
-              roughness: 0.14,
-              clearcoat: 1,
-              clearcoatRoughness: 0.08,
-            });
-            for (let side of [-1, 1]) {
-              let x0 = side * 1.2,
-                x1 = side * 60,
-                z0 = -250 + (22 * -Math.abs(x0)) / 64 + 0.25,
-                z1 = -250 + (22 * -Math.abs(x1)) / 64 + 0.25,
-                bottom = bridgeRoof - 15.5,
-                top = bridgeRoof - 2.8,
-                geometry2 = new BufferGeometry();
-              (geometry2.setAttribute(
-                "position",
-                new Float32BufferAttribute(
-                  [x0, bottom, z0, x1, bottom, z1, x1, top, z1, x0, top, z0],
-                  3,
-                ),
-              ),
-                geometry2.setIndex(side === 1 ? [0, 1, 2, 0, 2, 3] : [0, 2, 1, 0, 3, 2]),
-                geometry2.setAttribute(
-                  "uv",
-                  new Float32BufferAttribute([0, 0, 1, 0, 1, 1, 0, 1], 2),
-                ),
-                geometry2.computeVertexNormals());
-              let pane = new Mesh(geometry2, glazingMaterial);
-              ((pane.name = "v-bridge-forward-glazing"), root.add(pane));
-            }
-            (beam([-45, bridgeRoof - 1, -290], [-45, bridgeRoof + 14, -290], 1),
-              beam([40, bridgeRoof - 1, -290], [40, bridgeRoof + 13, -290], 1));
-            let dish = new Mesh(new SphereGeometry(7, 12, 6, 0, Math.PI * 2, 0, 0.9), steel);
-            ((dish.rotation.x = Math.PI / 2),
-              dish.position.set(40, bridgeRoof + 8, -290),
-              root.add(dish));
-            let bridgeProfile = {
-              base: bridgeBase,
-              roof: bridgeRoof,
-              deck: deck(0, -290),
-              clearance: bridgeY - 9.5 - deck(0, -290),
-            };
-            for (let side of [-1, 1])
-              for (let j = 0; j < 8; j++) {
-                let z = -90 + j * 64,
-                  k = profile.findIndex(
-                    (v, i) => i < profile.length - 1 && z >= v[0] && z < profile[i + 1][0],
-                  ),
-                  a = profile[k],
-                  b = profile[k + 1],
-                  t = (z - a[0]) / (b[0] - a[0]),
-                  h = MathUtils.lerp(a[2], b[2], t),
-                  w = MathUtils.lerp(a[1], b[1], t),
-                  slope2 = Math.atan2(b[2] - a[2], b[0] - a[0]),
-                  q = new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), -slope2),
-                  x = side * w * 0.43;
-                (add(1, x, h + 0.4, z, Math.max(7, w * 0.13), 1.2, 57, q),
-                  add(0, x, h + 1.3, z, 2, 1.3, 51, q));
-                for (let dz2 of [-20, 20])
+            // Flush fasteners belong to the detachable shield plate, not a random grid.
+            // Broad fields remain quiet; the belly and aft service zone get the fittings.
+            if (
+              !central &&
+              !serviceBay &&
+              (underside || s === 0) &&
+              face !== 0
+            ) {
+              const q = new Quaternion().setFromUnitVectors(
+                new Vector3(0, 0, 1),
+                n,
+              );
+              for (const u of [u0 + (u1 - u0) * 0.09, u1 - (u1 - u0) * 0.09])
+                for (const v of [
+                  v0 + (v1 - v0) * 0.12,
+                  v1 - (v1 - v0) * 0.12,
+                ]) {
+                  const p = facet(a, b, u, v).addScaledVector(n, 1.22);
                   add(
-                    2,
-                    x,
-                    h + 2 - dz2 * Math.sin(-slope2),
-                    z + dz2,
-                    Math.max(8, w * 0.14),
-                    1.2,
-                    2,
+                    0,
+                    p.x,
+                    p.y,
+                    p.z,
+                    ACCESS_SCALE.fastener,
+                    ACCESS_SCALE.fastener,
+                    0.18,
                     q,
                   );
-              }
-            for (let side of [-1, 1])
-              for (let j = 0; j < 4; j++) {
-                let z = -355 + j * 66,
-                  x = side * Math.min(70, section(z).w * 0.5),
-                  h = section(z).h,
-                  slope2 = (section(z + 1).h - section(z - 1).h) / 2,
-                  q = new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), Math.atan(slope2));
-                (add(1, x, -h - 1.3, z, 47, 3.8, 49, q), add(2, x, -h - 3.1, z, 41, 1.4, 43, q));
-                for (let dx2 of [-17, 17])
-                  for (let dz2 of [-17, 17]) {
-                    let p = new Vector3(dx2, -4, dz2).applyQuaternion(q);
-                    add(0, x + p.x, -h + p.y, z + p.z, 1.9, 0.7, 1.9, q);
-                  }
-                for (let dz2 of [-13, 13]) {
-                  let p = new Vector3(21, -3.3, dz2).applyQuaternion(q);
-                  add(0, x + p.x, -h + p.y, z + p.z, 2.2, 1, 5, q);
                 }
-              }
-            let hatchZ = 105,
-              hatchY = -section(hatchZ).h,
-              slope = (section(hatchZ + 1).h - section(hatchZ - 1).h) / 2,
-              hatchFrame = new Group();
-            ((hatchFrame.name = "integrated-docking-seat"),
-              hatchFrame.position.set(0, hatchY, hatchZ),
-              (hatchFrame.rotation.x = Math.atan(slope)));
-            let seat = new Mesh(
-              new CylinderGeometry(23, 23, 2.2, tier2 === "low" ? 24 : 40),
-              steel,
-            );
-            ((seat.position.y = -1.5), hatchFrame.add(seat));
-            let hatch = new Mesh(
-              new CylinderGeometry(17, 17, 2.5, tier2 === "low" ? 24 : 40),
-              dark,
-            );
-            ((hatch.position.y = -3), hatchFrame.add(hatch));
-            let collar = new Mesh(
-              new TorusGeometry(19.2, 1.3, 6, tier2 === "low" ? 24 : 40),
-              steel,
-            );
-            ((collar.rotation.x = Math.PI / 2), (collar.position.y = -3.5), hatchFrame.add(collar));
-            let locks = new InstancedMesh(unitBox, steel, 8),
-              lock = new Object3D();
-            for (let j = 0; j < 8; j++) {
-              let a = (j * Math.PI) / 4;
-              (lock.scale.set(3, 1.4, 2),
-                lock.position.set(Math.cos(a) * 20.3, -3, Math.sin(a) * 20.3),
-                (lock.rotation.y = -a),
-                lock.updateMatrix(),
-                locks.setMatrixAt(j, lock.matrix));
             }
-            (locks.computeBoundingSphere(), hatchFrame.add(locks));
-            let door = new Mesh(
-              new CylinderGeometry(15.6, 15.6, 0.9, tier2 === "low" ? 24 : 40),
-              ivory,
-            );
-            ((door.position.y = -4.4),
-              (door.castShadow = door.receiveShadow = !0),
-              (door.name = "recessed-docking-pressure-door"),
-              hatchFrame.add(door));
-            let doorMetal = [new BoxGeometry(19, 1.1, 2.2).translate(0, -5.15, 0)];
-            for (let x of [-12, 12])
-              doorMetal.push(new BoxGeometry(2.4, 1.3, 6).translate(x, -4.95, 0));
-            (hatchFrame.add(mergedShipDetail(doorMetal, steel, "docking-door-locks", 4)),
-              root.add(hatchFrame));
-            let deployables = [];
-            for (let side of [-1, 1]) {
-              let rootWidth = Math.max(section(-415).w, section(-220).w, section(-85).w) + 26,
-                position = new Vector3(side * rootWidth, 4, -250);
-              beam([side * (section(-250).w - 8), 4, -250], [position.x + side * 4, 4, -250], 5);
-              for (let dz2 of [-105.6, 105.6])
-                beam(
-                  [side * (section(-250 + dz2).w - 8), 4, -250 + dz2],
-                  [position.x - side * 19, 4, -250 + dz2],
-                  5,
-                );
-              deployables.push(
-                ...pairedRadiator({
-                  owner: root,
-                  side,
-                  position,
-                  surface: radiatorSurface,
-                  metal: steel,
-                  tier: tier2,
-                  width: 116,
-                  length: 330,
-                  index,
-                }),
+            // Habitation strips lie on the side walls rather than floating in space.
+            if (face === 2 || face === 6) {
+              const q = new Quaternion().setFromUnitVectors(
+                new Vector3(0, 0, 1),
+                n,
               );
+              for (let j = 0; j < 3; j++)
+                if (rand() > 0.3) {
+                  const p = centre.clone().addScaledVector(n, 1.9);
+                  p.z += (j - 1) * 5;
+                  add(3, p.x, p.y, p.z, 1.1, 0.65, 0.22, q);
+                }
             }
-            let aft = section(-520);
-            root.userData.engineOutlets = [
-              flushOutlet(root, 0, 0, -520.3, aft.w * 0.66, aft.h * 0.7, steel),
-            ];
-            let jets = createAttitudeJets(
-                root,
-                tier2,
-                [
-                  [310, section(310).w - 0.7],
-                  [-445, section(-445).w - 0.7],
-                ],
-                carrier ? "carrier" : capsule ? "capsule" : "escort",
-              ),
-              geometry = mergeGeometries(meshParts);
-            meshParts.forEach((g) => g.dispose());
-            let body = new Mesh(geometry, armour);
-            ((body.name = "shield-hull"),
-              (body.castShadow = body.receiveShadow = !0),
-              root.add(body),
-              instances.forEach((list, i) => {
-                let mesh = new InstancedMesh(i === 3 ? unitBox : box, materialList[i], list.length);
-                (list.forEach((m, j) => mesh.setMatrixAt(j, m)),
-                  (mesh.castShadow = i !== 3),
-                  (mesh.receiveShadow = i !== 3),
-                  (mesh.instanceMatrix.needsUpdate = !0),
-                  mesh.computeBoundingSphere(),
-                  root.add(mesh));
-              }),
-              fineInstances.forEach((list, i) => {
-                if (!list.length) return;
-                let mesh = new InstancedMesh(unitBox, materialList[i], list.length);
-                (list.forEach((m, j) => mesh.setMatrixAt(j, m)),
-                  (mesh.castShadow = mesh.receiveShadow = i !== 3),
-                  mesh.computeBoundingSphere(),
-                  (mesh.userData.distantOmit = !0),
-                  root.add(mesh));
-              }));
-            let pipeMesh = new InstancedMesh(cylinder2, steel, pipes.length);
-            return (
-              pipes.forEach((m, i) => pipeMesh.setMatrixAt(i, m)),
-              (pipeMesh.castShadow = pipeMesh.receiveShadow = !0),
-              pipeMesh.computeBoundingSphere(),
-              root.add(pipeMesh),
-              (root.userData = {
-                engineOutlets: root.userData.engineOutlets,
-                joints,
-                bridgeProfile,
-                serviceBays,
-                accessHatches,
-                panels: meshParts.length,
-                instances: [...instances, ...fineInstances].reduce((n, v) => n + v.length, 0),
-                jets,
-                kind: carrier ? "carrier" : capsule ? "habitat" : "migration",
-                deployables,
-              }),
-              updateWingDrives(root),
-              markFleet(root, tier2, index),
-              root
-            );
-          };
-        return Array.from({ length: count }, (_, i) => create(i));
+          }
       }
+    }
+    // Armoured closure at each end, with a recessed forward navigation bay.
+    for (const end of [profile[0], profile.at(-1)]) {
+      const shape = new Shape();
+      ring(end[1], end[2]).forEach(([x, y], i) =>
+        i ? shape.lineTo(x, y) : shape.moveTo(x, y),
+      );
+      shape.closePath();
+      if (end === profile[0])
+        shape.holes.push(
+          outletShape(end[1] * 0.66 - end[2] * 0.7 * 0.17, end[2] * 0.7 * 0.83),
+        );
+      const g = new ShapeGeometry(shape);
+      g.translate(0, 0, end[0]);
+      const mesh = new Mesh(g, ivory);
+      mesh.material = ivory;
+      mesh.material.side = DoubleSide;
+      root.add(mesh);
+    }
+    // A single low V cabin replaces the overlapping stepped deckhouse.
+    // Structural keel, docking recesses, tanks, radiator fins and service conduits.
+    // Keel follows each hull segment instead of hanging below a tapering bow.
+    // Shared cross-sections form a continuous, capped keel at every hull bend.
+    // No independently rotated boxes or overlapping end faces at the joints.
+    const keel = (width, top, bottom, material, name, x = 0) => {
+      const positions = [],
+        indices = [];
+      for (const [z, w, h] of profile) {
+        const half = Math.min(width * 0.5, w * 0.4);
+        positions.push(
+          x - half,
+          -h - top,
+          z,
+          x + half,
+          -h - top,
+          z,
+          x + half,
+          -h - bottom,
+          z,
+          x - half,
+          -h - bottom,
+          z,
+        );
+      }
+      for (let k = 0; k < profile.length - 1; k++)
+        for (let side = 0; side < 4; side++) {
+          const a = k * 4 + side,
+            b = k * 4 + ((side + 1) % 4),
+            c = b + 4,
+            d = a + 4;
+          indices.push(a, c, b, a, d, c);
+        }
+      const last = (profile.length - 1) * 4;
+      indices.push(
+        0,
+        1,
+        2,
+        0,
+        2,
+        3,
+        last,
+        last + 2,
+        last + 1,
+        last,
+        last + 3,
+        last + 2,
+      );
+      const g = new BufferGeometry();
+      g.setAttribute(
+        "position",
+        new Float32BufferAttribute(positions, 3),
+      );
+      g.setIndex(indices);
+      const flat = g.toNonIndexed();
+      g.dispose();
+      flat.computeVertexNormals();
+      const uv = [];
+      const pos = flat.attributes.position;
+      for (let i = 0; i < pos.count; i++)
+        uv.push(pos.getZ(i) / 90, (pos.getX(i) + pos.getY(i)) / 70);
+      flat.setAttribute("uv", new Float32BufferAttribute(uv, 2));
+      const mesh = new Mesh(flat, material);
+      mesh.name = name;
+      mesh.castShadow = mesh.receiveShadow = true;
+      root.add(mesh);
+    };
+    keel(22, 0.8, 2.5, dark, "continuous-keel-recess");
+    keel(6, 2.5, 3.4, steel, "continuous-keel-spine");
+    for (const side of [-1, 1])
+      keel(1.8, 1, 3.9, steel, "keel-edge-rail", side * 10.5);
+    for (const z of [-390, -290, -190, -90, 10, 210, 310, 410]) {
+      const h = section(z).h;
+      const k = profile.findIndex(
+        (v, i) => i < profile.length - 1 && z >= v[0] && z < profile[i + 1][0],
+      );
+      const a = profile[k],
+        b = profile[k + 1],
+        q = new Quaternion().setFromAxisAngle(
+          new Vector3(1, 0, 0),
+          Math.atan2(b[2] - a[2], b[0] - a[0]),
+        );
+      add(0, 0, -h - 2.9, z, 19, 1.2, 2.3, q);
+    }
+    const nose = profile.at(-1)[0];
+    add(1, 0, 4, nose, Math.min(48, profile.at(-1)[1] * 1.4), 14, 4);
+    add(0, 0, 5, nose + 2, 26, 2, 2);
+    for (let j = 0; j < 7; j++)
+      add(3, (j - 3) * 3.4, 5, nose + 3.2, 1.5, 0.6, 0.2);
+    // Pressure vessels sit above a recessed service deck, joined by actual
+    // beams. Repetition expresses habitation capacity rather than surface noise.
+    const beam = (a, b, r = 1.6) => {
+      const av = new Vector3(...a),
+        bv = new Vector3(...b),
+        d = bv.clone().sub(av);
+      matrix.compose(
+        av.add(bv).multiplyScalar(0.5),
+        new Quaternion().setFromUnitVectors(
+          new Vector3(0, 1, 0),
+          d.clone().normalize(),
+        ),
+        new Vector3(r, d.length(), r),
+      );
+      pipes.push(matrix.clone());
+    };
+    // Payload frames follow the upper deck, not the sloping outer shoulder.
+    // Geometry fitting is a visual construction rule, not a structural load model.
+    const missionPayloads = [];
+    const payloadFrames = [], seatPositions = [], seatIndices = [];
+    const payloadFrame = (x, z, width, length) => {
+      const half = length / 2;
+      const slope = (deck(x, z + half) - deck(x, z - half)) / length;
+      const rotation = new Quaternion().setFromAxisAngle(
+        new Vector3(1, 0, 0), -Math.atan(slope),
+      );
+      const cosine = Math.cos(Math.atan(slope)), sine = -slope * cosine;
+      // Include every hull break in the fit so a case cannot cut through a ridge.
+      const stations = [-half, half, ...profile.map(([pz]) => (pz - z) / cosine)
+        .filter((dz) => dz > -half && dz < half)].sort((a, b) => a - b);
+      let base = -Infinity;
+      for (const dx of [-width / 2, 0, width / 2])
+        for (const dz of stations)
+          base = Math.max(base, deck(x + dx, z + cosine * dz) + sine * dz);
+      base += 3.5;
+      const at = (dx, dy, dz) => new Vector3(
+        x + dx, base + cosine * dy - sine * dz, z + sine * dy + cosine * dz,
+      );
+      const boxAt = (material, dx, dy, dz, sx, sy, sz) => {
+        const p = at(dx, dy, dz);
+        add(material, p.x, p.y, p.z, sx, sy, sz, rotation);
+      };
+      // Two low continuous shoes meet the faceted hull along their whole length.
+      // Their upper faces follow the payload and their lower faces follow the deck.
+      for (const side of [-1, 1]) {
+        const centre = side * width * 0.32, railHalf = width * 0.075;
+        for (let k = 0; k < stations.length - 1; k++) {
+          const points = [];
+          for (const dz of [stations[k], stations[k + 1]])
+            for (const dx of [centre - railHalf, centre + railHalf]) {
+              const top = at(dx, -1, dz);
+              points.push(new Vector3(top.x, deck(top.x, top.z) - 0.8, top.z), top);
+              joints.push({kind: "payload-shoe", bottom: deck(top.x, top.z) - 0.8,
+                deck: deck(top.x, top.z), top: top.y, target: top.y});
+            }
+          const start = seatPositions.length / 3;
+          points.forEach((p) => seatPositions.push(p.x, p.y, p.z));
+          for (const face of [[0,4,6,2],[1,3,7,5],[0,1,5,4],
+            [2,6,7,3],[0,2,3,1],[4,5,7,6]])
+            seatIndices.push(start + face[0], start + face[2], start + face[1],
+              start + face[0], start + face[3], start + face[2]);
+        }
+      }
+      const footprint = [];
+      for (const dx of [-width / 2, width / 2])
+        for (const dz of stations) footprint.push(at(dx, 0, dz).toArray());
+      payloadFrames.push({position: [x, base, z], rotation: rotation.toArray(),
+        size: [width, length], footprint});
+      return {at, boxAt, rotation, base};
+    };
+    const payloadRole = carrier
+      ? "heavy-cargo"
+      : index === 2
+        ? "spares-cassettes"
+        : index === 4
+          ? "settlement-equipment"
+          : "pressure-modules";
+    if (index === 2) {
+      const payload = carrier
+        ? { count: 3, start: -330, step: 185, width: 70, height: 24, length: 124 }
+        : index === 2
+          ? { count: 4, start: -340, step: 130, width: 38, height: 32, length: 82 }
+          : { count: 2, start: -270, step: 260, width: 52, height: 42, length: 176 };
+      for (const side of [-1, 1]) {
+        // The nose is +Z: remove the forward pair on X01/X05, including its mounts.
+        for (let j = 0; j < payload.count - (carrier || index === 4 ? 1 : 0); j++) {
+          const z = payload.start + j * payload.step,
+            half = payload.length / 2,
+            x = side * Math.min(
+              carrier ? 139 : 95,
+              section(z - half).w * 0.68,
+              section(z + half).w * 0.68,
+            ),
+            bottom = Math.max(deck(x, z - half), deck(x, z + half)) + 6,
+            y = bottom + payload.height / 2;
+          for (const dz of [-half * 0.7, half * 0.7]) {
+            const seat = deck(x, z + dz) - 2;
+            add(0, x, (seat + bottom) / 2, z + dz,
+              payload.width * 0.68, bottom - seat, 7);
+            joints.push({kind: "payload", bottom: seat, deck: deck(x, z + dz),
+              top: bottom, target: bottom});
+          }
+          // Closed cases, seated rails and two end restraints give each item
+          // a readable mounting path. No floating frame or exposed hollow box.
+          add(1, x, bottom + 1, z, payload.width + 4, 3, payload.length + 4);
+          add(2, x, y, z, payload.width, payload.height, payload.length);
+          for (const dx of [-payload.width * 0.43, payload.width * 0.43])
+            add(0, x + dx, bottom - 1, z, 3, 4, payload.length + 10);
+          for (const dz of [-half * 0.8, half * 0.8])
+            add(0, x, bottom + payload.height + 0.7, z + dz,
+              payload.width + 1.4, 1.4, 3.2);
+          if (carrier) {
+            // Broad, low freight coffers: a quiet cargo deck silhouette.
+            add(0, x, bottom + payload.height + 1.1, z, 3, 2.2, payload.length - 8);
+            for (const end of [-1, 1])
+              add(1, x, y - 2, z + end * (half + 0.08),
+                payload.width * 0.42, 8, 0.3);
+          } else if (index === 2) {
+            // Four paired removable spare-parts cassettes. Their recessed
+            // middle seam and front lock distinguish them from pressure pods.
+            add(1, x + side * (payload.width / 2 + 0.08), y + 2, z,
+              0.3, 1.8, payload.length - 8);
+            for (const end of [-1, 1]) {
+              add(0, x, y, z + end * (half + 0.25), 11, 8, 1.2);
+              add(1, x, y, z + end * (half + 0.9), 7, 3, 0.3);
+            }
+          } else {
+            // Long sealed equipment skids. Protected dark service
+            // faces sit inside the white housing; ribs belong to those covers.
+            const outer = x + side * (payload.width / 2 + 0.25);
+            add(1, outer, y, z, 0.8, payload.height - 10, payload.length - 18);
+            for (let k = 0; k < 4; k++)
+              add(0, outer + side * 0.55, y,
+                z + (k - 1.5) * (payload.length - 28) / 4,
+                1, payload.height - 8, 2.2);
+            add(0, x, bottom + payload.height + 1.8, z,
+              payload.width * 0.72, 3.6, payload.length * 0.56);
+          }
+          missionPayloads.push({role: payloadRole, side, position: [x, y, z],
+            size: [payload.width, payload.height, payload.length], bottom});
+        }
+      }
+    } else if (payloadRole !== "pressure-modules") {
+      const cargo = carrier
+        ? {count: 2, start: -330, step: 185, x: 102, width: 70, height: 24, length: 124}
+        : {count: 1, start: -230, step: 260, x: 93, width: 52, height: 42, length: 176};
+      for (const side of [-1, 1])
+        for (let j = 0; j < cargo.count; j++) {
+          const z = cargo.start + j * cargo.step, x = side * cargo.x;
+          const frame = payloadFrame(x, z, cargo.width + 4, cargo.length + 4);
+          const put = frame.boxAt, half = cargo.length / 2;
+          put(1, 0, 0, 0, cargo.width + 4, 4, cargo.length + 4);
+          put(2, 0, cargo.height / 2, 0, cargo.width, cargo.height, cargo.length);
+          for (const dx of [-cargo.width * 0.43, cargo.width * 0.43])
+            put(0, dx, 0, 0, 3, 4, cargo.length + 6);
+          for (const dz of [-half * 0.8, half * 0.8])
+            put(0, 0, cargo.height + 0.7, dz, cargo.width + 1.4, 1.4, 3.2);
+          if (carrier) {
+            put(0, 0, cargo.height + 1.1, 0, 3, 2.2, cargo.length - 8);
+            for (const end of [-1, 1])
+              put(1, 0, cargo.height / 2 - 2, end * (half + 0.08),
+                cargo.width * 0.42, 8, 0.3);
+          } else {
+            const outer = side * (cargo.width / 2 + 0.25);
+            put(1, outer, cargo.height / 2, 0, 0.8, cargo.height - 10, cargo.length - 18);
+            for (let k = 0; k < 4; k++)
+              put(0, outer + side * 0.55, cargo.height / 2,
+                (k - 1.5) * (cargo.length - 28) / 4, 1, cargo.height - 8, 2.2);
+            put(0, 0, cargo.height + 1.8, 0, cargo.width * 0.72, 3.6, cargo.length * 0.56);
+          }
+          missionPayloads.push({role: payloadRole, side,
+            position: frame.at(0, cargo.height / 2, 0).toArray(),
+            size: [cargo.width, cargo.height, cargo.length], bottom: frame.base,
+            rotation: frame.rotation.toArray()});
+        }
+    } else {
+      const pressure = pressureVesselGeometry(12, 66, tier),
+        pressureDetails = [];
+      for (const side of [-1, 1]) {
+        // The capsule's narrow stern carries one aft pair; three pairs sit ahead
+        // of the cabin. The removed foremost pair is not restored.
+        const stations = capsule ? [-375, -196, -116, -36] : [-340, -240, -140, -40];
+        for (let j = 0; j < stations.length; j++) {
+          const z = stations[j], x = side * (capsule ? (j === 0 ? 54 : 70) : 80);
+          const frame = payloadFrame(x, z, 31, 75), put = frame.boxAt;
+          const pod = new Mesh(pressure, ivory);
+          pod.name = "pressure-module";
+          pod.position.copy(frame.at(0, 12, 0));
+          pod.quaternion.copy(frame.rotation);
+          pod.castShadow = pod.receiveShadow = true;
+          root.add(pod);
+          for (const g of pressureVesselFittings(12, 66, tier)) {
+            g.applyQuaternion(frame.rotation);
+            g.translate(...pod.position.toArray());
+            pressureDetails.push(g);
+          }
+          put(1, 0, 0, 0, 31, 4, 75);
+          for (const dz of [-19, 19]) put(0, 0, 23, dz, 24, 2, 3);
+          // End service modules carry the exposed insulation and retainers;
+          // the intermediate pressure vessels retain quiet, closed end caps.
+          if (j === 0 || j === stations.length - 1) {
+            put(5, 0, 14, 32.5, 10, 10, 1.4);
+            for (const sideX of [-1, 1])
+              put(0, sideX * 5.7, 14, 32.8, 1, 10, 1.5);
+          }
+          for (const dz of [-25, 25])
+            for (const sideX of [-1, 1])
+              put(0, sideX * 11.8, 12, dz, 2, 4, 3);
+          // White micrometeoroid covers are held clear of the pressure vessel.
+          // The narrow gap, metal straps and MLI end caps expose the assembly.
+          put(0, 0, 25, 0, 27, 1.5, 58);
+          put(2, 0, 28, 0, 29, 2, 55);
+          for (const dz of [-26, 26]) put(0, 0, 29.4, dz, 30, 0.8, 2.4);
+        }
+      }
+      root.add(
+        mergedShipDetail(pressureDetails, steel, "pressure-module-welds", 1),
+      );
+    }
+    if (seatPositions.length) {
+      const seats = new BufferGeometry();
+      seats.setAttribute("position", new Float32BufferAttribute(seatPositions, 3));
+      seats.setIndex(seatIndices);
+      const flat = seats.toNonIndexed();
+      seats.dispose();
+      flat.computeVertexNormals();
+      const uv = [], p = flat.attributes.position;
+      for (let i = 0; i < p.count; i++) uv.push(p.getX(i) / 40, p.getZ(i) / 40);
+      flat.setAttribute("uv", new Float32BufferAttribute(uv, 2));
+      const shoes = new Mesh(flat, steel);
+      shoes.name = "deck-conforming-payload-shoes";
+      shoes.castShadow = shoes.receiveShadow = true;
+      root.add(shoes);
+    }
+    // Bridge assembly: the four revised cargo carriers have horizontal panoramic
+    // glazing; X03 retains its approved forward-facing service cabin.
+    let bridgeProfile;
+    if (index !== 2) {
+      const bridgeZ = -290;
+      const base = Math.min(deck(0, -315), deck(0, -265)) - 1.5;
+      const cargoRoof = Math.max(...payloadFrames.map((frame) => {
+        const top = payloadRole === "pressure-modules" ? 31 : carrier ? 27 : 46;
+        const rotation = new Quaternion().fromArray(frame.rotation);
+        return Math.max(...[-1, 1].map((end) =>
+          new Vector3(0, top, end * frame.size[1] / 2)
+            .applyQuaternion(rotation).y + frame.position[1]));
+      }));
+      const eyeY = Math.max(deck(0, bridgeZ) + 35, cargoRoof + 9);
+      const windowBottom = eyeY - 7, windowTop = eyeY + 9, roof = windowTop + 3.2;
+      // A shallow V still addresses the bow, while the rear and both flanks are
+      // glazed too. The sight plane clears the highest container by nine units.
+      const plan = [[-58,-25],[58,-25],[64,-13],[64,15],[0,37],[-64,15],[-64,-13]];
+      const loft = (name, levels, material, capped = true) => {
+        const positions = [], indices = [], uv = [], n = plan.length;
+        for (const [height, scale] of levels)
+          for (const [px, pz] of plan) {
+            positions.push(px * scale, height, bridgeZ + pz * scale);
+            uv.push(px / 40, (height + pz) / 40);
+          }
+        for (let level = 0; level < levels.length - 1; level++)
+          for (let j = 0; j < n; j++) {
+            const a = level * n + j, b = level * n + (j + 1) % n;
+            indices.push(a, a + n, b, b, a + n, b + n);
+          }
+        if (capped) {
+          const top = (levels.length - 1) * n;
+          for (let j = 1; j < n - 1; j++)
+            indices.push(0, j, j + 1, top, top + j + 1, top + j);
+        }
+        const geometry = new BufferGeometry();
+        geometry.setAttribute("position", new Float32BufferAttribute(positions, 3));
+        geometry.setAttribute("uv", new Float32BufferAttribute(uv, 2));
+        geometry.setIndex(indices);
+        const flat = geometry.toNonIndexed();
+        geometry.dispose();flat.computeVertexNormals();
+        const mesh = new Mesh(flat, material);
+        mesh.name = name;mesh.castShadow = mesh.receiveShadow = true;
+        root.add(mesh);return mesh;
+      };
+      loft("panoramic-bridge-faired-support", [[base, 0.82], [windowBottom - 4, 0.74]], ivory);
+      loft("panoramic-bridge-lower-cowl", [[windowBottom - 4.5, 0.74], [windowBottom, 1]], ivory);
+      const glazing = new MeshPhysicalMaterial({
+        color: 0x15313e, metalness: 0.2, roughness: 0.14,
+        clearcoat: tier === "low" ? 0 : 1, clearcoatRoughness: 0.08,
+      });
+      // Closed exterior glass band, with no opaque cabin wall behind it.
+      // Opaque shading avoids transmission passes; it represents tinted glass.
+      loft("panoramic-bridge-360-glazing", [[windowBottom - 0.1, 1], [windowTop + 0.1, 0.965]], glazing, false);
+      loft("panoramic-bridge-roof", [[windowTop, 0.98], [roof, 0.92]], ivory);
+      for (const [px, pz] of plan)
+        beam([px, windowBottom - 0.3, bridgeZ + pz],
+          [px * 0.965, windowTop + 0.3, bridgeZ + pz * 0.965], 0.65);
+      joints.push({kind: "bridge", bottom: base, deck: deck(0, bridgeZ),
+        top: windowBottom - 4, target: windowBottom - 4});
+      // Communications equipment stays on the aft deck below the sight plane.
+      const mastZ = -410, mastDeck = deck(0, mastZ);
+      beam([0, mastDeck - 0.5, mastZ], [0, mastDeck + 15, mastZ], 1);
+      const dish = new Mesh(
+        new SphereGeometry(7, 12, 6, 0, Math.PI * 2, 0, 0.9), steel,
+      );
+      dish.rotation.x = Math.PI / 2;
+      dish.position.set(0, mastDeck + 10, mastZ);root.add(dish);
+      bridgeProfile = {base, roof, deck: deck(0, bridgeZ), clearance: windowBottom - 4 - deck(0, bridgeZ),
+        panoramic: true, horizontalCoverageDegrees: 360, eyeY, cargoRoof,
+        sightlineClearance: eyeY - cargoRoof, windowBottom, windowTop, windowFacets: plan.length};
+    } else {
+    // Low observation cabin seated across the sloping deck: no exposed tower.
+    // The broad plinth intersects the hull at both ends and meets the cabin.
+    const bridgeBase = Math.min(deck(0, -315), deck(0, -265)) - 1.5;
+    const bridgeTop = Math.max(deck(0, -315), deck(0, -265)) + 4;
+    const bridgeY = bridgeTop + 8.5,
+      bridgeRoof = bridgeY + 9.5;
+    add(
+      0,
+      0,
+      (bridgeBase + bridgeTop) / 2,
+      -290,
+      108,
+      bridgeTop - bridgeBase,
+      45,
+    );
+    joints.push({
+      kind: "bridge",
+      bottom: bridgeBase,
+      deck: deck(0, -290),
+      top: bridgeTop,
+      target: bridgeY - 9.5,
+    });
+    // Shallow V in plan: the low cabin follows the hull rather than forming a tower.
+    // Glazing is seated just outside the pressure shell, with a narrow structural rim.
+    const cabinPlan = new Shape();
+    cabinPlan.moveTo(-64, -315);
+    cabinPlan.lineTo(64, -315);
+    cabinPlan.lineTo(64, -272);
+    cabinPlan.lineTo(0, -250);
+    cabinPlan.lineTo(-64, -272);
+    cabinPlan.closePath();
+    const cabinGeometry = new ExtrudeGeometry(cabinPlan, {
+      depth: 19,
+      bevelEnabled: false,
+      steps: 1,
+    });
+    cabinGeometry.rotateX(Math.PI / 2);
+    cabinGeometry.translate(0, bridgeRoof, 0);
+    const cabin = new Mesh(cabinGeometry, ivory);
+    cabin.name = "shallow-v-bridge-shell";
+    cabin.castShadow = cabin.receiveShadow = true;
+    root.add(cabin);
+    const glazingMaterial = new MeshPhysicalMaterial({
+      color: 0x15313e,
+      metalness: 0.3,
+      roughness: 0.14,
+      clearcoat: 1,
+      clearcoatRoughness: 0.08,
+    });
+    for (const side of [-1, 1]) {
+      const x0 = side * 1.2,
+        x1 = side * 60;
+      const z0 = -250 + (22 * -Math.abs(x0)) / 64 + 0.25;
+      const z1 = -250 + (22 * -Math.abs(x1)) / 64 + 0.25;
+      const bottom = bridgeRoof - 15.5,
+        top = bridgeRoof - 2.8;
+      const geometry = new BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new Float32BufferAttribute(
+          [x0, bottom, z0, x1, bottom, z1, x1, top, z1, x0, top, z0],
+          3,
+        ),
+      );
+      geometry.setIndex(side === 1 ? [0, 1, 2, 0, 2, 3] : [0, 2, 1, 0, 3, 2]);
+      geometry.setAttribute(
+        "uv",
+        new Float32BufferAttribute([0, 0, 1, 0, 1, 1, 0, 1], 2),
+      );
+      geometry.computeVertexNormals();
+      const pane = new Mesh(geometry, glazingMaterial);
+      pane.name = "v-bridge-forward-glazing";
+      root.add(pane);
+    }
+    beam([-45, bridgeRoof - 1, -290], [-45, bridgeRoof + 14, -290], 1);
+    beam([40, bridgeRoof - 1, -290], [40, bridgeRoof + 13, -290], 1);
+    const dish = new Mesh(
+      new SphereGeometry(7, 12, 6, 0, Math.PI * 2, 0, 0.9),
+      steel,
+    );
+    dish.rotation.x = Math.PI / 2;
+    dish.position.set(40, bridgeRoof + 8, -290);
+    root.add(dish);
+    bridgeProfile = {
+      base: bridgeBase,
+      roof: bridgeRoof,
+      deck: deck(0, -290),
+      clearance: bridgeY - 9.5 - deck(0, -290),
+    };
+    }
+    // Two recessed maintenance corridors follow the changing hull section.
+    // Cross-bracing is tied to the deck slope, never randomly scattered greeble.
+    for (const side of [-1, 1])
+      for (let j = 0; j < 8; j++) {
+        const z = -90 + j * 64;
+        const k = profile.findIndex(
+          (v, i) =>
+            i < profile.length - 1 && z >= v[0] && z < profile[i + 1][0],
+        );
+        const a = profile[k],
+          b = profile[k + 1],
+          t = (z - a[0]) / (b[0] - a[0]);
+        const h = MathUtils.lerp(a[2], b[2], t),
+          w = MathUtils.lerp(a[1], b[1], t);
+        const slope = Math.atan2(b[2] - a[2], b[0] - a[0]);
+        const q = new Quaternion().setFromAxisAngle(
+          new Vector3(1, 0, 0),
+          -slope,
+        );
+        const x = side * w * 0.43;
+        add(1, x, h + 0.4, z, Math.max(7, w * 0.13), 1.2, 57, q);
+        add(0, x, h + 1.3, z, 2, 1.3, 51, q);
+        for (const dz of [-20, 20])
+          add(
+            2,
+            x,
+            h + 2 - dz * Math.sin(-slope),
+            z + dz,
+            Math.max(8, w * 0.14),
+            1.2,
+            2,
+            q,
+          );
+      }
+    // Underbody service covers seat against the local lower hull.
+    for (const side of [-1, 1])
+      for (let j = 0; j < 4; j++) {
+        const z = -355 + j * 66,
+          x = side * Math.min(70, section(z).w * 0.5),
+          h = section(z).h;
+        const slope = (section(z + 1).h - section(z - 1).h) / 2;
+        const q = new Quaternion().setFromAxisAngle(
+          new Vector3(1, 0, 0),
+          Math.atan(slope),
+        );
+        add(1, x, -h - 1.3, z, 47, 3.8, 49, q);
+        add(2, x, -h - 3.1, z, 41, 1.4, 43, q);
+        for (const dx of [-17, 17])
+          for (const dz of [-17, 17]) {
+            const p = new Vector3(dx, -4.0, dz).applyQuaternion(q);
+            add(0, x + p.x, -h + p.y, z + p.z, 1.9, 0.7, 1.9, q);
+          }
+        // Paired hinge and latch remain flush against the sloping hull.
+        for (const dz of [-13, 13]) {
+          const p = new Vector3(21, -3.3, dz).applyQuaternion(q);
+          add(0, x + p.x, -h + p.y, z + p.z, 2.2, 1.0, 5, q);
+        }
+      }
+    const hatchZ = 105,
+      hatchY = -section(hatchZ).h;
+    const slope = (section(hatchZ + 1).h - section(hatchZ - 1).h) / 2;
+    const hatchFrame = new Group();
+    hatchFrame.name = "integrated-docking-seat";
+    hatchFrame.position.set(0, hatchY, hatchZ);
+    hatchFrame.rotation.x = Math.atan(slope);
+    const seat = new Mesh(
+      new CylinderGeometry(23, 23, 2.2, tier === "low" ? 24 : 40),
+      steel,
+    );
+    seat.position.y = -1.5;
+    hatchFrame.add(seat);
+    const hatch = new Mesh(
+      new CylinderGeometry(17, 17, 2.5, tier === "low" ? 24 : 40),
+      dark,
+    );
+    hatch.position.y = -3;
+    hatchFrame.add(hatch);
+    const collar = new Mesh(
+      new TorusGeometry(19.2, 1.3, 6, tier === "low" ? 24 : 40),
+      steel,
+    );
+    collar.rotation.x = Math.PI / 2;
+    collar.position.y = -3.5;
+    hatchFrame.add(collar);
+    const locks = new InstancedMesh(unitBox, steel, 8);
+    const lock = new Object3D();
+    for (let j = 0; j < 8; j++) {
+      const a = (j * Math.PI) / 4;
+      lock.scale.set(3, 1.4, 2);
+      lock.position.set(Math.cos(a) * 20.3, -3, Math.sin(a) * 20.3);
+      lock.rotation.y = -a;
+      lock.updateMatrix();
+      locks.setMatrixAt(j, lock.matrix);
+    }
+    locks.computeBoundingSphere();
+    hatchFrame.add(locks);
+    // A closed pressure door sits behind the docking seal; no empty black aperture.
+    const door = new Mesh(
+      new CylinderGeometry(15.6, 15.6, 0.9, tier === "low" ? 24 : 40),
+      ivory,
+    );
+    door.position.y = -4.4;
+    door.castShadow = door.receiveShadow = true;
+    door.name = "recessed-docking-pressure-door";
+    hatchFrame.add(door);
+    const doorMetal = [
+      new BoxGeometry(19, 1.1, 2.2).translate(0, -5.15, 0),
+    ];
+    for (const x of [-12, 12])
+      doorMetal.push(new BoxGeometry(2.4, 1.3, 6).translate(x, -4.95, 0));
+    hatchFrame.add(mergedShipDetail(doorMetal, steel, "docking-door-locks", 4));
+    root.add(hatchFrame);
+    const deployables = [];
+    for (const side of [-1, 1]) {
+      const rootWidth =
+        Math.max(section(-415).w, section(-220).w, section(-85).w) + 26;
+      const position = new Vector3(side * rootWidth, 4, -250);
+      beam(
+        [side * (section(-250).w - 8), 4, -250],
+        [position.x + side * 4, 4, -250],
+        5,
+      );
+      for (const dz of [-105.6, 105.6])
+        beam(
+          [side * (section(-250 + dz).w - 8), 4, -250 + dz],
+          [position.x - side * 19, 4, -250 + dz],
+          5,
+        );
+      deployables.push(
+        ...pairedRadiator({
+          owner: root,
+          side,
+          position,
+          surface: radiatorSurface,
+          metal: steel,
+          tier,
+          width: 116,
+          length: 330,
+          index,
+        }),
+      );
+    }
+    const aft = section(-520);
+    root.userData.engineOutlets = [
+      flushOutlet(root, 0, 0, -520.3, aft.w * 0.66, aft.h * 0.7, steel),
+    ];
+    const jets = createAttitudeJets(
+      root,
+      tier,
+      [
+        [310, section(310).w - 0.7],
+        [-445, section(-445).w - 0.7],
+      ],
+      carrier ? "carrier" : capsule ? "capsule" : "escort",
+    );
+    const geometry = mergeGeometries(meshParts);
+    meshParts.forEach((g) => g.dispose());
+    const body = new Mesh(geometry, armour);
+    body.name = "shield-hull";
+    body.castShadow = body.receiveShadow = true;
+    root.add(body);
+    // Actual bevels and recessed seams define the hull; no coplanar line overlay.
+    instances.forEach((list, i) => {
+      const mesh = new InstancedMesh(
+        i === 3 ? unitBox : box,
+        materialList[i],
+        list.length,
+      );
+      list.forEach((m, j) => mesh.setMatrixAt(j, m));
+      mesh.castShadow = i !== 3;
+      mesh.receiveShadow = i !== 3;
+      mesh.instanceMatrix.needsUpdate = true;
+      mesh.computeBoundingSphere();
+      root.add(mesh);
+    });
+    fineInstances.forEach((list, i) => {
+      if (!list.length) return;
+      const mesh = new InstancedMesh(
+        unitBox,
+        materialList[i],
+        list.length,
+      );
+      list.forEach((m, j) => mesh.setMatrixAt(j, m));
+      mesh.castShadow = mesh.receiveShadow = i !== 3;
+      mesh.computeBoundingSphere();
+      mesh.userData.distantOmit = true;
+      root.add(mesh);
+    });
+    const pipeMesh = new InstancedMesh(cylinder, steel, pipes.length);
+    pipes.forEach((m, i) => pipeMesh.setMatrixAt(i, m));
+    pipeMesh.castShadow = pipeMesh.receiveShadow = true;
+    pipeMesh.computeBoundingSphere();
+    root.add(pipeMesh);
+    root.userData = {
+      engineOutlets: root.userData.engineOutlets,
+      joints,
+      bridgeProfile,
+      serviceBays,
+      accessHatches,
+      panels: meshParts.length,
+      instances: [...instances, ...fineInstances].reduce(
+        (n, v) => n + v.length,
+        0,
+      ),
+      jets,
+      kind: carrier ? "carrier" : capsule ? "habitat" : "migration",
+      payloadRole,
+      missionPayloads,
+      payloadFrames,
+      deployables,
+    };
+    updateWingDrives(root);
+    markFleet(root, tier, index);
+    return root;
+  };
+  return Array.from({ length: count }, (_, i) => create(i));
+}
 
       // works/first_dawn/cruciform-tail.js
       var TAIL_RCS_STATION = Object.freeze([-366, 215.5]);
@@ -42979,367 +43363,504 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
       }
 
       // works/first_dawn/reference-ark.js
-      function createReferenceArk(tier2) {
-        let detail = { high: 64, mid: 40, low: 24 }[tier2],
-          box =
-            tier2 === "low" ? new BoxGeometry(1, 1, 1) : new RoundedBoxGeometry(1, 1, 1, 1, 0.025),
-          radial = tier2 === "high" ? 24 : tier2 === "mid" ? 16 : 12,
-          mats = [
-            shipMaterial("white", tier2),
-            shipMaterial("thermal", tier2),
-            shipMaterial("steel", tier2),
-            shipMaterial("white", tier2, { color: 13027781 }),
-            new MeshStandardMaterial({
-              color: 10203062,
-              emissive: 9219772,
-              emissiveIntensity: 0.28,
-              roughness: 0.4,
-            }),
-            shipMaterial("foil", tier2),
-          ];
-        {
-          let block2 = function (mat, x, y, z, w, h, d, q) {
-              (matrix.compose(new Vector3(x, y, z), q || new Quaternion(), new Vector3(w, h, d)),
-                batches[mat].push(matrix.clone()),
-                batchOwners[mat].push(partParent),
-                batchParts[mat].push(blueprintPart),
-                batchFine[mat].push(Math.min(w, h, d) <= 3));
-            },
-            beam = function (a, b, r = 3, mat = 2) {
-              let av2 = new Vector3(...a),
-                bv2 = new Vector3(...b),
-                delta = bv2.clone().sub(av2);
-              block2(
-                mat,
-                ...av2.add(bv2).multiplyScalar(0.5).toArray(),
-                r,
-                delta.length(),
-                r,
-                new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), delta.normalize()),
-              );
-            },
-            mesh = function (geo, mat, x, y, z) {
-              let m = new Mesh(geo, mats[mat]);
-              return (
-                m.position.set(x, y, z),
-                (m.castShadow = m.receiveShadow = mat !== 4),
-                (m.userData.blueprintPart = blueprintPart),
-                (m.userData.blueprintOmit = mat === 4),
-                partParent.add(m),
-                m
-              );
-            },
-            ship = new Group();
-          ship.name = "sf-migration-ark";
-          let batches = mats.map(() => []),
-            batchParts = mats.map(() => []),
-            batchFine = mats.map(() => []),
-            batchOwners = mats.map(() => []),
-            matrix = new Matrix4(),
-            blueprintPart = 4,
-            serviceBays = 0,
-            accessHatches = 0,
-            partParent = ship,
-            habitatRings = [];
-          (block2(1, 0, 0, 0, 64, 64, 1010), block2(0, 0, 35, 15, 36, 9, 900));
-          for (let side of [-1, 1]) {
-            beam([side * 36, -28, -465], [side * 36, -28, 455], 5);
-            for (let z = -450; z < 450; z += 60)
-              (beam([side * 37, -30, z], [side * 37, 30, z + 60], 3),
-                block2(2, side * 39, 0, z, 5, 65, 7));
+      function createReferenceArk(tier) {
+  const detail = { high: 64, mid: 40, low: 24 }[tier];
+  // Narrow edge highlights reveal structure during the close ring passage.
+  // Low retains the silhouette while omitting bevel tessellation.
+  const box =
+    tier === "low"
+      ? new BoxGeometry(1, 1, 1)
+      : new RoundedBoxGeometry(1, 1, 1, 1, 0.025);
+  const radial = tier === "high" ? 24 : tier === "mid" ? 16 : 12;
+  const mats = [
+    shipMaterial("white", tier),
+    shipMaterial("thermal", tier),
+    shipMaterial("steel", tier),
+    shipMaterial("white", tier, { color: 0xc6c9c5 }),
+    new MeshStandardMaterial({
+      color: 0x9bafb6,
+      emissive: 0x8caebc,
+      emissiveIntensity: 0.28,
+      roughness: 0.4,
+    }),
+    shipMaterial("foil", tier),
+  ];
+
+  {
+    const ship = new Group();
+    ship.name = "sf-migration-ark";
+    const batches = mats.map(() => []),
+      batchParts = mats.map(() => []),
+      batchFine = mats.map(() => []),
+      batchOwners = mats.map(() => []),
+      matrix = new Matrix4();
+    let blueprintPart = 4,
+      serviceBays = 0,
+      accessHatches = 0,
+      partParent = ship;
+    const habitatRings = [];
+    function block(mat, x, y, z, w, h, d, q) {
+      matrix.compose(
+        new Vector3(x, y, z),
+        q || new Quaternion(),
+        new Vector3(w, h, d),
+      );
+      batches[mat].push(matrix.clone());
+      batchOwners[mat].push(partParent);
+      batchParts[mat].push(blueprintPart);
+      batchFine[mat].push(Math.min(w, h, d) <= 3);
+    }
+    function beam(a, b, r = 3, mat = 2) {
+      const av2 = new Vector3(...a),
+        bv2 = new Vector3(...b),
+        delta = bv2.clone().sub(av2);
+      block(
+        mat,
+        ...av2.add(bv2).multiplyScalar(0.5).toArray(),
+        r,
+        delta.length(),
+        r,
+        new Quaternion().setFromUnitVectors(
+          new Vector3(0, 1, 0),
+          delta.normalize(),
+        ),
+      );
+    }
+    function mesh(geo, mat, x, y, z) {
+      const m = new Mesh(geo, mats[mat]);
+      m.position.set(x, y, z);
+      m.castShadow = m.receiveShadow = mat !== 4;
+      m.userData.blueprintPart = blueprintPart;
+      m.userData.blueprintOmit = mat === 4;
+      partParent.add(m);
+      return m;
+    }
+    block(1, 0, 0, 0, 64, 64, 1010);
+    block(0, 0, 35, 15, 36, 9, 900);
+    for (const side of [-1, 1]) {
+      beam([side * 36, -28, -465], [side * 36, -28, 455], 5);
+      for (let z = -450; z < 450; z += 60) {
+        beam([side * 37, -30, z], [side * 37, 30, z + 60], 3);
+        block(2, side * 39, 0, z, 5, 65, 7);
+      }
+    }
+    for (let j = 0; j < 4; j++) {
+      let g = new CylinderGeometry(55 - j * 8, 65 - j * 7, 40, 8);
+      g.rotateX(Math.PI / 2);
+      mesh(g, j % 2 ? 3 : 0, 0, 0, 440 + j * 31);
+    }
+    block(1, 0, 48, 437, 65, 7, 26);
+    block(4, 0, 49, 451, 43, 2, 1);
+    blueprintPart = 1;
+    const pressureDetails = [];
+    for (const side of [-1, 1])
+      for (let j = 0; j < 5; j++) {
+        const z = -205 + j * 117,
+          x = side * 86;
+        beam([side * 27, 0, z], [x, 0, z], 9);
+        const geo = pressureVesselGeometry(29, 94, tier);
+        mesh(geo, 3, x, 0, z).name = "pressure-module";
+        // Straps seat on the cylindrical barrel, not around the tapered head.
+        for (const g of pressureVesselFittings(29, 94, tier, true)) {
+          g.translate(x, 0, z);
+          pressureDetails.push(g);
+        }
+        block(1, x, 29, z, 28, 4, 72);
+        block(0, x, 32, z, 17, 3, 65);
+        for (let k = 0; k < 5; k++)
+          if (j !== 2 || k === 2)
+            block(4, x + side * 28.6, 7, z - 30 + k * 14, 1, 0.8, 1.8);
+        block(5, x, 30, z - 23, 18, 1, 8);
+        // Small inspection blanket, seated on the domed end with metal retainers.
+        if (j === 0 || j === 4) {
+          block(5, x, 0, z + 46.4, 23, 24, 1.2);
+          for (const dx of [-12.5, 12.5])
+            block(2, x + dx, 0, z + 46.7, 1.2, 24, 1.0);
+        }
+        for (const dz of [-(47 - 29 * 0.44 - 3), 47 - 29 * 0.44 - 3])
+          for (const a of [0, Math.PI / 2, Math.PI, Math.PI * 1.5]) {
+            block(
+              2,
+              x + Math.cos(a) * 30.3,
+              Math.sin(a) * 30.3,
+              z + dz,
+              2.4,
+              2.4,
+              6.8,
+            );
           }
-          for (let j = 0; j < 4; j++) {
-            let g = new CylinderGeometry(55 - j * 8, 65 - j * 7, 40, 8);
-            (g.rotateX(Math.PI / 2), mesh(g, j % 2 ? 3 : 0, 0, 0, 440 + j * 31));
-          }
-          (block2(1, 0, 48, 437, 65, 7, 26), block2(4, 0, 49, 451, 43, 2, 1), (blueprintPart = 1));
-          let pressureDetails = [];
-          for (let side of [-1, 1])
-            for (let j = 0; j < 5; j++) {
-              let z = -205 + j * 117,
-                x = side * 86;
-              beam([side * 27, 0, z], [x, 0, z], 9);
-              let geo = pressureVesselGeometry(29, 94, tier2);
-              mesh(geo, 3, x, 0, z).name = "pressure-module";
-              for (let g of pressureVesselFittings(29, 94, tier2, !0))
-                (g.translate(x, 0, z), pressureDetails.push(g));
-              (block2(1, x, 29, z, 28, 4, 72), block2(0, x, 32, z, 17, 3, 65));
-              for (let k = 0; k < 5; k++)
-                (j !== 2 || k === 2) && block2(4, x + side * 28.6, 7, z - 30 + k * 14, 1, 0.8, 1.8);
-              if ((block2(5, x, 30, z - 23, 18, 1, 8), j === 0 || j === 4)) {
-                block2(5, x, 0, z + 46.4, 23, 24, 1.2);
-                for (let dx2 of [-12.5, 12.5]) block2(2, x + dx2, 0, z + 46.7, 1.2, 24, 1);
-              }
-              for (let dz2 of [-(47 - 29 * 0.44 - 3), 47 - 29 * 0.44 - 3])
-                for (let a of [0, Math.PI / 2, Math.PI, Math.PI * 1.5])
-                  block2(2, x + Math.cos(a) * 30.3, Math.sin(a) * 30.3, z + dz2, 2.4, 2.4, 6.8);
-              beam([x + side * 17, -23, z - 42], [x + side * 17, -23, z + 42], 2.2);
-              for (let dz2 of [-36, 36]) block2(2, x, 33, z + dz2, 34, 2, 3);
-            }
-          (ship.add(
-            mergedShipDetail(pressureDetails, mats[2], "pressure-module-straps-and-welds", 1),
+        // One protected service conduit connects the adjacent module saddles.
+        beam([x + side * 17, -23, z - 42], [x + side * 17, -23, z + 42], 2.2);
+
+        for (const dz of [-36, 36]) block(2, x, 33, z + dz, 34, 2, 3);
+      }
+    ship.add(
+      mergedShipDetail(
+        pressureDetails,
+        mats[2],
+        "pressure-module-straps-and-welds",
+        1,
+      ),
+    );
+    blueprintPart = 0;
+    const bearings = [];
+    for (const [ringIndex, z] of HABITAT_RING_Z.entries()) {
+      const radiusScale = HABITAT_RING_SCALE[ringIndex],
+        rim = (r) => r * radiusScale;
+      const ring = new Group();
+      ring.name = z > 0 ? "habitat-ring-A" : "habitat-ring-B";
+      ring.userData.axialPosition = z;
+      ship.add(ring);
+      habitatRings.push(ring);
+      partParent = ring;
+      const shields = [],
+        edgeBands = [],
+        backs = [],
+        hubs = [],
+        spokes = [];
+      const pipe = (from, to, radius, bore) => {
+        const a = new Vector3(...from),
+          b = new Vector3(...to),
+          delta = b.clone().sub(a),
+          length = delta.length();
+        const section = [
+          [radius, 0],
+          [radius, length],
+          [bore, length],
+          [bore, 0],
+          [radius, 0],
+        ];
+        const tube = new LatheGeometry(
+          section.map((p) => new Vector2(...p)),
+          { high: 20, mid: 16, low: 10 }[tier],
+        );
+        tube.applyQuaternion(
+          new Quaternion().setFromUnitVectors(
+            new Vector3(0, 1, 0),
+            delta.normalize(),
           ),
-            (blueprintPart = 0));
-          let bearings = [];
-          for (let [ringIndex, z] of HABITAT_RING_Z.entries()) {
-            let radiusScale = HABITAT_RING_SCALE[ringIndex],
-              rim = (r) => r * radiusScale,
-              ring = new Group();
-            ((ring.name = z > 0 ? "habitat-ring-A" : "habitat-ring-B"),
-              (ring.userData.axialPosition = z),
-              ship.add(ring),
-              habitatRings.push(ring),
-              (partParent = ring));
-            let shields = [],
-              edgeBands = [],
-              backs = [],
-              hubs = [],
-              spokes = [],
-              pipe = (from, to, radius, bore) => {
-                let a = new Vector3(...from),
-                  b = new Vector3(...to),
-                  delta = b.clone().sub(a),
-                  length = delta.length(),
-                  section = [
-                    [radius, 0],
-                    [radius, length],
-                    [bore, length],
-                    [bore, 0],
-                    [radius, 0],
-                  ],
-                  tube = new LatheGeometry(
-                    section.map((p) => new Vector2(...p)),
-                    { high: 20, mid: 16, low: 10 }[tier2],
-                  );
-                (tube.applyQuaternion(
-                  new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), delta.normalize()),
-                ),
-                  tube.translate(...a.toArray()),
-                  spokes.push(tube));
-              };
-            (mesh(new TorusGeometry(rim(176), 10, 6, detail), 1, 0, 0, z),
-              mesh(new TorusGeometry(rim(193), 3, 5, detail), 2, 0, 0, z));
-            let segments = tier2 === "low" ? 16 : 24;
-            for (let j = 0; j < segments; j++) {
-              let a = (j / segments) * Math.PI * 2,
-                q = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), a),
-                arc = (Math.PI * 2) / segments - 0.013,
-                openBay = j % (segments / 4) === 0,
-                shieldPieces = openBay
-                  ? [
-                      [161.5, 168, a, arc],
-                      [184, 190.5, a, arc],
-                      [168, 184, a - arc * 0.4, arc * 0.2],
-                      [168, 184, a + arc * 0.4, arc * 0.2],
-                    ]
-                  : [[161.5, 190.5, a, arc]];
-              for (let [inner, outer, angle, width] of shieldPieces) {
-                let shield = ringShieldGeometry(rim(inner), rim(outer), 35, angle, width, tier2);
-                shield.translate(0, 0, z);
-                let finish = 0.5 + 0.18 * Math.sin(j * 2.399 + ringIndex * 1.73);
-                (shield.setAttribute(
-                  "shieldFinish",
-                  new Float32BufferAttribute(
-                    new Float32Array(shield.attributes.position.count).fill(finish),
-                    1,
-                  ),
-                ),
-                  shields.push(shield));
-              }
-              if (openBay) {
-                let backing = ringShieldGeometry(rim(166), rim(186), 23, a, arc * 0.76, tier2);
-                (backing.translate(0, 0, z), backs.push(backing));
-                for (let sign2 of [-1, 1]) {
-                  let p = new Vector3(
-                      rim(176) * Math.cos(a),
-                      rim(176) * Math.sin(a),
-                      z + sign2 * 11.3,
-                    ),
-                    faceQ =
-                      sign2 === 1
-                        ? q
-                        : q
-                            .clone()
-                            .multiply(
-                              new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), Math.PI),
-                            );
-                  (serviceHatch(
-                    (kind, ...args) => block2({ steel: 2, dark: 1, paint: 3 }[kind], ...args),
-                    p,
-                    faceQ,
-                    tier2,
-                  ),
-                    accessHatches++);
-                }
-                serviceBays++;
-              }
-              let band = ringShieldGeometry(rim(190.5), rim(192.3), 31, a, arc - 0.018, tier2);
-              (band.translate(0, 0, z), edgeBands.push(band));
-              let equipmentSector = j % (segments / 4) === Math.floor(segments / 8);
-              if (!openBay && equipmentSector) {
-                if (
-                  (block2(
-                    1,
-                    rim(176) * Math.cos(a),
-                    rim(176) * Math.sin(a),
-                    z + 17.8,
-                    11,
-                    16,
-                    1,
-                    q,
-                  ),
-                  block2(
-                    3,
-                    rim(176) * Math.cos(a),
-                    rim(176) * Math.sin(a),
-                    z + 18.5,
-                    9.4,
-                    14.4,
-                    0.7,
-                    q,
-                  ),
-                  tier2 !== "low")
-                )
-                  for (let delta of [-0.034, 0.034])
-                    block2(
-                      2,
-                      rim(176) * Math.cos(a + delta),
-                      rim(176) * Math.sin(a + delta),
-                      z + 19,
-                      1.5,
-                      1.5,
-                      0.8,
-                      q,
+        );
+        tube.translate(...a.toArray());
+        spokes.push(tube);
+      };
+      mesh(new TorusGeometry(rim(176), 10, 6, detail), 1, 0, 0, z);
+      mesh(new TorusGeometry(rim(193), 3, 5, detail), 2, 0, 0, z);
+      const segments = tier === "low" ? 16 : 24;
+      for (let j = 0; j < segments; j++) {
+        const a = (j / segments) * Math.PI * 2,
+          q = new Quaternion().setFromAxisAngle(
+            new Vector3(0, 0, 1),
+            a,
+          );
+        const arc = (Math.PI * 2) / segments - 0.013;
+        const openBay = j % (segments / 4) === 0;
+        const shieldPieces = openBay
+          ? [
+              [161.5, 168, a, arc],
+              [184, 190.5, a, arc],
+              [168, 184, a - arc * 0.4, arc * 0.2],
+              [168, 184, a + arc * 0.4, arc * 0.2],
+            ]
+          : [[161.5, 190.5, a, arc]];
+        for (const [inner, outer, angle, width] of shieldPieces) {
+          const shield = ringShieldGeometry(
+            rim(inner),
+            rim(outer),
+            35,
+            angle,
+            width,
+            tier,
+          );
+          shield.translate(0, 0, z);
+          // One restrained finish value per fabricated cassette, including its rim strips.
+          const finish = 0.5 + 0.18 * Math.sin(j * 2.399 + ringIndex * 1.73);
+          shield.setAttribute(
+            "shieldFinish",
+            new Float32BufferAttribute(
+              new Float32Array(shield.attributes.position.count).fill(finish),
+              1,
+            ),
+          );
+          shields.push(shield);
+        }
+        if (openBay) {
+          const backing = ringShieldGeometry(
+            rim(166),
+            rim(186),
+            23,
+            a,
+            arc * 0.76,
+            tier,
+          );
+          backing.translate(0, 0, z);
+          backs.push(backing);
+          for (const sign of [-1, 1]) {
+            const p = new Vector3(
+              rim(176) * Math.cos(a),
+              rim(176) * Math.sin(a),
+              z + sign * 11.3,
+            );
+            const faceQ =
+              sign === 1
+                ? q
+                : q
+                    .clone()
+                    .multiply(
+                      new Quaternion().setFromAxisAngle(
+                        new Vector3(0, 1, 0),
+                        Math.PI,
+                      ),
                     );
-                block2(4, rim(176) * Math.cos(a), rim(176) * Math.sin(a), z + 18, 3, 0.65, 1, q);
-              }
-            }
-            for (let dz2 of [-9, 9]) {
-              let hub = ringShieldGeometry(56, 68, 4, 0, Math.PI * 2, tier2);
-              (hub.translate(0, 0, z + dz2), hubs.push(hub));
-            }
-            for (let j = 0; j < 6; j++) {
-              let a = (j * Math.PI) / 3,
-                at = (r) => [r * Math.cos(a), r * Math.sin(a), z];
-              pipe(at(60), at(rim(170)), 4.8, 3.5);
-              for (let r of [63, rim(164)]) pipe(at(r - 6), at(r + 6), 9.2, 4.75);
-            }
-            let tubularSpokes = mergedShipDetail(spokes, mats[2], "tubular-ring-spokes", 0);
-            ((tubularSpokes.userData.spokeCount = 6),
-              (tubularSpokes.userData.section = "circular-hollow"),
-              ring.add(tubularSpokes),
-              ring.add(mergedShipDetail(hubs, mats[2], "habitat-spoke-hubs", 0)),
-              ring.add(mergedShipDetail(backs, mats[1], "recessed-ring-pressure-backs", 0)),
-              ring.add(mergedShipDetail(shields, mats[0], "curved-habitat-shields", 0)),
-              ring.add(mergedShipDetail(edgeBands, mats[3], "habitat-shield-edge-bands", 0)));
-            let bearing = ringShieldGeometry(48, 55.2, 20, 0, Math.PI * 2, tier2);
-            (bearing.translate(0, 0, z), bearings.push(bearing), (partParent = ship));
-            for (let j = 0; j < 4; j++) {
-              let a = (j * Math.PI) / 2,
-                q = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), a);
-              block2(2, 41 * Math.cos(a), 41 * Math.sin(a), z, 20, 8, 16, q);
-            }
+            serviceHatch(
+              (kind, ...args) =>
+                block({ steel: 2, dark: 1, paint: 3 }[kind], ...args),
+              p,
+              faceQ,
+              tier,
+            );
+            accessHatches++;
           }
-          ship.add(mergedShipDetail(bearings, mats[2], "stationary-ring-bearing-housings", 0));
-          let seals = [];
-          for (let z of HABITAT_RING_Z)
-            for (let dz2 of [-10.2, 10.2]) {
-              let lip = ringShieldGeometry(52, 55.5, 1.2, 0, Math.PI * 2, tier2);
-              (lip.translate(0, 0, z + dz2), seals.push(lip));
-            }
-          (ship.add(mergedShipDetail(seals, mats[1], "stationary-hub-seal-lips", 0)),
-            (partParent = ship),
-            (blueprintPart = 3),
-            block2(1, 0, 0, -401, 130, 110, 163),
-            block2(0, 0, 60, -403, 104, 10, 139));
-          let jets = createAttitudeJets(ship, tier2, [[471, 51.5], TAIL_RCS_STATION], "habitat");
-          for (let side of [-1, 1]) {
-            (beam([side * 40, -16, -315], [side * 142, -16, -390], 18),
-              beam([side * 40, 16, -460], [side * 142, 16, -465], 14));
-            let pod = new CylinderGeometry(43, 37, 166, radial);
-            (pod.rotateX(Math.PI / 2), mesh(pod, 2, side * 142, 0, -413.5));
-            for (let k = 0; k < 5; k++) block2(0, side * 142, 41, -350 - k * 31, 44, 7, 20);
-          }
-          let thrustFace = outletShape(60, 36);
-          for (let y of [-18, 18])
-            for (let x of [-36, 0, 36]) {
-              let opening = new Path();
-              (opening.absarc(x, y, 14 * 0.83, 0, Math.PI * 2, !0), thrustFace.holes.push(opening));
-            }
-          let thrustBulkhead = new ExtrudeGeometry(thrustFace, {
-            depth: 18,
-            steps: 1,
-            bevelEnabled: !1,
-            curveSegments: tier2 === "low" ? 8 : 16,
-          });
-          ((mesh(thrustBulkhead, 2, 0, -8, -514).name = "integrated-thrust-bulkhead"),
-            (ship.userData.engineOutlets = []));
-          for (let x of [-142, 142]) {
-            let nozzle = nozzleAssembly(tier2, 32, 28.5, mats[2], mats[1]);
-            (nozzle.position.set(x, 0, -496.5),
-              nozzle.traverse((node) => {
-                node.userData.blueprintPart = blueprintPart;
-              }),
-              ship.add(nozzle),
-              ship.userData.engineOutlets.push({
-                x,
-                y: 0,
-                radius: 32,
-                exit: -525,
-                depth: 28.5,
-              }));
-          }
-          for (let y of [-26, 10])
-            for (let x of [-36, 0, 36])
-              ship.userData.engineOutlets.push(
-                flushOutlet(ship, x, y, -514.3, 14, 14, mats[2], tier2 === "low" ? 16 : 32),
+          serviceBays++;
+        }
+        const band = ringShieldGeometry(
+          rim(190.5),
+          rim(192.3),
+          31,
+          a,
+          arc - 0.018,
+          tier,
+        );
+        band.translate(0, 0, z);
+        edgeBands.push(band);
+        // Recessed service plate and paired latches share the cassette orientation.
+        const equipmentSector = j % (segments / 4) === Math.floor(segments / 8);
+        if (!openBay && equipmentSector) {
+          block(
+            1,
+            rim(176) * Math.cos(a),
+            rim(176) * Math.sin(a),
+            z + 17.8,
+            11,
+            16,
+            1.0,
+            q,
+          );
+          block(
+            3,
+            rim(176) * Math.cos(a),
+            rim(176) * Math.sin(a),
+            z + 18.5,
+            9.4,
+            14.4,
+            0.7,
+            q,
+          );
+          if (tier !== "low")
+            for (const delta of [-0.034, 0.034])
+              block(
+                2,
+                rim(176) * Math.cos(a + delta),
+                rim(176) * Math.sin(a + delta),
+                z + 19,
+                1.5,
+                1.5,
+                0.8,
+                q,
               );
-          addCruciformTail(ship, tier2);
-          let deployables = [];
-          ((blueprintPart = 4),
-            block2(2, 0, 72, 285, 19, 92, 24),
-            block2(3, 0, 115, 285, 51, 12, 33),
-            block2(1, 0, 115, 303, 45, 5, 2),
-            block2(4, 0, 115, 304.2, 33, 1, 1),
-            beam([0, 120, 280], [0, 153, 280], 1.3));
-          let fineBox = new BoxGeometry(1, 1, 1);
-          return (
-            batches.forEach((arr, k) => {
-              for (let owner of [ship, ...habitatRings])
-                for (let fine of [!1, !0]) {
-                  let selected = arr
-                    .map((m, i) => i)
-                    .filter((i) => batchFine[k][i] === fine && batchOwners[k][i] === owner);
-                  if (!selected.length) continue;
-                  let inst = new InstancedMesh(fine ? fineBox : box, mats[k], selected.length);
-                  ((inst.userData.blueprintParts = selected.map((i) => batchParts[k][i])),
-                    (inst.userData.blueprintFine = selected.map((i) => batchFine[k][i])),
-                    (inst.userData.blueprintBox = !0),
-                    (inst.userData.distantOmit = fine),
-                    (inst.userData.blueprintOmit = k === 4),
-                    selected.forEach((i, j) => inst.setMatrixAt(j, arr[i])),
-                    (inst.instanceMatrix.needsUpdate = !0),
-                    (inst.castShadow = inst.receiveShadow = k !== 4),
-                    inst.computeBoundingSphere(),
-                    owner.add(inst));
-                }
-            }),
-            (ship.userData = {
-              engineOutlets: ship.userData.engineOutlets,
-              jets,
-              deployables,
-              habitatRings,
-              serviceBays,
-              accessHatches,
-              kind: "migration-ark",
-              design: "segmented-pressure-vessels / twin-habitat-rings / axial-keel",
-            }),
-            markFleet(ship, tier2, 5),
-            markRingModules(ship, tier2),
-            ship
+          block(
+            4,
+            rim(176) * Math.cos(a),
+            rim(176) * Math.sin(a),
+            z + 18,
+            3,
+            0.65,
+            1,
+            q,
           );
         }
       }
+      // Each spoke seats into an annular hub and a rim shoe, closing its load path.
+      for (const dz of [-9, 9]) {
+        const hub = ringShieldGeometry(56, 68, 4, 0, Math.PI * 2, tier);
+        hub.translate(0, 0, z + dz);
+        hubs.push(hub);
+      }
+      for (let j = 0; j < 6; j++) {
+        const a = (j * Math.PI) / 3;
+        const at = (r) => [r * Math.cos(a), r * Math.sin(a), z];
+        // Round tubular spokes and seated sleeves rotate with the ring. The
+        // sleeve touches both hub plates; the pipe stays inside their gap.
+        pipe(at(60), at(rim(170)), 4.8, 3.5);
+        for (const r of [63, rim(164)]) pipe(at(r - 6), at(r + 6), 9.2, 4.75);
+      }
+      const tubularSpokes = mergedShipDetail(
+        spokes,
+        mats[2],
+        "tubular-ring-spokes",
+        0,
+      );
+      tubularSpokes.userData.spokeCount = 6;
+      tubularSpokes.userData.section = "circular-hollow";
+      ring.add(tubularSpokes);
+      ring.add(mergedShipDetail(hubs, mats[2], "habitat-spoke-hubs", 0));
+      ring.add(
+        mergedShipDetail(backs, mats[1], "recessed-ring-pressure-backs", 0),
+      );
+      ring.add(mergedShipDetail(shields, mats[0], "curved-habitat-shields", 0));
+      ring.add(
+        mergedShipDetail(edgeBands, mats[3], "habitat-shield-edge-bands", 0),
+      );
+      // Fixed journal and four adapters close the load path to the axial frame.
+      // A radial gap separates this housing from the rotating hub's inner edge.
+      const bearing = ringShieldGeometry(48, 55.2, 20, 0, Math.PI * 2, tier);
+      bearing.translate(0, 0, z);
+      bearings.push(bearing);
+      partParent = ship;
+      for (let j = 0; j < 4; j++) {
+        const a = (j * Math.PI) / 2,
+          q = new Quaternion().setFromAxisAngle(
+            new Vector3(0, 0, 1),
+            a,
+          );
+        block(2, 41 * Math.cos(a), 41 * Math.sin(a), z, 20, 8, 16, q);
+      }
+    }
+    ship.add(
+      mergedShipDetail(
+        bearings,
+        mats[1],
+        "stationary-ring-bearing-housings",
+        0,
+      ),
+    );
+    const seals = [];
+    for (const z of HABITAT_RING_Z) {
+      for (const dz of [-10.2, 10.2]) {
+        // Stationary retaining lips retain radial clearance from the rotating 56-unit bore.
+        const lip = ringShieldGeometry(52, 55.5, 1.2, 0, Math.PI * 2, tier);
+        lip.translate(0, 0, z + dz);
+        seals.push(lip);
+      }
+    }
+    // Fixed dark journal, narrow metal retaining lips and the brighter rotating
+    // hub reveal the existing bearing clearance without enlarging the mechanism.
+    ship.add(mergedShipDetail(seals, mats[2], "stationary-hub-seal-lips", 0));
+    partParent = ship;
+    blueprintPart = 3;
+    block(1, 0, 0, -401, 130, 110, 163);
+    block(0, 0, 60, -403, 104, 10, 139);
+    const jets = createAttitudeJets(
+      ship,
+      tier,
+      [[471, 51.5], TAIL_RCS_STATION],
+      "habitat",
+    );
+    for (const side of [-1, 1]) {
+      beam([side * 40, -16, -315], [side * 142, -16, -390], 18);
+      beam([side * 40, 16, -460], [side * 142, 16, -465], 14);
+      const pod = new CylinderGeometry(43, 37, 166, radial);
+      pod.rotateX(Math.PI / 2);
+      mesh(pod, 2, side * 142, 0, -413.5);
+      for (let k = 0; k < 5; k++)
+        block(0, side * 142, 41, -350 - k * 31, 44, 7, 20);
+    }
+    // The central bank is integrated into the aft thrust bulkhead.
+    const thrustFace = outletShape(60, 36);
+    for (const y of [-18, 18])
+      for (const x of [-36, 0, 36]) {
+        const opening = new Path();
+        opening.absarc(x, y, 14 * 0.83, 0, Math.PI * 2, true);
+        thrustFace.holes.push(opening);
+      }
+    const thrustBulkhead = new ExtrudeGeometry(thrustFace, {
+      depth: 18,
+      steps: 1,
+      bevelEnabled: false,
+      curveSegments: tier === "low" ? 8 : 16,
+    });
+    mesh(thrustBulkhead, 2, 0, -8, -514).name = "integrated-thrust-bulkhead";
+    ship.userData.engineOutlets = [];
+    for (const x of [-142, 142]) {
+      const nozzle = nozzleAssembly(tier, 32, 28.5, mats[2], mats[1]);
+      nozzle.position.set(x, 0, -496.5);
+      nozzle.traverse((node) => {
+        node.userData.blueprintPart = blueprintPart;
+      });
+      ship.add(nozzle);
+      ship.userData.engineOutlets.push({
+        x,
+        y: 0,
+        radius: 32,
+        exit: -525,
+        depth: 28.5,
+      });
+    }
+    for (const y of [-26, 10]) {
+      for (const x of [-36, 0, 36]) {
+        ship.userData.engineOutlets.push(
+          flushOutlet(
+            ship,
+            x,
+            y,
+            -514.3,
+            14,
+            14,
+            mats[2],
+            tier === "low" ? 16 : 32,
+          ),
+        );
+      }
+    }
+    addCruciformTail(ship, tier);
+    const deployables = [];
+    blueprintPart = 4;
+    block(2, 0, 72, 285, 19, 92, 24);
+    block(3, 0, 115, 285, 51, 12, 33);
+    block(1, 0, 115, 303, 45, 5, 2);
+    block(4, 0, 115, 304.2, 33, 1, 1);
+    beam([0, 120, 280], [0, 153, 280], 1.3);
+    const fineBox = new BoxGeometry(1, 1, 1);
+    batches.forEach((arr, k) => {
+      for (const owner of [ship, ...habitatRings])
+        for (const fine of [false, true]) {
+          const selected = arr
+            .map((m, i) => i)
+            .filter(
+              (i) => batchFine[k][i] === fine && batchOwners[k][i] === owner,
+            );
+          if (!selected.length) continue;
+          const inst = new InstancedMesh(
+            fine ? fineBox : box,
+            mats[k],
+            selected.length,
+          );
+          inst.userData.blueprintParts = selected.map((i) => batchParts[k][i]);
+          inst.userData.blueprintFine = selected.map((i) => batchFine[k][i]);
+          inst.userData.blueprintBox = true;
+          inst.userData.distantOmit = fine;
+          inst.userData.blueprintOmit = k === 4;
+          selected.forEach((i, j) => inst.setMatrixAt(j, arr[i]));
+          inst.instanceMatrix.needsUpdate = true;
+          inst.castShadow = inst.receiveShadow = k !== 4;
+          inst.computeBoundingSphere();
+          owner.add(inst);
+        }
+    });
+    ship.userData = {
+      engineOutlets: ship.userData.engineOutlets,
+      jets,
+      deployables,
+      habitatRings,
+      serviceBays,
+      accessHatches,
+      kind: "migration-ark",
+      design: "segmented-pressure-vessels / twin-habitat-rings / axial-keel",
+    };
+    markFleet(ship, tier, 5);
+    markRingModules(ship, tier);
+    return ship;
+  }
+}
 
       // works/first_dawn/atmosphere.js
       function createAtmosphere(planet, sun, tier2) {
@@ -68259,7 +68780,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
       function installVoyageEngineGlow(
         fleet2,
         tier2,
-        { lengthScale = 5, tailFalloff = 0, brightness = 1, colorGradient = !0 } = {},
+        { lengthScale = 5, tailFalloff = 0, brightness = 1, plumeBrightness = brightness, colorGradient = !0 } = {},
       ) {
         let segments = { low: 20, mid: 28, high: 40 }[tier2],
           axial = { low: 5, mid: 8, high: 10 }[tier2],
@@ -68344,7 +68865,7 @@ vPlumeNormal=normalize(normalMatrix*normal);vPlumeView=-mvPosition.xyz;`,
       float column=pow(smoothstep(.0,.94,facing),1.85);
       vec3 centre=mix(vec3(.83,.92,1.0),vec3(.35,.54,.65),smoothstep(.0,.72,t));
       vec3 colour=${colorGradient ? "mix(vec3(.16,.30,.40),centre,column)" : "vec3(.48,.61,.69)"};
-      diffuseColor.rgb=colour*${brightness.toFixed(3)};
+      diffuseColor.rgb=colour*${plumeBrightness.toFixed(3)};
       float density=pow(1.0-t,1.7)*exp(-${tailFalloff.toFixed(3)}*t);
       // Restrained, advected variation; the throat stays steady and there are no
       // periodic bright bands. The same clock freezes with the scene on pause.
@@ -68355,9 +68876,9 @@ vPlumeNormal=normalize(normalMatrix*normal);vPlumeView=-mvPosition.xyz;`,
             )));
         }),
           (plume.customProgramCacheKey = () =>
-            `soft-engine-envelope-v1-${tailFalloff}-${brightness}-${colorGradient}`));
+            `soft-engine-envelope-v1-${tailFalloff}-${plumeBrightness}-${colorGradient}`));
         let emissionMaterial =
-            tier2 === "low" ? mobilePlumeMaterial(clock, brightness, colorGradient) : plume,
+            tier2 === "low" ? mobilePlumeMaterial(clock, plumeBrightness, colorGradient) : plume,
           nozzles = 0;
         return (
           fleet2.forEach((ship, shipIndex) => {
@@ -68410,6 +68931,7 @@ vPlumeNormal=normalize(normalMatrix*normal);vPlumeView=-mvPosition.xyz;`,
             lengthScale,
             tailFalloff,
             brightness,
+            plumeBrightness,
             colorGradient,
             update(seconds2) {
               clock.value = seconds2;
@@ -69224,12 +69746,13 @@ vShieldFinish=shieldFinish;`,
             tier,
             phase === "migration"
               ? {
-                  lengthScale: 112.5,
+                  lengthScale: 168.75,
                   tailFalloff: 1.6,
                   brightness: 1.15,
+                  plumeBrightness: 1.38,
                   colorGradient: !0,
                 }
-              : {},
+              : { lengthScale: 7.5, plumeBrightness: 1.2 },
           )),
           phase === "arrival" &&
             (arrivalLight = createArrivalLight(

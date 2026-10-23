@@ -63755,18 +63755,51 @@ body.ti-voyage #ti-transfer-trigger {
           solveSuspension(suspension, restY),
           wheels.push(w));
       }
-    let panelRig = transferTag(new Group(), "panel", 10133928, !0);
-    panelRig.userData.designRole = "solar-gimbal";
-    for (let x of [-0.2, 0.2]) {
-      panelRig.add(
-        cylinderBetween([x, deck + 0.18, 0.18], [x, deck + 0.72, -D.lidLen * 0.5], 0.027, metal),
-      );
-      let joint = new Mesh(new CylinderGeometry(0.075, 0.075, 0.055, 18), dark);
-      (joint.position.set(x, deck + 0.72, -D.lidLen * 0.5),
-        (joint.rotation.z = Math.PI / 2),
-        panelRig.add(joint));
-    }
-    chassis.add(panelRig);
+  const panelRig = transferTag(new Group(), "panel", 10133928, true);
+  panelRig.userData.designRole = "solar-gimbal";
+  const panelSill = new Mesh(
+    formedBox(0.74, 0.055, 0.14, 0.008),
+    hull,
+  );
+  panelSill.position.set(0, deck + 0.18, 0.18);
+  panelSill.userData.designRole = "array-load-spreader";
+  panelRig.add(panelSill);
+  for (const x of [-0.31, 0.31]) {
+    panelRig.add(
+      cylinderBetween(
+        [x, deck + 0.18, 0.18],
+        [x, deck + 0.72, -D.lidLen * 0.5],
+        0.027,
+        metal,
+      ),
+    );
+    const joint = new Mesh(
+      new CylinderGeometry(0.075, 0.075, 0.055, 18),
+      dark,
+    );
+    joint.position.set(x, deck + 0.72, -D.lidLen * 0.5);
+    joint.rotation.z = Math.PI / 2;
+    panelRig.add(joint);
+    const bearingCap = new Mesh(
+      new CylinderGeometry(0.06, 0.06, 0.018, 12),
+      metal,
+    );
+    bearingCap.position.set(
+      x + Math.sign(x) * 0.037,
+      deck + 0.72,
+      -D.lidLen * 0.5,
+    );
+    bearingCap.rotation.z = Math.PI / 2;
+    panelRig.add(bearingCap);
+  }
+  const rootShaft = new Mesh(
+    new CylinderGeometry(0.034, 0.034, 0.71, 12),
+    metal,
+  );
+  rootShaft.position.set(0, deck + 0.72, -D.lidLen * 0.5);
+  rootShaft.rotation.z = Math.PI / 2;
+  panelRig.add(rootShaft);
+  chassis.add(panelRig);
     let lid = new Group();
     (transferTag(lid, "panel", null, !0),
       (lid.userData.designRole = "solar-array"),
@@ -64081,12 +64114,23 @@ body.ti-voyage #ti-transfer-trigger {
       (bezel.position.set(sx, deck + D.camY, D.camZ - 0.134),
         chassis.add(transferTag(bezel, "signal", 10133928, !0)));
     }
-    let lidarLens = optic(0.06, 0.042);
-    (lidarLens.position.set(0, deck + D.camY + 0.145, D.camZ - 0.067),
-      chassis.add(transferTag(lidarLens, "signal", 8885157, !0)));
-    let lidarBezel = new Mesh(new TorusGeometry(0.071, 0.01, 7, 28), metal);
-    (lidarBezel.position.set(0, deck + D.camY + 0.145, D.camZ - 0.092),
-      chassis.add(transferTag(lidarBezel, "signal", 10133928, !0)));
+  // Ranging and panoramic windows have a different aperture from stereo optics.
+  const scanWindow = (width, height, depth) => {
+    const window = new Group();
+    const baffle = new Mesh(
+      formedBox(width + 0.024, height + 0.024, depth, 0.004),
+      dark,
+    );
+    const lens = new Mesh(new PlaneGeometry(width, height), glass);
+    lens.position.z = -depth * 0.5 - 0.001;
+    lens.rotation.y = Math.PI;
+    window.add(baffle, lens);
+    window.userData.designRole = "recessed-scan-window";
+    return window;
+  };
+  const lidarLens = scanWindow(0.112, 0.038, 0.025);
+  lidarLens.position.set(0, deck + D.camY + 0.145, D.camZ - 0.075);
+  chassis.add(transferTag(lidarLens, "signal", 8885157, true));
     let sensorBrow = new Mesh(new BoxGeometry(0.43, 0.025, 0.055), armour);
     (sensorBrow.position.set(0, deck + D.camY + 0.095, D.camZ - 0.105),
       chassis.add(transferTag(sensorBrow, "signal", 6910073, !0)));
@@ -64097,7 +64141,7 @@ body.ti-voyage #ti-transfer-trigger {
     let visor = new Mesh(new BoxGeometry(0.72, 0.03, 0.075), dark);
     (visor.position.set(0, deck + D.camY + 0.095, D.camZ - 0.105), crown.add(visor));
     for (let x of [-0.255, 0, 0.255]) {
-      let lens = optic(x ? 0.042 : 0.052, 0.045);
+      let lens = scanWindow(x ? 0.058 : 0.078, 0.028, 0.026);
       (lens.position.set(x, deck + D.camY + 0.03, D.camZ - 0.125), crown.add(lens));
     }
     chassis.add(crown);
@@ -64909,6 +64953,25 @@ body.ti-voyage #ti-transfer-trigger {
         (ankleJoint.quaternion.copy(shoulderJoint.quaternion), this.group.add(ankleJoint));
         let kneeDrive = new Mesh(new CylinderGeometry(0.32, 0.32, 0.18, radial), graphite);
         (kneeDrive.quaternion.copy(shoulderJoint.quaternion), this.group.add(kneeDrive));
+      // End caps reveal the existing hinge axes without changing the leg solver.
+      for (const [joint, radius, depth] of [
+        [shoulderJoint, 0.2, 0.52],
+        [kneeDrive, 0.21, 0.18],
+        [ankleJoint, 0.085, 0.42],
+      ]) {
+        const capGeometry = new CylinderGeometry(
+          radius, radius, depth + 0.025, radial,
+        );
+        const indices = capGeometry.index.array;
+        const endFaces = capGeometry.groups.slice(1).flatMap(({ start, count }) =>
+          Array.from(indices.slice(start, start + count)),
+        );
+        capGeometry.setIndex(endFaces);
+        capGeometry.clearGroups();
+        const cap = new Mesh(capGeometry, metal);
+        cap.name = "landing-gear-pivot-caps";
+        joint.add(cap);
+      }
         let downPin = new Mesh(new CylinderGeometry(0.085, 0.085, 0.5, radial), metal);
         (downPin.quaternion.copy(shoulderJoint.quaternion),
           this.group.add(downPin),
@@ -65120,6 +65183,32 @@ body.ti-voyage #ti-transfer-trigger {
         (rampRibA.position.y = -0.065));
       let rampRibB = rampRibA.clone();
       ((rampRibB.position.x = 1.47), this.rampPivot.add(rampRibA, rampRibB));
+    const rampJoints = [];
+    for (let i = 0; i < 7; i++) {
+      const knuckle = new Mesh(
+        new CylinderGeometry(0.085, 0.085, 0.36, radial),
+        i % 2 ? graphite : metal,
+      );
+      knuckle.position.set(
+        (i - 3) * 0.42,
+        this.dock.floorY - 0.1,
+        this.dock.hatchZ + 0.02,
+      );
+      knuckle.rotation.z = Math.PI * 0.5;
+      knuckle.name = "ramp-root-hinge";
+      this.group.add(knuckle);
+      rampJoints.push(knuckle);
+    }
+    for (const side of [-1, 1]) {
+      const curb = new Mesh(
+        new BoxGeometry(0.07, 0.07, rampLength - 0.28),
+        metal,
+      );
+      curb.position.set(side * 1.535, 0.035, -rampLength * 0.5);
+      curb.name = "ramp-low-edge-curb";
+      this.rampPivot.add(curb);
+      rampJoints.push(curb);
+    }
       let ventCollar = new Mesh(new CylinderGeometry(0.12, 0.17, 0.28, 8), metal);
       (ventCollar.position.set(-3.6, 3.73, 0.15),
         (ventCollar.rotation.z = Math.PI * 0.5),
@@ -65136,6 +65225,7 @@ body.ti-voyage #ti-transfer-trigger {
           this.ramp,
           rampRibA,
           rampRibB,
+          ...rampJoints,
           ...this.dockLights,
           ventCollar,
           ventMouth,
@@ -70341,8 +70431,8 @@ body.ti-voyage #ti-transfer-trigger {
           greenControl.setAttribute(
             "aria-label",
             active
-              ? "녹색 모니터 사용 중 · RAW 색상으로 전환"
-              : "RAW 색상 사용 중 · 녹색 모니터로 전환",
+              ? "SCOPE 표시 중 · SOURCE로 전환"
+              : "SOURCE 표시 중 · SCOPE로 전환",
           )),
         hud?.set(
           "mode",

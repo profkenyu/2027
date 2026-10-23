@@ -29751,181 +29751,104 @@ void main() {
 
   // echo/vessel.mjs
   var up = new Vector3(0, 1, 0);
-  function createVessel() {
-    const root = new Group(), batches = /* @__PURE__ */ new Map();
-    const white = new MeshStandardMaterial({
-      color: 10266796,
-      roughness: 0.7,
-      metalness: 0.32
-    });
-    const graphite = new MeshStandardMaterial({
-      color: 1252900,
-      roughness: 0.78,
-      metalness: 0.2
-    });
-    const metal = new MeshStandardMaterial({
-      color: 7175299,
-      roughness: 0.44,
-      metalness: 0.62
-    });
-    const foil = new MeshStandardMaterial({
-      color: 7958102,
-      roughness: 0.73,
-      metalness: 0.52,
-      flatShading: true
-    });
-    const glass = new MeshStandardMaterial({
-      color: 1454139,
-      roughness: 0.25,
-      metalness: 0.48
-    });
-    function add(g, m, x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0) {
-      const o = new Object3D();
-      o.position.set(x, y, z);
-      o.rotation.set(rx, ry, rz);
-      o.updateMatrix();
-      g.applyMatrix4(o.matrix);
-      const flat = g.index ? g.toNonIndexed() : g;
-      if (flat !== g) g.dispose();
-      if (!batches.has(m)) batches.set(m, []);
-      batches.get(m).push(flat);
+  // Cruise configuration of TR-Q1. Geometry is a reduced visual derivative of
+// the mission lander, not a mass/thermal/structural engineering simulation.
+// Keep six folded legs, the closed rover ramp and one main + four small outlets.
+function createPhaseEchoes(root) {
+  const surfaces = root.children.filter(o => o.isMesh && o.material.isMeshStandardMaterial);
+  const images = [-1, 1].map(sign => {
+    const group = new Group();
+    const material = new MeshBasicMaterial({color: sign < 0 ? 0x8296a1 : 0xaaa394, transparent:true, opacity:0, depthWrite:false});
+    for(const o of surfaces){const m=new Mesh(o.geometry,material);m.position.copy(o.position);m.quaternion.copy(o.quaternion);group.add(m);}
+    group.name = sign < 0 ? "received-observation-A" : "received-observation-B";
+    root.add(group);return {group,material,sign};
+  });
+  return agreement => {
+    const gap = Math.min(1, Math.sqrt(Math.max(0,1-agreement))*1.6);
+    for(const image of images){
+      image.group.visible=gap>.015;
+      image.group.position.set(image.sign*gap*.78,0,image.sign*gap*.18);
+      image.material.opacity=gap*.16;
     }
-    function rod(a, b, r = 0.045) {
-      const a3 = new Vector3(...a), b3 = new Vector3(...b), d = b3.clone().sub(a3), g = new CylinderGeometry(r, r, d.length(), 8);
-      g.applyQuaternion(
-        new Quaternion().setFromUnitVectors(up, d.normalize())
-      );
-      a3.add(b3).multiplyScalar(0.5);
-      add(g, metal, a3.x, a3.y, a3.z);
-    }
-    add(
-      new CylinderGeometry(1.65, 2.14, 0.83, 6),
-      white,
-      0,
-      0.92,
-      0,
-      0,
-      Math.PI / 6
-    );
-    add(
-      new CylinderGeometry(2.14, 1.32, 1.13, 6),
-      foil,
-      0,
-      -0.06,
-      0,
-      0,
-      Math.PI / 6
-    );
-    add(
-      new CylinderGeometry(1.51, 1.6, 0.16, 6),
-      graphite,
-      0,
-      1.4,
-      0,
-      0,
-      Math.PI / 6
-    );
-    add(new BoxGeometry(0.65, 0.35, 0.5), white, 0.35, 1.64, 0.05);
-    add(new BoxGeometry(0.3, 0.12, 0.24), glass, 0.35, 1.85, 0.05);
-    rod([-0.65, 1.45, 0], [-0.65, 2.65, 0], 0.023);
-    add(new CylinderGeometry(0.09, 0.09, 0.27, 8), metal, -0.65, 2.65, 0);
-    for (const side of [-1, 1]) {
-      rod([side * 1.6, 0.8, 0], [side * 2.8, 0.8, 0], 0.065);
-      add(
-        new BoxGeometry(1.7, 0.075, 2.25),
-        graphite,
-        side * 3.12,
-        0.81,
-        0,
-        0,
-        0,
-        side * 0.16
-      );
-      for (const z of [-1.1, 1.1])
-        add(
-          new BoxGeometry(1.74, 0.08, 0.035),
-          metal,
-          side * 3.12,
-          0.86,
-          z,
-          0,
-          0,
-          side * 0.16
-        );
-      for (let i = 0; i < 5; i++)
-        add(
-          new BoxGeometry(1.65, 0.012, 0.018),
-          metal,
-          side * 3.12,
-          0.87,
-          -0.82 + i * 0.41,
-          0,
-          0,
-          side * 0.16
-        );
-    }
-    for (let i = 0; i < 4; i++) {
-      const a = Math.PI / 4 + i * Math.PI / 2, c = Math.cos(a), s = Math.sin(a);
-      rod([c * 1.7, 0.4, s * 1.7], [c * 1.85, -1.05, s * 1.85], 0.075);
-      rod([c * 0.85, -0.65, s * 0.85], [c * 1.85, -1.05, s * 1.85], 0.04);
-      add(
-        new CylinderGeometry(0.29, 0.34, 0.11, 8),
-        graphite,
-        c * 1.85,
-        -1.1,
-        s * 1.85
-      );
-    }
-    for (let i = 0; i < 3; i++) {
-      const a = i * Math.PI * 2 / 3;
-      add(
-        new CylinderGeometry(0.16, 0.32, 0.48, 12, 1, true),
-        metal,
-        Math.cos(a) * 0.8,
-        -0.88,
-        Math.sin(a) * 0.8
-      );
-    }
-    for (const [m, list] of batches) {
-      const total = list.reduce((n2, g2) => n2 + g2.attributes.position.count, 0), p = new Float32Array(total * 3), n = p.slice();
-      let at = 0;
-      for (const g2 of list) {
-        p.set(g2.attributes.position.array, at);
-        n.set(g2.attributes.normal.array, at);
-        at += g2.attributes.position.array.length;
-        g2.dispose();
-      }
-      const g = new BufferGeometry();
-      g.setAttribute("position", new BufferAttribute(p, 3));
-      g.setAttribute("normal", new BufferAttribute(n, 3));
-      g.computeBoundingSphere();
-      root.add(new Mesh(g, m));
-    }
-    const canvas = document.createElement("canvas");
-    canvas.width = 512;
-    canvas.height = 128;
-    const cx = canvas.getContext("2d");
-    cx.clearRect(0, 0, 512, 128);
-    cx.fillStyle = "#c6ced1";
-    cx.font = "600 58px sans-serif";
-    cx.fillText("TR-Q1", 22, 72);
-    cx.font = "16px sans-serif";
-    cx.fillText("TERRAFORMING_PROJECT", 24, 108);
-    const texture = new CanvasTexture(canvas);
-    texture.colorSpace = SRGBColorSpace;
-    const label = new Mesh(
-      new PlaneGeometry(1.13, 0.28),
-      new MeshBasicMaterial({
-        map: texture,
-        transparent: true,
-        depthWrite: false,
-        side: DoubleSide
-      })
-    );
-    label.position.set(0, 0.95, 1.87);
-    root.add(label);
-    return root;
+  };
+}
+
+// C: loss of an observed silhouette driven by the Lambert branch-gap state.
+// The clipping describes unavailable information, not tidal/material failure.
+function createVessel() {
+  const root = new Group(), batches = new Map();
+  root.name = "TR-Q1-cruise";
+  root.userData.design = { id: "TR-Q1", configuration: "cruise", legs: 6, outlets: 5, ramp: "closed" };
+  const white = new MeshStandardMaterial({ color: 0xa4adb0, roughness: .72, metalness: .25 });
+  const dark = new MeshStandardMaterial({ color: 0x131e24, roughness: .82, metalness: .18 });
+  const metal = new MeshStandardMaterial({ color: 0x6d7c83, roughness: .48, metalness: .62 });
+  const foil = new MeshStandardMaterial({ color: 0x796e56, roughness: .78, metalness: .42 });
+  const glass = new MeshStandardMaterial({ color: 0x102630, roughness: .28, metalness: .35 });
+  root.servicePanelMaterial = glass;
+  const up = new Vector3(0, 1, 0);
+  function add(g, m, x=0, y=0, z=0, rx=0, ry=0, rz=0) {
+    const o = new Object3D(); o.position.set(x,y,z); o.rotation.set(rx,ry,rz); o.updateMatrix();
+    g.applyMatrix4(o.matrix); const flat=g.index?g.toNonIndexed():g;
+    if(flat!==g)g.dispose(); if(!batches.has(m))batches.set(m,[]); batches.get(m).push(flat);
   }
+  function rod(a,b,r=.045,m=metal) {
+    const v=new Vector3(...a),w=new Vector3(...b),d=w.clone().sub(v);
+    const g=new CylinderGeometry(r,r,d.length(),8);
+    g.applyQuaternion(new Quaternion().setFromUnitVectors(up,d.normalize()));
+    v.add(w).multiplyScalar(.5);add(g,m,v.x,v.y,v.z);
+  }
+  // Closed pressure shell, lower service skirt and ceramic roof.
+  add(new CylinderGeometry(1.96,1.96,.86,12),dark,0,-.23,0);
+  add(new CylinderGeometry(1.43,2.35,1.05,12),white,0,.72,0);
+  add(new CylinderGeometry(1.41,1.43,.15,12),dark,0,1.31,0);
+  add(new CylinderGeometry(1.98,1.98,.065,12),metal,0,-.63,0);
+  // A closed ramp occupies the same front sector as the mission lander.
+  add(new BoxGeometry(1.54,1.38,.12),metal,0,.12,-1.99);
+  add(new BoxGeometry(1.39,1.22,.13),dark,0,.12,-2.005);
+  for(const x of [-.56,.56])add(new BoxGeometry(.22,.08,.17),metal,x,-.58,-2.04);
+  for(const side of [-1,1]){
+    add(new BoxGeometry(.74,.3,.08),glass,side*1.12,.69,-1.72,0,side*.36);
+    // Folded thermal panels stay close to the shell, with visible hinge roots.
+    add(new BoxGeometry(.08,1.22,1.08),dark,side*2.26,.57,.16,0,0,side*.12);
+    rod([side*1.83,.08,.16],[side*2.26,.08,.16],.075);
+    rod([side*1.83,1.08,.16],[side*2.26,1.08,.16],.075);
+    add(new BoxGeometry(.12,.62,.54),foil,side*1.99,-.15,.64);
+  }
+  for(let i=0;i<6;i++){
+    const a=i*Math.PI/3,c=Math.cos(a),s=Math.sin(a);
+    const p=(r,y)=>[c*r,y,s*r];
+    rod(p(2.12,-.3),p(2.57,.25),.085,white);
+    rod(p(2.57,.25),p(2.5,1.14),.065);
+    rod(p(2.14,.1),p(2.5,.86),.035,dark);
+    add(new CylinderGeometry(.24,.29,.09,8),metal,c*2.5,1.16,s*2.5,Math.PI/2,0,a);
+    add(new BoxGeometry(.19,.18,.19),dark,c*2.13,-.26,s*2.13,0,-a);
+  }
+  // Actual nozzle topology is shared with the main lander.
+  const outlets=[[0,0,.55],[-.85,-.74,.18],[.85,-.74,.18],[-.85,.74,.18],[.85,.74,.18]];
+  for(const [x,z,r] of outlets){
+    add(new CylinderGeometry(r*.5,r,.38,12,1,true),metal,x,-.86,z);
+    add(new CylinderGeometry(r*.49,r*.49,.035,12),dark,x,-.69,z);
+  }
+  // One asymmetric sensor gives the craft an identity at small screen sizes.
+  add(new BoxGeometry(.98,.18,.39),white,0,1.48,0);
+  add(new BoxGeometry(.26,.22,.3),metal,.38,1.66,-.02);
+  add(new BoxGeometry(.18,.13,.035),glass,.38,1.68,-.19);
+  rod([-.47,1.44,.03],[-.47,2.08,.03],.025);
+  add(new CylinderGeometry(.06,.06,.16,8),metal,-.47,2.1,.03);
+  for(const [m,list] of batches){
+    const count=list.reduce((n,g)=>n+g.attributes.position.count,0),p=new Float32Array(count*3),n=new Float32Array(count*3);
+    let at=0;for(const g of list){p.set(g.attributes.position.array,at);n.set(g.attributes.normal.array,at);at+=g.attributes.position.array.length;g.dispose();}
+    const g=new BufferGeometry();g.setAttribute('position',new BufferAttribute(p,3));g.setAttribute('normal',new BufferAttribute(n,3));g.computeBoundingSphere();
+    root.add(new Mesh(g,m));
+  }
+  const canvas=document.createElement('canvas');canvas.width=256;canvas.height=64;
+  const ctx=canvas.getContext('2d');ctx.fillStyle='#b7c1c4';ctx.font='500 34px sans-serif';ctx.fillText('TR-Q1',12,44);
+  const texture=new Texture(canvas);texture.needsUpdate=true;texture.colorSpace=SRGBColorSpace;
+  const label=new Mesh(new PlaneGeometry(.82,.2),new MeshBasicMaterial({map:texture,transparent:true,depthWrite:false}));
+  label.position.set(0,.37,-2.08);label.rotation.y=Math.PI;root.add(label);
+  return root;
+}
+
 
   // echo/model.mjs
   var COUNT = 300;
@@ -30748,6 +30671,7 @@ void main() {
     if (snap) vessel.quaternion.copy(pose);
     else vessel.quaternion.slerp(pose, 1 - Math.exp(-2.2 * dt));
     led.material.opacity = model.now - model.lastTransmit < 0.12 ? 0.38 : 0.045;
+  vessel.updateReceivedImages(model.mixed.agreement);
   }
   function render() {
     uniforms.uTime.value = model.now;
@@ -30986,6 +30910,7 @@ void main() {
     buildLayers();
     vessel = createVessel();
     scene.add(vessel);
+  vessel.updateReceivedImages = createPhaseEchoes(vessel);
     led = new Mesh(
       new SphereGeometry(0.13, 8, 6),
       new MeshBasicMaterial({

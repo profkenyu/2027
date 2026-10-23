@@ -2258,10 +2258,10 @@
       body #ti-shot-cue { font-size: max(var(--site-type-min), 7px); }
       body .ti-rover-reticle .ground-horizon-label { font-size: max(var(--site-type-min), 7px); }
       body .ti-rover-reticle .sensor-center text[style] { font-size: max(var(--site-type-min), 6px) !important; }
-      /* Mode switches use a shared 72 by 26 pixel footprint. */
+      /* Mode switches use a shared 76 by 24 pixel footprint. */
       body #ti-green,
       body #ti-drive-mode {
-        width: 72px; height: 26px; min-width: 0; min-height: 26px;
+        width: 76px; height: 24px; min-width: 0; min-height: 24px;
         padding: 1px; font-size: 9px; letter-spacing: -.02em;
       }
       body { --ti-mode-edge: 24px; }
@@ -2269,7 +2269,7 @@
       body #ti-green,
       body.ti-mobile #ti-green { right: var(--ti-mode-edge); }
       body #ti-drive-mode,
-      body.ti-mobile #ti-drive-mode { right: calc(var(--ti-mode-edge) + 75px); }
+      body.ti-mobile #ti-drive-mode { right: calc(var(--ti-mode-edge) + 79px); }
       @media (max-width: 760px) {
         body { --ti-mode-edge: max(14px, env(safe-area-inset-right)); }
       }
@@ -2384,13 +2384,13 @@
       id="ti-green"
       type="button"
       aria-pressed="false"
-      aria-label="RAW 색상 사용 중 · 녹색 모니터로 전환"
+      aria-label="SOURCE 표시 중 · SCOPE로 전환"
       data-green-state="off"
       data-green-current="raw"
       disabled
     >
-      <span class="mode" data-green-option="green">GREEN</span
-      ><span class="mode" data-green-option="raw">RAW</span>
+      <span class="mode" data-green-option="green">SCOPE</span
+      ><span class="mode" data-green-option="raw">SOURCE</span>
     </button>
     <button
       id="ti-drive-mode"
@@ -2401,7 +2401,7 @@
       disabled
     >
       <span class="mode" data-drive-option="auto">AUTO</span
-      ><span class="mode" data-drive-option="manual">MANUAL</span>
+      ><span class="mode" data-drive-option="manual">MAN</span>
     </button>
     <div id="ti-mobile-drive" aria-label="모바일 로버 조작">
       <button id="ti-mobile-tilt" type="button" aria-pressed="false">
