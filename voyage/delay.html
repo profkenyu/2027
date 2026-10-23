@@ -30119,24 +30119,36 @@ function createOdysseyFlow(level) {
   const geometry=new BufferGeometry();
   geometry.setAttribute('position',new BufferAttribute(new Float32Array(count*3),3));
   geometry.setAttribute('aOrbit',new BufferAttribute(data,3));
-  const clock={value:0};
+  const clock={value:0}, pixelRatio={value:1}, readability={value:0};
   const material=new ShaderMaterial({
-    uniforms:{uOrbitTime:clock},transparent:true,depthWrite:false,
-    vertexShader:`attribute vec3 aOrbit;uniform float uOrbitTime;varying float vR,vSeed;
+    uniforms:{uOrbitTime:clock,uPixelRatio:pixelRatio,uReadability:readability},transparent:true,depthWrite:false,
+    vertexShader:`attribute vec3 aOrbit;uniform float uOrbitTime,uPixelRatio,uReadability;varying float vR,vSeed,vArc;
     void main(){float r=aOrbit.x;float theta=aOrbit.y+(35./r+.8*exp(-r/450.))*uOrbitTime;
       vec3 p=vec3(cos(theta)*r,sin(theta*5.+aOrbit.z*20.)*r*.012,sin(theta)*r);
       vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;
-      gl_PointSize=clamp(1000./max(1.,-mv.z),.7,1.8);vR=r;vSeed=aOrbit.z;}`,
-    fragmentShader:`varying float vR,vSeed;void main(){float d=length(gl_PointCoord-.5);if(d>.5)discard;
+      // Size is specified in CSS pixels, then converted to drawing-buffer pixels.
+      gl_PointSize=uPixelRatio*mix(1.06,1.26,uReadability)*clamp(1000./max(1.,-mv.z),.78,mix(1.8,1.6,uReadability));
+      // An advected density pattern makes the existing differential motion legible.
+      // It follows the initial orbital phase; no new particles or angular speed.
+      vArc=pow(max(0.,cos(3.*aOrbit.y+1.5*log(r/180.))),8.);
+      vR=r;vSeed=aOrbit.z;}`,
+    fragmentShader:`uniform float uReadability;varying float vR,vSeed,vArc;void main(){float d=length(gl_PointCoord-.5);if(d>.5)discard;
       float edge=1.-smoothstep(.06,.5,d);float inner=1.-smoothstep(180.,650.,vR);
       vec3 silver=mix(vec3(.20,.27,.31),vec3(.68,.60,.46),inner);
-      gl_FragColor=vec4(silver,edge*(.16+.28*inner)*(.5+.5*vSeed));
+      float density=mix(1.-.1*uReadability,1.+.75*uReadability,vArc);
+      gl_FragColor=vec4(silver,edge*(.16+.28*inner)*(.5+.5*vSeed)*mix(1.08,1.32,uReadability)*density);
       #include <tonemapping_fragment>
       #include <colorspace_fragment>
     }`,
   });
   const points=new Points(geometry,material);points.name='odyssey-differential-flow';points.frustumCulled=false;
-  return {points,update(t){clock.value=t;},dispose(){geometry.dispose();material.dispose();}};
+  return {points,
+    setViewport(ratio,width,height){
+      pixelRatio.value=ratio;
+      const amount=Math.max(0,Math.min(1,(Math.min(width,height)-560)/340));
+      readability.value=amount*amount*(3-2*amount);
+    },
+    update(t){clock.value=t;},dispose(){geometry.dispose();material.dispose();}};
 }
 
   function buildSpace() {
@@ -30285,6 +30297,7 @@ function updateVessel() {
     height = h;
     vessel.scale.setScalar((height > width ? 15 : 12) * receivedScale);
     dpr = Math.min(devicePixelRatio || 1, tiers[level].dpr);
+    odysseyFlow.setViewport(dpr, width, height);
     resizeArtworkBuffer(renderer, width, height, dpr);
     quietSky?.setQuality(level, renderer.getPixelRatio());
     camera.aspect = width / height;
