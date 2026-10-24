@@ -40,7 +40,7 @@
   );
   --ui-data-width: clamp(136px, 18vw, 210px);
   color: #b3bec5;
-  background: #010423;
+  background: #03060f;
 }
 * {
   box-sizing: border-box;
@@ -285,7 +285,7 @@ footer button {
   place-content: center;
   margin: 0;
   padding: 24px;
-  background: #010423;
+  background: #03060f;
   color: #9baab4;
   font-size: var(--ui-text);
   line-height: 1.8;
@@ -30854,7 +30854,7 @@ function resizeArtworkBuffer(renderer, width, height, ratio, updateStyle = false
   }
   try {
     scene = new Scene();
-    scene.background = new Color("#010423");
+    scene.background = new Color("#03060f");
     quietSky = createQuietStars(level);
     scene.add(quietSky.points);
     camera = new PerspectiveCamera(43, width / height, 0.1, 6e3);

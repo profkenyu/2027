@@ -40,7 +40,7 @@
   );
   --ui-data-width: clamp(136px, 18vw, 210px);
   color: #b3bec5;
-  background: #010423;
+  background: #03060f;
 }
 * {
   box-sizing: border-box;
@@ -285,7 +285,7 @@ footer button {
   place-content: center;
   margin: 0;
   padding: 24px;
-  background: #010423;
+  background: #03060f;
   color: #9baab4;
   font-size: var(--ui-text);
   line-height: 1.8;
@@ -739,7 +739,7 @@ footer nav.series-nav {
         제타 함수의 공식이나 실제 광학 장치의 시뮬레이션이 아닙니다.
       </p>
       <p>
-        이웃한 소수의 차이는 선 사이의 간격을, 복소 로그항은 길이와 깊이를 결정합니다. 두
+        이웃한 소수의 차이는 선 사이의 간격을, 복소 로그항은 길이와 깊이를 결정합니다. 선의 기본 길이는 왼쪽에서 오른쪽으로 길어지며, 이 높이 차이는 공간감을 위한 예술적 배치입니다. 두
         응답의 상대 위상 차이가 각 수직선의 가운데에 짧은 틈을 열고, 정렬되면 그
         틈이 닫히고 깊이 차이가 줄어듭니다. 이 틈은 위상 차이를 공간으로 옮긴 예술적 표현입니다. 수신
         지연이 긴 항을 더 깊이 배치해 응답의 시간차를 공간으로 펼칩니다. 전면의
@@ -30695,7 +30695,9 @@ function createVessel() {
     float pullA=exp(-da*da*2.)*uTouch.x,pullB=exp(-db*db*2.)*uTouch.y;
     float targetWidth=aCell*uSpan.x*.48*mix(.40,.49,e);
     float quadWidth=targetWidth+uPixelWorld*1.25;
-    float height=uWall.y*mix(.96+.04*strength,1.,e);
+    // Left recedes, right approaches; the verticals remain straight.
+  float sideScale=mix(.80,1.,aPrime.x*.5+.5);
+  float height=uWall.y*sideScale*mix(.96+.04*strength,1.,e);
     vec3 p=vec3(center+position.x*quadWidth,
                 uWall.x+position.y*height,
                 (sin(phaseCenter)*uSpan.x*.018+cos(aPrime.y*.8)*6.-delayDepth*54.)*(1.-e));
@@ -31067,7 +31069,7 @@ function resizeArtworkBuffer(renderer, width, height, ratio, updateStyle = false
   }
   try {
     scene = new Scene();
-    scene.background = new Color("#010423");
+    scene.background = new Color("#03060f");
     quietSky = createQuietStars(level);
     scene.add(quietSky.points);
     camera = new PerspectiveCamera(42, width / height, 0.1, 6e3);
