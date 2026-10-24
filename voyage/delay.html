@@ -756,7 +756,7 @@ footer nav.series-nav {
         소리는 도착한 신호를 음으로 옮긴 것입니다. 응답기는 탐사선의 시계를
         기준으로 일정한 주파수의 반송파를 새로 보냅니다. 왕복 경로가 응답의 간격을 바꾸고,
         바깥으로 향하는 경로의 적색편이가 반송파를 낮춥니다. 거울 반사파를
-        계산하는 방식은 아닙니다. 기준 신호은 짧은 한 획으로 들립니다. 직접
+        계산하는 방식은 아닙니다. 기준 신호는 짧은 한 획으로 들립니다. 직접
         누른 신호의 응답은 누를 때 보낸 신호가 돌아오면 시작되고,
         손을 뗄 때 보낸 신호가 돌아오면 멈춥니다. 관객이 만든 길이와 침묵의 간격이 왕복 경로에 의해 달라져
         돌아오며, 음높이는 이미 수신된 원격측정의 적색편이를 따릅니다.
@@ -770,12 +770,13 @@ footer nav.series-nav {
       </p>
       <p>
         긴 공백 뒤 오래전의 응답이 도착하는 순간이 이 항해의 단 한 번의
-        사건입니다. 직접 보낸 신호의 응답이 없을 때에는 기준 신호이 그 공백을
+        사건입니다. 직접 보낸 신호의 응답이 없을 때에는 기준 신호가 그 공백을
         드러냅니다. 그 순간 수신면은 8초 동안 한 기록을 붙잡습니다. 계측기의
         표본 유지에 해당하는 예술적 시간 구성으로, 항해 계산은 계속됩니다.
+        유지 시간이 끝나면 현재까지 수신된 기록으로 부드럽게 전환됩니다.
         접촉에 의한 수신면 변형도 계속 반응합니다. 제동으로 세계선이 달라지면 그
-        시각도 달라집니다. 이후 화면은 자동으로 되돌아가지 않습니다. 새 항해는
-        직접 시작할 수 있습니다.
+        시각도 달라집니다. 항해가 자동으로 다시 시작되지는 않습니다.
+        새 항해는 직접 시작할 수 있습니다.
       </p>
       <p>
         이 브라우저에서 다시 열면 저장된 항해와 도착을 기다리는 명령을
@@ -29105,6 +29106,7 @@ function createVessel() {
   function createReceiverField(segments) {
     const uniforms = {
       uArchiveT: { value: 0 },
+      uHeldArchiveT: { value: 0 },
       uNow: { value: 0 },
       uIntro: { value: 0.25 },
       uG: { value: 1 },
@@ -29132,7 +29134,7 @@ function createVessel() {
       fragmentShader: `
     precision highp float;
     varying vec2 p;
-    uniform float uArchiveT,uNow,uIntro,uG,uTuning,uHold,uFocusArrival;
+    uniform float uArchiveT,uHeldArchiveT,uNow,uIntro,uG,uTuning,uHold,uFocusArrival;
     uniform vec4 uContact[2],uReplies[4],uPacket,uReplyEnd;
     float nullCoordinate(float r){float q=sqrt(r);return r+2.*q+2.*log(q-1.);}
     float contour(float phase,float width){
@@ -29173,7 +29175,8 @@ function createVessel() {
       float F=nullCoordinate(r),retarded=uArchiveT-F;
       float band=.72+.045*uTuning;
       float phase=retarded*band+5.*a;
-      float mainLine=contour(phase,.04);
+      float heldPhase=(uHeldArchiveT-F)*band+5.*a;
+      float mainLine=mix(contour(phase,.04),contour(heldPhase,.04),uHold);
       // The fivefold receiver geometry is a quiet coordinate scaffold, not a field of stars.
       // Most of the aperture stays inactive between the few actual received layers.
       float aperture=.10+.90*pow(.5+.5*cos(a-.7),4.);
@@ -29185,17 +29188,21 @@ function createVessel() {
       }
       float inner=smoothstep(1.12,1.6,r);
       float envelope=1./(1.+pow(r*.034,1.3));
-      vec3 graphite=vec3(.012,.016,.024),silver=vec3(.475,.507,.552);
+      vec3 silver=vec3(.475,.507,.552);
       vec3 receivedShade=vec3(.342,.366,.406);
       vec3 ink=mix(silver,receivedShade,(1.-clamp(uG,0.,1.))*.55);
       float fresh=received*exp(-max(0.,uNow-uPacket.x)*.08);
       float scaffold=mainLine*.055*fresh*mix(1.,.45,uHold);
       float layers=receipt.x*(.28+.72*aperture)+receipt.y;
-      vec3 color=graphite*(.08+.34*fresh)*(.6+.4*aperture)+ink*(scaffold+layers*(1.+.18*uHold)+touch*.075);
+      vec3 color=ink*(scaffold+layers*(1.+.18*uHold)+touch*.075);
       float density=(.62+.18*aperture)*inner*envelope*uIntro;
       gl_FragColor=vec4(color,density);
       #include <tonemapping_fragment>
       #include <colorspace_fragment>
+      // Preserve line radiance without covering empty space with a dark sheet.
+      float coverage=clamp(max(gl_FragColor.r,max(gl_FragColor.g,gl_FragColor.b)),0.,1.);
+      gl_FragColor.rgb/=max(coverage,.00001);
+      gl_FragColor.a*=coverage;
     }`
     });
     const mesh = new Mesh(
@@ -30429,7 +30436,11 @@ function updateVessel() {
     diskUniforms.uG.value = model.hasImage ? model.image[8] : 1;
     diskUniforms.uTuning.value = receiverLog - Math.log2(900);
     diskUniforms.uIntro.value = 0.25 + 0.75 * fade(0, 6, model.now);
-    diskUniforms.uHold.value = heldArchive ? 1 : 0;
+    // Crossfade two already received records; never interpolate their timestamps.
+  diskUniforms.uHeldArchiveT.value = archiveHoldT;
+  diskUniforms.uHold.value = archiveHoldUntil > 0
+    ? 1 - fade(0, 1.2, model.now - archiveHoldUntil)
+    : 0;
   diskUniforms.uFocusArrival.value = model.signatureAt ?? -1000;
     diskUniforms.uPacket.value.set(
       model.receivedPackets ? model.lastPacket[0] : -1e3,

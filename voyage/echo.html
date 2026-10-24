@@ -706,8 +706,8 @@ footer nav.series-nav {
         번째 손가락이나 Shift와 드래그로 계속 바꿀 수 있습니다.
       </p>
       <p>
-        수신면은 화면 바깥까지 이어지고, 손을 놓은 뒤에는 마지막 응답의 흔적이
-        남습니다. 접촉한 부근의 면은 즉시 휘어집니다. 두 관측의 수신 응답은 각기
+        수직선은 화면을 넓게 채웁니다. 손을 놓은 뒤에도 마지막 응답의 흔적은
+        남습니다. 접촉한 위치 주변의 선들은 곧은 형태를 유지한 채 간격과 깊이가 달라집니다. 두 관측의 수신 응답은 각기
         다른 간격으로 도착해 틈과 간섭 무늬를 바꿉니다. 두 관측점을 좌우로
         어긋나게 움직인 뒤, 비슷한 가로 위치에서 멈추고 기다려 보십시오.
       </p>
@@ -739,14 +739,14 @@ footer nav.series-nav {
         제타 함수의 공식이나 실제 광학 장치의 시뮬레이션이 아닙니다.
       </p>
       <p>
-        이웃한 소수의 차이는 면 사이의 간격을, 복소 로그항은 길이와 깊이를 결정합니다. 두
-        응답의 상대 위상 차이가 각 수직 면의 가운데에 짧은 틈을 열고, 정렬되면 그
-        틈과 깊이가 함께 닫힙니다. 이 틈은 위상 차이를 공간으로 옮긴 예술적 표현입니다. 수신
+        이웃한 소수의 차이는 선 사이의 간격을, 복소 로그항은 길이와 깊이를 결정합니다. 두
+        응답의 상대 위상 차이가 각 수직선의 가운데에 짧은 틈을 열고, 정렬되면 그
+        틈이 닫히고 깊이 차이가 줄어듭니다. 이 틈은 위상 차이를 공간으로 옮긴 예술적 표현입니다. 수신
         지연이 긴 항을 더 깊이 배치해 응답의 시간차를 공간으로 펼칩니다. 전면의
         간섭 구조는 마지막 수신값을 낮은 대비로 유지하며, 새 기록이 도착하면 그
         구조가 바뀝니다. 새 응답이 도착한 항은 잠깐 드러났다가 낮은 대비의 기록으로
         남습니다. 수신 뒤 경과한 시간에 따라 각 항의 밝기를 조절합니다. 손을
-        멈춘 뒤에도 각 소수의 로그값에 따른 경로 위상은 천천히 변합니다. 접촉 부근의 탄성 변형,
+        멈춘 뒤에도 각 소수의 로그값에 따른 경로 위상은 천천히 변합니다. 접촉 부근의 선 이동,
         관측별 수신 지연, 경로 위상, 화면 진폭의 압축은 예술적 해석입니다. 소수
         자체가 물리적으로 진동한다고 설명하지 않습니다.
       </p>
@@ -776,7 +776,7 @@ footer nav.series-nav {
       </p>
       <p class="credits">
         HIGH / MID / LOW 모두 두 관측과 300개 소수, 같은 간섭 계산과 사건 조건을
-        유지합니다. 면의 세분화·화면 해상도·표시 빈도만 다릅니다. 단일 HTML ·
+        유지합니다. 화면 해상도와 표시 빈도만 다릅니다. 단일 HTML ·
         외부 파일 없이 실행. Three.js · MIT License. 김건우, 2026.
       </p>
     </dialog>
@@ -30380,6 +30380,7 @@ function createVessel() {
     uSpan: { value: new Vector2(1e3, 650) },
     uWall: { value: new Vector2(0, 490) },
     uPixelWorld: { value: 1 },
+  uPlaneDistance: { value: 1 },
     uPointA: { value: contacts[0].point },
     uPointB: { value: contacts[1].point },
     uTouch: { value: new Vector2() },
@@ -30678,7 +30679,7 @@ function createVessel() {
       toneMapped: false,
       vertexShader: `
   attribute vec4 aPrime,aA,aB;attribute vec2 aDelay;attribute float aCell;
-  uniform float uTime,uIntro,uAlign,uAgreement,uPixelWorld;
+  uniform float uTime,uIntro,uAlign,uAgreement,uPixelWorld,uPlaneDistance;
   uniform vec2 uSpan,uWall,uPointA,uPointB,uTouch,uDepth,uDelayRange;
   varying vec2 vUv,vPosition;varying vec4 vPair;
   varying float vAlpha,vPath,vAlign,vCarrier,vDrift,vContact,vStroke;varying vec3 vColor;
@@ -30701,6 +30702,8 @@ function createVessel() {
     p.x+=(pullA-pullB)*uSpan.x*.004*(1.-e*.85);
     p.z+=(pullA*uDepth.x+pullB*uDepth.y)*(1.-e*.92);
     p.z=clamp(p.z,-uSpan.y*.08,uSpan.y*.06);
+  // Keep vertical bounds clear of the UI as columns move in depth.
+  p.y*=1.-p.z/uPlaneDistance;
     float signal=max(aB.y,aB.z);
     float activity=.58+.42*smoothstep(.02,.65,signal);
     vAlpha=(.50+.24*strength)*mix(activity,.94,e)*uIntro*mix(1.,.88,delayDepth*(1.-e));
@@ -30765,9 +30768,13 @@ function createVessel() {
     const planeHeight = 2 * halfHeight, planeWidth = planeHeight * camera.aspect;
     uniforms.uSpan.value.set(planeWidth, planeHeight);
     uniforms.uPixelWorld.value = 2 * halfHeight / height;
+  uniforms.uPlaneDistance.value = distance;
     const bounds = host.getBoundingClientRect();
     const top = Math.min(height * 0.3, Math.max(height * 0.12, document.querySelector("header").getBoundingClientRect().bottom - bounds.top + 18));
-    const controls = document.querySelector("footer nav:not(.series-nav)").getBoundingClientRect().top - bounds.top;
+    const controls = Math.min(...Array.from(document.querySelectorAll("footer nav, #hint"), element => {
+    const rect = element.getBoundingClientRect();
+    return rect.width && rect.height ? rect.top - bounds.top : height;
+  }));
     const bottom = Math.max(top + height * 0.32, Math.min(height * 0.91, controls - 14));
     uniforms.uWall.value.set((0.5 - (top + bottom) / (2 * height)) * planeHeight, (bottom - top) / height * planeHeight);
     camera.position.set(0, 0, distance);
