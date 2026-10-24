@@ -851,6 +851,20 @@
       .voyage-heading h2 { color: #e1eaed; }
       .voyage-heading span { color: #68adb5; }
       .voyage-intro { color: #9aafb7; margin-bottom: 38px; }
+      .voyage-note { margin: 28px 0 0; color: #9aafb7; font-size: 9px; line-height: 1.8; word-break: keep-all; }
+      .voyage-event-log { margin-top: 36px; padding-top: 24px; border-top: 1px solid #24323a; }
+      .voyage-event-log h3 { margin: 0 0 8px; color: #dae5e8; font-size: 11.5px; font-weight: 400; }
+      .voyage-record-scope { margin: 0; color: #9aafb7; font-size: 9px; line-height: 1.8; }
+      .voyage-event-work { margin-top: 24px; }
+      .voyage-event-work h4 { margin: 0 0 12px; color: #9aafb7; font-size: 10.5px; font-weight: 400; letter-spacing: .04em; }
+      .voyage-event-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+      .voyage-event-grid figure { min-width: 0; margin: 0; }
+      .voyage-event-grid img { display: block; width: 100%; aspect-ratio: 1.6; object-fit: contain; background: #020304; }
+      .voyage-event-grid figcaption { margin-top: 8px; color: #9aafb7; font-size: 9px; line-height: 1.8; }
+      @media (max-width: 600px) {
+        .voyage-event-grid { grid-template-columns: 1fr; }
+        .voyage-record-scope, .voyage-event-grid figcaption { font-size: 8px; }
+      }
       .voyage-list { gap: 22px 28px; }
       .voyage-list a { color: #dae5e8; }
       .voyage-number { color: #68adb5; }
@@ -911,6 +925,7 @@
         body .filter,
         body .record { font-size: 10.5px; }
         body .ledger-head { font-size: 10px; }
+        body .voyage-note { font-size: 8px; }
       }
     </style>
 </head
@@ -997,6 +1012,8 @@
             </a>
           </li>
         </ol>
+        <div class="voyage-event-log" id="voyage-event-archive" aria-live="polite" hidden></div>
+        <p class="voyage-note">스마트폰과 태블릿 등 모바일 디바이스에서는 가로모드를 추천합니다.</p>
       </section>
       <footer class="footer">
         <span>©2026 KIM GUNWOO. ALL RIGHTS RESERVED.</span>
@@ -2637,6 +2654,124 @@
           void mountPlaceArchive(document.querySelector(".archive"));
         })();
       })();
+    </script>
+    <script id="voyage-event-reader">
+(() => {
+  function mountVoyageRecords() {
+    const host = document.getElementById("voyage-event-archive");
+    if (!host) return;
+    const works = [
+      ["echo", "ECHO", "\uC815\uB82C"],
+      ["transfer", "TRANSFER", "\uD1B5\uACFC"],
+      ["delay", "DELAY", "\uC2E0\uD638\uC758 \uADC0\uD658"],
+      ["abyss", "ABYSS", "\uC18C\uC2E4"]
+    ];
+    const urls = [];
+    let revision = 0;
+    const clock = (t) => `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
+    function read() {
+      return new Promise((resolve) => {
+        let done = false, db = null;
+        const finish = (value) => {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          db?.close();
+          resolve(value);
+        };
+        const timer = setTimeout(() => finish([]), 1600);
+        try {
+          const request = indexedDB.open("hybrid-exhibition-20-v1");
+          request.onupgradeneeded = () => request.transaction.abort();
+          request.onerror = request.onblocked = () => finish([]);
+          request.onsuccess = () => {
+            db = request.result;
+            if (done) {
+              db.close();
+              return;
+            }
+            if (!db.objectStoreNames.contains("artworks")) {
+              finish([]);
+              return;
+            }
+            const tx = db.transaction("artworks", "readonly"), query = tx.objectStore("artworks").getAll();
+            tx.oncomplete = () => finish(query.result || []);
+            tx.onabort = tx.onerror = () => finish([]);
+          };
+        } catch {
+          finish([]);
+        }
+      });
+    }
+    function valid(f) {
+      return f && Number.isInteger(f.cycle) && f.cycle > 0 && Number.isInteger(f.stage) && f.stage >= 0 && f.stage <= 2 && Number.isFinite(f.at) && f.at >= 0 && Number.isFinite(f.eventAt) && f.eventAt >= 0 && (f.stage === 0 ? f.at < f.eventAt : f.at >= f.eventAt) && Array.isArray(f.summary) && f.summary.length <= 7 && f.summary.every((s) => typeof s === "string" && s.length <= 180);
+    }
+    async function refresh() {
+      const ticket = ++revision, records = await read();
+      if (ticket !== revision) return;
+      urls.splice(0).forEach((url) => URL.revokeObjectURL(url));
+      host.replaceChildren();
+      const heading = document.createElement("h3");
+      heading.textContent = "\uD56D\uD574\uC758 \uAE30\uB85D";
+      const scope = document.createElement("p");
+      scope.className = "voyage-record-scope";
+      scope.textContent = "\uC774 \uBE0C\uB77C\uC6B0\uC800\uC5D0 \uB0A8\uC740 \uC2E4\uC81C \uC7A5\uBA74 \xB7 \uC0AC\uAC74 \uC804\uACFC \uADF8 \uC774\uD6C4";
+      let count = 0;
+      const content = document.createDocumentFragment();
+      content.append(heading, scope);
+      for (const [id, title, event] of works) {
+        let record = records.find((r) => r?.version === 1 && r.id === id);
+        if (!record) {
+          try {
+            record = JSON.parse(localStorage.getItem(`hybrid-exhibition:${id}:v1`) || "null");
+          } catch {
+          }
+        }
+        const frames = (Array.isArray(record?.eventFrames) ? record.eventFrames : []).slice(-9).filter(valid);
+        if (!frames.length) continue;
+        const cycle = Math.max(...frames.map((f) => f.cycle));
+        const section = document.createElement("section");
+        section.className = "voyage-event-work";
+        const h = document.createElement("h4");
+        h.textContent = `${title} \xB7 ${event}`;
+        const grid = document.createElement("div");
+        grid.className = "voyage-event-grid";
+        for (const frame of frames.filter((f) => f.cycle === cycle).sort((a, b) => a.stage - b.stage)) {
+          const figure = document.createElement("figure"), label = ["\uC0AC\uAC74 \uC804", event, "\uC0AC\uAC74 \uC774\uD6C4"][frame.stage];
+          if (frame.image instanceof Blob && /^image\/(?:jpeg|png|webp)$/.test(frame.image.type) && frame.image.size <= 18e4) {
+            const img = document.createElement("img"), url = URL.createObjectURL(frame.image);
+            urls.push(url);
+            img.src = url;
+            img.alt = `${title} \xB7 ${label} \xB7 ${clock(frame.at)}`;
+            img.loading = "lazy";
+            img.decoding = "async";
+            figure.append(img);
+          }
+          const caption = document.createElement("figcaption");
+          caption.textContent = `${label} \xB7 ${clock(frame.at)}`;
+          figure.append(caption);
+          grid.append(figure);
+          count++;
+        }
+        section.append(h, grid);
+        content.append(section);
+      }
+      host.hidden = count === 0;
+      if (count) host.append(content);
+    }
+    addEventListener("pageshow", refresh);
+    addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) refresh();
+    });
+    addEventListener("pagehide", (e) => {
+      if (!e.persisted) urls.splice(0).forEach((u) => URL.revokeObjectURL(u));
+    });
+    void refresh();
+  }
+  mountVoyageRecords();
+})();
+
     </script>
   </body>
 </html>

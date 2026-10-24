@@ -40,7 +40,7 @@
   );
   --ui-data-width: clamp(136px, 18vw, 210px);
   color: #b3bec5;
-  background: #020304;
+  background: #010423;
 }
 * {
   box-sizing: border-box;
@@ -285,7 +285,7 @@ footer button {
   place-content: center;
   margin: 0;
   padding: 24px;
-  background: #020304;
+  background: #010423;
   color: #9baab4;
   font-size: var(--ui-text);
   line-height: 1.8;
@@ -28405,11 +28405,18 @@ void main() {
   }
 
   // exhibition-memory.mjs
-  var DB_NAME = "hybrid-exhibition-20-v1";
-  var STORE = "artworks";
-  var MAX_CYCLES = 3;
-  var STAGES = ["\uAC1C\uC785 \uC804", "\uAC1C\uC785 \uC9C1\uD6C4", "\uC2DC\uAC04\uC774 \uC9C0\uB09C \uB4A4"];
-  var actionKeys = {
+  const DB_NAME = "hybrid-exhibition-20-v1";
+  const STORE = "artworks";
+  const MAX_CYCLES = 3;
+  const STAGES = ["\uAC1C\uC785 \uC804", "\uAC1C\uC785 \uC9C1\uD6C4", "\uC2DC\uAC04\uC774 \uC9C0\uB09C \uB4A4"];
+  const EVENT_RULES = {
+    echo: { title: "\uC815\uB82C", peak: 1.4, after: 10 },
+    transfer: { title: "\uD1B5\uACFC", peak: 0, after: 12 },
+    delay: { title: "\uC2E0\uD638\uC758 \uADC0\uD658", peak: 0, after: 9 },
+    abyss: { title: "\uC18C\uC2E4", peak: 0, after: 6 }
+  };
+  const EVENT_STAGES = [1, 2];
+  const actionKeys = {
     transfer: ["Space", "ArrowLeft", "ArrowRight", "KeyA", "KeyD"],
     abyss: ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"],
     echo: ["Enter", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"],
@@ -28422,7 +28429,9 @@ void main() {
     let saveAt = -Infinity, writing = null, saveAgain = false, serial = 0;
     let cycle = 1, interventionAt = null, released = false, frames = [];
     let lastCapture = -Infinity, loadedPayload = null, statusNode, listNode;
-    const urls = [], contacts2 = /* @__PURE__ */ new Set(), keys2 = /* @__PURE__ */ new Set();
+    const eventRule = EVENT_RULES[id];
+    let eventFrames = [], eventAt = null, beforeEvent = null, sampledAt = -Infinity;
+    const urls = [], contacts = /* @__PURE__ */ new Set(), keys = /* @__PURE__ */ new Set();
     let afterFrame = 0, refreshNeeded = false;
     const isTest = new URLSearchParams(location.search).has("test");
     const allowPersistence = !isTest || new URLSearchParams(location.search).has("persist");
@@ -28440,8 +28449,8 @@ void main() {
       statusNode.textContent = storage === "superseded" ? "\uB2E4\uB978 \uD654\uBA74\uC5D0\uC11C \uD56D\uD574\uB97C \uC774\uC5B4\uBC1B\uC558\uC2B5\uB2C8\uB2E4. \uC774 \uD654\uBA74\uC758 \uAE30\uB85D\uC740 \uD604\uC7AC \uD654\uBA74\uC5D0\uC11C\uB9CC \uBCF4\uAD00\uD569\uB2C8\uB2E4." : storage === "indexeddb" ? "\uC774 \uBE0C\uB77C\uC6B0\uC800\uC5D0 \uAE30\uB85D\uD569\uB2C8\uB2E4. \uC0C8 \uD56D\uD574\uB97C \uC2DC\uC791\uD574\uB3C4 \uC774\uC804 \uAE30\uB85D\uC740 \uB0A8\uC2B5\uB2C8\uB2E4." : storage === "local" ? "\uC774 \uBE0C\uB77C\uC6B0\uC800\uC5D0 \uD56D\uD574 \uC0C1\uD0DC\uB97C \uAE30\uB85D\uD569\uB2C8\uB2E4. \uC774\uBBF8\uC9C0\uB294 \uC774\uBC88 \uD654\uBA74\uC5D0\uC11C \uBCF4\uAD00\uD569\uB2C8\uB2E4." : "\uD604\uC7AC \uD654\uBA74\uC5D0\uC11C \uAE30\uB85D\uD569\uB2C8\uB2E4. \uC800\uC7A5 \uACF5\uAC04\uC744 \uC0AC\uC6A9\uD560 \uC218 \uC5C6\uC5B4 \uC7AC\uC811\uC18D \uC2DC \uC778\uACC4\uB418\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.";
     }
     function mount() {
-      const dialog2 = document.getElementById("record");
-      if (!dialog2) return;
+      const dialog = document.getElementById("record");
+      if (!dialog) return;
       const section = document.createElement("section");
       section.id = "experience-log";
       const heading = document.createElement("h3");
@@ -28451,10 +28460,10 @@ void main() {
       listNode = document.createElement("div");
       listNode.className = "memory-cycles";
       section.append(heading, statusNode, listNode);
-      const first = dialog2.querySelector("h2 + p");
+      const first = dialog.querySelector("h2 + p");
       if (first) first.after(section);
-      else dialog2.append(section);
-      dialog2.addEventListener("close", () => {
+      else dialog.append(section);
+      dialog.addEventListener("close", () => {
         if (refreshNeeded) refresh();
       });
       document.getElementById("about")?.addEventListener("click", refresh);
@@ -28508,6 +28517,32 @@ void main() {
         }
         group.append(h, grid);
         listNode.append(group);
+      }
+      if (eventFrames.length) {
+        const heading = document.createElement("h4");
+        heading.textContent = `${eventRule.title} \uC804\uD6C4\uC758 \uAE30\uB85D`;
+        listNode.append(heading);
+        const grid = document.createElement("div");
+        grid.className = "memory-grid";
+        const latest = Math.max(...eventFrames.map((f) => f.cycle));
+        for (const f of eventFrames.filter((f2) => f2.cycle === latest).sort((a, b) => a.stage - b.stage)) {
+          const figure = document.createElement("figure"), caption = document.createElement("figcaption");
+          const label = ["\uC0AC\uAC74 \uC804", eventRule.title, "\uC0AC\uAC74 \uC774\uD6C4"][f.stage];
+          if (f.image instanceof Blob && /^image\//.test(f.image.type)) {
+            const img = document.createElement("img"), url = URL.createObjectURL(f.image);
+            urls.push(url);
+            img.src = url;
+            img.alt = `${label} \xB7 ${formatClock(f.at)}`;
+            img.loading = "lazy";
+            img.width = 480;
+            img.height = 300;
+            figure.append(img);
+          }
+          caption.textContent = `${label} \xB7 ${formatClock(f.at)}`;
+          figure.append(caption);
+          grid.append(figure);
+        }
+        listNode.append(grid);
       }
       updateStatus();
     }
@@ -28633,6 +28668,8 @@ void main() {
           const restoredCycle = Number.isInteger(stored.cycle) && stored.cycle > 0 ? stored.cycle : 1;
           cycle = Math.min(restoredCycle, 1e9);
           frames = (Array.isArray(stored.frames) ? stored.frames : []).filter(validFrame).slice(-9);
+          eventFrames = (Array.isArray(stored.eventFrames) ? stored.eventFrames : []).filter((f) => validFrame(f) && Number.isFinite(f.eventAt) && f.eventAt >= 0).slice(-9);
+          eventAt = eventFrames.find((f) => f.cycle === cycle)?.eventAt ?? null;
           interventionAt = Number.isFinite(stored.interventionAt) && stored.interventionAt >= 0 ? stored.interventionAt : null;
           released = !!stored.released;
           try {
@@ -28644,9 +28681,11 @@ void main() {
             interventionAt = null;
             released = false;
             cycle++;
+            eventAt = null;
           }
           if (!options.resumeCycle) {
             cycle++;
+            eventAt = null;
             interventionAt = null;
             released = false;
           }
@@ -28675,6 +28714,7 @@ void main() {
         interventionAt,
         released,
         frames: frames.slice(-9),
+        eventFrames: eventFrames.slice(-9),
         payload: continuation ? continuation() : null,
         serial: ++serial,
         owner
@@ -28699,7 +28739,8 @@ void main() {
             try {
               const compact = {
                 ...value,
-                frames: value.frames.map(({ image, ...f }) => f)
+                frames: value.frames.map(({ image, ...f }) => f),
+                eventFrames: value.eventFrames.map(({ image, ...f }) => f)
               };
               const json = JSON.stringify(compact);
               if (json.length <= 15e4) localStorage.setItem(key, json);
@@ -28752,6 +28793,62 @@ void main() {
     function trim() {
       const keep = [...new Set(frames.map((f) => f.cycle))].sort((a, b) => b - a).slice(0, MAX_CYCLES);
       frames = frames.filter((f) => keep.includes(f.cycle)).slice(-9);
+      const eventCycles = [...new Set(eventFrames.map((f) => f.cycle))].sort((a, b) => b - a).slice(0, MAX_CYCLES);
+      eventFrames = eventFrames.filter((f) => eventCycles.includes(f.cycle)).slice(-9);
+    }
+    function photograph(record, repaint = true) {
+      const source = canvas();
+      if (!loaded || capturing || !source?.width || !source?.height) return false;
+      capturing = true;
+      try {
+        if (repaint) paint();
+        const image = document.createElement("canvas"), ratio = Math.min(480 / source.width, 300 / source.height, 1);
+        image.width = Math.max(1, Math.round(source.width * ratio));
+        image.height = Math.max(1, Math.round(source.height * ratio));
+        image.getContext("2d", { alpha: false }).drawImage(source, 0, 0, image.width, image.height);
+        image.toBlob((blob) => {
+          if (blob && blob.size <= 18e4) record.image = blob;
+          refreshNeeded = true;
+          if (eventFrames.includes(record)) checkpoint();
+        }, "image/jpeg", 0.76);
+        return true;
+      } catch {
+        return false;
+      } finally {
+        capturing = false;
+      }
+    }
+    function observeEvent(t) {
+      if (!eventRule || !options.eventAt) return;
+      const witnessed = options.eventAt();
+      if (eventAt === null && Number.isFinite(witnessed) && witnessed >= 0 && witnessed <= t) {
+        eventAt = witnessed;
+        if (beforeEvent && beforeEvent.at < witnessed) {
+          beforeEvent.eventAt = eventAt;
+          eventFrames.push(beforeEvent);
+          beforeEvent = null;
+        }
+        trim();
+      }
+      if (eventAt !== null) {
+        for (const stage of EVENT_STAGES) {
+          const due = eventAt + (stage === 1 ? eventRule.peak : eventRule.after);
+          if (t < due || eventFrames.some((f) => f.cycle === cycle && f.stage === stage)) continue;
+          if (stage === 1 && t > due + 0.75) continue;
+          const frame = { cycle, stage, at: t, eventAt, summary: safeSummary(), image: null };
+          if (photograph(frame, false)) {
+            eventFrames.push(frame);
+            trim();
+            refreshNeeded = true;
+          }
+        }
+      } else if (t >= 0 && t - sampledAt >= 4) {
+        const frame = { cycle, stage: 0, at: t, summary: safeSummary(), image: null };
+        if (photograph(frame, false)) {
+          beforeEvent = frame;
+          sampledAt = t;
+        }
+      }
     }
     function capture(stage) {
       if (!loaded || capturing || frames.some((f) => f.cycle === cycle && f.stage === stage))
@@ -28790,7 +28887,7 @@ void main() {
       released = false;
     }
     function afterInput() {
-      if (!loaded || contacts2.size || keys2.size || interventionAt === null)
+      if (!loaded || contacts.size || keys.size || interventionAt === null)
         return;
       released = true;
       if (afterFrame) cancelAnimationFrame(afterFrame);
@@ -28814,13 +28911,13 @@ void main() {
         "pointerdown",
         (e) => {
           if (e.button > 0 || !eventTarget(e)) return;
-          contacts2.add(e.pointerId);
+          contacts.add(e.pointerId);
           beforeInput();
         },
         true
       );
       const finish = (e) => {
-        if (contacts2.delete(e.pointerId)) afterInput();
+        if (contacts.delete(e.pointerId)) afterInput();
       };
       addEventListener("pointerup", finish);
       addEventListener("pointercancel", finish);
@@ -28829,14 +28926,14 @@ void main() {
         "keydown",
         (e) => {
           if (!e.repeat && actionable.has(e.code) && eventTarget(e)) {
-            keys2.add(e.code);
+            keys.add(e.code);
             beforeInput();
           }
         },
         true
       );
       addEventListener("keyup", (e) => {
-        if (keys2.delete(e.code)) afterInput();
+        if (keys.delete(e.code)) afterInput();
       });
       if (id === "abyss")
         surface.addEventListener(
@@ -28851,8 +28948,8 @@ void main() {
           { capture: true, passive: true }
         );
       const suspendInput = () => {
-        contacts2.clear();
-        keys2.clear();
+        contacts.clear();
+        keys.clear();
         afterInput();
         checkpoint();
       };
@@ -28865,9 +28962,10 @@ void main() {
         checkpoint();
       });
     }
-    function tick2() {
+    function tick() {
       if (!loaded || capturing) return;
       const t = now();
+      observeEvent(t);
       if (t >= 0.8 && !frames.some((f) => f.cycle === cycle && f.stage === 0))
         capture(0);
       const after = frames.find((f) => f.cycle === cycle && f.stage === 1);
@@ -28882,10 +28980,13 @@ void main() {
       if (interventionAt !== null && !frames.some((f) => f.cycle === cycle && f.stage === 1))
         capture(1);
       cycle++;
+      eventAt = null;
+      beforeEvent = null;
+      sampledAt = -Infinity;
       interventionAt = null;
       released = false;
-      contacts2.clear();
-      keys2.clear();
+      contacts.clear();
+      keys.clear();
       lastCapture = -Infinity;
       trim();
       refreshNeeded = true;
@@ -28893,7 +28994,7 @@ void main() {
     }
     return {
       start,
-      tick: tick2,
+      tick,
       checkpoint,
       newVoyage,
       beforeInput,
@@ -28913,7 +29014,9 @@ void main() {
           summary: [...f.summary],
           hasImage: f.image instanceof Blob
         })),
-        lastCapture
+        lastCapture,
+        eventAt,
+        eventFrames: eventFrames.map((f) => ({ cycle: f.cycle, stage: f.stage, at: f.at, eventAt: f.eventAt, hasImage: f.image instanceof Blob }))
       })
     };
   }
@@ -29007,6 +29110,7 @@ function createVessel() {
       uG: { value: 1 },
       uTuning: { value: 0 },
       uHold: { value: 0 },
+      uFocusArrival: { value: -1000 },
       // Arrival, validity, received frequency ratio, and emitted coordinate time.
       // The reference ridge does not exist until the model receives a real packet.
       uPacket: { value: new Vector4(-1e3, 0, 1, 0) },
@@ -29028,7 +29132,7 @@ function createVessel() {
       fragmentShader: `
     precision highp float;
     varying vec2 p;
-    uniform float uArchiveT,uNow,uIntro,uG,uTuning,uHold;
+    uniform float uArchiveT,uNow,uIntro,uG,uTuning,uHold,uFocusArrival;
     uniform vec4 uContact[2],uReplies[4],uPacket,uReplyEnd;
     float nullCoordinate(float r){float q=sqrt(r);return r+2.*q+2.*log(q-1.);}
     float contour(float phase,float width){
@@ -29051,7 +29155,9 @@ function createVessel() {
       float mark=exp(-max(0.,age-3.)/6.)*(1.-closed+closed*exp(-max(0.,uNow-ended)/1.25));
       float fresh=mix(exp(-max(0.,age)/1.7),mark,personal);
       float retained=exp(-max(0.,age)/85.);
-      return vec2(ridge*(.12+.82*fresh),shoulder*.055)*retained*valid;
+      float selected=1.-step(.001,abs(packet.x-uFocusArrival));
+      float focus=mix(1.,mix(.46,1.24,selected),uHold);
+      return vec2(ridge*(.12+.82*fresh),shoulder*.055)*retained*valid*focus;
     }
     void main(){
       vec2 q=p;
@@ -29079,11 +29185,11 @@ function createVessel() {
       }
       float inner=smoothstep(1.12,1.6,r);
       float envelope=1./(1.+pow(r*.034,1.3));
-      vec3 graphite=vec3(.013,.017,.020),silver=vec3(.48,.51,.52);
-      vec3 warm=vec3(.48,.34,.23);
-      vec3 ink=mix(silver,warm,(1.-clamp(uG,0.,1.))*.55);
+      vec3 graphite=vec3(.012,.016,.024),silver=vec3(.475,.507,.552);
+      vec3 receivedShade=vec3(.342,.366,.406);
+      vec3 ink=mix(silver,receivedShade,(1.-clamp(uG,0.,1.))*.55);
       float fresh=received*exp(-max(0.,uNow-uPacket.x)*.08);
-      float scaffold=mainLine*.055*fresh;
+      float scaffold=mainLine*.055*fresh*mix(1.,.45,uHold);
       float layers=receipt.x*(.28+.72*aperture)+receipt.y;
       vec3 color=graphite*(.08+.34*fresh)*(.6+.4*aperture)+ink*(scaffold+layers*(1.+.18*uHold)+touch*.075);
       float density=(.62+.18*aperture)*inner*envelope*uIntro;
@@ -30134,7 +30240,7 @@ function createOdysseyFlow(level) {
       vR=r;vSeed=aOrbit.z;}`,
     fragmentShader:`uniform float uReadability;varying float vR,vSeed,vArc;void main(){float d=length(gl_PointCoord-.5);if(d>.5)discard;
       float edge=1.-smoothstep(.06,.5,d);float inner=1.-smoothstep(180.,650.,vR);
-      vec3 silver=mix(vec3(.20,.27,.31),vec3(.68,.60,.46),inner);
+      vec3 silver=mix(vec3(.234,.260,.290),vec3(.568,.610,.655),inner);
       float density=mix(1.-.1*uReadability,1.+.75*uReadability,vArc);
       gl_FragColor=vec4(silver,edge*(.16+.28*inner)*(.5+.5*vSeed)*mix(1.08,1.32,uReadability)*density);
       #include <tonemapping_fragment>
@@ -30302,8 +30408,8 @@ function updateVessel() {
     quietSky?.setQuality(level, renderer.getPixelRatio());
     camera.aspect = width / height;
     camera.fov = 54;
-    camera.up.set(height > width ? 1 : 0, height > width ? 0 : 1, 0);
-    const distance = height > width ? 1050 : 850;
+    camera.up.set(0, 1, 0);
+    const distance = height > width ? 1050 * Math.max(1, 0.7 / camera.aspect) : 850;
     camera.position.copy(normal).multiplyScalar(distance);
     camera.lookAt(0, 0, 0);
     camera.updateProjectionMatrix();
@@ -30324,6 +30430,7 @@ function updateVessel() {
     diskUniforms.uTuning.value = receiverLog - Math.log2(900);
     diskUniforms.uIntro.value = 0.25 + 0.75 * fade(0, 6, model.now);
     diskUniforms.uHold.value = heldArchive ? 1 : 0;
+  diskUniforms.uFocusArrival.value = model.signatureAt ?? -1000;
     diskUniforms.uPacket.value.set(
       model.receivedPackets ? model.lastPacket[0] : -1e3,
       model.receivedPackets ? 1 : 0,
@@ -30766,7 +30873,7 @@ function resizeArtworkBuffer(renderer, width, height, ratio, updateStyle = false
   }
   try {
     scene = new Scene();
-    scene.background = new Color(131844);
+    scene.background = new Color("#010423");
     quietSky = createQuietStars(level);
     scene.add(quietSky.points);
     camera = new PerspectiveCamera(54, width / height, 0.1, 24e3);
@@ -30918,6 +31025,7 @@ function resizeArtworkBuffer(renderer, width, height, ratio, updateStyle = false
     });
     journeyMemory = createExhibitionMemory({
       id: "delay",
+      eventAt: () => model.signatureAt,
       canvas: () => renderer.domElement,
       paint: render,
       now: () => model.now,

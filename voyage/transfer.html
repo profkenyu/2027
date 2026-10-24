@@ -40,7 +40,7 @@
   );
   --ui-data-width: clamp(136px, 18vw, 210px);
   color: #b3bec5;
-  background: #020304;
+  background: #010423;
 }
 * {
   box-sizing: border-box;
@@ -285,7 +285,7 @@ footer button {
   place-content: center;
   margin: 0;
   padding: 24px;
-  background: #020304;
+  background: #010423;
   color: #9baab4;
   font-size: var(--ui-text);
   line-height: 1.8;
@@ -28860,11 +28860,18 @@ void main() {
   }
 
   // exhibition-memory.mjs
-  var DB_NAME = "hybrid-exhibition-20-v1";
-  var STORE = "artworks";
-  var MAX_CYCLES = 3;
-  var STAGES = ["\uAC1C\uC785 \uC804", "\uAC1C\uC785 \uC9C1\uD6C4", "\uC2DC\uAC04\uC774 \uC9C0\uB09C \uB4A4"];
-  var actionKeys = {
+  const DB_NAME = "hybrid-exhibition-20-v1";
+  const STORE = "artworks";
+  const MAX_CYCLES = 3;
+  const STAGES = ["\uAC1C\uC785 \uC804", "\uAC1C\uC785 \uC9C1\uD6C4", "\uC2DC\uAC04\uC774 \uC9C0\uB09C \uB4A4"];
+  const EVENT_RULES = {
+    echo: { title: "\uC815\uB82C", peak: 1.4, after: 10 },
+    transfer: { title: "\uD1B5\uACFC", peak: 0, after: 12 },
+    delay: { title: "\uC2E0\uD638\uC758 \uADC0\uD658", peak: 0, after: 9 },
+    abyss: { title: "\uC18C\uC2E4", peak: 0, after: 6 }
+  };
+  const EVENT_STAGES = [1, 2];
+  const actionKeys = {
     transfer: ["Space", "ArrowLeft", "ArrowRight", "KeyA", "KeyD"],
     abyss: ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"],
     echo: ["Enter", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"],
@@ -28877,7 +28884,9 @@ void main() {
     let saveAt = -Infinity, writing = null, saveAgain = false, serial = 0;
     let cycle = 1, interventionAt = null, released = false, frames = [];
     let lastCapture = -Infinity, loadedPayload = null, statusNode, listNode;
-    const urls = [], contacts = /* @__PURE__ */ new Set(), keys2 = /* @__PURE__ */ new Set();
+    const eventRule = EVENT_RULES[id];
+    let eventFrames = [], eventAt = null, beforeEvent = null, sampledAt = -Infinity;
+    const urls = [], contacts = /* @__PURE__ */ new Set(), keys = /* @__PURE__ */ new Set();
     let afterFrame = 0, refreshNeeded = false;
     const isTest = new URLSearchParams(location.search).has("test");
     const allowPersistence = !isTest || new URLSearchParams(location.search).has("persist");
@@ -28895,8 +28904,8 @@ void main() {
       statusNode.textContent = storage === "superseded" ? "\uB2E4\uB978 \uD654\uBA74\uC5D0\uC11C \uD56D\uD574\uB97C \uC774\uC5B4\uBC1B\uC558\uC2B5\uB2C8\uB2E4. \uC774 \uD654\uBA74\uC758 \uAE30\uB85D\uC740 \uD604\uC7AC \uD654\uBA74\uC5D0\uC11C\uB9CC \uBCF4\uAD00\uD569\uB2C8\uB2E4." : storage === "indexeddb" ? "\uC774 \uBE0C\uB77C\uC6B0\uC800\uC5D0 \uAE30\uB85D\uD569\uB2C8\uB2E4. \uC0C8 \uD56D\uD574\uB97C \uC2DC\uC791\uD574\uB3C4 \uC774\uC804 \uAE30\uB85D\uC740 \uB0A8\uC2B5\uB2C8\uB2E4." : storage === "local" ? "\uC774 \uBE0C\uB77C\uC6B0\uC800\uC5D0 \uD56D\uD574 \uC0C1\uD0DC\uB97C \uAE30\uB85D\uD569\uB2C8\uB2E4. \uC774\uBBF8\uC9C0\uB294 \uC774\uBC88 \uD654\uBA74\uC5D0\uC11C \uBCF4\uAD00\uD569\uB2C8\uB2E4." : "\uD604\uC7AC \uD654\uBA74\uC5D0\uC11C \uAE30\uB85D\uD569\uB2C8\uB2E4. \uC800\uC7A5 \uACF5\uAC04\uC744 \uC0AC\uC6A9\uD560 \uC218 \uC5C6\uC5B4 \uC7AC\uC811\uC18D \uC2DC \uC778\uACC4\uB418\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.";
     }
     function mount() {
-      const dialog2 = document.getElementById("record");
-      if (!dialog2) return;
+      const dialog = document.getElementById("record");
+      if (!dialog) return;
       const section = document.createElement("section");
       section.id = "experience-log";
       const heading = document.createElement("h3");
@@ -28906,10 +28915,10 @@ void main() {
       listNode = document.createElement("div");
       listNode.className = "memory-cycles";
       section.append(heading, statusNode, listNode);
-      const first = dialog2.querySelector("h2 + p");
+      const first = dialog.querySelector("h2 + p");
       if (first) first.after(section);
-      else dialog2.append(section);
-      dialog2.addEventListener("close", () => {
+      else dialog.append(section);
+      dialog.addEventListener("close", () => {
         if (refreshNeeded) refresh();
       });
       document.getElementById("about")?.addEventListener("click", refresh);
@@ -28963,6 +28972,32 @@ void main() {
         }
         group.append(h, grid);
         listNode.append(group);
+      }
+      if (eventFrames.length) {
+        const heading = document.createElement("h4");
+        heading.textContent = `${eventRule.title} \uC804\uD6C4\uC758 \uAE30\uB85D`;
+        listNode.append(heading);
+        const grid = document.createElement("div");
+        grid.className = "memory-grid";
+        const latest = Math.max(...eventFrames.map((f) => f.cycle));
+        for (const f of eventFrames.filter((f2) => f2.cycle === latest).sort((a, b) => a.stage - b.stage)) {
+          const figure = document.createElement("figure"), caption = document.createElement("figcaption");
+          const label = ["\uC0AC\uAC74 \uC804", eventRule.title, "\uC0AC\uAC74 \uC774\uD6C4"][f.stage];
+          if (f.image instanceof Blob && /^image\//.test(f.image.type)) {
+            const img = document.createElement("img"), url = URL.createObjectURL(f.image);
+            urls.push(url);
+            img.src = url;
+            img.alt = `${label} \xB7 ${formatClock(f.at)}`;
+            img.loading = "lazy";
+            img.width = 480;
+            img.height = 300;
+            figure.append(img);
+          }
+          caption.textContent = `${label} \xB7 ${formatClock(f.at)}`;
+          figure.append(caption);
+          grid.append(figure);
+        }
+        listNode.append(grid);
       }
       updateStatus();
     }
@@ -29088,6 +29123,8 @@ void main() {
           const restoredCycle = Number.isInteger(stored.cycle) && stored.cycle > 0 ? stored.cycle : 1;
           cycle = Math.min(restoredCycle, 1e9);
           frames = (Array.isArray(stored.frames) ? stored.frames : []).filter(validFrame).slice(-9);
+          eventFrames = (Array.isArray(stored.eventFrames) ? stored.eventFrames : []).filter((f) => validFrame(f) && Number.isFinite(f.eventAt) && f.eventAt >= 0).slice(-9);
+          eventAt = eventFrames.find((f) => f.cycle === cycle)?.eventAt ?? null;
           interventionAt = Number.isFinite(stored.interventionAt) && stored.interventionAt >= 0 ? stored.interventionAt : null;
           released = !!stored.released;
           try {
@@ -29099,9 +29136,11 @@ void main() {
             interventionAt = null;
             released = false;
             cycle++;
+            eventAt = null;
           }
           if (!options.resumeCycle) {
             cycle++;
+            eventAt = null;
             interventionAt = null;
             released = false;
           }
@@ -29130,6 +29169,7 @@ void main() {
         interventionAt,
         released,
         frames: frames.slice(-9),
+        eventFrames: eventFrames.slice(-9),
         payload: continuation ? continuation() : null,
         serial: ++serial,
         owner
@@ -29154,7 +29194,8 @@ void main() {
             try {
               const compact = {
                 ...value,
-                frames: value.frames.map(({ image, ...f }) => f)
+                frames: value.frames.map(({ image, ...f }) => f),
+                eventFrames: value.eventFrames.map(({ image, ...f }) => f)
               };
               const json = JSON.stringify(compact);
               if (json.length <= 15e4) localStorage.setItem(key, json);
@@ -29207,6 +29248,62 @@ void main() {
     function trim() {
       const keep = [...new Set(frames.map((f) => f.cycle))].sort((a, b) => b - a).slice(0, MAX_CYCLES);
       frames = frames.filter((f) => keep.includes(f.cycle)).slice(-9);
+      const eventCycles = [...new Set(eventFrames.map((f) => f.cycle))].sort((a, b) => b - a).slice(0, MAX_CYCLES);
+      eventFrames = eventFrames.filter((f) => eventCycles.includes(f.cycle)).slice(-9);
+    }
+    function photograph(record, repaint = true) {
+      const source = canvas();
+      if (!loaded || capturing || !source?.width || !source?.height) return false;
+      capturing = true;
+      try {
+        if (repaint) paint();
+        const image = document.createElement("canvas"), ratio = Math.min(480 / source.width, 300 / source.height, 1);
+        image.width = Math.max(1, Math.round(source.width * ratio));
+        image.height = Math.max(1, Math.round(source.height * ratio));
+        image.getContext("2d", { alpha: false }).drawImage(source, 0, 0, image.width, image.height);
+        image.toBlob((blob) => {
+          if (blob && blob.size <= 18e4) record.image = blob;
+          refreshNeeded = true;
+          if (eventFrames.includes(record)) checkpoint();
+        }, "image/jpeg", 0.76);
+        return true;
+      } catch {
+        return false;
+      } finally {
+        capturing = false;
+      }
+    }
+    function observeEvent(t) {
+      if (!eventRule || !options.eventAt) return;
+      const witnessed = options.eventAt();
+      if (eventAt === null && Number.isFinite(witnessed) && witnessed >= 0 && witnessed <= t) {
+        eventAt = witnessed;
+        if (beforeEvent && beforeEvent.at < witnessed) {
+          beforeEvent.eventAt = eventAt;
+          eventFrames.push(beforeEvent);
+          beforeEvent = null;
+        }
+        trim();
+      }
+      if (eventAt !== null) {
+        for (const stage of EVENT_STAGES) {
+          const due = eventAt + (stage === 1 ? eventRule.peak : eventRule.after);
+          if (t < due || eventFrames.some((f) => f.cycle === cycle && f.stage === stage)) continue;
+          if (stage === 1 && t > due + 0.75) continue;
+          const frame = { cycle, stage, at: t, eventAt, summary: safeSummary(), image: null };
+          if (photograph(frame, false)) {
+            eventFrames.push(frame);
+            trim();
+            refreshNeeded = true;
+          }
+        }
+      } else if (t >= 0 && t - sampledAt >= 4) {
+        const frame = { cycle, stage: 0, at: t, summary: safeSummary(), image: null };
+        if (photograph(frame, false)) {
+          beforeEvent = frame;
+          sampledAt = t;
+        }
+      }
     }
     function capture(stage) {
       if (!loaded || capturing || frames.some((f) => f.cycle === cycle && f.stage === stage))
@@ -29245,7 +29342,7 @@ void main() {
       released = false;
     }
     function afterInput() {
-      if (!loaded || contacts.size || keys2.size || interventionAt === null)
+      if (!loaded || contacts.size || keys.size || interventionAt === null)
         return;
       released = true;
       if (afterFrame) cancelAnimationFrame(afterFrame);
@@ -29284,14 +29381,14 @@ void main() {
         "keydown",
         (e) => {
           if (!e.repeat && actionable.has(e.code) && eventTarget(e)) {
-            keys2.add(e.code);
+            keys.add(e.code);
             beforeInput();
           }
         },
         true
       );
       addEventListener("keyup", (e) => {
-        if (keys2.delete(e.code)) afterInput();
+        if (keys.delete(e.code)) afterInput();
       });
       if (id === "abyss")
         surface.addEventListener(
@@ -29307,7 +29404,7 @@ void main() {
         );
       const suspendInput = () => {
         contacts.clear();
-        keys2.clear();
+        keys.clear();
         afterInput();
         checkpoint();
       };
@@ -29320,9 +29417,10 @@ void main() {
         checkpoint();
       });
     }
-    function tick2() {
+    function tick() {
       if (!loaded || capturing) return;
       const t = now();
+      observeEvent(t);
       if (t >= 0.8 && !frames.some((f) => f.cycle === cycle && f.stage === 0))
         capture(0);
       const after = frames.find((f) => f.cycle === cycle && f.stage === 1);
@@ -29337,10 +29435,13 @@ void main() {
       if (interventionAt !== null && !frames.some((f) => f.cycle === cycle && f.stage === 1))
         capture(1);
       cycle++;
+      eventAt = null;
+      beforeEvent = null;
+      sampledAt = -Infinity;
       interventionAt = null;
       released = false;
       contacts.clear();
-      keys2.clear();
+      keys.clear();
       lastCapture = -Infinity;
       trim();
       refreshNeeded = true;
@@ -29348,7 +29449,7 @@ void main() {
     }
     return {
       start,
-      tick: tick2,
+      tick,
       checkpoint,
       newVoyage,
       beforeInput,
@@ -29368,7 +29469,9 @@ void main() {
           summary: [...f.summary],
           hasImage: f.image instanceof Blob
         })),
-        lastCapture
+        lastCapture,
+        eventAt,
+        eventFrames: eventFrames.map((f) => ({ cycle: f.cycle, stage: f.stage, at: f.at, eventAt: f.eventAt, hasImage: f.image instanceof Blob }))
       })
     };
   }
@@ -29827,7 +29930,7 @@ void main() {
     uHeight: { value: height },
     uFade: { value: 0 }
   };
-  var fieldUniforms = { uC: { value: 4.018 }, uFade: { value: 0 } };
+  var fieldUniforms = { uC: { value: 4.018 }, uFade: { value: 0 }, uPassage: { value: 0 } };
   function say(text, seconds = 5) {
     notice.textContent = text;
     notice.classList.toggle("visible", !!text);
@@ -30252,7 +30355,7 @@ function createVessel() {
         gl_Position=projectionMatrix*eye;
       }`,
       fragmentShader: `
-      uniform float uC,uFade; varying vec2 p; varying float vDepth;
+      uniform float uC,uFade,uPassage; varying vec2 p; varying float vDepth;
       void main(){
         float r1=max(length(p+vec2(.5,0.)),.035);
         float r2=max(length(p-vec2(.5,0.)),.035);
@@ -30261,14 +30364,15 @@ function createVessel() {
         float width=max(fwidth(phase),.025);
         float contour=1.-smoothstep(width*.35,width*1.4,abs(fract(phase+.5)-.5));
         float neck=exp(-pow(p.x/.32,2.)-pow(p.y/.28,2.));
-        float w=max(fwidth(f),.0005)*(1.+neck*.9);
-        float boundary=exp(-pow(f/w,2.)*.7);
+        float w=max(fwidth(f),.0015)*(1.+neck*.5);
+        float boundary=1.-smoothstep(w*.65,w*1.8,abs(f));
         float quiet=exp(-abs(f)*.5);
         float allowed=smoothstep(-.02,.025,f);
         float edge=(1.-smoothstep(1.6,1.9,abs(p.x)))*(1.-smoothstep(1.25,1.6,abs(p.y)));
         float cores=smoothstep(.045,.11,min(r1,r2));
         float distanceFade=mix(.18,1.,exp(-max(vDepth-300.,0.)/1450.));
-        float a=(contour*(.02+.055*quiet)*(.35+.65*allowed)+boundary*(.20+.50*neck))*edge*cores*distanceFade*uFade;
+        float strata=contour*(.02+.055*quiet)*(.35+.65*allowed)*(1.-uPassage*.16);
+        float a=(strata+boundary*(.20+.50*neck))*edge*cores*distanceFade*uFade;
         vec3 color=mix(vec3(.39,.42,.43),vec3(.72,.74,.71),allowed);
         color=mix(color,vec3(.82,.83,.79),boundary*.7);
         gl_FragColor=vec4(color,a);
@@ -30465,6 +30569,7 @@ function createVessel() {
     starUniforms.uJacobi.value = C;
     starUniforms.uFade.value = MathUtils.smootherstep(age + 0.6, 0, 8);
     fieldUniforms.uC.value = C;
+  fieldUniforms.uPassage.value = sim.eventAt === null ? 0 : Math.exp(-Math.max(0, sim.elapsed - sim.eventAt) / 8);
     fieldUniforms.uFade.value = MathUtils.smootherstep(age + 1.2, 0, 5);
     trailUniforms.uFade.value = MathUtils.smootherstep(age, 0, 3);
     vessel.position.set(
@@ -30749,7 +30854,7 @@ function resizeArtworkBuffer(renderer, width, height, ratio, updateStyle = false
   }
   try {
     scene = new Scene();
-    scene.background = new Color(197637);
+    scene.background = new Color("#010423");
     quietSky = createQuietStars(level);
     scene.add(quietSky.points);
     camera = new PerspectiveCamera(43, width / height, 0.1, 6e3);
@@ -30891,6 +30996,7 @@ function resizeArtworkBuffer(renderer, width, height, ratio, updateStyle = false
     });
     journeyMemory = createExhibitionMemory({
       id: "transfer",
+      eventAt: () => sim.eventAt,
       canvas: () => renderer.domElement,
       paint: render,
       now: () => sim.elapsed,
