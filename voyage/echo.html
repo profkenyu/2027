@@ -40,7 +40,7 @@
   );
   --ui-data-width: clamp(136px, 18vw, 210px);
   color: #b3bec5;
-  background: #03060f;
+  background: #030612;
 }
 * {
   box-sizing: border-box;
@@ -285,7 +285,7 @@ footer button {
   place-content: center;
   margin: 0;
   padding: 24px;
-  background: #03060f;
+  background: #030612;
   color: #9baab4;
   font-size: var(--ui-text);
   line-height: 1.8;
@@ -30711,7 +30711,7 @@ function createVessel() {
     vAlpha=(.50+.24*strength)*mix(activity,.94,e)*uIntro*mix(1.,.88,delayDepth*(1.-e));
     vPair=vec4(ratio,diff,aB.y,aB.z);vPath=aB.w*aPrime.y*.18;vCarrier=aPrime.y*1.2;
     vDrift=-uTime*.022*sqrt(aPrime.y);vContact=max(pullA,pullB);
-    vColor=mix(vec3(.72,.75,.79),vec3(.86,.88,.91),e*.8+strength*.08);
+    vColor=mix(vec3(.71,.75,.80),vec3(.85,.88,.92),e*.8+strength*.08);
     vUv=uv;vPosition=p.xy;vAlign=e;vStroke=targetWidth/quadWidth;
     gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.);
   }
@@ -31069,7 +31069,7 @@ function resizeArtworkBuffer(renderer, width, height, ratio, updateStyle = false
   }
   try {
     scene = new Scene();
-    scene.background = new Color("#03060f");
+    scene.background = new Color("#030612");
     quietSky = createQuietStars(level);
     scene.add(quietSky.points);
     camera = new PerspectiveCamera(42, width / height, 0.1, 6e3);

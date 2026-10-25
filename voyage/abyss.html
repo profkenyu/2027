@@ -40,7 +40,7 @@
   );
   --ui-data-width: clamp(136px, 18vw, 210px);
   color: #b3bec5;
-  background: #03060f;
+  background: #030612;
 }
 * {
   box-sizing: border-box;
@@ -285,7 +285,7 @@ footer button {
   place-content: center;
   margin: 0;
   padding: 24px;
-  background: #03060f;
+  background: #030612;
   color: #9baab4;
   font-size: var(--ui-text);
   line-height: 1.8;
@@ -29817,7 +29817,7 @@ const lossStartGap = (() => { const pair = lookup.pairAt(.72, new Float64Array(2
     quietSky?.setQuality(level, renderer.getPixelRatio());
     stars.geometry.setDrawRange(0, Math.min(capacity, q.points));
     uniforms.uSize.value = q.size;
-    uniforms.uOpacity.value = q.opacity;
+    uniforms.uOpacity.value = q.opacity * 1.08;
     uniforms.uScale.value = viewport.height * 0.5 * renderer.getPixelRatio();
     uniforms.uAspect.value = viewport.width / viewport.height;
   }
@@ -29991,7 +29991,7 @@ function updateCamera() {
     audio.reset();
     x = y = viewX = viewY = 0;
     lastTick = lastDraw = 0;
-    show("\uC911\uC2EC\uC73C\uB85C \uBC00\uACE0 \uBC14\uAE65\uC73C\uB85C \uB2F9\uACA8, \uC811\uD788\uB294 \uACBD\uACC4\uB97C \uBC14\uAFC9\uB2C8\uB2E4", 7);
+    show("", 0);
     paused = false;
     simulate(0, true);
     draw();
@@ -30115,7 +30115,7 @@ function resizeArtworkBuffer(renderer, width, height, ratio, updateStyle = false
   }
   try {
     scene = new Scene();
-    scene.background = new Color("#03060f");
+    scene.background = new Color("#030612");
     quietSky = createQuietStars(level);
     scene.add(quietSky.points);
     camera = new PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 1800);
@@ -30275,7 +30275,7 @@ function resizeArtworkBuffer(renderer, width, height, ratio, updateStyle = false
       ready = true;
       setStatus("");
       document.body.classList.add("ready");
-      show("\uC911\uC2EC\uC73C\uB85C \uBC00\uACE0 \uBC14\uAE65\uC73C\uB85C \uB2F9\uACA8, \uC811\uD788\uB294 \uACBD\uACC4\uB97C \uBC14\uAFC9\uB2C8\uB2E4", 7);
+      show("", 0);
       draw();
       artworkLoop.start();
     });

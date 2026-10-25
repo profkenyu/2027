@@ -40,7 +40,7 @@
   );
   --ui-data-width: clamp(136px, 18vw, 210px);
   color: #b3bec5;
-  background: #03060f;
+  background: #030612;
 }
 * {
   box-sizing: border-box;
@@ -285,7 +285,7 @@ footer button {
   place-content: center;
   margin: 0;
   padding: 24px;
-  background: #03060f;
+  background: #030612;
   color: #9baab4;
   font-size: var(--ui-text);
   line-height: 1.8;
@@ -30375,7 +30375,7 @@ function createVessel() {
         float a=(strata+boundary*(.20+.50*neck))*edge*cores*distanceFade*uFade;
         vec3 color=mix(vec3(.39,.42,.43),vec3(.72,.74,.71),allowed);
         color=mix(color,vec3(.82,.83,.79),boundary*.7);
-        gl_FragColor=vec4(color,a);
+        gl_FragColor=vec4(color,a*1.06);
       }`
     });
     const n = tiers[level].field;
@@ -30854,7 +30854,7 @@ function resizeArtworkBuffer(renderer, width, height, ratio, updateStyle = false
   }
   try {
     scene = new Scene();
-    scene.background = new Color("#03060f");
+    scene.background = new Color("#030612");
     quietSky = createQuietStars(level);
     scene.add(quietSky.points);
     camera = new PerspectiveCamera(43, width / height, 0.1, 6e3);
