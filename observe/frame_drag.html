@@ -4,23 +4,42 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#030612">
-<meta name="description" content="KERR PLASMA / FRAME DRAG — 관객이 회전의 방향을 바꾸고, 서로 다른 궤도의 편향이 교환되는 실시간 계산 작품.">
+<meta name="description" content="KERR PLASMA / FRAME DRAG — 고정된 Kerr 회전 속 여섯 물질층. 국소 개입과 저항이 쌓이면 한 층이 갈라져 남는 약 90초의 관측.">
 <title>KERR PLASMA / FRAME DRAG — KIM GUNWOO</title>
 <link rel="icon" href="data:,">
 <style>
 :root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;font-synthesis:none;-webkit-text-size-adjust:100%;--pad:clamp(18px,2.1vw,30px);--left:max(var(--pad),env(safe-area-inset-left));--right:max(var(--pad),env(safe-area-inset-right));--top:max(var(--pad),env(safe-area-inset-top));--bottom:max(12px,env(safe-area-inset-bottom));--title:14px;--text:10.5px;--small:9px;background:#030612;color:#b3bec5}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none}body{touch-action:manipulation}canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;outline:none}header,#hint,#telemetry,#credit{position:fixed;z-index:3;pointer-events:none;text-shadow:0 1px 8px #000}header{left:var(--left);top:var(--top);width:min(620px,calc(100% - var(--left) - var(--right) - 200px))}header .context{margin:0 0 7px;color:#8e9da7;font-size:var(--small);letter-spacing:.08em}h1{margin:0;color:#d6dcdf;font-size:var(--title);font-weight:400;line-height:1.5;letter-spacing:.14em;overflow-wrap:anywhere}header p{margin:9px 0 0;color:#a2afb7;font-size:var(--text);line-height:1.75;word-break:keep-all}#telemetry{right:var(--right);top:var(--top);width:178px;font-size:var(--text);line-height:1.8;font-variant-numeric:tabular-nums}dl{margin:0}dl div{display:flex;justify-content:space-between;gap:12px}dt{color:#68adb5}dd{margin:0;color:#a1e2e8}#notice{color:#a1e2e8;line-height:1.8;text-align:right;min-height:2em}#hint{left:var(--left);bottom:calc(var(--bottom) + 30px);width:min(470px,calc(100% - var(--left) - var(--right) - 270px));margin:0;font-size:var(--text);line-height:1.8;word-break:keep-all}#hint span{display:block;color:#8e9da7}button,a{font:inherit;color:#bdc9cf;background:none;border:0;border-radius:0;padding:0;box-shadow:none;text-decoration:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}button:hover,a:hover{color:#f0f4f5}button:focus-visible,a:focus-visible{outline:0;text-decoration:underline;text-underline-offset:5px}footer nav{position:fixed;z-index:5;right:var(--right);bottom:calc(var(--bottom) + 18px);display:flex;align-items:center;gap:18px}footer button,footer a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px;font-size:var(--text);white-space:nowrap}footer nav.series{bottom:calc(var(--bottom) + 78px);gap:18px}footer .series a{font-size:10px;color:#a3b2bb}#credit{left:50%;transform:translateX(-50%);bottom:var(--bottom);margin:0;color:#7f909c;font-size:var(--small);letter-spacing:.04em;white-space:nowrap}#status{position:fixed;inset:0;z-index:8;display:grid;place-content:center;margin:0;padding:24px;background:#030612;color:#a2afb7;font-size:12px;line-height:1.8;text-align:center}dialog{width:min(740px,calc(100% - 32px));max-height:calc(100% - 40px);padding:28px;border:1px solid #26333d;background:#080d16;color:#b8c4cc;font-size:11.5px;line-height:1.9;overflow:auto}dialog::backdrop{background:#02040be0}dialog h2{font-size:15px;font-weight:400;letter-spacing:.12em;margin:0 0 18px}dialog h3{font-size:10.5px;color:#9ed1d8;letter-spacing:.09em;margin:22px 0 6px}dialog p{margin:6px 0 12px}dialog nav{display:flex;justify-content:flex-end}dialog button{min-height:44px;min-width:44px}dialog a{color:#a1d1d8;text-decoration:underline;text-underline-offset:3px}.frames{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.frames figure{margin:0}.frames img{width:100%;height:auto;aspect-ratio:1.6;object-fit:contain;background:#030612}.frames figcaption{font-size:9px;line-height:1.7;color:#94a6b3;margin-top:6px}.touch-help{display:none!important}#contact{position:fixed;z-index:4;width:20px;height:20px;border:1px solid #adbdc46b;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);display:none}[hidden]{display:none!important}@media(max-width:760px),(pointer:coarse) and (max-width:1024px){:root{--title:12.5px;--text:10px;--small:8.5px}header{width:calc(100% - var(--left) - var(--right) - 116px)}#telemetry{width:105px;font-size:9px}#telemetry dl div{gap:6px}#hint{bottom:calc(var(--bottom) + 128px);width:calc(100% - var(--left) - var(--right))}footer nav{gap:16px}footer nav.series{gap:16px}footer .series a{font-size:9px}.frames{grid-template-columns:1fr}dialog{padding:20px}}@media(pointer:coarse){.mouse-help{display:none!important}.touch-help{display:block!important}}@media(max-height:500px){header p{display:none}#hint{bottom:calc(var(--bottom) + 36px);width:48%;font-size:9px}footer nav.series{bottom:calc(var(--bottom) + 72px)}#telemetry{font-size:9px}h1{font-size:12px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
-#sound{width:44px;padding:0}#sound svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}.sound-on{display:none}#sound[aria-pressed=true] .sound-on{display:block}#sound[aria-pressed=true] .sound-off{display:none}#close{display:block;position:sticky;top:-12px;z-index:2;margin-left:auto;min-width:44px;min-height:44px;background:#080d16}
+#hint{transition:opacity 1.5s}#sound{width:44px;padding:0}#sound svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}.sound-on{display:none}#sound[aria-pressed=true] .sound-on{display:block}#sound[aria-pressed=true] .sound-off{display:none}#close{display:block;position:sticky;top:-12px;z-index:2;margin-left:auto;min-width:44px;min-height:44px;background:#080d16}
 </style>
 </head>
 <body>
-<canvas id="view" tabindex="0" role="application" aria-label="좌우로 드래그하면 회전 방향이 바뀝니다. 두 손가락의 간격은 접근 거리, 각도는 회전을 조절합니다. 방향키, P, R, M 키도 사용할 수 있습니다."></canvas>
-<header><p class="context">관측의 조건 · 02 / 03</p><h1>KERR PLASMA / FRAME DRAG</h1><p>반경마다 다른 끌림이 쌓이고, 이전 방향의 한 층이 갈라져 남습니다.</p></header>
-<aside id="telemetry" aria-label="작품 데이터"><dl><div><dt>회전</dt><dd id="spin">+0.56</dd></div><div><dt>지평선 / M</dt><dd id="horizon">1.83</dd></div><div><dt>방향 전이</dt><dd id="reversals">0</dd></div></dl><p id="notice" role="status"></p></aside>
-<p id="hint">좌우로 끌면 안쪽부터 회전 방향이 바뀝니다.<span class="mouse-help">위아래는 관측 각도, 휠은 접근 거리입니다.</span><span class="touch-help">두 손가락의 간격과 각도로 접근과 비틀림을 조절합니다.</span></p>
+<canvas id="view" tabindex="0" role="application" aria-label="바깥층을 왼쪽으로 밀고 누른 채 머무르면 국소 회전력이 전달됩니다. 두 손가락의 간격은 접근 거리, 회전은 국소 힘을 조절합니다. 방향키, P, R, M 키도 사용할 수 있습니다."></canvas>
+<header><p class="context">관측의 조건 · 02 / 03</p><h1>KERR PLASMA / FRAME DRAG</h1><p>중심은 멈추지 않고, 여섯 층 사이에 힘의 차이가 쌓입니다.</p></header>
+<aside id="telemetry" aria-label="작품 데이터"><dl><div><dt>중심 회전</dt><dd id="spin">+0.84</dd></div><div><dt>층간 전단</dt><dd id="shear">0.00</dd></div><div><dt>박리</dt><dd id="reversals">—</dd></div></dl><p id="notice" role="status" aria-live="polite"></p></aside>
+<p id="hint">바깥층을 왼쪽으로 밀고, 누른 채 잠시 머무르십시오.<span class="mouse-help">위아래는 관측 높이 · 휠은 접근 거리입니다.</span><span class="touch-help">두 손가락의 간격은 거리, 회전은 국소적인 힘을 바꿉니다.</span></p>
 <div id="contact" aria-hidden="true"></div>
 <footer><nav class="series" aria-label="다른 작품"><a href="../field-archive.html?from=observe/frame_drag.html#observation-conditions">FIELD ARCHIVE</a><a href="occlusion.html">다음 작품 · OCCLUSION</a></nav><nav aria-label="작품 설정"><button id="sound" aria-pressed="false" aria-label="소리 켜기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="sound-on" d="M16 8c2 2 2 6 0 8m3-11c4 4 4 10 0 14"/><path class="sound-off" d="m17 9 4 6m0-6-4 6"/></svg></button><button id="restart">새 관측</button><button id="about">기록</button></nav><p id="credit">© 2026 KIM GUNWOO</p></footer>
 <p id="status">관측면을 준비하고 있습니다.</p>
-<dialog id="record" aria-labelledby="record-title"><button id="close" autofocus>닫기</button><h2 id="record-title" tabindex="-1">회전의 편향 / 관측 기록</h2><p>회전 방향을 반대로 밀고 잠시 기다리면 안쪽이 먼저 돌아서고 바깥쪽은 느리게 따라옵니다. 반대 방향이 유지되어 반경 사이의 누적 각도 차이가 임계값을 넘으면 이전 방향의 한 층이 갈라져 남습니다. 이 단층은 새 관측마다 한 번만 생깁니다. 짧게 좌우를 왕복하는 동작만으로는 사건이 일어나지 않습니다.</p><h3>실제 화면</h3><div id="frames" class="frames"></div><p id="storage-note"></p><h3>A · 수학적 사실</h3><p>질량을 M=1로 놓고 무차원 회전 a*=J/M²를 사용합니다. 바깥 사건의 지평선은 r+/M=1+√(1−a*²)입니다. 적도면의 순행·역행 원형 광자궤도 반경은 |a*|로 계산하고, 회전 부호는 화면의 좌우 배치와 흐르는 방향을 바꿉니다. 적도면에서 영각운동량 관측자의 각속도는 Ω=−gₜφ/gφφ=2ar/[(r²+a²)²−a²(r²−2r+a²)]입니다.</p><h3>B · 실시간 근사</h3><p>화면은 정확한 Kerr 영측지선 추적이 아닙니다. TR-Q1은 같은 회전 부호와 관측 투영을 따르는 예술적 추적기이며, 실제 우주선의 항법을 계산하지 않습니다. 모든 품질 등급에서 2.05M부터 12.8M까지 같은 28개 반경의 Ω를 시간 적분합니다. 표본 사이를 선형 보간하며, 경계 안쪽은 첫 표본으로 제한합니다. 기하량으로 정한 경계와 이 누적 각도로 궤도층을 투영합니다. 광선의 굴절이나 물질의 유체역학은 풀지 않습니다.</p><h3>C · 예술적 해석</h3><p>시간 배율 4, 반대 방향의 지속 시간과 누적 전단 임계값, 단층과 이전 방향의 잔류층, 회백색 발광과 접촉음은 예술적 해석입니다. 이 임계 사건은 실제 Kerr 시공간의 위상 전이가 아닙니다. 물질층의 흐르는 방향을 회전 부호에 맞추는 설정 역시 실제 강착 원반의 운동을 재현한 것이 아닙니다. 블랙홀의 호킹 증발이나 질량 소멸을 재현하지 않습니다.</p><p><a href="https://www.damtp.cam.ac.uk/user/tong/gr/grhtml/S6.html" target="_blank" rel="noreferrer">Kerr 계량과 프레임 끌림 · David Tong</a> · <a href="https://phyweb.physics.nus.edu.sg/~phyteoe/kerr/" target="_blank" rel="noreferrer">Kerr 구면 광자궤도 · Edward Teo</a></p></dialog>
+<dialog id="record" aria-labelledby="record-title"><button id="close" autofocus>닫기</button>
+<h2 id="record-title" tabindex="-1">회전의 중량 / 관측 기록</h2>
+<p>여섯 개의 두꺼운 층이 화면 밖으로 이어집니다. 중심의 회전은 바뀌지 않습니다. 관객의 손짓은 닿은 층에만 힘을 전달합니다. 바깥층은 반대로 돌아설 수 있지만, 안쪽은 강한 끌림 속에서 같은 방향을 유지합니다.</p>
+<h3>약 90초의 관측</h3>
+<p>처음 8초에는 가까운 가장자리가 나타나고, 20초까지 탐사선과 층 사이의 깊이가 드러납니다. 바깥층을 왼쪽으로 민 뒤 누른 채 머무르면 저항과 회전 차이가 쌓입니다. 충분한 힘이 전달되면 한 층이 들려 올라가고 긴 검은 틈이 열립니다. 보통의 강한 개입은 약 8–12초 동안 축적되지만, 위치와 힘에 따라 도달 시간은 달라집니다. 사건은 누적된 일과 전단이 결정하며, 특정 시각에 예약되어 있지 않습니다.</p>
+<p>한 관측에서 박리는 한 번만 발생합니다. 60–90초에는 운동이 가라앉고, 이후에도 분리된 두 방향과 틈이 남습니다. 새 관측은 층과 탐사선을 처음으로 되돌립니다. 개입하지 않으면 회전은 이어지지만 박리는 일어나지 않습니다.</p>
+<h3>접촉</h3>
+<p>층을 누른 위치가 힘을 가할 반경을 선택합니다. 빈 공간에는 힘을 전달하지 않습니다. 좌우로 미는 방향과 거리가 힘의 방향과 크기를 정하고, 누른 동안 그 힘이 이어집니다. 놓으면 외력은 멈추지만 이미 바뀐 운동은 천천히 회복합니다. 위아래 드래그는 관측 높이, 휠은 접근 거리입니다. 두 손가락의 간격은 거리, 두 접점의 회전은 더 넓은 영역의 힘을 조절합니다.</p>
+<p>좌우 방향키를 누르는 동안 가운데 바깥층에 힘을 가합니다. 위아래 방향키는 접근 거리, P 또는 Space는 일시 정지, R은 새 관측, M은 사운드입니다. 기록을 열거나 화면을 벗어나면 관측 시간이 멈춥니다.</p>
+<h3>실제 화면</h3><div id="frames" class="frames"></div><p id="storage-note"></p>
+<h3>A · 수학과 물리</h3>
+<p>G=M=c=1인 고정 Kerr 배경에서 회전 a=0.84를 사용합니다. 바깥 지평선은 r+=1+√(1−a²)입니다. 적도면에서 gₜₜ=−(1−2/r), gₜφ=−2a/r, gφφ=r²+a²+2a²/r이며, 영각운동량 관측자의 각속도는 Ω=−gₜφ/gφφ입니다.</p>
+<p>고정된 r과 θ에서 시간꼴 원운동이 가능한 각속도는 Ω₋와 Ω₊ 사이에 놓이며, Ω±=[−gₜφ±√(gₜφ²−gₜₜgφφ)]/gφφ입니다. 적도면의 에르고영역에서는 이 범위가 중심과 같은 회전 방향에 놓입니다. 관객의 개입은 중심의 회전 a를 바꾸지 않습니다.</p>
+<h3>B · 수치 근사</h3>
+<p>r++0.10부터 16.6M까지 로그 간격의 64개 반경에서 물질층의 각운동을 64비트 부동소수점과 1/120초 간격으로 적분합니다. 각속도는 위 허용 범위의 안쪽으로 제한하고 반경 사이를 선형 보간합니다. 각 층의 중심 위상을 큰 면의 회전에 사용하고, 내부의 상대 위상은 제한된 비틀림으로 옮깁니다. 국소적인 힘, 이웃 사이의 완화와 감쇠를 포함한 1차원 모형입니다. 실제 유체역학·자기장·Kerr 측지선 항법·광선 추적은 계산하지 않습니다.</p>
+<h3>C · 예술적 해석</h3>
+<p>여섯 층의 두께와 공간 배치, 전단을 면의 비틀림으로 옮기는 방식, 무차원 일과 전단의 박리 임계값, 분리된 층의 잔류 운동은 작품을 위한 구성입니다. 실제 시공간이 찢어지거나 블랙홀의 회전이 뒤집히는 현상을 의미하지 않습니다. 중앙의 어둠은 여섯 층 사이에 남은 공간이며 실제 관측된 블랙홀 그림자의 크기를 재현하지 않습니다.</p>
+<p>표시 시간 배율은 2.4에서 시작해 60–90초 동안 0.84로 가라앉습니다. 밝기와 시간 배율은 예술적 해석입니다. 사운드는 직접 켰을 때만 들리며, 층 사이의 미끄러짐을 짧은 저역 마찰음으로 옮깁니다. 박리 뒤에는 이 접촉음이 끊깁니다. 지속적인 배경음은 없습니다.</p>
+<p>HIGH / MID / LOW는 같은 여섯 층·64개 반경·힘·사건 조건을 유지합니다. 면의 세분화와 화면 해상도, 표시 빈도만 조절합니다. TR-Q1은 동일한 각운동을 따르는 예술적 추적기입니다.</p>
+<p><a href="https://www.damtp.cam.ac.uk/user/tong/gr/grhtml/S6.html#S6.SS3.SSS3" target="_blank" rel="noreferrer">Kerr 계량과 에르고영역 · David Tong</a></p></dialog>
 <script>
 /*
 The MIT License
@@ -27621,224 +27640,598 @@ function createVessel() {
 
 
 
-return {createVessel,installObservationLoss,Scene,Group,PerspectiveCamera,OrthographicCamera,WebGLRenderer,HemisphereLight,DirectionalLight,Vector2,Vector3,Matrix4,Quaternion,Object3D,Color,SRGBColorSpace,ACESFilmicToneMapping};
+return {createVessel,installObservationLoss,Scene,Group,PerspectiveCamera,OrthographicCamera,WebGLRenderer,HemisphereLight,DirectionalLight,Vector2,Vector3,Matrix4,Quaternion,Object3D,Color,SRGBColorSpace,ACESFilmicToneMapping,BufferGeometry,BufferAttribute,ShaderMaterial,Mesh,MeshBasicMaterial,SphereGeometry,DoubleSide};
 })();
 
 </script>
 <script>
-(()=>{'use strict';
-// MODEL / STATE. Geometric quantities are separated from the artistic projection.
-const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-const parameters=new URLSearchParams(location.search),names=['LOW','MID','HIGH'];
-const tiers=[{layers:12,dpr:1,pixels:330000,fps:30},{layers:20,dpr:1.25,pixels:650000,fps:45},{layers:28,dpr:1.5,pixels:1100000,fps:60}];
-const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-let level=Math.min(innerWidth,innerHeight)<650||(navigator.deviceMemory||8)<=4?0:devicePixelRatio>1.8?1:2;
-const forced=names.indexOf((parameters.get('quality')||'').toUpperCase());if(forced>=0)level=forced;
-const S={time:0,spin:.56,spinTarget:.56,view:.38,viewTarget:.38,zoom:1,zoomTarget:1,orbit:0,orbitTarget:0,memory:0,eventAt:-1,reversals:0,lastSign:1,stable:0,shear:0,candidate:0,interaction:0,inputCount:0,paused:false,lost:false,ready:false,frames:0,qualityChanges:0,probePhase:2.20};
-function geometry(a){const m=Math.abs(clamp(a,-1,1));return {horizon:1+Math.sqrt(1-m*m),prograde:2*(1+Math.cos(2/3*Math.acos(-m))),retrograde:2*(1+Math.cos(2/3*Math.acos(m)))};}
-// A: equatorial zero-angular-momentum observer rate, M=G=c=1.
-// B: 28 fixed radial samples, explicit time integration. C: time scale and material traces.
-const SHELLS=28,shellPhase=new Float32Array(SHELLS),previousPhase=new Float32Array(SHELLS);
-let originInner=0,originOuter=0;
-function frameDrag(r,a){const delta=r*r-2*r+a*a;return 2*a*r/((r*r+a*a)**2-a*a*delta);}
-function shellRadius(i){return 2.05+10.75*i/(SHELLS-1);}
-const canvas=document.querySelector('#view'),status=document.querySelector('#status'),dialog=document.querySelector('#record');
-const spinNode=document.querySelector('#spin'),horizonNode=document.querySelector('#horizon'),reversalNode=document.querySelector('#reversals'),notice=document.querySelector('#notice'),contact=document.querySelector('#contact');
-let gl,program,buffer,loc={},lastTick=0,lastDraw=0,lastUI=0,slow=0,costMean=0,error=null;
-const contacts=new Map(),keys=new Set();let pair=null,pendingFrame='',revision=0;
-const vertex=`#version 300 es
-in vec2 position;void main(){gl_Position=vec4(position,0.,1.);}`;
-const fragment=`#version 300 es
-precision highp float;
-uniform vec2 resolution;uniform float time,spin,viewAngle,zoom,orbit,memorySpin,eventAge,rH,rPro,rRet,frameFit;
-uniform float shellPhase[28],previousPhase[28];
-out vec4 fragColor;
-#define PI 3.141592653589793
-#define LAYERS __LAYERS__
-float hash(vec2 v){return fract(sin(dot(v,vec2(127.1,311.7)))*43758.5453);}
-mat2 rotate(float a){float s=sin(a),c=cos(a);return mat2(c,-s,s,c);}
-float quietStars(vec2 p){vec2 cell=floor(p*190.);vec2 q=fract(p*190.)-.5;float h=hash(cell);float star=1.-smoothstep(.02,.10,length(q));return star*step(.9915,h)*(.12+.27*hash(cell+8.));}
-float radialPhase(float r,bool previous){float p=clamp((r-2.05)/10.75,0.,1.)*27.;int i=min(26,int(floor(p)));return previous?mix(previousPhase[i],previousPhase[i+1],p-float(i)):mix(shellPhase[i],shellPhase[i+1],p-float(i));}
-void main(){
- vec2 uv=(2.*gl_FragCoord.xy-resolution)/min(resolution.x,resolution.y);
- vec2 sky=rotate(orbit*.055)*uv;float stars=quietStars(sky*.72)+quietStars(sky*1.17+20.)*.35;
- vec3 color=vec3(.009,.015,.031)+vec3(.49,.57,.65)*stars;
- // An explicit artistic projection, with Kerr radii controlling its boundaries.
- vec2 u=rotate(-.10+orbit*.08)*uv;
- float scale=3.45*zoom*frameFit;
- float influence=exp(-dot(u,u)*.34);
- u.x+=spin*.12*influence*(.6+u.y);
- float incline=clamp(viewAngle,.15,.76);
- vec2 p=vec2(u.x,(u.y+.035*sin(u.x*1.2)*spin)/(incline+.025*abs(u.x)))*scale;
- float r=length(p),phi=atan(p.y,p.x);
- float side=cos(phi)*spin;
- float opening=mix(rPro,rRet,.5+.5*cos(phi)*sign(spin));
- float inner=opening+.16;
- float phase=phi;
- float front=1.-smoothstep(-.03,.025,u.y);
- float shadowRadius=rH*.285/(zoom*frameFit);
- float shadowDistance=length(vec2(u.x+spin*.032,u.y));
- float shadow=1.-smoothstep(shadowRadius-.009,shadowRadius+.008,shadowDistance);
- float visibility=1.-shadow;
- float lineSum=0.;float filament=0.;
- for(int i=0;i<LAYERS;i++){
-  float f=float(i)/float(LAYERS-1);
-  float radius=inner+f*(12.8-inner);
-  // Every tier samples the same integrated Kerr dragging field.
-  float advection=radialPhase(radius,false);
-  float ripple=sin(phase*2.-advection*2.+f*3.2)*spin*.14;
-  float winding=sin(phase+f*2.9-advection*.45)*(.05+.10*abs(spin));
-  float distance=r-radius-ripple-winding;
-  float pixel=max(fwidth(r)*.62,.010);
-  float line=exp(-pow(distance/(pixel+.011+.006*f),2.));
-  float body=exp(-pow(distance/(pixel*.9+.050),2.))*.11;
-  float arc=.45+.55*pow(.5+.5*cos(phase-advection+f*2.1),2.);
-  float dim=exp(-f*1.15)*(.58+.42*arc);
-  float v=mix(visibility,1.,front*.94)*smoothstep(inner-.12,inner+.15,r);
-  float fault=eventAge<0.?1.:1.-.78*exp(-pow((r-4.9)/.13,2.));
-  lineSum+=(line*.32+body)*dim*v*fault;
-  filament+=line*pow(arc,7.)*.16*v;
- }
- // A thin lensed return of the far side. This analytic fold is not a ray-traced image.
- float rr=length(vec2(u.x+spin*.045,u.y*1.10));
- float ringRadius=mix(rPro,rRet,.5+.5*cos(atan(u.y,u.x))*sign(spin))*.25/(zoom*frameFit);
- float ring=exp(-pow((rr-ringRadius)/max(fwidth(rr)*1.3,.009),2.));
- float arcGate=.22+.78*smoothstep(-.18,.32,u.y);
- float asymmetry=clamp(.66+side*.36,.24,1.02);
- vec3 cool=vec3(.32,.42,.49),warm=vec3(.61,.60,.52);
- vec3 light=mix(cool,warm,.50+spin*.34*cos(phi));
- color=mix(color,vec3(.0007,.0013,.0027),shadow*.995);
- color+=light*lineSum*asymmetry+vec3(.74,.76,.71)*filament;
- color+=mix(vec3(.37,.49,.55),vec3(.70,.68,.57),.5+spin*.35)*ring*.24*arcGate;
- // One previous spin direction remains as a weak, displaced material layer after reversal.
- if(abs(memorySpin)>.05){float separation=eventAge<0.?0.:.12+.18*(1.-exp(-eventAge/7.));float oldRadius=4.9+sin(phi*2.-radialPhase(4.9,true)*2.)*.15+separation;float old=exp(-pow((r-oldRadius)/max(fwidth(r),.025),2.));color+=vec3(.25,.32,.35)*old*.12*visibility;}
- float vignette=1.-smoothstep(1.45,2.8,length(uv));
- color*=.66+.34*vignette;
- color=1.-exp(-color*1.27);
- fragColor=vec4(pow(max(color,vec3(0.)),vec3(.94)),1.);
-}`;
-function fail(reason){error=String(reason);status.hidden=false;status.textContent='화면을 시작할 수 없습니다. WebGL 2를 지원하는 브라우저에서 다시 열어 주세요.';console.error('Kerr renderer:',reason);}
-function compile(type,source){const sh=gl.createShader(type);gl.shaderSource(sh,source);gl.compileShader(sh);if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS)){const message=gl.getShaderInfoLog(sh);gl.deleteShader(sh);throw Error(message);}return sh;}
-function build(){
- if(program)gl.deleteProgram(program);if(buffer)gl.deleteBuffer(buffer);
- const vs=compile(gl.VERTEX_SHADER,vertex),fs=compile(gl.FRAGMENT_SHADER,fragment.replace('__LAYERS__',tiers[level].layers));
- program=gl.createProgram();gl.attachShader(program,vs);gl.attachShader(program,fs);gl.linkProgram(program);gl.deleteShader(vs);gl.deleteShader(fs);
- if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));
- gl.useProgram(program);buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
- const index=gl.getAttribLocation(program,'position');gl.enableVertexAttribArray(index);gl.vertexAttribPointer(index,2,gl.FLOAT,false,0,0);
- loc={};for(const name of ['resolution','time','spin','viewAngle','zoom','orbit','memorySpin','eventAge','rH','rPro','rRet','frameFit'])loc[name]=gl.getUniformLocation(program,name);loc.shellPhase=gl.getUniformLocation(program,'shellPhase[0]');loc.previousPhase=gl.getUniformLocation(program,'previousPhase[0]');
- resize();
-}
-function resize(){if(!gl||S.lost)return;const q=tiers[level],ratio=Math.min(devicePixelRatio||1,q.dpr,Math.sqrt(q.pixels/(innerWidth*innerHeight)));canvas.width=Math.max(1,Math.round(innerWidth*ratio));canvas.height=Math.max(1,Math.round(innerHeight*ratio));gl.viewport(0,0,canvas.width,canvas.height);resizeProbe();}
-function draw(){if(!gl||S.lost||!program)return;const g=geometry(S.spin);gl.useProgram(program);gl.uniform2f(loc.resolution,canvas.width,canvas.height);gl.uniform1f(loc.time,S.time);gl.uniform1f(loc.spin,S.spin);gl.uniform1f(loc.viewAngle,S.view);gl.uniform1f(loc.zoom,S.zoom);gl.uniform1f(loc.orbit,S.orbit);gl.uniform1f(loc.memorySpin,S.memory);gl.uniform1f(loc.eventAge,S.eventAt<0?-1:S.time-S.eventAt);gl.uniform1f(loc.rH,g.horizon);gl.uniform1f(loc.rPro,g.prograde);gl.uniform1f(loc.rRet,g.retrograde);gl.uniform1f(loc.frameFit,frameFit());gl.uniform1fv(loc.shellPhase,shellPhase);gl.uniform1fv(loc.previousPhase,previousPhase);gl.drawArrays(gl.TRIANGLES,0,3);drawProbe();S.frames++;}
-function step(dt){
- if(S.paused||S.lost||dialog.open)return;
- S.time+=dt*(reduced?.32:1);
- const radii=geometry(S.spin),r=radii.prograde+(radii.retrograde-radii.prograde)*(.5+.5*Math.cos(S.probePhase)*Math.sign(S.spin))+1.3;S.probePhase+=dt*(reduced?.32:1)*4*frameDrag(r,S.spin);
- if(keys.has('ArrowLeft'))S.spinTarget=clamp(S.spinTarget-dt*.72,-.98,.98);
- if(keys.has('ArrowRight'))S.spinTarget=clamp(S.spinTarget+dt*.72,-.98,.98);
- if(keys.has('ArrowUp'))S.zoomTarget=clamp(S.zoomTarget-dt*.23,.72,1.65);
- if(keys.has('ArrowDown'))S.zoomTarget=clamp(S.zoomTarget+dt*.23,.72,1.65);
- const follow=1-Math.exp(-dt*5.5);S.spin+=(S.spinTarget-S.spin)*follow;S.view+=(S.viewTarget-S.view)*follow;S.zoom+=(S.zoomTarget-S.zoom)*follow;S.orbit+=(S.orbitTarget-S.orbit)*follow;
- const sign=S.spin<-.16?-1:S.spin>.16?1:0;
- if(sign&&sign!==S.lastSign&&S.interaction>.08){
-  if(S.eventAt<0){S.memory=S.lastSign*.56;previousPhase.set(shellPhase);originInner=shellPhase[0];originOuter=shellPhase[SHELLS-1];S.candidate=sign;S.stable=0;S.shear=0;notice.textContent='안쪽과 바깥쪽이 서로 다른 속도로 방향을 바꿉니다.';}
-  S.lastSign=sign;S.reversals++;
- }
- const fieldDt=dt*(reduced?.32:1)*4;
- for(let i=0;i<SHELLS;i++){const radius=shellRadius(i);shellPhase[i]+=fieldDt*frameDrag(radius,S.spin);if(S.memory)previousPhase[i]+=fieldDt*frameDrag(radius,S.memory);}
- if(S.candidate&&S.eventAt<0){
-  S.stable=sign===S.candidate?S.stable+dt:0;
-  S.shear=Math.abs((shellPhase[0]-originInner)-(shellPhase[SHELLS-1]-originOuter));
-  if(S.stable>=4&&S.shear>=.65){S.eventAt=S.time;pendingFrame='역방향 단층';notice.textContent='이전 방향의 한 층이 분리되어 남았습니다.';}
- }
-}
-function observeCost(cost,dt){if(forced>=0||level===0)return;costMean+=(cost-costMean)*.08;slow=costMean>18?slow+dt:Math.max(0,slow-dt*.7);if(slow>3){level--;slow=0;S.qualityChanges++;build();}}
-// INTERACTION: horizontal input is angular momentum. Two contacts set the viewing boundary.
-function pairState(){const v=[...contacts.values()];if(v.length<2)return null;return {distance:Math.hypot(v[1].x-v[0].x,v[1].y-v[0].y),angle:Math.atan2(v[1].y-v[0].y,v[1].x-v[0].x),y:(v[0].y+v[1].y)*.5};}
-function down(e){if(S.paused||S.lost||dialog.open||contacts.size>=2)return;if(!contacts.size)captureFrame('개입 전');S.inputCount++;contacts.set(e.pointerId,{x:e.clientX,y:e.clientY});canvas.setPointerCapture(e.pointerId);pair=pairState();contact.style.display='block';contact.style.left=e.clientX+'px';contact.style.top=e.clientY+'px';}
-function move(e){const old=contacts.get(e.pointerId);if(!old||S.paused||S.lost||dialog.open)return;const dx=e.clientX-old.x,dy=e.clientY-old.y;old.x=e.clientX;old.y=e.clientY;S.inputCount++;S.interaction+=Math.hypot(dx,dy)/Math.min(innerWidth,innerHeight);
- if(contacts.size===2){const next=pairState();if(pair){let da=next.angle-pair.angle;if(da>Math.PI)da-=Math.PI*2;if(da<-Math.PI)da+=Math.PI*2;S.spinTarget=clamp(S.spinTarget+da*1.25,-.98,.98);S.zoomTarget=clamp(S.zoomTarget*pair.distance/Math.max(20,next.distance),.72,1.65);S.viewTarget=clamp(S.viewTarget-(next.y-pair.y)/innerHeight*.7,.15,.76);}pair=next;}else{S.spinTarget=clamp(S.spinTarget+dx/innerWidth*3.25,-.98,.98);S.viewTarget=clamp(S.viewTarget-dy/innerHeight*.9,.15,.76);S.orbitTarget+=dx/innerWidth*.17;}
- contact.style.left=e.clientX+'px';contact.style.top=e.clientY+'px';Audio.contact();}
-function up(e){const id=typeof e==='number'?e:e.pointerId;if(!contacts.has(id))return;contacts.delete(id);pair=pairState();if(!contacts.size){contact.style.display='none';captureFrame('개입 직후');}}
-function release(){contacts.clear();keys.clear();pair=null;contact.style.display='none';}
-canvas.addEventListener('pointerdown',down);canvas.addEventListener('pointermove',move);for(const name of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(name,up);canvas.addEventListener('contextmenu',e=>e.preventDefault());
-canvas.addEventListener('wheel',e=>{if(S.paused||dialog.open)return;e.preventDefault();S.inputCount++;S.zoomTarget=clamp(S.zoomTarget+e.deltaY*.0007,.72,1.65);S.interaction+=Math.abs(e.deltaY)*.0002;},{passive:false});
-addEventListener('blur',release);document.addEventListener('visibilitychange',()=>{release();lastTick=lastDraw=0;if(document.hidden)Audio.suspend();else Audio.resume();});addEventListener('pagehide',()=>{release();Audio.suspend();});addEventListener('pageshow',()=>{lastTick=lastDraw=0;resize();});
-addEventListener('resize',resize);addEventListener('orientationchange',()=>requestAnimationFrame(resize));if(visualViewport)visualViewport.addEventListener('resize',resize);
-addEventListener('keydown',e=>{if(dialog.open||e.target.closest('input,textarea,[contenteditable=true]'))return;if(['Space','Enter'].includes(e.code)&&e.target.closest('button,a'))return;if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space','KeyP','KeyR','KeyM'].includes(e.code))e.preventDefault();if((e.code==='KeyP'||e.code==='Space')&&!e.repeat){S.paused=!S.paused;release();lastTick=lastDraw=0;notice.textContent=S.paused?'관측을 멈췄습니다.':'';if(S.paused)Audio.suspend();else Audio.resume();}else if(e.code==='KeyR'&&!e.repeat)reset();else if(e.code==='KeyM'&&!e.repeat)Audio.toggle();else if(e.code.startsWith('Arrow')&&!S.paused){keys.add(e.code);S.inputCount++;S.interaction+=.02;Audio.contact();}});addEventListener('keyup',e=>keys.delete(e.code));
-// AUDIO: explicit opt-in, one short contact tone on change. Never a background drone.
-const Audio=(()=>{let context=null,enabled=false,gate=0;return{get enabled(){return enabled},async toggle(){try{if(!context)context=new(window.AudioContext||window.webkitAudioContext)();enabled=!enabled;if(enabled)await context.resume();else await context.suspend();const button=document.querySelector('#sound');button.setAttribute('aria-pressed',String(enabled));button.setAttribute('aria-label',enabled?'소리 끄기':'소리 켜기');}catch{enabled=false;}},contact(){if(!enabled||!context||context.state!=='running'||context.currentTime<gate)return;gate=context.currentTime+.18;const o=context.createOscillator(),g=context.createGain(),t=context.currentTime;o.type='sine';o.frequency.setValueAtTime(130+Math.abs(S.spin)*85,t);o.frequency.exponentialRampToValueAtTime(88+Math.abs(S.spin)*40,t+.1);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.035,t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+.15);o.connect(g);g.connect(context.destination);o.start(t);o.stop(t+.18);o.onended=()=>{o.disconnect();g.disconnect();};},suspend(){if(context&&enabled)context.suspend().catch(()=>{});},resume(){if(context&&enabled&&!S.paused&&!dialog.open)context.resume().catch(()=>{});}}})();
-// A reduced TR-Q1 is advected by the same signed rotation and projected disk coordinates.
-// This is an artistic tracer, not a solution to Kerr spacecraft navigation.
-let probe=null;
-function frameFit(){return Math.max(1,.90/(innerWidth/innerHeight));}
-function createProbe(){
- const T=window.__VoyageGeometry;
- const scene=new T.Scene(),camera=new T.OrthographicCamera(-1,1,1,-1,.1,50);
- camera.position.set(0,0,20);camera.lookAt(0,0,0);
- const renderer=new T.WebGLRenderer({alpha:true,antialias:level>0,powerPreference:'default',preserveDrawingBuffer:false});
- renderer.setClearColor(0,0);renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=.96;
- const layer=renderer.domElement;layer.id='probe-layer';layer.style.pointerEvents='none';layer.style.zIndex='1';layer.setAttribute('aria-hidden','true');document.body.append(layer);
- const root=new T.Group(),ship=T.createVessel();root.add(ship);scene.add(root);
- scene.add(new T.HemisphereLight(0xc3d2d8,0x111924,.83));
- const key=new T.DirectionalLight(0xe5e4d8,2.85);key.position.set(-3,5,8);scene.add(key);
- const rim=new T.DirectionalLight(0x869fae,.75);rim.position.set(4,-2,-5);scene.add(rim);
- const q={resolution:{value:new T.Vector2()},spin:{value:0},view:{value:0},zoom:{value:1},orbit:{value:0},horizon:{value:2},back:{value:0},fit:{value:1}};
- const header='uniform vec2 qResolution;uniform float qSpin,qZoom,qOrbit,qHorizon,qBack,qFit;\n';
- const mask=`
-vec2 quv=(2.*gl_FragCoord.xy-qResolution)/min(qResolution.x,qResolution.y);
-float qa=-.10+qOrbit*.08;float qs=sin(qa),qc=cos(qa);
-vec2 qu=mat2(qc,-qs,qs,qc)*quv;
-float qi=exp(-dot(qu,qu)*.34);qu.x+=qSpin*.12*qi*(.6+qu.y);
-float qr=length(vec2(qu.x+qSpin*.032,qu.y));
-if(qBack>.5&&qr<qHorizon*.285/(qZoom*qFit))discard;
-`;
- ship.traverse(o=>{if(!o.isMesh)return;const materials=Array.isArray(o.material)?o.material:[o.material];for(const m of materials){m.onBeforeCompile=shader=>{shader.uniforms.qResolution=q.resolution;shader.uniforms.qSpin=q.spin;shader.uniforms.qZoom=q.zoom;shader.uniforms.qOrbit=q.orbit;shader.uniforms.qHorizon=q.horizon;shader.uniforms.qBack=q.back;shader.uniforms.qFit=q.fit;shader.fragmentShader=header+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <clipping_planes_fragment>','#include <clipping_planes_fragment>\n'+mask);};m.customProgramCacheKey=()=> 'kerr-tracer-shadow-v1';}});
- layer.addEventListener('webglcontextlost',e=>{e.preventDefault();S.lost=true;release();Audio.suspend();status.hidden=false;status.textContent='탐사선 관측면을 복구하고 있습니다.';});
- layer.addEventListener('webglcontextrestored',()=>{S.lost=false;lastTick=lastDraw=0;resizeProbe();draw();status.hidden=true;Audio.resume();});
- return {renderer,scene,camera,root,ship,q,T,point:new T.Vector3(),ahead:new T.Vector3(),heading:new T.Vector3(),forward:new T.Vector3(0,0,1),rotation:new T.Quaternion(),key};
-}
-function resizeProbe(){
- if(!probe)return;const min=Math.min(innerWidth,innerHeight),camera=probe.camera;
- camera.left=-innerWidth/min;camera.right=innerWidth/min;camera.top=innerHeight/min;camera.bottom=-innerHeight/min;camera.updateProjectionMatrix();
- probe.renderer.setPixelRatio(canvas.width/innerWidth);probe.renderer.setSize(innerWidth,innerHeight);probe.q.resolution.value.set(probe.renderer.domElement.width,probe.renderer.domElement.height);
-}
-function projectOrbit(phase,out){
- const g=geometry(S.spin),c=Math.cos(phase),s=Math.sin(phase);
- const radius=g.prograde+(g.retrograde-g.prograde)*(.5+.5*c*Math.sign(S.spin))+1.3;
- const px=c*radius,pz=s*radius,scale=3.45*S.zoom*frameFit();
- const ux=px/scale,uy=pz/scale*(S.view+.025*Math.abs(ux))-.035*Math.sin(ux*1.2)*S.spin;
- let unwarped=ux;for(let i=0;i<3;i++)unwarped=ux-S.spin*.12*Math.exp(-(unwarped*unwarped+uy*uy)*.34)*(.6+uy);
- const a=-.10+S.orbit*.08,ca=Math.cos(a),sa=Math.sin(a);
- out.set(ca*unwarped-sa*uy,sa*unwarped+ca*uy,-s*.9);
- return radius;
-}
-function drawProbe(){
- if(!probe)return;
- const P=probe,g=geometry(S.spin);projectOrbit(S.probePhase,P.point);projectOrbit(S.probePhase+.003,P.ahead);
- P.heading.subVectors(P.ahead,P.point);P.heading.z*=.1;P.heading.normalize();
- if(frameDrag(4.9,S.spin)<0)P.heading.negate();P.rotation.setFromUnitVectors(P.forward,P.heading);
- P.root.position.copy(P.point);P.root.quaternion.copy(P.rotation);
- const scale=.026*Math.max(1,600/Math.min(innerWidth,innerHeight))/S.zoom;
- P.root.scale.setScalar(scale);P.ship.rotation.set(.65+S.view*.5,.33+S.spin*.22,.18+S.spin*.42);
- P.q.spin.value=S.spin;P.q.view.value=S.view;P.q.zoom.value=S.zoom;P.q.orbit.value=S.orbit;P.q.horizon.value=g.horizon;P.q.back.value=Math.sin(S.probePhase)>0?1:0;P.q.fit.value=frameFit();
- P.key.intensity=2.85*(.82+.18*Math.cos(S.probePhase));P.renderer.render(P.scene,P.camera);
-}
+(() => {
+  'use strict';
+  const T = window.__VoyageGeometry;
+  const $ = id => document.getElementById(id);
+  const canvas = $('view'), dialog = $('record'), status = $('status'), notice = $('notice');
+  const query = new URLSearchParams(location.search);
+  const clamp = (x, a=0, b=1) => Math.max(a, Math.min(b,x));
+  const smooth = (a,b,x) => { const q=clamp((x-a)/(b-a)); return q*q*(3-2*q); };
+  const TAU = Math.PI*2, SPIN = .84, SAMPLES = 64, RMAX = 16.6;
+  const HORIZON = 1+Math.sqrt(1-SPIN*SPIN), RMIN = HORIZON+.10;
+  // Six material bodies are invariant across every display tier.
+  const BANDS = [[1.66,2.25,.13],[2.70,3.85,.17],[4.40,5.85,.21],
+                 [6.55,8.35,.27],[9.25,11.45,.34],[12.55,16.10,.42]];
+  const NAMES = ['LOW','MID','HIGH'];
+  const TIERS = [
+    {angular:96, radial:6, dpr:1, pixels:420000, fps:30},
+    {angular:160,radial:10,dpr:1.25,pixels:850000,fps:45},
+    {angular:256,radial:18,dpr:1.5,pixels:1600000,fps:60}
+  ];
+  const forced=NAMES.indexOf((query.get('quality')||'').toUpperCase());
+  let level=forced>=0?forced:Math.min(innerWidth,innerHeight)<650||(navigator.deviceMemory||8)<=4?0:devicePixelRatio>1.8?1:2;
 
-// RECORD: actual images and finite state only; isolated from the voyage database.
-const RECORD_KEY='hybrid.kerr.observation.v1';let records=[],storage='memory';
-try{const data=JSON.parse(localStorage.getItem(RECORD_KEY)||'[]');if(Array.isArray(data))records=data.filter(r=>r&&typeof r.image==='string'&&r.image.startsWith('data:image/jpeg')&&Number.isFinite(r.spin)).slice(-3);storage='localStorage';}catch{}
-function captureFrame(label){if(!S.ready||S.lost)return;try{draw();const capture=document.createElement('canvas');const ratio=canvas.width/canvas.height;capture.width=Math.round(Math.min(480,300*ratio));capture.height=Math.round(capture.width/ratio);const ctx=capture.getContext('2d');ctx.drawImage(canvas,0,0,capture.width,capture.height);if(probe)ctx.drawImage(probe.renderer.domElement,0,0,capture.width,capture.height);records.push({label,image:capture.toDataURL('image/jpeg',.65),spin:S.spin,at:S.time,revision:++revision});records=records.slice(-3);try{localStorage.setItem(RECORD_KEY,JSON.stringify(records));storage='localStorage';}catch{storage='memory';}}catch{storage='memory';}}
-function showRecords(){const host=document.querySelector('#frames');host.replaceChildren();for(const item of records){const f=document.createElement('figure'),img=document.createElement('img'),caption=document.createElement('figcaption');img.src=item.image;img.alt=item.label+'의 실제 화면';img.width=480;img.height=300;caption.textContent=item.label+' · '+item.at.toFixed(1)+'s · 회전 '+(item.spin>=0?'+':'')+item.spin.toFixed(2);f.append(img,caption);host.append(f);}document.querySelector('#storage-note').textContent=storage==='localStorage'?'최근 실제 화면 3개가 이 브라우저에 남습니다.':'현재 세션의 실제 화면만 보관합니다.';}
-function reset(){release();Object.assign(S,{spin:.56,spinTarget:.56,view:.38,viewTarget:.38,zoom:1,zoomTarget:1,memory:0,eventAt:-1,reversals:0,lastSign:1,stable:0,shear:0,candidate:0,interaction:0,inputCount:0,paused:false,time:0,orbit:0,orbitTarget:0,probePhase:2.20});shellPhase.fill(0);previousPhase.fill(0);originInner=originOuter=0;pendingFrame='';notice.textContent='';lastTick=lastDraw=0;}
-document.querySelector('#sound').addEventListener('click',()=>Audio.toggle());document.querySelector('#restart').addEventListener('click',reset);document.querySelector('#about').addEventListener('click',()=>{release();captureFrame('현재 관측');showRecords();dialog.showModal();dialog.scrollTop=0;document.querySelector('#record-title').focus({preventScroll:true});Audio.suspend();lastTick=lastDraw=0;});document.querySelector('#close').addEventListener('click',()=>dialog.close());dialog.addEventListener('close',()=>{lastTick=lastDraw=0;Audio.resume();});
-canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();S.lost=true;release();Audio.suspend();status.hidden=false;status.textContent='화면을 복구하고 있습니다.';});canvas.addEventListener('webglcontextrestored',()=>{try{program=null;buffer=null;S.lost=false;lastTick=lastDraw=0;build();draw();status.hidden=true;error=null;}catch(e){fail(e);}});
-function snapshot(){const g=geometry(S.spin);return {work:'kerr',quality:names[level],time:S.time,finite:[S.time,S.spin,S.view,S.zoom,S.orbit,g.horizon,g.prograde,g.retrograde,...shellPhase,...previousPhase].every(Number.isFinite),contacts:contacts.size,inputCount:S.inputCount,vesselVisible:!!probe?.root.visible,vesselPosition:probe?probe.root.position.toArray():[],vesselScale:probe?probe.root.scale.x:0,vesselDesign:probe?{...probe.ship.userData.design}:null,vesselPhase:S.probePhase,interaction:S.interaction,spin:S.spin,spinTarget:S.spinTarget,horizon:g.horizon,photonPrograde:g.prograde,photonRetrograde:g.retrograde,view:S.view,zoom:S.zoom,signature:S.eventAt>=0,radialShear:S.shear,settledFor:S.stable,shellPhases:Array.from(shellPhase),dragInner:frameDrag(2.05,S.spin),dragOuter:frameDrag(12.8,S.spin),signatureAt:S.eventAt,reversals:S.reversals,memory:S.memory,paused:S.paused,lost:S.lost,ready:S.ready,frames:S.frames,qualityChanges:S.qualityChanges,buffer:[canvas.width,canvas.height],audio:{enabled:Audio.enabled},records:records.map(({image,...rest})=>rest),storage,projection:'Kerr ZAMO radial advection / artistic layer projection',error};}
-window.__ARTWORK__={snapshot,get ready(){return S.ready},get state(){return snapshot()},get renderer(){return {domElement:canvas,getContext:()=>gl}},get probeRenderer(){return probe?.renderer},geometry,frameDrag,reset,advance(seconds){const n=Math.ceil(Math.max(0,seconds)*60);for(let i=0;i<n;i++)step(seconds/n);draw();return snapshot();}};
-function loop(now){requestAnimationFrame(loop);if(document.hidden||S.lost||S.paused||dialog.open){lastTick=lastDraw=0;return;}const dt=lastTick?Math.min(.05,(now-lastTick)*.001):0;lastTick=now;step(dt);if(now-lastDraw<1000/tiers[level].fps-.8)return;lastDraw=now;const start=performance.now();draw();observeCost(performance.now()-start,dt);if(pendingFrame){const label=pendingFrame;pendingFrame='';captureFrame(label);}if(now-lastUI>120){lastUI=now;spinNode.textContent=(S.spin>=0?'+':'')+S.spin.toFixed(2);horizonNode.textContent=geometry(S.spin).horizon.toFixed(3);reversalNode.textContent=String(S.reversals);}}
-try{gl=canvas.getContext('webgl2',{alpha:false,antialias:false,depth:false,stencil:false,preserveDrawingBuffer:false,powerPreference:'default'});if(!gl)throw Error('WebGL 2 unavailable');build();probe=createProbe();resizeProbe();S.ready=true;draw();captureFrame('관측 시작');status.hidden=true;requestAnimationFrame(loop);}catch(e){fail(e);}
+  // A — equatorial Kerr metric; the central spin is fixed.
+  // These bounds describe circular timelike directions at fixed r, theta.
+  // B — one radial material-advection model; this is not GRMHD or a geodesic solver.
+  function angularBounds(r,a=SPIN) {
+    const gtt=-(1-2/r),gtp=-2*a/r,gpp=r*r+a*a+2*a*a/r;
+    const half=Math.sqrt(Math.max(0,gtp*gtp-gtt*gpp))/gpp;
+    const drag=-gtp/gpp;
+    return {drag,half,min:drag-half,max:drag+half};
+  }
+  function sample(values,r) {
+    const p=clamp(Math.log(clamp(r,RMIN,RMAX)/RMIN)/Math.log(RMAX/RMIN))*(SAMPLES-1);
+    const i=Math.min(SAMPLES-2,Math.floor(p)),f=p-i;
+    return values[i]+(values[i+1]-values[i])*f;
+  }
+  function bandAt(r) {
+    let index=0,distance=Infinity;
+    for(let i=0;i<6;i++){const b=BANDS[i],d=Math.abs(r-(b[0]+b[1])*.5);if(d<distance){distance=d;index=i;}}
+    return index;
+  }
+  function createModel() {
+    const radii=new Float64Array(SAMPLES),drag=new Float64Array(SAMPLES),half=new Float64Array(SAMPLES);
+    const phase=new Float64Array(SAMPLES),reference=new Float64Array(SAMPLES),memory=new Float64Array(SAMPLES);
+    const velocity=new Float64Array(SAMPLES),next=new Float64Array(SAMPLES),locked=new Float64Array(SAMPLES);
+    const omega=new Float64Array(SAMPLES),strain=new Float64Array(SAMPLES);
+    const state={time:0,simulationTime:0,eventAt:-1,eventCount:0,faultLayer:-1,faultAngle:0,
+      work:0,shear:0,opposition:0,interaction:0,inputCount:0,lastInputAt:-100,firstInputAt:-1,
+      inputRadius:7.55,inputAngle:.8,inputWidth:1.5,inputTorque:0,phase:'emergence'};
+    for(let i=0;i<SAMPLES;i++){
+      const r=RMIN*Math.pow(RMAX/RMIN,i/(SAMPLES-1)),b=angularBounds(r);
+      radii[i]=r;drag[i]=b.drag;half[i]=b.half;
+    }
+    function reset(){
+      Object.assign(state,{time:0,simulationTime:0,eventAt:-1,eventCount:0,faultLayer:-1,faultAngle:0,
+        work:0,shear:0,opposition:0,interaction:0,inputCount:0,lastInputAt:-100,firstInputAt:-1,
+        inputRadius:7.55,inputAngle:.8,inputWidth:1.5,inputTorque:0,phase:'emergence'});
+      phase.fill(0);reference.fill(0);memory.fill(0);velocity.fill(.16);next.fill(.16);locked.fill(.16);strain.fill(0);
+      for(let i=0;i<SAMPLES;i++)omega[i]=drag[i]+.16*half[i];
+    }
+    function drive(torque,r=state.inputRadius,width=state.inputWidth,angle=state.inputAngle) {
+      state.inputTorque=clamp(torque,-1,1);
+      state.inputRadius=clamp(r,RMIN+.04,RMAX-.1);state.inputWidth=clamp(width,.6,3);
+      state.inputAngle=angle;state.lastInputAt=state.time;state.inputCount++;
+      if(Math.abs(torque)>.02){state.interaction+=Math.abs(torque);if(state.firstInputAt<0)state.firstInputAt=state.time;}
+    }
+    function update(dt) {
+      state.time+=dt;
+      // C — authored display-time scale. It settles after the 90-second encounter.
+      const rate=2.4*(1-.65*smooth(60,90,state.time));
+      const step=dt*rate;
+      state.simulationTime+=step;
+      const torque=state.inputTorque,center=state.inputRadius,width=state.inputWidth;
+      let work=0,weight=0;
+      const fault=state.faultLayer>=0?BANDS[state.faultLayer]:null;
+      for(let i=0;i<SAMPLES;i++){
+        const r=radii[i],kernel=Math.exp(-.5*((r-center)/width)**2);
+        const neighbour=(velocity[Math.max(0,i-1)]+velocity[Math.min(SAMPLES-1,i+1)])*.5-velocity[i];
+        const retained=fault&&r>=(fault[0]+fault[1])*.5-.20&&r<=fault[1]+.12;
+        const target=velocity[i]+dt*(torque*kernel*.72+neighbour*.18-(velocity[i]-.16)*.065);
+        next[i]=retained?locked[i]:clamp(target,-.92,.82);
+      }
+      for(let i=0;i<SAMPLES;i++){
+        velocity[i]=next[i];omega[i]=drag[i]+velocity[i]*half[i];
+        const base=drag[i]+.16*half[i],kernel=Math.exp(-.5*((radii[i]-center)/width)**2);
+        phase[i]+=omega[i]*step;reference[i]+=base*step;
+        if(state.eventAt<0)memory[i]=phase[i];else memory[i]+=base*step;
+        work+=Math.max(0,-torque)*kernel*Math.max(0,base-omega[i])*rate;
+        weight+=kernel;
+      }
+      state.work+=dt*work/Math.max(.001,weight);
+      state.shear=0;
+      for(let i=0;i<SAMPLES;i++){
+        const a=Math.max(0,i-1),b=Math.min(SAMPLES-1,i+1);
+        strain[i]=radii[i]*Math.abs((phase[b]-reference[b])-(phase[a]-reference[a]))/(radii[b]-radii[a]);
+        state.shear=Math.max(state.shear,strain[i]);
+      }
+      state.opposition=Math.max(0,-sample(omega,center));
+      const candidate=bandAt(center),band=BANDS[candidate];
+      // C — dimensionless work and shear thresholds define material yielding.
+      // No wall-clock event time is reserved, and no event can occur without work.
+      let fired=false;
+      if(state.eventAt<0&&candidate>0&&state.work>=2.1&&state.shear>=1.1&&sample(omega,(band[0]+band[1])*.5)<-.002){
+        state.eventAt=state.time;state.eventCount=1;state.faultLayer=candidate;state.faultAngle=state.inputAngle;
+        locked.set(velocity);memory.set(phase);fired=true;
+      }
+      state.phase=state.eventAt>=0?'aftermath':state.time<8?'emergence':state.time<20?'scale':Math.abs(torque)>.02?'resistance':'drift';
+      return fired;
+    }
+    reset();
+    return {state,radii,phase,reference,memory,velocity,omega,strain,drive,update,reset,
+      snapshot(){return {...state,spin:SPIN,horizon:HORIZON,layers:6,samples:SAMPLES,
+        innerOmega:omega[0],outerOmega:omega[SAMPLES-1],localOmega:sample(omega,state.inputRadius),
+        finite:[...phase,...reference,...memory,...velocity,...omega,...strain,...Object.values(state).filter(v=>typeof v==='number')].every(Number.isFinite)};}};
+  }
+  const model=createModel(),S=model.state;
+  const state={ready:false,lost:false,paused:false,frames:0,qualityChanges:0,
+    zoom:1,zoomTarget:1,view:0,viewTarget:0,parallax:0,parallaxTarget:0};
+  let renderer,scene,camera,sheets,vessel,ship,material,geometry;
+  let running=0,last=0,lastDraw=0,lastUI=0,accumulator=0,slow=0,costMean=0,error=null,pendingCapture='';
+  let pageActive=true,firstCapture=false,eventCaptured=false,aftermathCaptured=false;
+  const pointers=new Map(),keys=new Set();
+  let pair=null;
+  const phaseGPU=new Float32Array(SAMPLES),memoryGPU=new Float32Array(SAMPLES),strainGPU=new Float32Array(SAMPLES);
+  const uniforms={
+    uCenters:{value:new Float32Array(BANDS.map(b=>(b[0]+b[1])*.5))},
+    uPhase:{value:phaseGPU},uMemory:{value:memoryGPU},uStrain:{value:strainGPU},
+    uTime:{value:0},uFault:{value:-1},uPeel:{value:0},uContactAngle:{value:0},
+    uRMin:{value:RMIN},uRMax:{value:RMAX},uEye:{value:new T.Vector3()}
+  };
+  const vertex=`
+    attribute vec4 aSheet;
+    attribute vec2 aFace;
+    uniform float uPhase[64],uMemory[64],uStrain[64],uCenters[6];
+    uniform float uTime,uFault,uPeel,uContactAngle,uRMin,uRMax;
+    varying vec3 vWorld;
+    varying vec4 vSheet;
+    varying vec3 vFace;
+    float field(float r,int kind){
+      float p=clamp(log(clamp(r,uRMin,uRMax)/uRMin)/log(uRMax/uRMin),0.,1.)*63.;
+      int i=min(62,int(floor(p)));float f=p-float(i);
+      if(kind==1)return mix(uMemory[i],uMemory[i+1],f);
+      if(kind==2)return mix(uStrain[i],uStrain[i+1],f);
+      return mix(uPhase[i],uPhase[i+1],f);
+    }
+    void main(){
+      float r=aSheet.x,theta=aSheet.y,layer=aSheet.w;
+      float broken=1.-step(.1,abs(layer-uFault));
+      float lifted=broken*step(.5,aFace.y);
+      float old=broken*(1.-step(.5,aFace.y));
+      float phase=mix(field(r,0),field(r,1),old);
+      float strain=field(r,2);
+      float center=uCenters[int(layer)];
+      float centerPhase=mix(field(center,0),field(center,1),old);
+      float relative=phase-centerPhase;
+      float turn=theta+centerPhase+.32*relative/(1.+abs(relative));
+      float radial=r+.10*sin(theta*3.+layer*.7)+lifted*uPeel*.50;
+      float h=.13*sin(theta*2.+layer*.62)+.075*cos(theta*3.-layer*.4);
+      h+=.07*layer+min(strain,5.)*.045*sin(theta-uContactAngle);
+      h+=lifted*uPeel*(1.15+.48*pow(sin(theta-uContactAngle),2.));
+      float thickness=.13+layer*.057;
+      vec3 p=vec3(cos(turn)*radial,h+aSheet.z*thickness*.5,sin(turn)*radial);
+      vWorld=(modelMatrix*vec4(p,1.)).xyz;
+      vSheet=vec4(aFace.x,theta,layer,strain);
+      vFace=vec3(aSheet.z,aFace.y,lifted);
+      gl_Position=projectionMatrix*viewMatrix*vec4(vWorld,1.);
+    }
+  `;
+  const fragment=`
+    precision highp float;
+    uniform float uTime,uFault,uPeel;
+    uniform vec3 uEye;
+    varying vec3 vWorld;
+    varying vec4 vSheet;
+    varying vec3 vFace;
+    void main(){
+      float layer=vSheet.z;
+      float reveal=smoothstep(0.,4.,uTime-(5.-layer)*2.3);
+      if(reveal<.002)discard;
+      vec3 n=normalize(cross(dFdx(vWorld),dFdy(vWorld)));
+      vec3 view=normalize(uEye-vWorld);if(dot(n,view)<0.)n=-n;
+      vec3 key=normalize(vec3(-.70,.29,.47));
+      float diffuse=max(0.,dot(n,key));
+      float edge=exp(-pow(min(vSheet.x,1.-vSheet.x)/.018,2.));
+      float top=step(.5,abs(vFace.x));
+      float underside=step(vFace.x,-.5);
+      vec3 ink=mix(vec3(.028,.038,.050),vec3(.10,.13,.155),top);
+      ink=mix(ink,vec3(.030,.044,.058),underside*.72);
+      float witness=exp(-pow(sin(vSheet.y*1.5)/.017,2.));
+      float relief=.72+.28*diffuse;
+      vec3 color=ink*(.08+.58*diffuse)*relief*(1.-witness*.40);
+      float grazing=pow(1.-max(0.,dot(n,view)),3.);
+      color+=mix(vec3(.19,.23,.26),vec3(.61,.58,.50),diffuse)*edge*(.12+.25*grazing);
+      vec3 halfDirection=normalize(key+view);
+      float glint=pow(max(0.,dot(n,halfDirection)),64.)*.055;
+      color+=vec3(.70,.70,.65)*glint;
+      float fault=1.-step(.1,abs(layer-uFault));
+      color+=vec3(.19,.205,.20)*edge*fault*uPeel*.18;
+      float distanceFade=mix(.38,1.,exp(-max(0.,length(uEye-vWorld)-14.)*.027));
+      color*=reveal*distanceFade;
+      gl_FragColor=vec4(color,1.);
+      #include <tonemapping_fragment>
+      #include <colorspace_fragment>
+    }
+  `;
+
+  // RENDERING — six closed, thick bodies, split at a genuine material seam.
+  // Only tessellation and drawing-buffer size depend on the quality tier.
+  function buildGeometry(){
+    const q=TIERS[level],positions=[],params=[],faces=[],indices=[];
+    function grid(layer,part,r0,r1,side,wall){
+      const na=q.angular,nb=wall?1:q.radial,base=params.length/4;
+      for(let j=0;j<=nb;j++)for(let i=0;i<=na;i++){
+        const u=j/nb,v=i/na,r=wall?r0:r0+(r1-r0)*u;
+        const height=wall?u*2-1:side;
+        positions.push(0,0,0);params.push(r,v*TAU,height,layer);
+        const b=BANDS[layer],radial=(r-b[0])/(b[1]-b[0]);
+        faces.push(radial,part);
+      }
+      for(let j=0;j<nb;j++)for(let i=0;i<na;i++){
+        const a=base+j*(na+1)+i,b=a+na+1;
+        indices.push(a,b,a+1,b,b+1,a+1);
+      }
+    }
+    for(let layer=0;layer<6;layer++){
+      const band=BANDS[layer],mid=(band[0]+band[1])*.5;
+      for(let part=0;part<2;part++){
+        const r0=part?mid:band[0],r1=part?band[1]:mid;
+        grid(layer,part,r0,r1,1,false);grid(layer,part,r0,r1,-1,false);
+        grid(layer,part,r0,r0,0,true);grid(layer,part,r1,r1,0,true);
+      }
+    }
+    const nextGeometry=new T.BufferGeometry();
+    nextGeometry.setAttribute('position',new T.BufferAttribute(new Float32Array(positions),3));
+    nextGeometry.setAttribute('aSheet',new T.BufferAttribute(new Float32Array(params),4));
+    nextGeometry.setAttribute('aFace',new T.BufferAttribute(new Float32Array(faces),2));
+    nextGeometry.setIndex(indices);
+    if(geometry)geometry.dispose();geometry=nextGeometry;
+    if(sheets)sheets.geometry=geometry;
+  }
+  function applyQuality(){
+    if(!renderer)return;
+    const q=TIERS[level],ratio=Math.min(devicePixelRatio||1,q.dpr,Math.sqrt(q.pixels/(innerWidth*innerHeight)));
+    renderer.setDrawingBufferSize(innerWidth,innerHeight,ratio);
+  }
+  function resize(){
+    if(!renderer||state.lost)return;
+    camera.aspect=innerWidth/innerHeight;camera.fov=innerWidth<innerHeight?39:32;
+    camera.updateProjectionMatrix();applyQuality();lastDraw=0;queue();
+  }
+  const shipPoint=new T.Vector3(),shipAhead=new T.Vector3(),shipHeading=new T.Vector3(),shipForward=new T.Vector3(0,0,1);
+  const rayPoint=new T.Vector3(),rayDirection=new T.Vector3();
+  function bodyPoint(r,theta,layer,part,out){
+    const old=S.faultLayer===layer&&part===0,phase=sample(old?model.memory:model.phase,r);
+    const strain=sample(model.strain,r),peel=smooth(0,7,S.time-S.eventAt)*(S.eventAt>=0?1:0);
+    const lifted=S.faultLayer===layer&&part===1?1:0;
+    const center=(BANDS[layer][0]+BANDS[layer][1])*.5,centerPhase=sample(old?model.memory:model.phase,center),relative=phase-centerPhase;
+    const radius=r+.10*Math.sin(theta*3+layer*.7)+lifted*peel*.50,turn=theta+centerPhase+.32*relative/(1+Math.abs(relative));
+    let h=.13*Math.sin(theta*2+layer*.62)+.075*Math.cos(theta*3-layer*.4)+.07*layer;
+    const contactAngle=S.eventAt<0?S.inputAngle:S.faultAngle;
+    h+=Math.min(strain,5)*.045*Math.sin(theta-contactAngle);
+    h+=lifted*peel*(1.15+.48*Math.sin(theta-contactAngle)**2);
+    out.set(Math.cos(turn)*radius,h+( .13+layer*.057)*.5,Math.sin(turn)*radius);
+    return out;
+  }
+  function pose(){
+    const z=state.zoom,portrait=innerWidth<innerHeight;
+    camera.position.set((portrait?1.0:.3)+state.parallax*.65,2.9+state.view,(portrait?16.8:13.5)*z);
+    camera.up.set(-.12,.993,0);camera.lookAt(portrait?-1.0:-2.0,.85,-1.8);
+    camera.updateMatrixWorld();
+    if(vessel){
+      const radius=7.62,theta=.94;
+      bodyPoint(radius,theta,3,1,shipPoint);bodyPoint(radius,theta+.003,3,1,shipAhead);
+      shipHeading.subVectors(shipAhead,shipPoint).normalize();
+      if(sample(model.omega,radius)<0)shipHeading.negate();
+      vessel.position.copy(shipPoint);vessel.position.y+=.24;
+      vessel.quaternion.setFromUnitVectors(shipForward,shipHeading);
+      ship.rotation.set(.22,.12,.07);vessel.scale.setScalar(portrait?.050:.065);
+      vessel.visible=S.time>5.5;
+    }
+  }
+  function paint(){
+    if(!state.ready||state.lost)return;
+    phaseGPU.set(model.phase);memoryGPU.set(model.memory);strainGPU.set(model.strain);
+    uniforms.uTime.value=S.time;uniforms.uFault.value=S.faultLayer;
+    uniforms.uPeel.value=S.eventAt<0?0:smooth(0,7,S.time-S.eventAt);
+    uniforms.uContactAngle.value=S.eventAt<0?S.inputAngle:S.faultAngle;
+    pose();uniforms.uEye.value.copy(camera.position);renderer.render(scene,camera);state.frames++;
+  }
+
+  // INTERACTION — local torque is applied to material, never to SPIN.
+  // B — coarse surface triangles are evaluated only on contact, not every frame.
+  // They use the same material mapping as the shader, including the peeled layer.
+  const pickA=new T.Vector3(),pickB=new T.Vector3(),pickC=new T.Vector3(),pickD=new T.Vector3();
+  const pickE1=new T.Vector3(),pickE2=new T.Vector3(),pickP=new T.Vector3(),pickQ=new T.Vector3(),pickT=new T.Vector3();
+  let pickU=0,pickV=0;
+  function triangleHit(a,b,c){
+    pickE1.subVectors(b,a);pickE2.subVectors(c,a);pickP.crossVectors(rayDirection,pickE2);
+    const det=pickE1.dot(pickP);if(Math.abs(det)<1e-9)return Infinity;
+    pickT.subVectors(camera.position,a);const u=pickT.dot(pickP)/det;
+    if(u<0||u>1)return Infinity;
+    pickQ.crossVectors(pickT,pickE1);const v=rayDirection.dot(pickQ)/det;
+    if(v<0||u+v>1)return Infinity;
+    const t=pickE2.dot(pickQ)/det;if(t<=0)return Infinity;
+    pickU=u;pickV=v;return t;
+  }
+  function contactAt(x,y){
+    rayPoint.set(x/innerWidth*2-1,1-y/innerHeight*2,.5).unproject(camera);
+    rayDirection.copy(rayPoint).sub(camera.position).normalize();
+    let nearest=Infinity,hit=null;
+    const divisions=48,radial=3;
+    for(let layer=0;layer<6;layer++)for(let part=0;part<2;part++){
+      if(S.time<(5-layer)*2.3+.1)continue;
+      const band=BANDS[layer],mid=(band[0]+band[1])*.5,lo=part?mid:band[0],hi=part?band[1]:mid;
+      for(let j=0;j<radial;j++)for(let i=0;i<divisions;i++){
+        const r0=lo+(hi-lo)*j/radial,r1=lo+(hi-lo)*(j+1)/radial;
+        const a0=TAU*i/divisions,a1=TAU*(i+1)/divisions;
+        bodyPoint(r0,a0,layer,part,pickA);bodyPoint(r1,a0,layer,part,pickB);
+        bodyPoint(r0,a1,layer,part,pickC);bodyPoint(r1,a1,layer,part,pickD);
+        let t=triangleHit(pickA,pickB,pickC);
+        if(t<nearest){nearest=t;hit={radius:r0+(r1-r0)*pickU,angle:a0+(a1-a0)*pickV,layer};}
+        t=triangleHit(pickC,pickB,pickD);
+        if(t<nearest){nearest=t;hit={radius:r0+(r1-r0)*(pickU+pickV),angle:a1-(a1-a0)*pickU,layer};}
+      }
+    }
+    return hit;
+  }
+  function pairState(){
+    if(pointers.size!==2)return null;const values=[...pointers.values()],a=values[0],b=values[1];
+    return {distance:Math.hypot(b.x-a.x,b.y-a.y),angle:Math.atan2(b.y-a.y,b.x-a.x)};
+  }
+  function syncDrive(){
+    if(keys.has('ArrowLeft')||keys.has('ArrowRight')){
+      model.drive(keys.has('ArrowLeft')?-1:1,7.55,1.5,.8);return;
+    }
+    if(!pointers.size){S.inputTorque=0;return;}
+    const values=[...pointers.values()].filter(p=>p.material);
+    if(!values.length){S.inputTorque=0;return;}
+    let torque=0,r=0,angle=0;
+    for(const p of values){torque+=p.torque;r+=p.radius;angle+=p.angle;}
+    model.drive(torque/values.length,r/values.length,pointers.size===2?2.2:1.5,angle/values.length);
+  }
+  function down(e){
+    if(e.button>0||state.paused||state.lost||dialog.open||pointers.size>=2)return;
+    canvas.focus({preventScroll:true});
+    if(!firstCapture){captureFrame('개입 전');firstCapture=true;}
+    const hit=contactAt(e.clientX,e.clientY);
+    pointers.set(e.pointerId,{x:e.clientX,y:e.clientY,torque:0,material:!!hit,...hit});
+    canvas.setPointerCapture(e.pointerId);pair=pairState();
+    S.inputCount++;$('contact').style.display=hit?'block':'none';mark(e.clientX,e.clientY);queue();
+  }
+  function mark(x,y){$('contact').style.left=x+'px';$('contact').style.top=y+'px';}
+  function move(e){
+    const p=pointers.get(e.pointerId);
+    if(!p){state.parallaxTarget=clamp((e.clientX/innerWidth-.5)*2,-1,1);return;}
+    if(state.paused||state.lost||dialog.open)return;
+    const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;
+    if(pointers.size===2){
+      const nextPair=pairState();
+      if(pair){let da=Math.atan2(Math.sin(nextPair.angle-pair.angle),Math.cos(nextPair.angle-pair.angle));
+        for(const entry of pointers.values())entry.torque=clamp(entry.torque+da*1.7,-1,1);
+        state.zoomTarget=clamp(state.zoomTarget*pair.distance/Math.max(20,nextPair.distance),.78,1.30);}
+      pair=nextPair;
+    }else{
+      p.torque=clamp(p.torque+dx/Math.min(innerWidth,innerHeight)*4,-1,1);
+      state.viewTarget=clamp(state.viewTarget-dy/innerHeight*3,-.75,1.2);
+    }
+    syncDrive();mark(e.clientX,e.clientY);queue();
+  }
+  function up(e){
+    if(!pointers.has(e.pointerId))return;
+    pointers.delete(e.pointerId);try{canvas.releasePointerCapture(e.pointerId);}catch{}
+    pair=pairState();syncDrive();if(!pointers.size)$('contact').style.display='none';queue();
+  }
+  function release(){
+    for(const id of pointers.keys())try{canvas.releasePointerCapture(id);}catch{}
+    pointers.clear();keys.clear();pair=null;S.inputTorque=0;$('contact').style.display='none';
+  }
+  canvas.addEventListener('pointerdown',down);canvas.addEventListener('pointermove',move);
+  for(const name of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(name,up);
+  canvas.addEventListener('wheel',e=>{
+    if(state.paused||dialog.open||state.lost)return;e.preventDefault();
+    state.zoomTarget=clamp(state.zoomTarget+e.deltaY*.00045,.78,1.30);queue();
+  },{passive:false});
+  canvas.addEventListener('contextmenu',e=>e.preventDefault());
+  addEventListener('keydown',e=>{
+    if(dialog.open||e.target.closest('input,textarea,[contenteditable=true]'))return;
+    if(['Space','Enter'].includes(e.code)&&e.target.closest('button,a'))return;
+    if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space','KeyP','KeyR','KeyM'].includes(e.code))e.preventDefault();
+    if((e.code==='KeyP'||e.code==='Space')&&!e.repeat)setPaused(!state.paused);
+    else if(e.code==='KeyR'&&!e.repeat)reset();
+    else if(e.code==='KeyM'&&!e.repeat)Audio.toggle();
+    else if(e.code.startsWith('Arrow')&&!state.paused){keys.add(e.code);syncDrive();queue();}
+  });
+  addEventListener('keyup',e=>{keys.delete(e.code);syncDrive();});
+
+  // AUDIO — opt-in, bounded, low-frequency slip impulses. No idle source.
+  const Audio=(()=>{
+    let context=null,master=null,buffer=null,enabled=false,lastSound=-100,played=0,silenced=0;
+    const voices=new Set();
+    function cancel(){
+      if(!context)return;
+      for(const v of voices){try{v.source.stop();}catch{}v.source.disconnect();v.gain.disconnect();}
+      voices.clear();
+    }
+    function create(){
+      context=new(window.AudioContext||window.webkitAudioContext)();
+      master=context.createGain();master.gain.value=.13;master.connect(context.destination);
+      buffer=context.createBuffer(1,Math.ceil(context.sampleRate*.16),context.sampleRate);
+      const values=buffer.getChannelData(0);let seed=42917,filtered=0;
+      for(let i=0;i<values.length;i++){seed=(Math.imul(seed,1664525)+1013904223)>>>0;
+        filtered=.92*filtered+.08*(seed/2147483648-1);values[i]=filtered*3;}
+    }
+    return {
+      async toggle(){
+        try{if(!context)create();enabled=!enabled;
+          if(enabled&&!state.paused&&!document.hidden&&!dialog.open)await context.resume();else{cancel();await context.suspend();}
+        }catch{enabled=false;}
+        $('sound').setAttribute('aria-pressed',String(enabled));$('sound').setAttribute('aria-label',enabled?'사운드 끄기':'사운드 켜기');
+      },
+      update(){
+        if(!enabled||context?.state!=='running'||S.eventAt>=0||state.paused||dialog.open)return;
+        if(S.inputTorque>-.08||S.opposition<.004||S.time-lastSound<.48||voices.size>=3)return;
+        lastSound=S.time;
+        const source=context.createBufferSource(),gain=context.createGain(),now=context.currentTime;
+        source.buffer=buffer;source.playbackRate.value=.45+clamp(S.opposition*5,0,.35);
+        gain.gain.setValueAtTime(0,now);gain.gain.linearRampToValueAtTime(.16+clamp(S.shear*.012,0,.12),now+.008);
+        gain.gain.exponentialRampToValueAtTime(.0001,now+.22);source.connect(gain);gain.connect(master);
+        const voice={source,gain};voices.add(voice);source.onended=()=>{voices.delete(voice);source.disconnect();gain.disconnect();};
+        source.start(now);source.stop(now+.24);played++;
+      },
+      fracture(){cancel();silenced++;},
+      reset(){cancel();lastSound=-100;played=0;silenced=0;},
+      suspend(){cancel();context?.suspend().catch(()=>{});},
+      resume(){if(enabled&&!state.paused&&!document.hidden&&!dialog.open)context?.resume().catch(()=>{});},
+      snapshot(){return {enabled,context:context?.state||'uninitialized',voices:voices.size,played,silenced,continuousSources:0};}
+    };
+  })();
+
+  // STATE / RECORD — actual canvas images, three bounded entries, isolated v2 history.
+  const RECORD_KEY='hybrid.kerr.observation.v2';let records=[],storage='memory',revision=0;
+  try{
+    const data=JSON.parse(localStorage.getItem(RECORD_KEY)||'[]');
+    if(Array.isArray(data))records=data.filter(r=>r&&typeof r.image==='string'&&r.image.startsWith('data:image/jpeg')&&r.image.length<300000&&Number.isFinite(r.at)).slice(-3);
+    storage='localStorage';
+  }catch{}
+  function captureFrame(label){
+    if(!state.ready||state.lost)return;
+    try{
+      paint();const capture=document.createElement('canvas'),aspect=innerWidth/innerHeight;
+      capture.width=Math.min(560,Math.round(350*aspect));capture.height=Math.round(capture.width/aspect);
+      capture.getContext('2d').drawImage(canvas,0,0,capture.width,capture.height);
+      records.push({label,image:capture.toDataURL('image/jpeg',.70),at:S.time,spin:SPIN,revision:++revision,version:2});
+      records=records.slice(-3);
+      try{localStorage.setItem(RECORD_KEY,JSON.stringify(records));storage='localStorage';}catch{storage='memory';}
+    }catch{storage='memory';}
+  }
+  function showRecords(){
+    const host=$('frames');host.replaceChildren();
+    for(const item of records){
+      const figure=document.createElement('figure'),img=document.createElement('img'),caption=document.createElement('figcaption');
+      img.src=item.image;img.alt=item.label+'의 실제 관측 화면';caption.textContent=item.label+' · '+item.at.toFixed(1)+'s';
+      figure.append(img,caption);host.append(figure);
+    }
+    $('storage-note').textContent=storage==='localStorage'?'최근 실제 화면 3개가 이 브라우저에 남습니다.':'현재 화면의 기록만 보관합니다.';
+  }
+  function ui(){
+    $('spin').textContent='+0.84';$('shear').textContent=S.shear.toFixed(2);
+    $('reversals').textContent=S.eventCount?'01':'—';
+    $('hint').style.opacity=S.firstInputAt>=0&&S.time-S.firstInputAt>12?'.28':'1';
+  }
+  function setPaused(value){
+    state.paused=value;release();last=lastDraw=0;accumulator=0;
+    if(value){Audio.suspend();stop();paint();notice.textContent='관측을 멈췄습니다.';}
+    else{notice.textContent=S.eventAt>=0?'갈라진 두 방향이 남아 있습니다.':'';Audio.resume();queue();}
+  }
+  function reset(){
+    release();model.reset();state.paused=false;state.zoom=state.zoomTarget=1;
+    state.view=state.viewTarget=state.parallax=state.parallaxTarget=0;
+    firstCapture=false;eventCaptured=false;aftermathCaptured=false;pendingCapture='';last=lastDraw=0;accumulator=0;
+    notice.textContent='';Audio.reset();Audio.suspend();Audio.resume();paint();ui();queue();
+  }
+  function update(dt){
+    const follow=1-Math.exp(-dt*4);
+    state.zoom+=(state.zoomTarget-state.zoom)*follow;state.view+=(state.viewTarget-state.view)*follow;
+    state.parallax+=(state.parallaxTarget-state.parallax)*follow;
+    if(keys.has('ArrowUp'))state.zoomTarget=clamp(state.zoomTarget-dt*.15,.78,1.3);
+    if(keys.has('ArrowDown'))state.zoomTarget=clamp(state.zoomTarget+dt*.15,.78,1.3);
+    if(keys.has('ArrowLeft')||keys.has('ArrowRight'))syncDrive();
+    accumulator+=Math.max(0,dt);
+    while(accumulator>=1/120-1e-10){
+      accumulator-=1/120;
+      if(model.update(1/120)){
+        notice.textContent='한 층이 갈라지고, 이전 방향이 남습니다.';
+        Audio.fracture();
+      }
+    }
+    Audio.update();
+    if(S.eventAt>=0&&S.time-S.eventAt>=6.8&&!eventCaptured){eventCaptured=true;pendingCapture='박리';}
+    if(S.eventAt>=0&&S.time-S.eventAt>=22&&!aftermathCaptured){aftermathCaptured=true;pendingCapture='박리 이후';}
+  }
+  function stop(){if(running)cancelAnimationFrame(running);running=0;last=lastDraw=0;}
+  function queue(){if(!running&&pageActive&&!document.hidden&&!state.paused&&!state.lost&&!dialog.open&&state.ready)running=requestAnimationFrame(tick);}
+  function tick(now){
+    running=0;if(!pageActive||document.hidden||state.paused||state.lost||dialog.open){last=lastDraw=0;return;}
+    const dt=last?Math.min(.06,(now-last)*.001):0;last=now;update(dt);
+    const budget=1000/TIERS[level].fps;
+    if(now-lastDraw>=budget-.7){
+      const interval=lastDraw?now-lastDraw:budget;lastDraw=now;
+      const start=performance.now();paint();const cost=performance.now()-start;
+      costMean=costMean*.95+cost*.05;
+      if(forced<0&&level>0&&S.time>8){
+        slow=costMean>19||interval>budget*1.9?slow+Math.min(interval*.001,.12):Math.max(0,slow-.04);
+        if(slow>4){level--;state.qualityChanges++;slow=0;buildGeometry();applyQuality();}
+      }
+      if(pendingCapture){const label=pendingCapture;pendingCapture='';captureFrame(label);}
+      if(now-lastUI>150){lastUI=now;ui();}
+    }
+    queue();
+  }
+  function suspend(){release();stop();Audio.suspend();}
+  addEventListener('blur',()=>{release();Audio.suspend();});
+  addEventListener('focus',()=>{Audio.resume();queue();});
+  addEventListener('pagehide',()=>{pageActive=false;suspend();});
+  addEventListener('pageshow',()=>{pageActive=true;last=lastDraw=0;resize();Audio.resume();queue();});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)suspend();else{last=lastDraw=0;Audio.resume();queue();}});
+  addEventListener('resize',()=>{release();resize();});
+  addEventListener('orientationchange',()=>requestAnimationFrame(resize));
+  if(visualViewport)visualViewport.addEventListener('resize',resize);
+  $('restart').addEventListener('click',reset);$('sound').addEventListener('click',()=>Audio.toggle());
+  $('about').addEventListener('click',()=>{
+    release();captureFrame('현재 관측');showRecords();dialog.showModal();dialog.scrollTop=0;
+    stop();Audio.suspend();$('record-title').focus({preventScroll:true});
+  });
+  $('close').addEventListener('click',()=>dialog.close());
+  dialog.addEventListener('close',()=>{last=lastDraw=0;Audio.resume();queue();});
+  canvas.addEventListener('webglcontextlost',e=>{
+    e.preventDefault();state.lost=true;suspend();status.hidden=false;status.textContent='관측면을 복구하고 있습니다.';
+  });
+  canvas.addEventListener('webglcontextrestored',()=>{
+    state.lost=false;last=lastDraw=0;accumulator=0;
+    if(material)material.needsUpdate=true;
+    applyQuality();paint();status.hidden=true;Audio.resume();queue();
+  });
+  function snapshot(){
+    return {...model.snapshot(),work:'kerr',version:2,quality:NAMES[level],qualityChanges:state.qualityChanges,
+      yieldWork:S.work,ready:state.ready,lost:state.lost,paused:state.paused,frames:state.frames,contacts:pointers.size,
+      signature:S.eventAt>=0,signatureAt:S.eventAt,peel:uniforms.uPeel.value,
+      encounterSeconds:90,centralSpinFixed:true,layerCount:6,stateSamples:SAMPLES,
+      camera:camera?.position.toArray()||[],fov:camera?.fov||32,viewport:[innerWidth,innerHeight],
+      buffer:renderer?[canvas.width,canvas.height]:[],drawCalls:renderer?.info.render.calls||0,
+      triangles:renderer?.info.render.triangles||0,vesselVisible:!!vessel?.visible,
+      vesselPosition:vessel?.position.toArray()||[],vesselNDC:vessel?vessel.position.clone().project(camera).toArray():[],vesselDesign:ship?{...ship.userData.design}:null,
+      angularVelocity:Array.from(model.omega),materialVelocity:Array.from(model.velocity),
+      radii:Array.from(model.radii),phaseValues:Array.from(model.phase),audio:Audio.snapshot(),
+      records:records.map(({image,...rest})=>rest),storage,projection:'Kerr angular-cone advection / six thick material sheets',error};
+  }
+  try{
+    renderer=new T.WebGLRenderer({canvas,alpha:false,antialias:level>0,powerPreference:'default',preserveDrawingBuffer:false});
+    renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=.92;
+    scene=new T.Scene();scene.background=new T.Color('#02040a');
+    camera=new T.PerspectiveCamera(32,innerWidth/innerHeight,.08,140);
+    material=new T.ShaderMaterial({uniforms,vertexShader:vertex,fragmentShader:fragment,side:T.DoubleSide,depthWrite:true,depthTest:true});
+    buildGeometry();sheets=new T.Mesh(geometry,material);sheets.frustumCulled=false;scene.add(sheets);
+    // The central absence is open space. No luminous ring or proxy sphere is added.
+    vessel=new T.Group();ship=T.createVessel();vessel.add(ship);scene.add(vessel);
+    scene.add(new T.HemisphereLight(0xa5b9c7,0x020307,.55));
+    const key=new T.DirectionalLight(0xe4e0ce,2.5);key.position.set(-6,9,5);scene.add(key);
+    const rim=new T.DirectionalLight(0x627e92,.55);rim.position.set(5,-2,-8);scene.add(rim);
+    state.ready=true;resize();paint();ui();status.hidden=true;captureFrame('관측 시작');queue();
+  }catch(e){
+    error=String(e);console.error(e);status.hidden=false;status.textContent='화면을 시작할 수 없습니다. WebGL 2 지원 브라우저에서 다시 열어 주세요.';
+  }
+  window.__ARTWORK__={
+    snapshot,get ready(){return state.ready;},get state(){return snapshot();},
+    get renderer(){return renderer;},reset,angularBounds,
+    advance(seconds){const n=Math.max(1,Math.ceil(Math.max(0,seconds)*120));
+      for(let i=0;i<n;i++){if(state.paused||dialog.open||state.lost)break;update(seconds/n);}
+      paint();ui();if(pendingCapture){const label=pendingCapture;pendingCapture='';captureFrame(label);}return snapshot();},
+    ...(query.has('inspect')||query.has('test')?{
+      drive(torque,radius=7.55,width=1.5){model.drive(torque,radius,width,.8);return snapshot();},
+      pick(x,y){return contactAt(x,y);},
+      materialPoint(r,theta=0,layer=3,part=1){return bodyPoint(r,theta,layer,part,new T.Vector3()).toArray();}
+    }:{})
+  };
 })();
+
 </script>
 </body>
 </html>
