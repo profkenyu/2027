@@ -59472,7 +59472,9 @@ body.ti-voyage #ti-transfer-trigger {
         this.lander.setLegFold(1),
         (this.lander.group.position.y = this.baseY + this.arrivalProfile.height),
         (this.group.visible = !1),
-        document.body.classList.add("ti-voyage"),
+        // Surface descent uses the same visible monitor and utilities as inline arrival.
+        // The voyage state still locks driving/camera input until deployment completes.
+        document.body.classList.remove("ti-voyage"),
         this.onSpace?.(!1),
         (this.baseY = this.lander.site.y),
         this.flightOrigin.copy(this.lander.group.position),
