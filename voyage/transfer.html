@@ -29852,9 +29852,9 @@ void main() {
   var axis = new Vector3();
   var qualityNames = ["LOW", "MID", "HIGH"];
   var tiers = [
-    { count: 14e3, field: 56, dpr: 1, fps: 30 },
-    { count: 3e4, field: 88, dpr: 1.3, fps: 60 },
-    { count: 54e3, field: 128, dpr: 1.6, fps: 60 }
+    { count: 1e4, field: 56, dpr: 1, fps: 30 },
+    { count: 21e3, field: 88, dpr: 1.3, fps: 60 },
+    { count: 38e3, field: 128, dpr: 1.6, fps: 60 }
   ];
   var requested = qualityNames.indexOf(
     (params.get("quality") || "").toUpperCase()
@@ -30371,8 +30371,8 @@ function createVessel() {
         float edge=(1.-smoothstep(1.6,1.9,abs(p.x)))*(1.-smoothstep(1.25,1.6,abs(p.y)));
         float cores=smoothstep(.045,.11,min(r1,r2));
         float distanceFade=mix(.18,1.,exp(-max(vDepth-300.,0.)/1450.));
-        float strata=contour*(.02+.055*quiet)*(.35+.65*allowed)*(1.-uPassage*.16);
-        float a=(strata+boundary*(.20+.50*neck))*edge*cores*distanceFade*uFade;
+        float strata=contour*(.014+.038*quiet)*(.35+.65*allowed)*(1.-uPassage*.16);
+        float a=(strata+boundary*(.20+.65*neck))*edge*cores*distanceFade*uFade;
         vec3 color=mix(vec3(.39,.42,.43),vec3(.72,.74,.71),allowed);
         color=mix(color,vec3(.82,.83,.79),boundary*.7);
         gl_FragColor=vec4(color,a*1.06);

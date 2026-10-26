@@ -700,7 +700,7 @@ footer nav.series-nav {
         스페이스 또는 위 방향키를 누르는 동안 최대 제동 명령을 보낼 수 있습니다.
         엔터를 누르고 놓으면 제동 없이 그 길이의 신호만 보낼 수 있고, 좌우 방향키로 수신 주파수를
         조절합니다. P는 일시 정지, R은 새 항해, M은 소리입니다. 이 기록을 열면
-        항해가 잠시 멈춥니다.
+        항해가 잠시 멈춥니다. 짧은 둘러보기보다 충분히 머물러 관측하십시오. 신호 사이의 공백은 시간이 지날수록 길어지며, 주변 흐름은 실제 수신 직후 잠깐 드러났다가 다시 낮아집니다.
       </p>
       <h3>A · 물리적 관계</h3>
       <p>
@@ -30221,7 +30221,7 @@ function createVessel() {
 // omega(r)=35/r+0.8 exp(-r/450). This is an authored rotating environment,
 // not a Kerr metric or a change to the radial Schwarzschild signal solver.
 function createOdysseyFlow(level) {
-  const count=[4000,9000,18000][level], data=new Float32Array(count*3);
+  const count=[2700,6000,12000][level], data=new Float32Array(count*3);
   let seed=240423;
   const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
   for(let i=0;i<count;i++){
@@ -30232,9 +30232,9 @@ function createOdysseyFlow(level) {
   const geometry=new BufferGeometry();
   geometry.setAttribute('position',new BufferAttribute(new Float32Array(count*3),3));
   geometry.setAttribute('aOrbit',new BufferAttribute(data,3));
-  const clock={value:0}, pixelRatio={value:1}, readability={value:0};
+  const clock={value:0}, pixelRatio={value:1}, readability={value:0},reception={value:0};
   const material=new ShaderMaterial({
-    uniforms:{uOrbitTime:clock,uPixelRatio:pixelRatio,uReadability:readability},transparent:true,depthWrite:false,
+    uniforms:{uOrbitTime:clock,uPixelRatio:pixelRatio,uReadability:readability,uReception:reception},transparent:true,depthWrite:false,
     vertexShader:`attribute vec3 aOrbit;uniform float uOrbitTime,uPixelRatio,uReadability;varying float vR,vSeed,vArc;
     void main(){float r=aOrbit.x;float theta=aOrbit.y+(35./r+.8*exp(-r/450.))*uOrbitTime;
       vec3 p=vec3(cos(theta)*r,sin(theta*5.+aOrbit.z*20.)*r*.012,sin(theta)*r);
@@ -30245,11 +30245,11 @@ function createOdysseyFlow(level) {
       // It follows the initial orbital phase; no new particles or angular speed.
       vArc=pow(max(0.,cos(3.*aOrbit.y+1.5*log(r/180.))),8.);
       vR=r;vSeed=aOrbit.z;}`,
-    fragmentShader:`uniform float uReadability;varying float vR,vSeed,vArc;void main(){float d=length(gl_PointCoord-.5);if(d>.5)discard;
+    fragmentShader:`uniform float uReadability,uReception;varying float vR,vSeed,vArc;void main(){float d=length(gl_PointCoord-.5);if(d>.5)discard;
       float edge=1.-smoothstep(.06,.5,d);float inner=1.-smoothstep(180.,650.,vR);
       vec3 silver=mix(vec3(.234,.260,.290),vec3(.568,.610,.655),inner);
       float density=mix(1.-.1*uReadability,1.+.75*uReadability,vArc);
-      gl_FragColor=vec4(silver,edge*(.16+.28*inner)*(.5+.5*vSeed)*mix(1.08,1.32,uReadability)*density);
+      gl_FragColor=vec4(silver,edge*(.16+.28*inner)*(.5+.5*vSeed)*mix(1.08,1.32,uReadability)*density*(.42+.58*uReception));
       #include <tonemapping_fragment>
       #include <colorspace_fragment>
     }`,
@@ -30261,7 +30261,7 @@ function createOdysseyFlow(level) {
       const amount=Math.max(0,Math.min(1,(Math.min(width,height)-560)/340));
       readability.value=amount*amount*(3-2*amount);
     },
-    update(t){clock.value=t;},dispose(){geometry.dispose();material.dispose();}};
+    update(t,freshness){clock.value=t;reception.value=freshness;},dispose(){geometry.dispose();material.dispose();}};
 }
 
   function buildSpace() {
@@ -30432,7 +30432,7 @@ function updateVessel() {
     const heldArchive = model.now < archiveHoldUntil;
     diskUniforms.uArchiveT.value = heldArchive ? archiveHoldT : model.hasImage ? model.image[1] : 0;
     diskUniforms.uNow.value = model.now;
-  odysseyFlow.update(model.now);
+  odysseyFlow.update(model.now,model.receivedPackets?Math.exp(-Math.max(0,model.now-model.lastPacket[0])/1.7):0);
     diskUniforms.uG.value = model.hasImage ? model.image[8] : 1;
     diskUniforms.uTuning.value = receiverLog - Math.log2(900);
     diskUniforms.uIntro.value = 0.25 + 0.75 * fade(0, 6, model.now);

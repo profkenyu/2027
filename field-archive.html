@@ -785,6 +785,9 @@
       .voyage-list li {
         min-width: 0;
       }
+      .observation-list {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
       .voyage-list a {
         display: grid;
         grid-template-columns: 24px minmax(0, 1fr);
@@ -1013,6 +1016,34 @@
           </li>
         </ol>
         <div class="voyage-event-log" id="voyage-event-archive" aria-live="polite" hidden></div>
+        <p class="voyage-note">스마트폰과 태블릿 등 모바일 디바이스에서는 가로모드를 추천합니다.</p>
+      </section>
+      <section class="voyage-conditions" id="observation-conditions" aria-labelledby="observation-title">
+        <div class="voyage-heading">
+          <h2 id="observation-title">관측의 조건</h2>
+          <span>3부작</span>
+        </div>
+        <p class="voyage-intro">접힘과 회전, 보이는 빛의 경계를 다루는 세 개의 관측.</p>
+        <ol class="voyage-list observation-list" aria-label="관측의 조건 관람 순서">
+          <li>
+            <a href="observe/fold.html">
+              <span class="voyage-number" aria-hidden="true">01</span>
+              <span class="voyage-work"><strong>FOLD</strong><span>다시 펼칠 수 있는 접힘</span></span>
+            </a>
+          </li>
+          <li>
+            <a href="observe/frame_drag.html">
+              <span class="voyage-number" aria-hidden="true">02</span>
+              <span class="voyage-work"><strong>FRAME DRAG</strong><span>회전이 남기는 방향의 층</span></span>
+            </a>
+          </li>
+          <li>
+            <a href="observe/occlusion.html">
+              <span class="voyage-number" aria-hidden="true">03</span>
+              <span class="voyage-work"><strong>OCCLUSION</strong><span>돌아오는 빛과 보이지 않는 영역</span></span>
+            </a>
+          </li>
+        </ol>
         <p class="voyage-note">스마트폰과 태블릿 등 모바일 디바이스에서는 가로모드를 추천합니다.</p>
       </section>
       <footer class="footer">
@@ -2633,12 +2664,12 @@
           if (returnLink) returnLink.href = returnPage;
           const post = readPostMission();
           if (post && returnLink) returnLink.href = POST_PHASES[post.phase].file;
-          const fromVoyage = /^voyage\/(?:echo|transfer|delay|abyss)\.html$/.test(
+          const fromArtwork = /^(?:voyage\/(?:echo|transfer|delay|abyss)|observe\/(?:fold|frame_drag|occlusion))\.html$/.test(
             new URLSearchParams(location.search).get("from") || "",
           );
           returnLink?.addEventListener("click", (event) => {
             if (
-              fromVoyage ||
+              fromArtwork ||
               event.button !== 0 ||
               event.metaKey ||
               event.ctrlKey ||

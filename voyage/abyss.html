@@ -700,7 +700,7 @@ footer nav.series-nav {
         접촉 중에는 카메라의 공전이 느려지고, 손을 놓으면 부드럽게 원래 속도로
         돌아갑니다. 두 분지 사이의 간격이 좁아질수록 접근은 천천히 진행되고, 경계 전에는
         바깥쪽 손짓으로 즉시 후퇴할 수 있습니다. 포획 뒤에는 공전과 주변 흐름이
-        가라앉고 빈틈에 시선이 머뭅니다. 그 뒤에도 접촉 부근을 변형하거나 흐름을
+        가라앉고 빈틈에 시선이 머뭅니다. 주변 층은 약 18초에 걸쳐 더 낮아지며 결손은 다시 채워지지 않습니다. 그 뒤에도 접촉 부근을 변형하거나 흐름을
         비틀 수 있습니다.
       </p>
       <p>
@@ -29793,10 +29793,10 @@ const lossStartGap = (() => { const pair = lookup.pairAt(.72, new Float64Array(2
   // The approached branch pair owns the light. Five other regions remain spatial references.
   float branchDistance=max(0.,(argument+.3678794411714423)/range);
   float foldEdge=1.-smoothstep(.014,.19,branchDistance);
-  float regionWeight=mix(mix(.18,.055,uAftermath),1.,selected);
+  float regionWeight=mix(mix(.18,.025,uAftermath),1.,selected);
   // Reveal only the surviving edge of a real domain cut; darkness remains the scar.
   float lossEdge=exp(-pow((branchDistance-.009)/.015,2.))*smoothstep(.018,.11,scar)*selected;
-  float structuralLight=(.56+.86*foldEdge+.2*selected)*mix(1.,.46,uAftermath*selected)+lossEdge*(.72+.6*uAftermath);
+  float structuralLight=(.56+.86*foldEdge+.2*selected)*mix(1.,.38,uAftermath*selected)+lossEdge*(.72+.6*uAftermath);
   float grey=dot(aTone,vec3(.2126,.7152,.0722));
   vColor=mix(vec3(grey*.7),aTone,mix(.16,.78,selected));
   vAlpha=valid*uOpacity*endFade*depthFade*nearFade*hierarchy*regionWeight*structuralLight;
@@ -29829,7 +29829,7 @@ function updateCamera() {
     camera.position.set(Math.cos(a) * radius, 0, Math.sin(a) * radius);
     // A narrow frame keeps the approached branch in view as its actual gap closes.
     // After capture the observer settles on that same absent branch pair.
-    const aftermath = state.captured ? ease(0, 5, state.elapsed - state.eventAt) : 0;
+    const aftermath = state.captured ? ease(0, 18, state.elapsed - state.eventAt) : 0;
     const approachFocus = viewport.width < viewport.height ? ease(0.24, 0.84, state.progress) * 0.9 : 0;
     const focusWeight = approachFocus + (1 - approachFocus) * aftermath;
     nebula.updateWorldMatrix(true, false);
@@ -29878,7 +29878,7 @@ function updateCamera() {
     uniforms.uPress.value = state.press;
     uniforms.uHover.value = hover;
     uniforms.uScar.value = state.scar;
-    uniforms.uAftermath.value = state.captured ? ease(0, 5, state.elapsed - state.eventAt) : 0;
+    uniforms.uAftermath.value = state.captured ? ease(0, 18, state.elapsed - state.eventAt) : 0;
     uniforms.uScarAngle.value = state.scarAngle;
   }
   function resize() {
