@@ -62848,6 +62848,7 @@ body.ti-voyage #ti-transfer-trigger {
         (this.wheels = built.wheels),
         (this.lid = built.lid),
         (this.wings = built.wings),
+        (this.lampMounts = built.lampMounts),
         (this.beaconPulse = built.beaconPulse),
         (this.signalPower = 1),
         (this.signalFast = !1),
@@ -63074,7 +63075,7 @@ body.ti-voyage #ti-transfer-trigger {
         this.group.position.set(this.pos.x, this.deckY, this.pos.z),
         this.group.rotation.set(0, this.heading, 0),
         this.chassis.rotation.set(this.pitch, 0, this.roll),
-        (this.wheelSpin += (this.speed * dt) / D.wheelR));
+        (this.wheelSpin -= (this.speed * dt) / D.wheelR));
       for (let i = 0; i < this.wheels.length; i++) {
         let w = this.wheels[i];
         ((w.rotation.x = this.wheelSpin),
@@ -63121,14 +63122,12 @@ body.ti-voyage #ti-transfer-trigger {
         sz = fx,
         H = cfg().headlight;
       if (H && H.count) {
-        let lampY = this.deckY + H.rise,
-          bx = this.pos.x + fx * H.ahead,
-          bz = this.pos.z + fz * H.ahead;
-        (uLampA.value.set(bx + sx * H.offset, lampY, bz + sz * H.offset),
-          uLampB.value.set(bx - sx * H.offset, lampY, bz - sz * H.offset));
-        let a = H.tilt - this.pitch,
-          ca = Math.cos(a);
-        uLampDir.value.set(fx * ca, -Math.sin(a), fz * ca);
+        // Use the lens centres and the same rigid transform as the visible body.
+        this.lampMounts[0].getWorldPosition(uLampA.value);
+        this.lampMounts[1].getWorldPosition(uLampB.value);
+        uLampDir.value
+          .set(0, -Math.sin(H.tilt), -Math.cos(H.tilt))
+          .transformDirection(this.chassis.matrixWorld);
       }
       return {
         speed: Math.abs(this.speed),
@@ -64168,7 +64167,12 @@ body.ti-voyage #ti-transfer-trigger {
     glow.colorNode = vec42(vec32(...C.headlight.colour).mul(uLampPower.mul(1.9).add(0.018)), 1);
     let canGeo = new BoxGeometry(0.18, 0.105, 0.1),
       lensG = new PlaneGeometry(0.135, 0.024);
+    const lampMounts = [];
     for (let sgn of [-1, 1]) {
+      const mount = new Object3D();
+      mount.position.set(sgn * C.headlight.offset, deck + 0.07, -LEN * 0.617);
+      chassis.add(mount);
+      lampMounts.push(mount);
       let can = new Mesh(canGeo, hull);
       (can.position.set(sgn * C.headlight.offset, deck + 0.07, -LEN * 0.585),
         chassis.add(transferTag(can, "body", 6910073)));
@@ -64200,7 +64204,7 @@ body.ti-voyage #ti-transfer-trigger {
       head.position.set(0, deck + D.camY, D.camZ - 0.13),
       chassis.add(head),
       (group.frustumCulled = !1),
-      { group, chassis, head, wheels, lid, wings, beaconPulse }
+      { group, chassis, head, wheels, lid, wings, beaconPulse, lampMounts }
     );
   }
   var clamp8 = (v, a, b) => Math.min(b, Math.max(a, v)),
@@ -70356,10 +70360,8 @@ body.ti-voyage #ti-transfer-trigger {
         (rover.disabled = pw.dead && !docking.active && !voyage.active),
         (rover.transmitting = !!fleetUplink.active),
         syncRoverUtilityControls());
-      let roverVisibleForFlight =
-        !voyage.active || voyage.phase === "egress" || voyage.phase === "close";
       ((uLampPower.value =
-        rover.lamps && roverVisibleForFlight ? pw.bus * openingLampGain(now2) : 0),
+        rover.lamps ? pw.bus * openingLampGain(now2) * passageLampGain(now2) : 0),
         ambient.setPower(pw.dead ? 0 : pw.charge));
       let q = ambient.update(v.radius);
       if ((captions.update(v.radius, now2), (acc += frameMs), frames++, acc >= 320)) {
@@ -70792,6 +70794,18 @@ body.ti-voyage #ti-transfer-trigger {
           !lander.group.visible ||
           now2 - openingShot.t0 >= OPENING_CAMERA_MS) &&
         ((openingShot = null), shotDirector.setOpening(!1));
+    }
+    function passageLampGain(now2) {
+      if (voyage.active) {
+        if (voyage.phase === "egress")
+          return orbitEase(Math.max(0, Math.min(1, (now2 - voyage.t0) / 600)));
+        return voyage.phase === "close" ? 1 : 0;
+      }
+      if (docking.phase === "secure")
+        return 1 - orbitEase(Math.max(0, Math.min(1, (now2 - docking.t0) / 600)));
+      if (rover.stowedIn || docking.phase === "closing" || docking.phase === "docked")
+        return 0;
+      return 1;
     }
     function openingLampGain(now2) {
       if (!openingShot) return 1;

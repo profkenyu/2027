@@ -31118,5 +31118,69 @@ function resizeArtworkBuffer(renderer, width, height, ratio, updateStyle = false
 })();
 
     </script>
-  </body>
+  <script id="visitor-navigation">(function enhanceVisitorNavigation() {
+  const run = () => {
+    if (document.documentElement.dataset.visitorNavigation) return;
+    document.documentElement.dataset.visitorNavigation = '1';
+    const style = document.createElement('style');
+    style.textContent = `
+#opening-archive-link{position:fixed;left:28px;bottom:calc(max(16px,env(safe-area-inset-bottom)) + 8px);z-index:120;display:inline-flex;align-items:center;min-height:44px;color:#b8c3cb;font:var(--site-nav-size,10px)/1.4 Arial,sans-serif;letter-spacing:.12em;text-decoration:none}
+body:has(#opening-archive-link) #vehicle-preview-link{left:160px;right:auto}
+#opening-archive-link:hover,#opening-archive-link:focus-visible{text-decoration:underline;text-underline-offset:4px;outline:none}
+.archive-index.visitor-persistent{position:fixed;z-index:19;left:0;right:0;top:var(--visitor-header,56px);margin:0;flex-wrap:nowrap;overflow-x:auto;background:var(--paper,#fbfbfa);padding:0 var(--pad,16px);gap:0 22px;scrollbar-width:none}
+.archive-index.visitor-persistent a{flex:none;white-space:nowrap}
+.archive-overview{display:flex;flex-wrap:wrap;gap:4px 24px;padding:0 var(--pad,16px);margin:0 0 16px;font-size:10.5px;color:var(--dim,#70706a)}
+.archive-overview a{display:inline-flex;align-items:center;min-height:44px;text-decoration:none}
+.archive-overview a:hover,.archive-overview a:focus-visible{text-decoration:underline;text-underline-offset:4px}
+footer nav.series-nav,footer nav.series{flex-wrap:wrap;max-width:calc(100vw - 2 * var(--ui-pad,24px));row-gap:0}
+body .visitor-vehicle-index{position:sticky;top:var(--visitor-preview-header,65px);z-index:3;display:flex;flex-wrap:nowrap;overflow-x:auto;gap:0 16px;margin:0 0 28px;background:var(--paper,#0b1014);scrollbar-width:none}
+body .visitor-vehicle-index a{flex:none;white-space:nowrap}
+.visitor-vehicle-index a[aria-current="location"]{text-decoration:underline;text-underline-offset:4px}
+@media(max-width:640px){#opening-archive-link{left:16px}body:has(#opening-archive-link) #vehicle-preview-link{left:148px}footer nav.series-nav{column-gap:12px}.archive-overview{gap:0 18px;font-size:10px}}
+`;
+    document.head.append(style);
+    const path = location.pathname;
+    if (document.querySelector('#ti-prologue') && document.querySelector('#ti-start')) {
+      const a=document.createElement('a');a.id='opening-archive-link';a.href=path.includes('/works/opening/')?'../terra_incognita/field-archive.dev.html?from=index.html':'field-archive.html?from=index.html';a.textContent='FIELD ARCHIVE';document.body.append(a);
+    }
+    const archive=document.querySelector('.archive-index'),header=document.querySelector('.site-header');
+    if(archive && header){
+      archive.classList.add('visitor-persistent');document.body.append(archive);
+      const size=()=>document.documentElement.style.setProperty('--visitor-header',header.getBoundingClientRect().height+'px');size();new ResizeObserver(size).observe(header);
+      const overview=document.createElement('nav');overview.className='archive-overview';overview.setAttribute('aria-label','관람 구성');
+      for(const [hash,label] of [['#coordinate-records','본편 탐사 기록'],['#observation-conditions','관측의 조건 3부작'],['#voyage-conditions','항해의 조건 4부작']]){const a=document.createElement('a');a.href=hash;a.textContent=label;overview.append(a);}
+      document.querySelector('.archive').prepend(overview);
+      const links=[...archive.querySelectorAll('a')];let pending=false;
+      const update=()=>{pending=false;let active=links[0];const edge=header.getBoundingClientRect().height+archive.offsetHeight+24;for(const a of links){const s=document.querySelector(a.hash);const h=s?.querySelector('h2')||s;if(h && h.getBoundingClientRect().top<=edge)active=a;}for(const a of links){if(a===active)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current');}};
+      addEventListener('scroll',()=>{if(!pending){pending=true;requestAnimationFrame(update);}},{passive:true});update();
+    }
+    const returnLink=document.querySelector('.site-header [data-return]');
+    if(returnLink){
+      const names={'index.html':'시작 화면','voyage/echo.html':'ECHO','voyage/transfer.html':'TRANSFER','voyage/delay.html':'DELAY','voyage/abyss.html':'ABYSS','observe/fold.html':'FOLD','observe/frame_drag.html':'FRAME DRAG','observe/occlusion.html':'OCCLUSION'};
+      const from=new URLSearchParams(location.search).get('from');
+      if(Object.hasOwn(names,from)){
+        const apply=()=>{if(returnLink.getAttribute('href')!==from)returnLink.setAttribute('href',from);const label=names[from]+'으로 돌아가기';returnLink.setAttribute('aria-label',label);const small=returnLink.querySelector('small');if(small&&small.textContent!==label)small.textContent=label;};
+        apply();new MutationObserver(apply).observe(returnLink,{attributes:true,attributeFilter:['href'],childList:true,subtree:true});
+      }
+    }
+    const series=document.querySelector('footer nav.series-nav,footer nav.series');
+    if(series){
+      const order=path.includes('/observe/')?['fold','frame_drag','occlusion']:['echo','transfer','delay','abyss'];
+      const key=path.split('/').pop().replace('.html',''),i=order.indexOf(key);
+      if(i>0&&!series.querySelector('.series-prev')){const a=document.createElement('a');a.className='series-prev';a.href=order[i-1]+'.html';a.textContent='이전 작품 · '+order[i-1].replace('_',' ').toUpperCase();series.prepend(a);}
+      const hint=document.querySelector('#hint');
+      if(hint){const fit=()=>{hint.style.bottom='';const h=hint.getBoundingClientRect(),s=series.getBoundingClientRect();if(h.right>s.left&&h.left<s.right&&h.bottom>s.top-12)hint.style.bottom=(innerHeight-s.top+12)+'px';};new ResizeObserver(fit).observe(series);addEventListener('resize',fit);fit();}
+
+    }
+    const index=document.querySelector('main .intro .index'),topbar=document.querySelector('.topbar');
+    if(index&&topbar){
+      index.classList.add('visitor-vehicle-index');document.querySelector('.intro').after(index);
+      const size=()=>{const h=topbar.getBoundingClientRect().height;document.documentElement.style.setProperty('--visitor-preview-header',h+'px');document.documentElement.style.scrollPaddingTop=(h+index.offsetHeight+18)+'px';};size();new ResizeObserver(size).observe(topbar);new ResizeObserver(size).observe(index);
+      const links=[...index.querySelectorAll('a')];let pending=false;
+      const update=()=>{pending=false;let active=links[0];const edge=topbar.offsetHeight+index.offsetHeight+40;for(const a of links){if(document.querySelector(a.hash)?.getBoundingClientRect().top<=edge)active=a;}if(scrollY+innerHeight>=document.documentElement.scrollHeight-2)active=links.at(-1);for(const a of links){if(a===active)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current');}};
+      addEventListener('scroll',()=>{if(!pending){pending=true;requestAnimationFrame(update);}},{passive:true});update();
+    }
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
+})();</script></body>
 </html>
