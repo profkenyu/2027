@@ -63987,9 +63987,9 @@ body.ti-voyage #ti-transfer-trigger {
     mastMount.userData.designRole = "camera-mast-structure";
     let baseZ = D.camZ + 0.09,
       tower = Merged();
-    tower.add(new BoxGeometry(0.48, 0.06, 0.31), xf([0, deck + 0.12, baseZ]));
+    tower.add(new BoxGeometry(0.48, 0.06, 0.53), xf([0, deck + 0.12, baseZ]));
     for (let x of [-0.085, 0.085])
-      tower.add(new BoxGeometry(0.075, 0.42, 0.12), xf([x, deck + 0.345, baseZ - 0.025]));
+      tower.add(new BoxGeometry(0.075, 0.72, 0.12), xf([x, deck + 0.495, D.camZ - 0.125]));
     (tower.add(new BoxGeometry(0.38, 0.08, 0.22), xf([0, deck + 0.555, D.camZ + 0.035])),
       tower.add(formedBox(0.46, 0.18, 0.2, 0.009), xf([0, deck + D.camY, D.camZ])),
       mastMount.add(new Mesh(tower.build(), hull)));
@@ -68369,7 +68369,7 @@ body.ti-voyage #ti-transfer-trigger {
           fadeBand: 3.5,
           clumpCell: 2.35,
           minPixels: 1.3,
-          length: 0.58,
+          length: 0.29,
           width: 0.019,
           bend: 0.62,
           breath: 0.17,
