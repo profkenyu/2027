@@ -1475,8 +1475,48 @@
               [18, 2.8, 23],
             ],
             dark,
-          ),
-          label(cargo, "X04 / X05 · SURFACE CARGO", 0, 7, -21.08, 15));
+          ));
+        let descentPods = [-18, 18].flatMap((x) => [-23, 23].map((z) => [x, z]));
+        (repeated(
+          cargo,
+          new T.CylinderGeometry(1.5, 1.2, 3, segments),
+          descentPods.map(([x, z]) => [x, 6.2, z]),
+          metal,
+        ),
+          repeated(
+            cargo,
+            new T.CylinderGeometry(0.65, 0.9, 1.4, segments),
+            descentPods.map(([x, z]) => [x, 8.3, z]),
+            dark,
+          ));
+        let exhaustMaterial = new T.MeshBasicMaterial({
+            color: 9336935,
+            transparent: !0,
+            opacity: 0.48,
+            depthWrite: !1,
+          }),
+          exhaustShape = new T.CylinderGeometry(0.8, 0.12, 1, segments, 1, !0),
+          exhaust = descentPods.map(([x, z]) => {
+            let plume = new T.Mesh(exhaustShape, exhaustMaterial);
+            return (
+              plume.position.set(x, 0.75, z),
+              (plume.visible = !1),
+              cargo.add(plume),
+              plume
+            );
+          }),
+          groundWashMaterial = new T.MeshBasicMaterial({
+            color: 7958118,
+            transparent: !0,
+            opacity: 0,
+            depthWrite: !1,
+          }),
+          groundWashShape = new T.CylinderGeometry(1, 1, 0.02, segments),
+          groundWash = descentPods.map(() => {
+            let wash = new T.Mesh(groundWashShape, groundWashMaterial);
+            return ((wash.visible = !1), root.add(wash), wash);
+          });
+        label(cargo, "X04 / X05 · SURFACE CARGO", 0, 7, -21.08, 15);
         for (let x of [-18, 18])
           for (let z of [-23, 23]) {
             let arm = box(cargo, 1.2, 1.2, 1, 0, 5.8, 0),
@@ -1545,6 +1585,18 @@
         let wheelLinks = wheels.map((w) =>
             box(carrier, 0.18, 1, 0.18, w.position.x, 1.5, w.position.z, dark),
           ),
+          driveMotors = repeated(
+            carrier,
+            new T.CylinderGeometry(0.68, 0.68, 1.05, segments).rotateZ(Math.PI / 2),
+            wheels.map((w) => [
+              w.position.x + Math.sign(w.position.x) * 0.82,
+              w.position.y,
+              w.position.z,
+            ]),
+            metal,
+          );
+        driveMotors.name = "independent-wheel-drive-motors";
+        let motorPivot = new T.Group(),
           power = new T.Group();
         ((power.name = "deployable-power-and-relay"),
           root.add(power),
@@ -1798,7 +1850,17 @@
             let link = wheelLinks[i];
             ((link.position.y = (2 + w.position.y) / 2),
               (link.scale.y = Math.max(0.1, 2 - w.position.y)));
+            let offset = Math.sign(w.position.x) * 0.82;
+            (motorPivot.position.set(
+              w.position.x + Math.cos(routeYaw) * offset,
+              w.position.y,
+              w.position.z - Math.sin(routeYaw) * offset,
+            ),
+              motorPivot.rotation.set(0, routeYaw, 0),
+              motorPivot.updateMatrix(),
+              driveMotors.setMatrixAt(i, motorPivot.matrix));
           }
+          driveMotors.instanceMatrix.needsUpdate = !0;
         }
         function driveCarrier(p, t) {
           (samplePath(p, t), poseCarrier(route.x, route.z));
@@ -1915,6 +1977,23 @@
             fall = 1 - phase(t, 162, 190);
           ((cargo.visible = t >= 162),
             cargo.position.set(cx, cy + 240 * fall, cz + 30 * fall));
+          let thrust = phase(t, 162, 165) * (1 - phase(t, 186, 190)),
+            plumeLength = Math.min(8, 240 * fall * 0.5) * thrust;
+          for (let plume of exhaust)
+            ((plume.visible = plumeLength > 0.05),
+              (plume.scale.y = Math.max(1e-3, plumeLength)),
+              (plume.position.y = 0.75 - plumeLength / 2));
+          let washStrength = thrust * (1 - phase(240 * fall, 8, 45));
+          groundWashMaterial.opacity = 0.16 * washStrength;
+          for (let i = 0; i < groundWash.length; i++) {
+            let [x, z] = descentPods[i],
+              wash = groundWash[i],
+              wx = cx + x,
+              wz = cz + z + 30 * fall;
+            (wash.position.set(wx, heightAt(wx, wz) + 0.35, wz),
+              wash.scale.set(4 + 6 * washStrength, 1, 4 + 6 * washStrength),
+              (wash.visible = washStrength > 0.015));
+          }
           for (let p2 of placements)
             descending
               ? p2.group.position.set(
@@ -2135,7 +2214,9 @@
         }
         let observer = new T.PerspectiveCamera(),
           aim = new T.Vector3(),
-          pos = new T.Vector3();
+          pos = new T.Vector3(),
+          detailAim = new T.Vector3(),
+          detailPos = new T.Vector3();
         function frame(camera) {
           if (existing || clock < 142) return;
           let close = phase(clock, 170, 178),
@@ -2148,8 +2229,31 @@
               -1415 - 15 * q,
               base + 34 + 40 * (1 - phase(clock, 178, 190)) * q,
               3320 + 45 * q,
+            ));
+          let landingView = phase(clock, 163, 169) * (1 - phase(clock, 186, 194));
+          landingView > 0 &&
+            (detailAim.copy(cargo.position),
+            (detailAim.y += 8),
+            detailPos.set(
+              cargo.position.x - 105,
+              cargo.position.y + 55,
+              cargo.position.z + 116,
             ),
-            portrait && pos.lerpVectors(aim, pos, 1.9),
+            aim.lerp(detailAim, landingView),
+            pos.lerp(detailPos, landingView));
+          let active = activeAt(clock);
+          if (active) {
+            let workView =
+              phase(clock, active.start + 1, active.start + 6) *
+              (1 - phase(clock, active.releaseAt, active.releaseAt + 5));
+            workView > 0 &&
+              (detailAim.copy(active.group.position),
+              (detailAim.y += 5),
+              detailPos.set(detailAim.x - 90, detailAim.y + 42, detailAim.z + 100),
+              aim.lerp(detailAim, workView),
+              pos.lerp(detailPos, workView));
+          }
+          (portrait && pos.lerpVectors(aim, pos, 1.9),
             (pos.y = Math.max(pos.y, heightAt(pos.x, pos.z) + 12)),
             observer.position.copy(pos),
             observer.up.set(0, 1, 0),
@@ -63463,10 +63567,34 @@
         recovery?.lost || ((paused = !1), pacer.reset(), audio.resume());
       }
       try {
-        let render = function (t) {
+        let frameSettlement = function () {
+            let portrait = camera.aspect < 1,
+              centerX = -1401,
+              centerZ = 3298,
+              ground = environment.surfaceHeightAt(centerX, centerZ),
+              distance = portrait ? 1.52 : 1;
+            (camera.position.set(
+              centerX + 104 * distance,
+              Math.max(
+                ground + 58 * distance,
+                environment.surfaceHeightAt(
+                  centerX + 104 * distance,
+                  centerZ - 126 * distance,
+                ) + 6,
+              ),
+              centerZ - 126 * distance,
+            ),
+              endingAim.set(centerX, ground + 18, centerZ),
+              camera.up.set(0, 1, 0),
+              camera.lookAt(endingAim),
+              (camera.fov = portrait ? 50 : 42),
+              (camera.near = 0.5),
+              camera.updateProjectionMatrix());
+          },
+          render = function (t) {
             ((seconds = Math.max(0, t)),
               habitat.update(origin + seconds),
-              habitat.frame(camera),
+              frameSettlement(),
               environment.update(origin + seconds, !0, camera, 108));
             let opacity =
               smooth4((seconds - 1) / 5) * (1 - smooth4((seconds - 14) / 8));
@@ -63603,23 +63731,24 @@
             ),
             (renderer.shadowMap.needsUpdate = !0));
         }
-        ((placeRecorder = createPlaceRecorder(
+        placeRecorder = createPlaceRecorder(
           renderer,
           scene,
           environment.surface,
           habitat,
           tier,
           state,
-        )),
-          installCinemaFrame((width, height, left, top) => {
-            ((camera.aspect = width / height),
-              renderer.setSize(width, height),
-              Object.assign(renderer.domElement.style, {
-                left: `${left}px`,
-                top: `${top}px`,
-              }),
-              render(seconds));
-          }),
+        );
+        let endingAim = new Vector3();
+        (installCinemaFrame((width, height, left, top) => {
+          ((camera.aspect = width / height),
+            renderer.setSize(width, height),
+            Object.assign(renderer.domElement.style, {
+              left: `${left}px`,
+              top: `${top}px`,
+            }),
+            render(seconds));
+        }),
           (recovery = installContextRecovery(renderer, pause)),
           (document.getElementById("loading").hidden = !0),
           installJourneyControls(audio, sound),

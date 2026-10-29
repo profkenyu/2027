@@ -29893,6 +29893,7 @@ void main() {
   var anchorHeading = 0;
   var pairOffset = 0;
   var cameraDistance = 780;
+  var approachZoom = 0;
   var previewOpacity = 0;
   var lastPrediction = -100;
   var keys = /* @__PURE__ */ new Set();
@@ -29914,7 +29915,7 @@ void main() {
   var TRAIL_CAPACITY = 160;
   var trailData = new Float32Array(TRAIL_CAPACITY * 3);
   var trailCoast = new Float32Array(TRAIL_CAPACITY);
-  var trailUniforms = { uCount: { value: 1 }, uFade: { value: 0 } };
+  var trailUniforms = { uCount: { value: 1 }, uFade: { value: 0 }, uThrust: { value: 0 } };
   var ray = new Raycaster();
   var plane = new Plane(up, 0);
   var ndc = new Vector2();
@@ -30407,10 +30408,14 @@ function createVessel() {
     if (snap) focus.copy(focusTarget);
     else focus.lerp(focusTarget, 1 - Math.exp(-dt / 0.95));
     observer.lerp(observerTarget, 1 - Math.exp(-dt / 0.32));
+    // The saddle is the meaningful approach region, not a timer or a camera orbit.
+    const proximity = 1 - MathUtils.smootherstep(Math.hypot(sim.s[0], sim.s[1]), 0.14, 0.52);
+    approachZoom = snap ? proximity : approachZoom + (proximity - approachZoom) * (1 - Math.exp(-dt / 1.4));
+    const distance = cameraDistance * (1 - 0.12 * approachZoom);
     camera.position.set(
-      focus.x + cameraDistance * (0.08 + observer.x * 0.13),
-      focus.y + cameraDistance * (0.52 + observer.y * 0.055),
-      focus.z + cameraDistance * 0.86
+      focus.x + distance * (0.08 + observer.x * 0.13),
+      focus.y + distance * (0.52 + observer.y * 0.055),
+      focus.z + distance * 0.86
     );
     camera.lookAt(focus);
     camera.updateMatrixWorld();
@@ -30460,7 +30465,7 @@ function createVessel() {
           void main(){
             float dash=1.-smoothstep(.48,.57,fract(vFuture*14.));
             float fade=1.-smoothstep(.15,1.,vFuture);
-            gl_FragColor=vec4(vec3(.61,.65,.64),uOpacity*dash*fade);
+            gl_FragColor=vec4(vec3(.56,.71,.72),uOpacity*dash*fade);
           }`
       })
     );
@@ -30487,10 +30492,10 @@ function createVessel() {
           gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);
         }`,
       fragmentShader: `
-        uniform float uFade;varying float vAge,vCoast;
+        uniform float uFade,uThrust;varying float vAge,vCoast;
         void main(){
-          float alpha=(.075+.18*pow(vAge,1.6))*mix(.43,1.,vCoast)*uFade;
-          gl_FragColor=vec4(vec3(.67,.69,.65),alpha);
+          float alpha=(.075+.18*pow(vAge,1.6))*mix(.65,1.,vCoast)*uFade*(1.+.25*uThrust);
+          gl_FragColor=vec4(vec3(.72,.71,.66),alpha);
         }`
     }));
     transitTrail.frustumCulled = false;
@@ -30561,7 +30566,7 @@ function createVessel() {
       prediction.geometry.attributes.position.needsUpdate = true;
       prediction.geometry.setDrawRange(0, count);
     }
-    predictionUniforms.uOpacity.value = previewOpacity * 0.22;
+    predictionUniforms.uOpacity.value = previewOpacity * 0.36;
   }
   function render() {
     const C = jacobi(sim.s), age = sim.elapsed;
@@ -30572,6 +30577,7 @@ function createVessel() {
   fieldUniforms.uPassage.value = sim.eventAt === null ? 0 : Math.exp(-Math.max(0, sim.elapsed - sim.eventAt) / 8);
     fieldUniforms.uFade.value = MathUtils.smootherstep(age + 1.2, 0, 5);
     trailUniforms.uFade.value = MathUtils.smootherstep(age, 0, 3);
+    trailUniforms.uThrust.value = sim.throttle;
     vessel.position.set(
       sim.s[0] * S,
       8 + Math.atan((sim.s[2] * sim.s[2] + sim.s[3] * sim.s[3]) * 0.7) * 76,
@@ -31045,6 +31051,7 @@ function resizeArtworkBuffer(renderer, width, height, ratio, updateStyle = false
           predictionSamples: prediction.geometry.drawRange.count,
           predictionFinite: predictionData.every(Number.isFinite),
           observerFocus: focus.toArray(),
+          approachZoom,
           sceneScale: S,
           palette: "near-achromatic",
           observer: observer.toArray(),

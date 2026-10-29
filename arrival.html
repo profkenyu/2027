@@ -530,8 +530,48 @@
               [18, 2.8, 23],
             ],
             dark,
-          ),
-          label(cargo, "X04 / X05 · SURFACE CARGO", 0, 7, -21.08, 15));
+          ));
+        let descentPods = [-18, 18].flatMap((x) => [-23, 23].map((z) => [x, z]));
+        (repeated(
+          cargo,
+          new T.CylinderGeometry(1.5, 1.2, 3, segments),
+          descentPods.map(([x, z]) => [x, 6.2, z]),
+          metal,
+        ),
+          repeated(
+            cargo,
+            new T.CylinderGeometry(0.65, 0.9, 1.4, segments),
+            descentPods.map(([x, z]) => [x, 8.3, z]),
+            dark,
+          ));
+        let exhaustMaterial = new T.MeshBasicMaterial({
+            color: 9336935,
+            transparent: !0,
+            opacity: 0.48,
+            depthWrite: !1,
+          }),
+          exhaustShape = new T.CylinderGeometry(0.8, 0.12, 1, segments, 1, !0),
+          exhaust = descentPods.map(([x, z]) => {
+            let plume = new T.Mesh(exhaustShape, exhaustMaterial);
+            return (
+              plume.position.set(x, 0.75, z),
+              (plume.visible = !1),
+              cargo.add(plume),
+              plume
+            );
+          }),
+          groundWashMaterial = new T.MeshBasicMaterial({
+            color: 7958118,
+            transparent: !0,
+            opacity: 0,
+            depthWrite: !1,
+          }),
+          groundWashShape = new T.CylinderGeometry(1, 1, 0.02, segments),
+          groundWash = descentPods.map(() => {
+            let wash = new T.Mesh(groundWashShape, groundWashMaterial);
+            return ((wash.visible = !1), root.add(wash), wash);
+          });
+        label(cargo, "X04 / X05 · SURFACE CARGO", 0, 7, -21.08, 15);
         for (let x of [-18, 18])
           for (let z of [-23, 23]) {
             let arm = box(cargo, 1.2, 1.2, 1, 0, 5.8, 0),
@@ -600,6 +640,18 @@
         let wheelLinks = wheels.map((w) =>
             box(carrier, 0.18, 1, 0.18, w.position.x, 1.5, w.position.z, dark),
           ),
+          driveMotors = repeated(
+            carrier,
+            new T.CylinderGeometry(0.68, 0.68, 1.05, segments).rotateZ(Math.PI / 2),
+            wheels.map((w) => [
+              w.position.x + Math.sign(w.position.x) * 0.82,
+              w.position.y,
+              w.position.z,
+            ]),
+            metal,
+          );
+        driveMotors.name = "independent-wheel-drive-motors";
+        let motorPivot = new T.Group(),
           power = new T.Group();
         ((power.name = "deployable-power-and-relay"),
           root.add(power),
@@ -854,7 +906,17 @@
             let link = wheelLinks[i];
             ((link.position.y = (2 + w.position.y) / 2),
               (link.scale.y = Math.max(0.1, 2 - w.position.y)));
+            let offset = Math.sign(w.position.x) * 0.82;
+            (motorPivot.position.set(
+              w.position.x + Math.cos(routeYaw) * offset,
+              w.position.y,
+              w.position.z - Math.sin(routeYaw) * offset,
+            ),
+              motorPivot.rotation.set(0, routeYaw, 0),
+              motorPivot.updateMatrix(),
+              driveMotors.setMatrixAt(i, motorPivot.matrix));
           }
+          driveMotors.instanceMatrix.needsUpdate = !0;
         }
         function driveCarrier(p, t) {
           (samplePath(p, t), poseCarrier(route.x, route.z));
@@ -971,6 +1033,23 @@
             fall = 1 - phase2(t, 162, 190);
           ((cargo.visible = t >= 162),
             cargo.position.set(cx, cy + 240 * fall, cz + 30 * fall));
+          let thrust = phase2(t, 162, 165) * (1 - phase2(t, 186, 190)),
+            plumeLength = Math.min(8, 240 * fall * 0.5) * thrust;
+          for (let plume of exhaust)
+            ((plume.visible = plumeLength > 0.05),
+              (plume.scale.y = Math.max(1e-3, plumeLength)),
+              (plume.position.y = 0.75 - plumeLength / 2));
+          let washStrength = thrust * (1 - phase2(240 * fall, 8, 45));
+          groundWashMaterial.opacity = 0.16 * washStrength;
+          for (let i = 0; i < groundWash.length; i++) {
+            let [x, z] = descentPods[i],
+              wash = groundWash[i],
+              wx = cx + x,
+              wz = cz + z + 30 * fall;
+            (wash.position.set(wx, heightAt(wx, wz) + 0.35, wz),
+              wash.scale.set(4 + 6 * washStrength, 1, 4 + 6 * washStrength),
+              (wash.visible = washStrength > 0.015));
+          }
           for (let p2 of placements)
             descending
               ? p2.group.position.set(
@@ -1193,7 +1272,9 @@
         }
         let observer = new T.PerspectiveCamera(),
           aim = new T.Vector3(),
-          pos = new T.Vector3();
+          pos = new T.Vector3(),
+          detailAim = new T.Vector3(),
+          detailPos = new T.Vector3();
         function frame(camera2) {
           if (existing || clock < 142) return;
           let close = phase2(clock, 170, 178),
@@ -1206,8 +1287,31 @@
               -1415 - 15 * q,
               base + 34 + 40 * (1 - phase2(clock, 178, 190)) * q,
               3320 + 45 * q,
+            ));
+          let landingView = phase2(clock, 163, 169) * (1 - phase2(clock, 186, 194));
+          landingView > 0 &&
+            (detailAim.copy(cargo.position),
+            (detailAim.y += 8),
+            detailPos.set(
+              cargo.position.x - 105,
+              cargo.position.y + 55,
+              cargo.position.z + 116,
             ),
-            portrait && pos.lerpVectors(aim, pos, 1.9),
+            aim.lerp(detailAim, landingView),
+            pos.lerp(detailPos, landingView));
+          let active = activeAt(clock);
+          if (active) {
+            let workView =
+              phase2(clock, active.start + 1, active.start + 6) *
+              (1 - phase2(clock, active.releaseAt, active.releaseAt + 5));
+            workView > 0 &&
+              (detailAim.copy(active.group.position),
+              (detailAim.y += 5),
+              detailPos.set(detailAim.x - 90, detailAim.y + 42, detailAim.z + 100),
+              aim.lerp(detailAim, workView),
+              pos.lerp(detailPos, workView));
+          }
+          (portrait && pos.lerpVectors(aim, pos, 1.9),
             (pos.y = Math.max(pos.y, heightAt(pos.x, pos.z) + 12)),
             observer.position.copy(pos),
             observer.up.set(0, 1, 0),
@@ -1291,7 +1395,6 @@
           },
         };
       }
-      
       
       var __create = Object.create;
       var __defProp = Object.defineProperty;
@@ -69594,15 +69697,14 @@
           ramp = 8,
           cruise = (originalTail - ramp / 2) / (stretchedTail - ramp / 2),
           t = Math.min(elapsed - inspectionStart, stretchedTail);
-        if (t >= ramp) return inspectionStart + (ramp * (1 + cruise)) / 2 + (t - ramp) * cruise;
+        if (t >= ramp)
+          return inspectionStart + (ramp * (1 + cruise)) / 2 + (t - ramp) * cruise;
         let u = t / ramp,
           integratedRamp = u ** 6 - 3 * u ** 5 + 2.5 * u ** 4;
         return inspectionStart + t - (1 - cruise) * ramp * integratedRamp;
       }
-      function arrivalDeparture(inherited, eventAt, origin = 0) {
-        return eventAt === null
-          ? 1 / 0
-          : Math.max(droneEnd(inherited), eventAt - origin) + ARRIVAL_HOLD;
+      function arrivalInstallationDeparture(inherited, installationDeparture) {
+        return Math.max(installationDeparture, droneEnd(inherited) + ARRIVAL_HOLD);
       }
       function createArrivalDrone(
         heightAt = groundHeight,
@@ -69651,12 +69753,15 @@
             let mid = (lo + hi) >> 1;
             timeMap[mid] < value ? (lo = mid) : (hi = mid);
           }
-          return (lo + (value - timeMap[lo]) / (timeMap[hi] - timeMap[lo])) / clockSamples;
+          return (
+            (lo + (value - timeMap[lo]) / (timeMap[hi] - timeMap[lo])) / clockSamples
+          );
         }
         let ahead = new Vector3(),
           target2 = new Vector3(),
           helper = new PerspectiveCamera();
-        (helper.position.copy(curve.points[0]), helper.lookAt(-50, helper.position.y + 160, -480));
+        (helper.position.copy(curve.points[0]),
+          helper.lookAt(-50, helper.position.y + 160, -480));
         let entryRotation = helper.quaternion.clone(),
           finalTargetHeight = heightAt(-1400, 3300) + 125,
           ease = (p) => MathUtils.smootherstep(p, 0, 1);
@@ -69667,7 +69772,11 @@
               let v = q / ramp;
               return (ramp * (v ** 3 - 0.5 * v ** 4)) / (1 - ramp);
             };
-          return p < ramp ? edge(p) : p > 1 - ramp ? 1 - edge(1 - p) : (p - ramp / 2) / (1 - ramp);
+          return p < ramp
+            ? edge(p)
+            : p > 1 - ramp
+              ? 1 - edge(1 - p)
+              : (p - ramp / 2) / (1 - ramp);
         }
         function frame(camera2, elapsed, inherited = !1) {
           if (elapsed <= DRONE_START) return;
@@ -69689,12 +69798,17 @@
             (target2.y = -110),
             target2.add(camera2.position));
           let distance = camera2.position.distanceTo(surveyorTarget),
-            surveyorFocus = p >= surveyorProgress ? 1 : 1 - ease((distance - 220) / 220);
+            surveyorFocus =
+              p >= surveyorProgress ? 1 : 1 - ease((distance - 220) / 220);
           (target2.lerp(surveyorTarget, surveyorFocus),
             helper.position.copy(camera2.position),
             helper.up.set(0, 1, 0),
             helper.lookAt(target2),
-            camera2.quaternion.slerpQuaternions(entryRotation, helper.quaternion, ease(u / 0.18)));
+            camera2.quaternion.slerpQuaternions(
+              entryRotation,
+              helper.quaternion,
+              ease(u / 0.18),
+            ));
           let settle = ease((p - surveyorProgress) / (1 - surveyorProgress));
           (helper.lookAt(-1400, finalTargetHeight, 3300),
             camera2.quaternion.slerp(helper.quaternion, settle),
@@ -70820,7 +70934,12 @@
           (render2(seconds + dt),
           seconds - lastSaved >= 10 && (persist(), (lastSaved = seconds)),
           (seconds >= endTime ||
-            (habitat && seconds - segment.start >= installation.departureAt())) &&
+            (habitat &&
+              seconds - segment.start >=
+                arrivalInstallationDeparture(
+                  !!state.placeInherited,
+                  installation.departureAt(),
+                ))) &&
             next());
       }
       function pause() {
@@ -71023,7 +71142,12 @@
               elapsed: seconds - segment.start,
               cameraSettledAt:
                 phase === "arrival" ? droneEnd(!!state.placeInherited) : null,
-              departureAt: habitat ? installation.departureAt() : null,
+              departureAt: habitat
+                ? arrivalInstallationDeparture(
+                    !!state.placeInherited,
+                    installation.departureAt(),
+                  )
+                : null,
               duration: segment.duration,
               endTime,
               preview: !state.evidence,

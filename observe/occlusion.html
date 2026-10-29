@@ -27654,12 +27654,15 @@ vec3 sky(vec3 direction){
  // The far field is sparse and fixed; it is revealed by bent rays, never screen-space drift.
  return vec3(.0019,.0030,.0064)+vec3(.64,.74,.79)*sparkle;
 }
-vec3 emission(vec3 p,vec3 view,float phi){
+vec3 emission(vec3 p,vec3 view,float phi,float critical){
  float r=length(p.xz),a=atan(p.z,p.x);
  float phase=a-uTime*.78/pow(r,1.5)+uShear*.22*exp(-(r-3.)*.24);
  float ripples=.65+.35*cos(phase*18.+r*2.4);
  float grain=.86+.14*cos(phase*61.-r*13.7);
- float annuli=.75+.25*cos(r*53.+phase*3.);
+ // Widen the bright portion of existing annuli near the critical impact
+ // parameter. This changes the light display, not the integrated ray path.
+ float annularWave=cos(r*53.+phase*3.);
+ float annuli=mix(.75+.25*annularWave,.72+.28*smoothstep(-.75,.30,annularWave),critical);
  float inner=smoothstep(3.,3.35,r),outer=1.-smoothstep(10.5,13.5,r);
  float radial=pow(3./max(r,3.),2.25)*inner*outer;
  float beta=sqrt(1./max(2.*(r-1.),.01));
@@ -27670,7 +27673,7 @@ vec3 emission(vec3 p,vec3 view,float phi){
  float reception=mix(1.,longPath,uGate);
  float luminous=radial*ripples*grain*annuli*pow(beam*gravitational,2.4)*reception;
  vec3 ink=mix(vec3(.66,.73,.76),vec3(.78,.72,.63),smoothstep(3.,6.,r)*.32);
- return ink*luminous*.52;
+ return ink*luminous*(.52+.23*critical);
 }
 void main(){
  vec2 uv=(gl_FragCoord.xy-.5*uResolution)/min(uResolution.x,uResolution.y);
@@ -27683,6 +27686,9 @@ void main(){
  vec3 tangent=rd-mu*er;float sine=length(tangent);
  vec3 et=tangent/max(sine,1e-7);
  float f=1.-1./uRadius,b=uRadius*sine/sqrt(f);
+ // A modest contrast cue follows rays near the capture/escape threshold;
+ // no light is added to the black capture region.
+ float critical=1.-smoothstep(.06,1.2,abs(b-2.598076211));
  float u=1./uRadius,v=-mu/max(b,1e-7),phi=0.;
  vec3 prev=ro,direction=rd,color=vec3(0.);float transmission=1.,captured=0.;int hits=0;
  if(sine<1e-6&&mu<0.)captured=1.;
@@ -27700,7 +27706,7 @@ void main(){
    float fraction=prev.y/(prev.y-p.y);vec3 crossing=mix(prev,p,clamp(fraction,0.,1.));
    float radius=length(crossing.xz);
    if(radius>=3.&&radius<=13.5){
-    color+=emission(crossing,-direction,phi)*transmission;
+    color+=emission(crossing,-direction,phi,critical)*transmission;
     transmission*=.40;hits++;
     if(hits>=3)break;
    }
