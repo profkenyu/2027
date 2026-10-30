@@ -1018,7 +1018,7 @@
         <nav class="archive-index" aria-label="아카이브 영역 바로가기">
           <a href="#coordinate-records">좌표 기록</a><a href="#vehicle-history">기체 기록</a><a href="#place-history">장소 기록</a><a href="#observation-conditions">관측</a><a href="#voyage-conditions">항해</a>
         </nav>
-        <p class="ledger-help" id="ledger-help">행성을 선택해 목록을 좁히고, 항목을 눌러 관측 상태를 확인하십시오.<span>같은 항목을 다시 누르거나 닫기를 누르면 미리보기가 닫힙니다.</span></p>
+        <p class="ledger-help" id="ledger-help">행성을 선택한 뒤, 목록의 항목을 눌러 관측 상태를 확인해 주세요.<span>같은 항목을 다시 누르거나 닫기를 누르면 미리보기가 닫힙니다.</span></p>
         <div class="ledger-head" id="coordinate-records" role="heading" aria-level="2" aria-label="좌표 기록">
           <span>No.</span><span>Planet</span><span>Site</span><span>Status</span>
         </div>
@@ -1065,7 +1065,7 @@
           </li>
         </ol>
         <p class="independent-note">각 작품은 독립적으로 관람할 수 있습니다.</p>
-        <p class="voyage-note">모바일 디바이스: 가로모드 추천</p>
+        <p class="voyage-note">모바일에서는 가로 화면을 권장합니다.</p>
       </section>
       <section class="voyage-conditions" id="voyage-conditions" aria-labelledby="voyage-title">
         <div class="voyage-heading">
@@ -1089,7 +1089,7 @@
           <li>
             <a href="voyage/delay.html">
               <span class="voyage-number" aria-hidden="true">03</span>
-              <span class="voyage-work"><strong>DELAY</strong><span>딜레이되는 신호</span></span>
+              <span class="voyage-work"><strong>DELAY</strong><span>늦게 도착하는 신호</span></span>
             </a>
           </li>
           <li>
@@ -1101,7 +1101,7 @@
         </ol>
         <div class="voyage-event-log" id="voyage-event-archive" aria-live="polite" hidden></div>
         <p class="independent-note">각 작품은 독립적으로 관람할 수 있습니다.</p>
-        <p class="voyage-note">모바일 디바이스: 가로모드 추천</p>
+        <p class="voyage-note">모바일에서는 가로 화면을 권장합니다.</p>
       </section>
       <footer class="footer">
         <span>©2026 KIM GUNWOO. ALL RIGHTS RESERVED.</span>
@@ -1117,1896 +1117,1867 @@
       <span id="fa-export-status" class="sr-only" role="status"></span>
       <div id="archive-scroll-space" aria-hidden="true"></div>
     </main>
-    <script>
-      (() => {
-        // works/shared/vehicle-log-labels.js
-        var vehicleContexts = {
-          terra: "행성 1",
-          desert: "행성 2",
-          granite: "행성 3",
-          candidate: "행성 4",
-          migration: "이주 항해",
-          arrival: "목적지 도착",
-        };
-        var vehicleFields = {
-          role: "임무",
-          phase: "운용 단계",
-          mission: "탐사 구역",
-          finish: "선체 표면",
-          travelDistance: "누적 주행 거리",
-          surfaceSeconds: "지표 탐사 시간",
-          recordedLandings: "착륙 횟수",
-          charge: "축전지 충전율",
-          position: "장면 내 좌표",
-          observedSites: "관측 완료 지점",
-          preservationBoundary: "보존 구역의 X 경계",
-          voyageDays: "항해 경과 일수",
-          surfaceHistory: "표면 손상 이력",
-          shot: "촬영 구도",
-          ships: "함대 기체 수",
-          ringPeriodSeconds: "고리 1회전 주기",
-          sceneSeconds: "장면 경과 시간",
-        };
-        var names = {
-          "OBSERVATION / SAMPLE RETURN": "지표 관측 · 시료 회수",
-          "TRANSPORT / SUPPLY": "로버 운송 · 탐사 지원",
-          "HABITATION / CONTINUOUS LOAD": "장기 항해 · 거주 설비 운용",
-          landing: "착륙",
-          deploy: "출입 경사로 전개",
-          egress: "로버 지상 전개",
-          survey: "지표 탐사",
-          return: "로버 귀환",
-          align: "출입구 정렬",
-          dock: "로버 수납실 진입",
-          stow: "로버 수납·고정",
-          uplink: "함대에 자료 송신",
-          decision: "정착 조건 검토",
-          complete: "임무 완료",
-          "surface standby": "지상 대기",
-          idle: "대기",
-          returning: "로버 귀환",
-          lowering: "출입 경사로 전개",
-          approach: "로버 수납실 진입",
-          secure: "로버 고정",
-          closing: "출입문 폐쇄",
-          docked: "로버 수납 완료",
-          "compress-out": "귀환 전환",
-          "compress-in": "기체 재구성",
-          "ring-passage": "환형 이주선 근접 통과",
-          "ring-rear": "환형 이주선 후면",
-          "escort-closeup": "함대 정면",
-          "opening-underpass": "선체 하부 통과",
-        };
-        function vehicleValue(key, value) {
-          if (key === "mission") return vehicleContexts[value] || String(value);
-          if (key === "position") {
-            const values = Array.isArray(value)
-              ? value.map((v, i) => [["X", "Y", "Z"][i] || String(i + 1), v])
-              : Object.entries(value || {});
-            return values
-              .map(([axis, v]) => `${axis.toUpperCase()} ${Number(v).toFixed(2)}`)
-              .join(" · ");
-          }
-          if (Number.isFinite(value)) {
-            if (key === "charge" && value >= 0 && value <= 1) return `${Math.round(value * 100)}%`;
-            const units = {
-              travelDistance: "m",
-              surfaceSeconds: "초",
-              sceneSeconds: "초",
-              voyageDays: "일",
-              ringPeriodSeconds: "초",
-              recordedLandings: "회",
-              observedSites: "곳",
-              ships: "척",
-            };
-            return `${Number.isInteger(value) ? value : value.toFixed(1)}${units[key] ? " " + units[key] : ""}`;
-          }
-          return names[value] || (Array.isArray(value) ? value.join(" / ") : String(value));
-        }
-
-        // works/shared/candidate-survey.js
-        var CANDIDATE_SITE = Object.freeze({
-          x: -1400,
-          z: 3300,
-          size: 640,
-          planet: "candidate",
-        });
-        var CANDIDATE_NAVIGATION = Object.freeze({
-          frame: "TF-NAV-01",
-          units: "AU",
-          origin: "작품 내 항성 중심",
-          x: 1.2846,
-          y: -0.0821,
-          z: 0.4368,
-          fictional: true,
-        });
-        var LIFE_ELEMENTS = Object.freeze(["H", "O", "C", "N", "P", "S"]);
-        var PRESERVE_X = -1310;
-        var INTERVENTION = Object.freeze({
-          minX: -1475,
-          maxX: -1325,
-          minZ: 3120,
-          maxZ: 3480,
-        });
-        var CANDIDATE_STATIONS = Object.freeze([
-          {
-            id: "P04-001",
-            body: "candidate",
-            planet: "PLANET 04",
-            world: "CANDIDATE BASIN",
-            label: "H · O / HYDRATED MINERALS",
-            ko: "H · O — 수소·산소 함유 광물",
-            elements: ["H", "O"],
-            compounds: "수화광물 · 물 추출 후보",
-            x: -1320,
-            z: 3280,
-            radius: 8,
-            order: 0,
-            capture: {
-              profile: "wide",
-              lens: "FOLLOW CAMERA",
-              viewpoint: "ROVER FOLLOW / BOUNDARY",
-              aspect: 1.6,
-              zoom: 1,
-              projection: "rectilinear",
-            },
-          },
-          {
-            id: "P04-002",
-            body: "candidate",
-            planet: "PLANET 04",
-            world: "CANDIDATE BASIN",
-            label: "C · N / CARBONATE AND NITRATE",
-            ko: "C · N — 탄소·질소 함유 물질",
-            elements: ["C", "N"],
-            compounds: "탄산염 · 질산염",
-            x: -1410,
-            z: 3300,
-            radius: 8,
-            order: 1,
-            capture: {
-              profile: "wide",
-              lens: "FOLLOW CAMERA",
-              viewpoint: "ROVER FOLLOW / FOOTPRINT",
-              aspect: 1.6,
-              zoom: 1,
-              projection: "rectilinear",
-            },
-          },
-          {
-            id: "P04-003",
-            body: "candidate",
-            planet: "PLANET 04",
-            world: "CANDIDATE BASIN",
-            label: "P · S / PHOSPHATE AND SULFATE",
-            ko: "P · S — 인·황 함유 광물",
-            elements: ["P", "S"],
-            compounds: "인산염 · 황산염",
-            x: -1450,
-            z: 3220,
-            radius: 8,
-            order: 2,
-            capture: {
-              profile: "wide",
-              lens: "FOLLOW CAMERA",
-              viewpoint: "ROVER FOLLOW / REFERENCE",
-              aspect: 1.6,
-              zoom: 1,
-              projection: "rectilinear",
-            },
-          },
-        ]);
-        function validDecision(d) {
-          return (
-            d?.version === 1 &&
-            d.planet === "candidate" &&
-            d.status === "limited-settlement" &&
-            d.preserveX === PRESERVE_X &&
-            Object.keys(INTERVENTION).every((k) => d.intervention?.[k] === INTERVENTION[k]) &&
-            Array.isArray(d.observations) &&
-            d.observations.length === 3 &&
-            CANDIDATE_STATIONS.every((s) => d.observations.includes(s.id))
-          );
-        }
-
-        // works/shared/exhibition-store.js
-        var EXHIBITION_DB = "beyond-known-place-v1";
-        var connection;
-        function openExhibition() {
-          if (connection) return connection;
-          connection = new Promise((resolve, reject) => {
-            const request = indexedDB.open(EXHIBITION_DB, 1);
-            request.onupgradeneeded = () => {
-              for (const name of ["world", "frames", "vehicles"])
-                request.result.createObjectStore(name, { keyPath: "id" });
-            };
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
-            request.onblocked = () => reject(new Error("Installation storage is blocked"));
-          }).catch((error) => {
-            connection = null;
-            throw error;
-          });
-          return connection;
-        }
-        async function readExhibition() {
-          const db = await openExhibition();
-          return new Promise((resolve, reject) => {
-            const tx = db.transaction(["world", "frames", "vehicles"], "readonly");
-            const world = tx.objectStore("world").get("basin");
-            const frames = tx.objectStore("frames").getAll();
-            const vehicles = tx.objectStore("vehicles").getAll();
-            tx.oncomplete = () =>
-              resolve({
-                version: 1,
-                scope: "this-browser-and-address",
-                world: world.result ?? null,
-                frames: frames.result,
-                vehicles: vehicles.result,
-              });
-            tx.onerror = () => reject(tx.error);
-            tx.onabort = () => reject(tx.error || new Error("Storage read aborted"));
-          });
-        }
-
-        // works/shared/place-sequence.js
-        var recordTime = (seconds) => `${Math.floor(seconds / 60)}분 ${Math.floor(seconds % 60)}초`;
-        function cameraKey(record) {
-          const c = record.camera,
-            p = record.site;
-          if (
-            !c ||
-            !p ||
-            !Array.isArray(c.position) ||
-            c.position.length !== 3 ||
-            !Array.isArray(c.quaternion) ||
-            c.quaternion.length !== 4
-          )
-            return null;
-          const values = [...c.position, ...c.quaternion, c.fov, c.aspect, p.x, p.z, p.size];
-          return values.every(Number.isFinite) ? values.map((v) => v.toFixed(6)).join("/") : null;
-        }
-        function matchingSequence(records) {
-          const groups = /* @__PURE__ */ new Map();
-          for (const record of records) {
-            const key = cameraKey(record);
-            if (!key) continue;
-            if (!groups.has(key)) groups.set(key, []);
-            groups.get(key).push(record);
-          }
-          const sameView = [...groups.values()].sort((a, b) => b.length - a.length)[0] ?? [];
-          const chronological = sameView
-            .sort((a, b) => a.seconds - b.seconds)
-            .filter((r, i, a) => i === 0 || r.seconds !== a[i - 1].seconds);
-          if (chronological.length <= 8) return chronological;
-          return [
-            chronological[0],
-            chronological[1],
-            ...Array.from(
-              { length: 6 },
-              (_, i) => chronological[2 + Math.round((i * (chronological.length - 3)) / 5)],
-            ),
-          ];
-        }
-        function mountRecordSequence(parent, records) {
-          const frames = matchingSequence(records);
-          if (frames.length < 2) return;
-          const figure = document.createElement("figure");
-          figure.className = "place-sequence";
-          figure.setAttribute("aria-label", "같은 구도로 촬영한 장소의 변화");
-          const viewport = document.createElement("div");
-          viewport.className = "place-sequence-view";
-          const images = [new Image(), new Image()];
-          for (const img of images) {
-            img.width = 640;
-            img.height = 400;
-            img.alt = "";
-            viewport.append(img);
-          }
-          const caption = document.createElement("figcaption");
-          const label = document.createElement("span");
-          const button = document.createElement("button");
-          button.type = "button";
-          caption.append(label, button);
-          const note = document.createElement("p");
-          note.className = "place-sequence-note";
-          note.textContent =
-            "저장된 촬영 기록을 시간순으로 보여줍니다. 기록 사이의 전환은 실제 변화 속도와 다릅니다.";
-          figure.append(viewport, caption, note);
-          parent.append(figure);
-          const motion = matchMedia("(prefers-reduced-motion: reduce)");
-          let index = 0,
-            elapsed = 0,
-            last = 0,
-            raf = 0;
-          let paused = motion.matches,
-            visible = false,
-            hidden = document.hidden,
-            done = false;
-          const HOLD = 6e3,
-            FADE = 2400;
-          function show() {
-            images[0].src = frames[index].image;
-            images[1].src = frames[Math.min(index + 1, frames.length - 1)].image;
-            images[1].style.opacity = "0";
-            label.textContent = `${recordTime(frames[index].seconds)} · ${frames[index].status}`;
-            figure.dataset.index = String(index);
-            figure.dataset.seconds = String(frames[index].seconds);
-            figure.dataset.transition = "false";
-          }
-          function controls() {
-            button.textContent = motion.matches
-              ? done
-                ? "처음 기록 보기"
-                : "다음 기록 보기"
-              : done
-                ? "다시 보기"
-                : paused
-                  ? "이어서 보기"
-                  : "일시정지";
-            figure.dataset.playing = String(!paused && !done && visible && !hidden);
-          }
-          function tick(now) {
-            raf = 0;
-            if (paused || done || !visible || hidden) {
-              last = 0;
-              controls();
-              return;
-            }
-            if (last) elapsed += Math.min(100, now - last);
-            last = now;
-            if (elapsed >= HOLD && (!images[1].complete || !images[1].naturalWidth)) elapsed = HOLD;
-            const fraction = Math.max(0, Math.min(1, (elapsed - HOLD) / FADE));
-            if (fraction > 0)
-              images[1].style.opacity = String(fraction * fraction * (3 - 2 * fraction));
-            if (fraction > 0 && figure.dataset.transition !== "true") {
-              label.textContent = `${recordTime(frames[index].seconds)} · ${recordTime(frames[index + 1].seconds)} 기록 전환`;
-              figure.dataset.transition = "true";
-            }
-            if (elapsed >= HOLD + FADE) {
-              index++;
-              elapsed = 0;
-              done = index === frames.length - 1;
-              figure.dataset.transition = "false";
-              show();
-              controls();
-            }
-            if (!done) raf = requestAnimationFrame(tick);
-          }
-          function schedule() {
-            if (raf) cancelAnimationFrame(raf);
-            raf = 0;
-            last = 0;
-            controls();
-            if (!paused && !done && visible && !hidden) raf = requestAnimationFrame(tick);
-          }
-          button.addEventListener("click", () => {
-            if (motion.matches) {
-              index = done ? 0 : index + 1;
-              done = index === frames.length - 1;
-              paused = true;
-              elapsed = 0;
-              show();
-            } else if (done) {
-              index = 0;
-              elapsed = 0;
-              done = false;
-              paused = false;
-              show();
-            } else paused = !paused;
-            schedule();
-          });
-          motion.addEventListener("change", () => {
-            paused = true;
-            elapsed = 0;
-            show();
-            schedule();
-          });
-          const observer = new IntersectionObserver(
-            (entries) => {
-              visible = entries[0].isIntersecting;
-              schedule();
-            },
-            { threshold: 0.15 },
-          );
-          observer.observe(figure);
-          document.addEventListener("visibilitychange", () => {
-            hidden = document.hidden;
-            schedule();
-          });
-          window.addEventListener("pagehide", () => {
-            hidden = true;
-            schedule();
-          });
-          window.addEventListener("pageshow", () => {
-            hidden = document.hidden;
-            schedule();
-          });
-          show();
-          controls();
-        }
-
-        // works/shared/place-archive-view.js
-        var imageOK = (v) =>
-          typeof v === "string" &&
-          v.length < 3e5 &&
-          /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(v);
-        var el = (tag, text) => {
-          const n = document.createElement(tag);
-          if (text !== void 0) n.textContent = text;
-          return n;
-        };
-        async function mountPlaceArchive(anchor) {
-          const section = el("section");
-          section.className = "place-archive is-empty";
-          section.id = "place-history";
-          section.append(el("h2", "PLACE HISTORY · 장소의 변화 기록"));
-          const note = el(
-            "p",
-            "도착 이후 장소의 변화가 기록됩니다.",
-          );
-          section.append(note);
-          anchor.after(section);
-          try {
-            const data = await readExhibition();
-            const frames = data.frames
-              .filter((r) => imageOK(r.image) && Number.isFinite(r.seconds))
-              .sort((a, b) => a.seconds - b.seconds);
-            if (!frames.length) {
-              return;
-            }
-            section.classList.remove("is-empty");
-            note.textContent = "같은 좌표·화각으로 기록한 개입 전, 설비 가동, 이후 경과. 기록은 이 주소와 브라우저에 남습니다.";
-            document.body.classList.add("has-place-history");
-            mountRecordSequence(section, frames);
-            const grid = el("div");
-            grid.className = "place-comparison";
-            const before = frames.find((r) => r.stage === "before"),
-              intervention = frames.find((r) => r.stage === "intervention");
-            const aftermath = frames.filter((r) => r.stage === "aftermath");
-            for (const [label, r] of [
-              ["개입 이전", before],
-              ["설비 가동", intervention],
-              ["이후 경과", aftermath.at(-1)],
-            ]) {
-              const figure = el("figure");
-              figure.append(el("h3", label));
-              if (r) {
-                const img = el("img");
-                img.src = r.image;
-                img.alt = `${label} · 동일 분지 관찰 구도`;
-                img.loading = "lazy";
-                img.width = 640;
-                img.height = 400;
-                figure.append(img);
-                figure.append(
-                  el(
-                    "figcaption",
-                    `${r.status} · 경과 시간 ${Math.floor(r.seconds / 60)}분 ${Math.floor(r.seconds % 60)}초`,
-                  ),
-                );
-                const stats = el(
-                  "p",
-                  `물 저장량 ${r.resources.stored.toFixed(1)} kg · 축전지 충전율 ${Math.round(r.resources.reserve * 100)}%`,
-                );
-                figure.append(stats);
-              } else
-                figure.append(
-                  el("p", "아직 촬영되지 않았습니다. 이전 상태를 추정해 채우지 않습니다."),
-                );
-              grid.append(figure);
-            }
-            section.append(grid);
-            const last = frames.at(-1);
-            const regions = el(
-              "p",
-              "개입이 적은 경계 지역과 물 회수 설비 주변을 함께 기록합니다. 설비의 대기 상태는 고장이 아닙니다. 여기서 다루는 것은 밀폐된 거주 시설의 운전 조건이며, 행성 전체의 거주 가능성을 뜻하지 않습니다.",
-            );
-            section.append(regions);
-            if (last.resources?.operation?.source === "mission-record") {
-              const operation = last.resources.operation;
-              const detail = el("details");
-              detail.append(el("summary", "탐사 기록과 설비 운전"));
-              detail.append(
-                el(
-                  "p",
-                  "광물 식별 결과, 수분 관측 신호, 세 지점의 지질 비교 기록으로 운전 조건을 정했습니다. 탐사 자료와 설비 설정의 대응 관계는 작품의 가정이며 실제 설비의 성능 예측값은 아닙니다.",
-                ),
-              );
-              detail.append(
-                el(
-                  "p",
-                  `기준 운전 대비 가열기 소비 전력 ${Math.round(operation.heatCost * 100)}% · 회수 펌프 소비 전력 ${Math.round(operation.pumpCost * 100)}% · 최대 회수 유량 ${Math.round(operation.recoveryRate * 100)}%`,
-                ),
-              );
-              detail.append(
-                el(
-                  "p",
-                  `물 저장량·축전지 충전율·온도가 설정 범위에서 ${operation.stableSeconds.toFixed(1)}초 이상 유지되면 안정 운전 단계로 전환합니다.`,
-                ),
-              );
-              section.append(detail);
-            }
-            const history2 = el("details");
-            history2.append(el("summary", `시간별 관찰 ${frames.length}건`));
-            for (const r of [...frames].reverse()) {
-              const row = el("details");
-              row.append(el("summary", `${r.status} · ${r.seconds.toFixed(1)}초`));
-              const img = el("img");
-              img.src = r.image;
-              img.alt = "같은 좌표의 기록";
-              img.loading = "lazy";
-              img.width = 640;
-              img.height = 400;
-              row.append(img);
-              for (const zone of r.regions)
-                row.append(
-                  el(
-                    "p",
-                    `${zone.side < 0 ? "왼쪽" : zone.side > 0 ? "오른쪽" : "중앙"} ${zone.zone} · 얼음 ${zone.ice.toFixed(3)} / 액체 물 ${zone.liquid.toFixed(3)} kg/m²${Number.isFinite(zone.deposited) && Number.isFinite(zone.eroded) ? ` · 퇴적 ${zone.deposited.toFixed(4)} / 침식 ${zone.eroded.toFixed(4)} kg/m²` : ""}`,
-                  ),
-                );
-              history2.append(row);
-            }
-            section.append(history2);
-            const vehicles = data.vehicles;
-            if (vehicles.length) {
-              const details = el("details");
-              details.append(el("summary", `이 기기에 남은 기체 기록 ${vehicles.length}건`));
-              for (const r of vehicles) {
-                if (!imageOK(r.image)) continue;
-                const figure = el("figure"),
-                  img = el("img");
-                img.src = r.image;
-                img.alt = `${r.kind} · ${r.context}`;
-                img.loading = "lazy";
-                figure.append(img, el("figcaption", `${r.status.role || r.kind} · ${r.context}`));
-                details.append(figure);
-              }
-              section.append(details);
-            }
-            section.append(
-              el(
-                "p",
-                "최초 개입 전·가동 기록과 최근 32개 경과를 보관합니다. 브라우저 데이터 삭제 시 지워지며, 다른 기기와 자동 공유되지 않습니다.",
-              ),
-            );
-            section.dataset.records = String(frames.length);
-            section.dataset.latest = String(last.seconds);
-          } catch {
-            note.textContent =
-              "이 브라우저에서 장기 기록 저장소를 열 수 없습니다. 현재 탐사 세션 기록은 유지됩니다.";
-            section.dataset.storage = "unavailable";
-          }
-        }
-
-        // works/shared/vehicle-archive.js
-        var VEHICLE_ARCHIVE_KEY = "terra-incognita:vehicle-archive:v1";
-        var kinds = /* @__PURE__ */ new Set(["rover", "surveyor", "fleet"]);
-        var contexts = /* @__PURE__ */ new Set([
-          "terra",
-          "desert",
-          "granite",
-          "candidate",
-          "migration",
-          "arrival",
-        ]);
-        function readVehicleArchive(storage) {
-          try {
-            const source = JSON.parse(storage.getItem(VEHICLE_ARCHIVE_KEY) || "null");
-            if (source?.version !== 1) return [];
-            return (Array.isArray(source.records) ? source.records : [])
-              .slice(0, 10)
-              .filter(
-                (r) =>
-                  r &&
-                  r.id === `${r.kind}:${r.context}` &&
-                  kinds.has(r.kind) &&
-                  contexts.has(r.context) &&
-                  typeof r.image === "string" &&
-                  r.image.length < 1e5 &&
-                  /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(r.image) &&
-                  Number.isFinite(r.seconds) &&
-                  r.status &&
-                  typeof r.status === "object",
-              );
-          } catch {
-            return [];
-          }
-        }
-
-        // engine/core/field-archive.js
-        var FIELD_ARCHIVE_VERSION = 4;
-        var DEFAULT_FIELD_ARCHIVE_KEY = "terra-incognita:field-archive:v4";
-        var FIELD_ARCHIVE_CAPACITY = 32;
-        var finite = (value, fallback = 0) =>
-          Number.isFinite(Number(value)) ? Number(value) : fallback;
-        var clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-        var ARCHIVE_TRANSLATIONS = Object.freeze([
-          ["철-니켈 합금 시료", "IRON–NICKEL ALLOY SAMPLE"],
-          ["규산염 세라믹 시료", "SILICATE CERAMIC SAMPLE"],
-          ["탄소 복합재 시료", "CARBON COMPOSITE SAMPLE"],
-          ["전도성 격자 시료", "CONDUCTIVE LATTICE SAMPLE"],
-          ["분자 질소(N₂) 서리층", "MOLECULAR NITROGEN (N₂) FROST"],
-          ["에탄올 결정상", "ETHANOL CRYSTALLINE PHASE"],
-          ["조사 지점", "SITE"],
-          ["관측 증거", "SAMPLE RECORD"],
-          ["후보 지점", "MODEL CANDIDATE"],
-        ]);
-        function archiveEnglish(value, fallback = "UNRESOLVED DATUM") {
-          let text = String(value ?? fallback);
-          for (const [ko, en] of ARCHIVE_TRANSLATIONS) text = text.replaceAll(ko, en);
-          text = text
-            .replace(/\bFIELD (\d+)\b/g, "SITE $1")
-            .replace(/\bRESOLVED POTENTIAL\b/g, "MODEL CANDIDATE");
-          return /[\uac00-\ud7a3]/.test(text) ? fallback : text;
-        }
-        function archiveImage(value) {
-          return typeof value === "string" &&
-            value.length <= 9e5 &&
-            /^data:image\/(?:png|jpeg|webp);base64,[a-z0-9+/=\s]+$/i.test(value)
-            ? value
-            : null;
-        }
-        var CAPTURE_SCHEDULE = Object.freeze({
-          terra: Object.freeze(["fisheye", "wide", "tele", "macro", "rear", "panorama"]),
-          desert: Object.freeze([
-            "wide",
-            "tele",
-            "fisheye",
-            "portrait",
-            "rear",
-            "macro",
-            "panorama",
-          ]),
-          granite: Object.freeze(["panorama", "macro", "portrait", "tele", "fisheye"]),
-        });
-        var ARCHIVE_CAPTURE_PROFILES = Object.freeze({
-          fisheye: Object.freeze({
-            lens: "FISHEYE 8MM",
-            viewpoint: "MAST / FORWARD",
-            aspect: 1,
-            zoom: 1.04,
-            focusX: 0.5,
-            focusY: 0.52,
-            projection: "fisheye",
-          }),
-          wide: Object.freeze({
-            lens: "ULTRAWIDE 18MM",
-            viewpoint: "LOW FRONT",
-            aspect: 16 / 9,
-            zoom: 1.08,
-            focusX: 0.5,
-            focusY: 0.56,
-            projection: "rectilinear",
-          }),
-          rear: Object.freeze({
-            lens: "STANDARD 35MM",
-            viewpoint: "REAR FOLLOW",
-            aspect: 3 / 2,
-            zoom: 1.28,
-            focusX: 0.5,
-            focusY: 0.53,
-            projection: "rectilinear",
-          }),
-          tele: Object.freeze({
-            lens: "TELEPHOTO 120MM",
-            viewpoint: "MATERIAL FACE",
-            aspect: 4 / 3,
-            zoom: 2.24,
-            focusX: 0.53,
-            focusY: 0.5,
-            projection: "rectilinear",
-          }),
-          macro: Object.freeze({
-            lens: "MACRO 90MM",
-            viewpoint: "GROUND CLOSE",
-            aspect: 4 / 5,
-            zoom: 2.82,
-            focusX: 0.5,
-            focusY: 0.68,
-            projection: "rectilinear",
-          }),
-          portrait: Object.freeze({
-            lens: "WIDE 24MM",
-            viewpoint: "LATERAL RISE",
-            aspect: 3 / 4,
-            zoom: 1.6,
-            focusX: 0.64,
-            focusY: 0.5,
-            projection: "rectilinear",
-          }),
-          panorama: Object.freeze({
-            lens: "PANORAMA 24MM",
-            viewpoint: "HORIZON SWEEP",
-            aspect: 2.39,
-            zoom: 1.04,
-            focusX: 0.46,
-            focusY: 0.5,
-            projection: "rectilinear",
-          }),
-        });
-        var stationOrder = (source) => {
-          const explicit = finite(source?.order, NaN);
-          if (Number.isFinite(explicit)) return Math.max(0, Math.floor(explicit));
-          const fromId = String(source?.id ?? "").match(/-(\d+)$/);
-          return fromId ? Math.max(0, Number(fromId[1]) - 1) : 0;
-        };
-        function archiveCaptureProfile(source = {}) {
-          const body = String(source?.body ?? "terra");
-          const schedule = CAPTURE_SCHEDULE[body] ?? CAPTURE_SCHEDULE.terra;
-          const requested = String(
-            source?.capture?.profile ?? schedule[stationOrder(source) % schedule.length],
-          );
-          const base = ARCHIVE_CAPTURE_PROFILES[requested] ?? ARCHIVE_CAPTURE_PROFILES.wide;
-          const capture = source?.capture ?? {};
-          return {
-            profile: ARCHIVE_CAPTURE_PROFILES[requested] ? requested : "wide",
-            lens: archiveEnglish(capture.lens, base.lens),
-            viewpoint: archiveEnglish(capture.viewpoint, base.viewpoint),
-            aspect: clamp(finite(capture.aspect, base.aspect), 0.5, 2.5),
-            zoom: clamp(finite(capture.zoom, base.zoom), 1, 3.2),
-            focusX: clamp(finite(capture.focusX, base.focusX), 0, 1),
-            focusY: clamp(finite(capture.focusY, base.focusY), 0, 1),
-            projection: ["fisheye", "rectilinear"].includes(capture.projection)
-              ? capture.projection
-              : base.projection,
-          };
-        }
-        function cleanStation(source) {
-          return {
-            id: String(source?.id ?? "UNRESOLVED"),
-            body: String(source?.body ?? "terra"),
-            planet: String(source?.planet ?? "PLANET 01"),
-            world: String(source?.world ?? "UNRESOLVED SURFACE"),
-            label: archiveEnglish(source?.label),
-            x: finite(source?.x),
-            z: finite(source?.z),
-            radius: clamp(finite(source?.radius, 10), 1, 120),
-            order: stationOrder(source),
-            resourceItem:
-              source?.resourceItem == null
-                ? null
-                : Math.max(0, Math.floor(finite(source.resourceItem))),
-            resourceVariant:
-              source?.resourceVariant == null
-                ? null
-                : Math.max(0, Math.floor(finite(source.resourceVariant))),
-            archiveRole: ["unresolved", "evidence", "potential"].includes(source?.archiveRole)
-              ? source.archiveRole
-              : "unresolved",
-            potentialCount: Math.max(0, Math.floor(finite(source?.potentialCount))),
-            resolved: !!source?.resolved,
-            capture: archiveCaptureProfile(source),
-          };
-        }
-        function archiveData(value, depth = 0) {
-          if (depth > 5) return null;
-          if (typeof value === "number") return Number.isFinite(value) ? value : null;
-          if (typeof value === "boolean" || value === null) return value;
-          if (typeof value === "string") return value.slice(0, 240);
-          if (Array.isArray(value)) return value.slice(0, 24).map((v) => archiveData(v, depth + 1));
-          if (value && typeof value === "object")
-            return Object.fromEntries(
-              Object.entries(value)
-                .filter(([k]) => !["__proto__", "constructor", "prototype"].includes(k))
-                .slice(0, 32)
-                .map(([k, v]) => [k, archiveData(v, depth + 1)]),
-            );
-          return null;
-        }
-        function cleanRecord(source) {
-          const image = archiveImage(source?.image);
-          const capture = archiveCaptureProfile(source);
-          const imageWidth = Math.max(0, Math.floor(finite(source?.imageWidth)));
-          const imageHeight = Math.max(0, Math.floor(finite(source?.imageHeight)));
-          return {
-            id: String(source?.id ?? "UNRESOLVED"),
-            body: String(source?.body ?? "terra"),
-            planet: String(source?.planet ?? "PLANET 01"),
-            world: String(source?.world ?? "UNRESOLVED SURFACE"),
-            label: archiveEnglish(source?.label),
-            x: finite(source?.x),
-            z: finite(source?.z),
-            heading: finite(source?.heading),
-            shot: String(source?.shot ?? "WIDE"),
-            frame: Math.max(0, Math.floor(finite(source?.frame))),
-            capturedAt: Math.max(0, finite(source?.capturedAt)),
-            kind: source?.kind === "resource-evidence" ? "resource-evidence" : "camera-return",
-            image,
-            data: archiveData(source?.data),
-            capturePosition: archiveData(source?.capturePosition),
-            imageWidth,
-            imageHeight,
-            capture,
-          };
-        }
-        function repairResourceLabels(data) {
-          for (const station of data.stations) {
-            if (station.body !== "terra" || !/^P01-\d{3}$/.test(station.id)) continue;
-            const item = station.resourceItem ?? Math.floor(station.order / 2);
-            const evidence = data.records.find(
-              (record2) => record2.body === "terra" && record2.data?.item === item,
-            );
-            const sample = evidence?.data?.sample ?? data.missions.terra?.samples?.[item]?.sample;
-            if (!sample) continue;
-            if (station.label === "UNRESOLVED DATUM") {
-              const suffix =
-                station.archiveRole === "potential"
-                  ? `MODEL CANDIDATE ×${station.potentialCount}`
-                  : station.archiveRole === "evidence"
-                    ? "SAMPLE RECORD"
-                    : `SITE ${station.resourceVariant ?? 0}`;
-              station.label = `${archiveEnglish(sample)} · ${suffix}`;
-            }
-            const record = data.records.find((entry) => entry.id === station.id);
-            if (record?.label === "UNRESOLVED DATUM") record.label = station.label;
-          }
-          return data;
-        }
-        function readFieldArchive(storage, key = DEFAULT_FIELD_ARCHIVE_KEY) {
-          const empty = {
-            version: FIELD_ARCHIVE_VERSION,
-            stations: [],
-            records: [],
-            missions: {},
-            transmission: null,
-          };
-          const keys =
-            key === DEFAULT_FIELD_ARCHIVE_KEY
-              ? [key, "terra-incognita:field-archive:v3", "terra-incognita:field-archive:v2"]
-              : [key];
-          const cleanList = (items, clean) =>
-            [
-              ...new Map(
-                items
-                  .filter((item) => item && typeof item.id === "string")
-                  .map((item) => [item.id, clean(item)]),
-              ).values(),
-            ].slice(0, FIELD_ARCHIVE_CAPACITY);
-          for (const candidate of keys) {
-            try {
-              const source = JSON.parse(storage?.getItem(candidate) ?? "null");
-              if (![2, 3, FIELD_ARCHIVE_VERSION].includes(source?.version)) continue;
-              if (!Array.isArray(source.stations) || !Array.isArray(source.records)) continue;
-              return repairResourceLabels({
-                version: FIELD_ARCHIVE_VERSION,
-                stations: cleanList(source.stations, cleanStation),
-                records: cleanList(source.records, cleanRecord),
-                missions: archiveData(source.missions) || {},
-                transmission: archiveData(source.transmission),
-              });
-            } catch {}
-          }
-          return empty;
-        }
-
-        // engine/core/archive-export.js
-        var number = (v) => (Number.isFinite(Number(v)) ? Number(v) : null);
-        function createArchiveExport(
-          {
-            stations = [],
-            vehicles = [],
-            records = [],
-            seed = null,
-            missions = {},
-            transmission = null,
-          },
-          now = /* @__PURE__ */ new Date(),
-        ) {
-          const captured = new Map(records.map((record) => [record.id, record]));
-          const fields = stations.map((station) => {
-            const record = captured.get(station.id),
-              capture = archiveCaptureProfile(record ?? station);
-            return {
-              id: String(station.id),
-              planet: archiveEnglish(station.planet),
-              world: archiveEnglish(station.world),
-              label: archiveEnglish(station.label),
-              x: number(station.x),
-              z: number(station.z),
-              data: archiveData(record?.data),
-              status: record
-                ? archiveImage(record.image)
-                  ? "FRAME RECORDED"
-                  : "DATA ONLY"
-                : station.archiveRole === "potential"
-                  ? "MODEL CANDIDATE"
-                  : "UNRESOLVED",
-              capture: record
-                ? {
-                    lens: capture.lens,
-                    viewpoint: capture.viewpoint,
-                    projection: capture.projection,
-                    aspect: capture.aspect,
-                    capturePosition: archiveData(record.capturePosition),
-                    imageWidth: number(record.imageWidth),
-                    imageHeight: number(record.imageHeight),
-                    frame: number(record.frame),
-                    pageElapsedMs: number(record.capturedAt),
-                    image: archiveImage(record.image),
-                  }
-                : null,
-            };
-          });
-          for (const vehicle of vehicles)
-            fields.push({
-              id: vehicle.id,
-              planet: vehicle.context,
-              world: vehicle.context,
-              label: vehicle.kind,
-              status: "VEHICLE FRAME",
-              x: null,
-              z: null,
-              data: archiveData(vehicle.status),
-              capture: {
-                image: archiveImage(vehicle.image),
-                imageWidth: vehicle.width,
-                imageHeight: vehicle.height,
-                pageElapsedMs: vehicle.seconds * 1e3,
-                viewpoint: "randomly sampled rendered scene",
-                lens: "scene camera",
-              },
-            });
-          return {
-            schema: "terra-incognita.field-archive",
-            version: 1,
-            exportedAt: now.toISOString(),
-            missions: archiveData(missions),
-            transmission: archiveData(transmission),
-            universeSeed: typeof seed === "string" && /^[0-9a-f]{6}$/i.test(seed) ? seed : null,
-            coordinates: "FICTIONAL LOCAL X/Z; NOT CELESTIAL COORDINATES",
-            captureTime: "Milliseconds since the capturing page initialized; not UTC.",
-            count: fields.filter((field) => field.capture).length,
-            stations: fields,
-          };
-        }
-        function csvCell(value) {
-          let text = String(value ?? "");
-          if (typeof value === "string" && /^[\s]*[=+@-]/.test(text)) text = "'" + text;
-          return '"' + text.replaceAll('"', '""') + '"';
-        }
-        function archiveCSV(data) {
-          const rows = [
-            [
-              "ID",
-              "PLANET",
-              "WORLD",
-              "LABEL",
-              "X",
-              "Z",
-              "STATUS",
-              "LENS",
-              "VIEWPOINT",
-              "FRAME",
-              "PAGE_ELAPSED_MS",
-              "HAS_IMAGE",
-              "OBSERVATION_DATA",
-            ],
-          ];
-          for (const field of data.stations)
-            rows.push([
-              field.id,
-              field.planet,
-              field.world,
-              field.label,
-              field.x,
-              field.z,
-              field.status,
-              field.capture?.lens,
-              field.capture?.viewpoint,
-              field.capture?.frame,
-              field.capture?.pageElapsedMs,
-              field.capture?.image ? "YES" : "NO",
-              field.data ? JSON.stringify(field.data) : "",
-            ]);
-          return "\uFEFF" + rows.map((row) => row.map(csvCell).join(",")).join("\r\n") + "\r\n";
-        }
-
-        // works/first_dawn/migration-sequence.js
-        var MIGRATION_OPENING_SPEED = 0.7;
-        var OPENING_PATH_DURATION = 28 / MIGRATION_OPENING_SPEED;
-        var OPENING_PASS_SPEED = 8960 / OPENING_PATH_DURATION;
-        var APPROACH_DURATION = 16;
-        var APPROACH_INITIAL_SPEED = 24;
-        var OPENING_START_OFFSET =
-          8960 - (OPENING_PASS_SPEED - APPROACH_INITIAL_SPEED) * APPROACH_DURATION * 0.5;
-        var MIGRATION_OPENING = OPENING_PATH_DURATION - 10;
-        var MIGRATION_EXTENSION = MIGRATION_OPENING - 3;
-        var RING_PASSAGE_DURATION = 52;
-        var RING_REAR_DURATION = 9;
-        var ringStart = 23 + MIGRATION_EXTENSION;
-        var MIGRATION_CUTS = Object.freeze([
-          MIGRATION_OPENING,
-          ringStart,
-          ringStart + RING_PASSAGE_DURATION,
-          ringStart + RING_PASSAGE_DURATION + RING_REAR_DURATION,
-        ]);
-        var FLEET_FRONT_DURATION = 14;
-        var MIGRATION_DURATION = MIGRATION_CUTS[3] + FLEET_FRONT_DURATION;
-
-        // works/first_dawn/habitat/conditions.js
-        function validSurvey(s) {
-          return (
-            s?.version === 1 &&
-            s.sampleCount === 6 &&
-            s.siteCount === 3 &&
-            [
-              "insulation",
-              "conduction",
-              "thermalDemand",
-              "fines",
-              "correlation",
-              "substrate",
-            ].every((k) => Number.isFinite(s[k]) && s[k] >= 0 && s[k] <= 1)
-          );
-        }
-        var BASE_OPERATION = Object.freeze({
-          version: 1,
-          source: "baseline",
-          heatCost: 1,
-          pumpCost: 1,
-          heatTransfer: 1,
-          recoveryRate: 1,
-          stableSeconds: 10,
-        });
-
-        // works/shared/post-mission-state.js
-        var POST_KEY = "beyond-known:post-mission:v1";
-        var POST_PHASES = Object.freeze({
-          migration: {
-            file: "migration.html",
-            start: 0,
-            duration: MIGRATION_DURATION,
-            next: "arrival",
-          },
-          arrival: {
-            file: "arrival.html",
-            start: 68,
-            duration: 180,
-            openEnded: true,
-            next: "ending",
-          },
-          ending: {
-            file: "ending.html",
-            start: 0,
-            duration: 18,
-            openEnded: true,
-            next: null,
-          },
-        });
-        function readPostMission() {
-          try {
-            const s = JSON.parse(sessionStorage.getItem(POST_KEY) || "null");
-            if (
-              s?.version !== 1 ||
-              !Object.hasOwn(POST_PHASES, s.phase) ||
-              !Number.isFinite(s.elapsed) ||
-              s.elapsed < 0 ||
-              [s.basinOrigin, s.endingOrigin].some(
-                (t) => t !== void 0 && (!Number.isFinite(t) || t < 0),
-              ) ||
-              (!POST_PHASES[s.phase].openEnded && s.elapsed > POST_PHASES[s.phase].duration)
-            )
-              return null;
-            if (
-              s.evidence &&
-              (!/^[0-9a-f]{6}$/i.test(s.seed) ||
-                !Number.isFinite(s.evidence.temperature) ||
-                !Number.isFinite(s.evidence.energy) ||
-                !Number.isFinite(s.evidence.radiation) ||
-                s.evidence.samples !== 6 ||
-                s.evidence.water !== true ||
-                s.evidence.nodes !== 3)
-            )
-              return null;
-            if (
-              s.evidence?.settlementDecision != null &&
-              !validDecision(s.evidence.settlementDecision)
-            )
-              return null;
-            const signatures = s.evidence?.sampleSignatures;
-            if (s.evidence?.settlementSurvey != null && !validSurvey(s.evidence.settlementSurvey))
-              return null;
-            if (
-              signatures != null &&
-              (!Array.isArray(signatures) ||
-                signatures.length !== 6 ||
-                signatures.some((v) => !Number.isFinite(v) || v < 0 || v > 1))
-            )
-              return null;
-            return s;
-          } catch {
-            return null;
-          }
-        }
-
-        // works/terra_incognita/field-archive-viewer.js
-        (() => {
-          const FALLBACK = [
-            [
-              "P01-001",
-              "terra",
-              "PLANET 01",
-              "SHEAR WORLD",
-              "IRON–NICKEL ALLOY SAMPLE · SITE 1",
-              231.6,
-              543.4,
-              0,
-            ],
-            [
-              "P01-002",
-              "terra",
-              "PLANET 01",
-              "SHEAR WORLD",
-              "IRON–NICKEL ALLOY SAMPLE · SITE 2",
-              247,
-              519,
-              1,
-            ],
-            [
-              "P01-003",
-              "terra",
-              "PLANET 01",
-              "SHEAR WORLD",
-              "SILICATE CERAMIC SAMPLE · SITE 1",
-              199.1,
-              516.1,
-              2,
-            ],
-            [
-              "P01-004",
-              "terra",
-              "PLANET 01",
-              "SHEAR WORLD",
-              "SILICATE CERAMIC SAMPLE · SITE 2",
-              185,
-              536,
-              3,
-            ],
-            [
-              "P01-005",
-              "terra",
-              "PLANET 01",
-              "SHEAR WORLD",
-              "CARBON COMPOSITE SAMPLE · SITE 1",
-              209.9,
-              471.4,
-              4,
-            ],
-            [
-              "P01-006",
-              "terra",
-              "PLANET 01",
-              "SHEAR WORLD",
-              "CARBON COMPOSITE SAMPLE · SITE 2",
-              190,
-              484,
-              5,
-            ],
-            [
-              "P01-007",
-              "terra",
-              "PLANET 01",
-              "SHEAR WORLD",
-              "CONDUCTIVE LATTICE SAMPLE · SITE 1",
-              168.5,
-              445.3,
-              6,
-            ],
-            [
-              "P01-008",
-              "terra",
-              "PLANET 01",
-              "SHEAR WORLD",
-              "CONDUCTIVE LATTICE SAMPLE · SITE 2",
-              151,
-              466,
-              7,
-            ],
-            [
-              "P01-009",
-              "terra",
-              "PLANET 01",
-              "SHEAR WORLD",
-              "MOLECULAR NITROGEN (N₂) FROST · SITE 1",
-              173.9,
-              391.9,
-              8,
-            ],
-            [
-              "P01-010",
-              "terra",
-              "PLANET 01",
-              "SHEAR WORLD",
-              "MOLECULAR NITROGEN (N₂) FROST · SITE 2",
-              153,
-              403,
-              9,
-            ],
-            [
-              "P01-011",
-              "terra",
-              "PLANET 01",
-              "SHEAR WORLD",
-              "ETHANOL CRYSTALLINE PHASE · SITE 1",
-              127.7,
-              352.8,
-              10,
-            ],
-            [
-              "P01-012",
-              "terra",
-              "PLANET 01",
-              "SHEAR WORLD",
-              "ETHANOL CRYSTALLINE PHASE · SITE 2",
-              111,
-              371,
-              11,
-            ],
-            ["P02-001", "desert", "PLANET 02", "YARDANG FIELD", "LANDING DATUM", 96, 520, 0],
-            ["P02-002", "desert", "PLANET 02", "YARDANG FIELD", "YARDANG INGRESS", 88, 503, 1],
-            ["P02-003", "desert", "PLANET 02", "YARDANG FIELD", "ERODED PASSAGE", 79, 486, 2],
-            ["P02-004", "desert", "PLANET 02", "YARDANG FIELD", "WIND-SHADOW CUT", 70, 468, 3],
-            [
-              "P02-005",
-              "desert",
-              "PLANET 02",
-              "YARDANG FIELD",
-              "HYDRATION-SIGNAL TRANSECT",
-              62,
-              450,
-              4,
-            ],
-            [
-              "P02-006",
-              "desert",
-              "PLANET 02",
-              "YARDANG FIELD",
-              "SPECTRAL TARGET APPROACH",
-              56,
-              438,
-              5,
-            ],
-            [
-              "P02-007",
-              "desert",
-              "PLANET 02",
-              "YARDANG FIELD",
-              "HYDRATION-SIGNAL SITE",
-              52,
-              428,
-              6,
-            ],
-            ["P03-001", "granite", "PLANET 03", "JOINTED GRANITE", "LANDING DATUM", 120, 460, 0],
-            [
-              "P03-002",
-              "granite",
-              "PLANET 03",
-              "JOINTED GRANITE",
-              "Si / SILICATE RESOURCE",
-              107,
-              431,
-              1,
-            ],
-            ["P03-003", "granite", "PLANET 03", "JOINTED GRANITE", "SURVEY TRANSECT", 124, 402, 2],
-            [
-              "P03-004",
-              "granite",
-              "PLANET 03",
-              "JOINTED GRANITE",
-              "Fe · Ti / OXIDE RESOURCE",
-              150,
-              383,
-              3,
-            ],
-            [
-              "P03-005",
-              "granite",
-              "PLANET 03",
-              "JOINTED GRANITE",
-              "Mg / SILICATE RESOURCE",
-              170,
-              345,
-              4,
-            ],
-          ].map(([id, body, planet, world, label, x, z, order]) => ({
-            id,
-            body,
-            planet,
-            world,
-            label,
-            x,
-            z,
-            order,
-            resourceItem: body === "terra" ? Math.floor(order / 2) : null,
-            resourceVariant: body === "terra" ? order % 2 : null,
-            archiveRole: "unresolved",
-            potentialCount: 0,
-            resolved: false,
-            capture: archiveCaptureProfile({ id, body, order }),
-          }));
-          FALLBACK.push(
-            ...CANDIDATE_STATIONS.map((s) => ({
-              ...s,
-              archiveRole: "unresolved",
-              resolved: false,
-              capture: archiveCaptureProfile(s),
-            })),
-          );
-          const byId = (items) => new Map(items.map((item) => [item.id, item]));
-          const escape = (value) =>
-            String(value ?? "").replace(
-              /[&<>\"]/g,
-              (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[char],
-            );
-          let storage;
-          try {
-            storage = sessionStorage;
-          } catch {
-            storage = null;
-          }
-          const source = readFieldArchive(storage);
-          const bodyOrder = ["terra", "desert", "granite", "candidate"];
-          const fallbackById = byId(FALLBACK);
-          const storedStations = source.stations
-            .filter((station) => fallbackById.has(station.id))
-            .map((station) => ({
-              ...fallbackById.get(station.id),
-              ...station,
-              body: fallbackById.get(station.id).body,
-              planet: fallbackById.get(station.id).planet,
-              world: fallbackById.get(station.id).world,
-              label: archiveEnglish(station.label, fallbackById.get(station.id).label),
-            }));
-          const stations = [...byId([...FALLBACK, ...storedStations]).values()].sort(
-            (a, b) => bodyOrder.indexOf(a.body) - bodyOrder.indexOf(b.body) || a.order - b.order,
-          );
-          const stationsById = byId(stations);
-          const stationNumbers = new Map(
-            stations.map((station, index) => [station.id, String(index).padStart(3, "0")]),
-          );
-          const records = (source.records || []).filter((record) => stationsById.has(record.id));
-          const recordsById = byId(records);
-          const vehicles = readVehicleArchive(storage);
-          const vehicleSection = document.createElement("section");
-          vehicleSection.className = "vehicle-archive";
-          vehicleSection.id = "vehicle-history";
-          vehicleSection.classList.toggle("is-empty", !vehicles.length);
-          vehicleSection.setAttribute("aria-label", "기체 운용 기록");
-          const names2 = {
-            rover: "ROVER · 로버",
-            surveyor: "SURVEYOR · 탐사선",
-            fleet: "MIGRATION FLEET · 이주선",
-          };
-          vehicleSection.innerHTML =
-            `<h2>VEHICLE LOG · 기체 운용 기록</h2>` +
-            (vehicles.length
-              ? `<p>실제 장면에서 무작위 선정한 화면과 기록 시점의 상태. 항목을 누르면 펼쳐집니다.</p>` + vehicles
-                  .map(
-                    (r) =>
-                      `<details><summary>${escape(names2[r.kind])} / ${escape(vehicleContexts[r.context] || r.context)} / ${r.seconds.toFixed(1)}초</summary><img loading="lazy" src="${escape(r.image)}" alt="${escape(names2[r.kind])} 실제 장면 기록"><dl>${Object.entries(
-                        r.status,
-                      )
-                        .map(
-                          ([k, v]) =>
-                            `<dt>${escape(vehicleFields[k] || k)}</dt><dd>${escape(vehicleValue(k, v))}</dd>`,
-                        )
-                        .join("")}</dl></details>`,
-                  )
-                  .join("")
-              : `<p>탐사와 항해 중 자동으로 기록됩니다.</p>`);
-          document.querySelector(".archive").after(vehicleSection);
-          document.querySelectorAll("[data-export]").forEach((button) =>
-            button.addEventListener("click", async () => {
-              try {
-                const data = createArchiveExport({
-                  stations,
-                  records,
-                  vehicles,
-                  missions: source.missions,
-                  transmission: source.transmission,
-                  seed: storage?.getItem("universe_seed"),
-                });
-                const csv = button.dataset.export === "csv";
-                if (!csv) {
-                  try {
-                    data.placeHistory = await readExhibition();
-                  } catch {
-                    data.placeHistory = { available: false };
-                  }
-                }
-                const blob = new Blob([csv ? archiveCSV(data) : JSON.stringify(data, null, 2)], {
-                  type: csv ? "text/csv;charset=utf-8" : "application/json",
-                });
-                const url = URL.createObjectURL(blob),
-                  link = document.createElement("a");
-                link.href = url;
-                link.download = `terra-incognita-${data.exportedAt.slice(0, 10)}.${csv ? "csv" : "json"}`;
-                document.body.append(link);
-                link.click();
-                link.remove();
-                setTimeout(() => URL.revokeObjectURL(url), 3e4);
-                document.getElementById("fa-export-status").textContent =
-                  `${csv ? "CSV" : "JSON"} export prepared · ${data.count} acquired records`;
-              } catch {
-                document.getElementById("fa-export-status").textContent =
-                  "Export unavailable. Please try again.";
-              }
-            }),
-          );
-          const ledger = document.getElementById("fa-ledger");
-          const image = document.getElementById("fa-image");
-          const empty = document.getElementById("fa-empty");
-          const emptyTitle = empty.querySelector("b");
-          const emptyStatus = empty.querySelector("span");
-          const count = document.getElementById("fa-count");
-          const preview = document.getElementById("fa-preview");
-          const previewTitle = document.getElementById("fa-preview-title");
-          const previewCoordinates = document.getElementById("fa-preview-coordinates");
-          const previewClose = document.getElementById("fa-preview-close");
-          const siteHeader = document.querySelector(".site-header");
-          const planetFilters = document.querySelector(".filters");
-          const frameSurface = preview.querySelector(".frame");
-          const selection = document.getElementById("fa-selection");
-          let filter = "all";
-          let selected = null;
-          let pinnedId = null;
-          let restoringFocus = false;
-          let expandedHeaderHeight = siteHeader.getBoundingClientRect().height;
-          let recordNodes = /* @__PURE__ */ new Map();
-          const coord = (station) =>
-            `X ${Number(station.x).toFixed(1)}  /  Z ${Number(station.z).toFixed(1)}`;
-          function filtered() {
-            return stations.filter((station) => filter === "all" || station.body === filter);
-          }
-          function positionPreview(node = selected && recordNodes.get(selected.id)) {
-            if (!node) return;
-            const rect = node.getBoundingClientRect();
-            const headerBottom = siteHeader.getBoundingClientRect().bottom;
-            if (planetFilters.hidden || rect.bottom <= headerBottom || rect.top >= innerHeight) {
-              clearPreview();
-              return;
-            }
-            selection.style.top = `${rect.top}px`;
-            selection.style.height = `${rect.height}px`;
-            selection.classList.toggle("on", rect.bottom > 0 && rect.top < innerHeight);
-            if (innerWidth > 700) {
-              const minimum = headerBottom + 12;
-              const available = Math.max(minimum, innerHeight - preview.offsetHeight - 24);
-              const top = Math.max(minimum, Math.min(rect.top - preview.offsetHeight * 0.36, available));
-              preview.style.setProperty("--preview-top", `${top}px`);
-            }
-          }
-          function sizePreview(capture) {
-            const aspect = capture?.aspect ?? 2.392;
-            const horizontalPad = Math.max(16, innerWidth * 0.01875);
-            const maxWidth = innerWidth > 700 ? innerWidth * 0.475 : innerWidth - horizontalPad * 2;
-            preview.style.width = `${Math.floor(maxWidth)}px`;
-            const detail = document.getElementById("fa-observation-data");
-            const extra = preview.querySelector(".preview-heading").offsetHeight + previewCoordinates.offsetHeight + detail.offsetHeight;
-            const maxHeight = Math.max(60, innerHeight - siteHeader.getBoundingClientRect().bottom - extra - 44);
-            preview.style.setProperty("--capture-aspect", String(aspect));
-            const noFrame = frameSurface.classList.contains("empty");
-            frameSurface.style.width = `${Math.floor(noFrame ? maxWidth : Math.max(48, Math.min(maxWidth, maxHeight * aspect)))}px`;
-            frameSurface.style.height = noFrame ? `${Math.min(140, maxHeight)}px` : "";
-            frameSurface.style.marginInline = "auto";
-          }
-          function select(station, node) {
-            selected = station;
-            const record = recordsById.get(station.id);
-            const capture = archiveCaptureProfile(record ?? station);
-            for (const [id, recordNode] of recordNodes)
-              recordNode.setAttribute("aria-pressed", String(id === station.id));
-            frameSurface.dataset.capture = capture.profile;
-            previewTitle.textContent = `${station.planet} · ${station.label}`;
-            previewCoordinates.textContent = coord(station);
-            if (record && archiveImage(record.image)) {
-              image.alt = `${station.planet} ${station.label} · ${capture.lens} ${capture.viewpoint}`;
-              image.src = record.image;
-              image.classList.add("on");
-              empty.hidden = true;
-              frameSurface.classList.remove("empty");
-            } else {
-              image.removeAttribute("src");
-              image.classList.remove("on");
-              empty.hidden = false;
-              frameSurface.classList.add("empty");
-              const potential = station.archiveRole === "potential";
-              emptyTitle.textContent = potential ? "MODEL CANDIDATE" : "NO IMAGE";
-              emptyStatus.textContent = potential
-                ? "모형상 후보 지점이며 아직 촬영되지 않았습니다."
-                : record ? "수치 기록이 있으며 촬영 화면은 없습니다." : "아직 촬영되지 않은 지점입니다.";
-            }
-            const detail = document.getElementById("fa-observation-data");
-            const measurement = record?.data;
-            detail.textContent = measurement
-              ? Object.entries(measurement)
-                  .filter(
-                    ([k, v]) =>
-                      !["id", "x", "z", "confirmed"].includes(k) &&
-                      v != null &&
-                      (typeof v !== "object" || Array.isArray(v)),
-                  )
-                  .slice(0, 6)
-                  .map(
-                    ([k, v]) =>
-                      `${k.replace(/([A-Z])/g, " $1").toUpperCase()} ${typeof v === "number" ? Number(v.toFixed(3)) : Array.isArray(v) ? v.join(" / ") : v}`,
-                  )
-                  .join(" · ")
-              : "";
-            preview.classList.add("on");
-            preview.setAttribute("aria-hidden", "false");
-            sizePreview(capture);
-            positionPreview(node);
-          }
-          function clearPreview() {
-            selected = null;
-            pinnedId = null;
-            for (const node of recordNodes.values()) node.setAttribute("aria-pressed", "false");
-            image.removeAttribute("src");
-            image.classList.remove("on");
-            preview.style.removeProperty("width");
-            preview.style.removeProperty("--capture-aspect");
-            frameSurface.style.removeProperty("width");
-            frameSurface.style.removeProperty("margin-inline");
-            frameSurface.style.removeProperty("height");
-            delete frameSurface.dataset.capture;
-            empty.hidden = false;
-            preview.classList.remove("on");
-            preview.setAttribute("aria-hidden", "true");
-            selection.classList.remove("on");
-          }
-          function closePreview() {
-            const node = selected && recordNodes.get(selected.id);
-            clearPreview();
-            if (node) {
-              restoringFocus = true;
-              node.focus({ preventScroll: true });
-              restoringFocus = false;
-            }
-          }
-          previewClose.addEventListener("click", closePreview);
-          document.addEventListener("keydown", (event) => {
-            if (event.key === "Escape" && selected) {
-              event.preventDefault();
-              closePreview();
-            }
-          });
-          function updateArchiveContext() {
-            const beyond = ledger.getBoundingClientRect().bottom <= expandedHeaderHeight + 12;
-            if (beyond && planetFilters.contains(document.activeElement)) document.activeElement.blur();
-            planetFilters.hidden = beyond;
-            siteHeader.classList.toggle("is-beyond-coordinates", beyond);
-            if (beyond && selected) clearPreview();
-          }
-          function render() {
-            const visible = filtered();
-            if (!visible.some((station) => station.id === selected?.id)) selected = null;
-            ledger.innerHTML =
-              visible
-                .map((station) => {
-                  const acquired = recordsById.has(station.id),
-                    hasImage = !!archiveImage(recordsById.get(station.id)?.image);
-                  const role =
-                    station.archiveRole === "evidence"
-                      ? "evidence"
-                      : station.archiveRole === "potential"
-                        ? "potential"
-                        : "unresolved";
-                  const number2 = stationNumbers.get(station.id);
-                  const status =
-                    role === "evidence"
-                      ? "SAMPLE"
-                      : role === "potential"
-                        ? "CANDIDATE"
-                        : acquired
-                          ? hasImage
-                            ? "RECORDED"
-                            : "DATA ONLY"
-                          : "—";
-                  const spoken =
-                    role === "evidence"
-                      ? "sample record"
-                      : role === "potential"
-                        ? `model candidate ${station.potentialCount || 0}`
-                        : acquired
-                          ? hasImage
-                            ? "frame recorded"
-                            : "data recorded, image unavailable"
-                          : "frame not captured";
-                  return `<button class="record" type="button" data-id="${escape(station.id)}" data-role="${role}" aria-label="${escape(`${number2} ${station.planet} ${station.label} ${coord(station)} ${spoken}`)}" aria-pressed="false"><span class="record-number">${number2}</span><span class="record-planet">${escape(station.planet)}</span><span class="record-label">${escape(station.label)}</span><span class="status ${role}">${status}</span></button>`;
-                })
-                .join("") || `<p class="empty-ledger">NO COORDINATE RECORDS</p>`;
-            recordNodes = new Map(
-              [...ledger.querySelectorAll(".record")].map((node) => [node.dataset.id, node]),
-            );
-            for (const [id, node] of recordNodes) {
-              const station = stationsById.get(id);
-              node.addEventListener("pointerenter", (event) => {
-                if (event.pointerType === "mouse" && !pinnedId) select(station, node);
-              });
-              node.addEventListener("focus", () => {
-                if (!restoringFocus && node.matches(":focus-visible") && !pinnedId) select(station, node);
-              });
-              node.addEventListener("click", () => {
-                if (pinnedId === id) closePreview();
-                else { pinnedId = id; select(station, node); }
-              });
-            }
-            count.textContent = `${String(records.length).padStart(2, "0")} / ${String(stations.length).padStart(2, "0")} OBSERVATIONS RECORDED`;
-            document.getElementById("fa-footer").textContent = records.length
-              ? `${records.length} records / ${records.filter((r) => archiveImage(r.image)).length} images retained for this session.${source.transmission?.status === "received" ? " · FLEET RECEIVED" : ""}`
-              : "No field observations in this session.";
-            if (selected) select(selected, recordNodes.get(selected.id));
-            else clearPreview();
-          }
-          ledger.addEventListener("pointerleave", (event) => {
-            if (
-              event.pointerType === "mouse" &&
-              !pinnedId &&
-              !document.activeElement?.classList.contains("record")
-            )
-              clearPreview();
-          });
-          document.querySelectorAll(".filter").forEach((node) =>
-            node.addEventListener("click", () => {
-              filter = node.dataset.filter;
-              clearPreview();
-              document
-                .querySelectorAll(".filter")
-                .forEach((button) => button.setAttribute("aria-pressed", String(button === node)));
-              render();
-            }),
-          );
-          addEventListener("resize", () => {
-            siteHeader.classList.remove("is-beyond-coordinates");
-            expandedHeaderHeight = siteHeader.getBoundingClientRect().height;
-            updateArchiveContext();
-            if (selected)
-              sizePreview(archiveCaptureProfile(recordsById.get(selected.id) ?? selected));
-            positionPreview();
-          });
-          addEventListener("scroll", () => { updateArchiveContext(); positionPreview(); }, { passive: true });
-          addEventListener("pageshow", () => { updateArchiveContext(); positionPreview(); });
-          image.addEventListener("load", () => positionPreview());
-          image.addEventListener("error", () => {
-            image.classList.remove("on");
-            empty.hidden = false;
-            emptyTitle.textContent = "NO IMAGE";
-            emptyStatus.textContent = "기록된 이미지를 불러올 수 없습니다.";
-            frameSurface.classList.add("empty");
-            if (selected) {
-              sizePreview(archiveCaptureProfile(recordsById.get(selected.id) ?? selected));
-              positionPreview();
-            }
-          });
-          const returnLink = document.querySelector("[data-return]");
-          let returnPage = "planet-01.html";
-          try {
-            const saved = sessionStorage.getItem("terra-incognita:last-planet");
-            if (/^planet-0[1234]\.html$/.test(saved)) returnPage = saved;
-          } catch {}
-          const post = readPostMission();
-          if (post) returnPage = POST_PHASES[post.phase].file;
-          if (returnLink) {
-            const destinations = { "migration.html": "이주 항해", "arrival.html": "도착 지점", "ending.html": "마지막 장면" };
-            const destination = destinations[returnPage] || `Planet ${returnPage.match(/0[1-4]/)?.[0] || "01"}`;
-            returnLink.href = returnPage;
-            const label = `${destination}${returnPage === "migration.html" || /^planet-/.test(returnPage) ? "로" : "으로"} 돌아가기`;
-            returnLink.querySelector("small").textContent = label;
-            returnLink.setAttribute("aria-label", label);
-          }
-          render();
-          const placeReady = mountPlaceArchive(vehicleSection);
-          requestAnimationFrame(updateArchiveContext);
-
-          // Resolve generated sections and the changing header before aligning a destination.
-          const archiveLinks = [...document.querySelectorAll(".archive-index a")];
-          const archiveHashes = new Set(archiveLinks.map((link) => link.hash));
-          const scrollSpace = document.getElementById("archive-scroll-space");
-          let navigationFrame = 0, inputRevision = 0, currentNavigation = null;
-          const navigationGap = 16;
-          function archiveHeading(hash) {
-            if (!archiveHashes.has(hash)) return null;
-            const section = document.getElementById(hash.slice(1));
-            return section?.querySelector("h2") || section;
-          }
-          function sizeScrollSpace() {
-            const lastHeading = archiveHeading("#voyage-conditions");
-            if (!lastHeading) return;
-            const collapsed = siteHeader.classList.contains("is-beyond-coordinates");
-            siteHeader.classList.add("is-beyond-coordinates");
-            const headerHeight = siteHeader.getBoundingClientRect().height;
-            siteHeader.classList.toggle("is-beyond-coordinates", collapsed);
-            const naturalHeight = document.documentElement.scrollHeight - scrollSpace.offsetHeight;
-            const lastTop = lastHeading.getBoundingClientRect().top + scrollY;
-            const needed = lastTop - headerHeight - (document.querySelector(".archive-index")?.offsetHeight || 0) - navigationGap + innerHeight - naturalHeight;
-            scrollSpace.style.height = `${Math.max(0, Math.ceil(needed))}px`;
-          }
-          function alignArchive(hash, focus) {
-            const heading = archiveHeading(hash);
-            if (!heading) return;
-            clearPreview();
-            const coordinates = hash === "#coordinate-records";
-            planetFilters.hidden = !coordinates;
-            siteHeader.classList.toggle("is-beyond-coordinates", !coordinates);
-            sizeScrollSpace();
-            const top = heading.getBoundingClientRect().top + scrollY - siteHeader.getBoundingClientRect().height - (document.querySelector(".archive-index")?.offsetHeight || 0) - navigationGap;
-            scrollTo({ top: Math.max(0, Math.round(top)), behavior: "auto" });
-            updateArchiveContext();
-            for (const link of archiveLinks) {
-              if (link.hash === hash) link.setAttribute("aria-current", "location");
-              else link.removeAttribute("aria-current");
-            }
-            if (focus) {
-              heading.setAttribute("tabindex", "-1");
-              heading.focus({ preventScroll: true });
-            }
-          }
-          function scheduleArchive(hash, focus = false) {
-            if (!archiveHeading(hash)) return;
-            if (navigationFrame) cancelAnimationFrame(navigationFrame);
-            const revision = inputRevision;
-            currentNavigation = { hash, revision };
-            navigationFrame = requestAnimationFrame(() => {
-              navigationFrame = requestAnimationFrame(() => {
-                navigationFrame = 0;
-                if (revision === inputRevision) alignArchive(hash, focus);
-              });
-            });
-          }
-          for (const name of ["wheel", "touchstart", "pointerdown", "keydown"])
-            addEventListener(name, () => { inputRevision++; }, { passive: true, capture: true });
-          for (const link of archiveLinks) link.addEventListener("click", (event) => {
-            if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-            if (!archiveHeading(link.hash)) return;
-            event.preventDefault();
-            if (location.hash !== link.hash) {
-              try { history.pushState(null, "", link.hash); }
-              catch { location.hash = link.hash; }
-            }
-            scheduleArchive(link.hash, true);
-          });
-          const followArchiveHash = () => scheduleArchive(location.hash);
-          addEventListener("hashchange", followArchiveHash);
-          addEventListener("popstate", followArchiveHash);
-          addEventListener("pageshow", followArchiveHash);
-          addEventListener("resize", () => {
-            if (currentNavigation?.revision === inputRevision) scheduleArchive(currentNavigation.hash);
-          });
-          // Stored place records may change the position of the two artwork groups.
-          placeReady.then(() => {
-            if (currentNavigation?.revision === inputRevision) scheduleArchive(currentNavigation.hash);
-          });
-          if (archiveHashes.has(location.hash)) scheduleArchive(location.hash);
-        })();
-      })();
-    </script>
-    <script id="voyage-event-reader">
-(() => {
-  function mountVoyageRecords() {
-    const host = document.getElementById("voyage-event-archive");
-    if (!host) return;
-    const works = [
-      ["echo", "ECHO", "\uC815\uB82C"],
-      ["transfer", "TRANSFER", "\uD1B5\uACFC"],
-      ["delay", "DELAY", "\uC2E0\uD638\uC758 \uADC0\uD658"],
-      ["abyss", "ABYSS", "\uC18C\uC2E4"]
-    ];
-    const urls = [];
-    let revision = 0;
-    const clock = (t) => `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
-    function read() {
-      return new Promise((resolve) => {
-        let done = false, db = null;
-        const finish = (value) => {
-          if (done) return;
-          done = true;
-          clearTimeout(timer);
-          db?.close();
-          resolve(value);
-        };
-        const timer = setTimeout(() => finish([]), 1600);
-        try {
-          const request = indexedDB.open("hybrid-exhibition-20-v1");
-          request.onupgradeneeded = () => request.transaction.abort();
-          request.onerror = request.onblocked = () => finish([]);
-          request.onsuccess = () => {
-            db = request.result;
-            if (done) {
-              db.close();
-              return;
-            }
-            if (!db.objectStoreNames.contains("artworks")) {
-              finish([]);
-              return;
-            }
-            const tx = db.transaction("artworks", "readonly"), query = tx.objectStore("artworks").getAll();
-            tx.oncomplete = () => finish(query.result || []);
-            tx.onabort = tx.onerror = () => finish([]);
-          };
-        } catch {
-          finish([]);
-        }
-      });
-    }
-    function valid(f) {
-      return f && Number.isInteger(f.cycle) && f.cycle > 0 && Number.isInteger(f.stage) && f.stage >= 0 && f.stage <= 2 && Number.isFinite(f.at) && f.at >= 0 && Number.isFinite(f.eventAt) && f.eventAt >= 0 && (f.stage === 0 ? f.at < f.eventAt : f.at >= f.eventAt) && Array.isArray(f.summary) && f.summary.length <= 7 && f.summary.every((s) => typeof s === "string" && s.length <= 180);
-    }
-    async function refresh() {
-      const ticket = ++revision, records = await read();
-      if (ticket !== revision) return;
-      urls.splice(0).forEach((url) => URL.revokeObjectURL(url));
-      host.replaceChildren();
-      const heading = document.createElement("h3");
-      heading.textContent = "\uD56D\uD574\uC758 \uAE30\uB85D";
-      const scope = document.createElement("p");
-      scope.className = "voyage-record-scope";
-      scope.textContent = "\uC774 \uBE0C\uB77C\uC6B0\uC800\uC5D0 \uB0A8\uC740 \uC2E4\uC81C \uC7A5\uBA74 \xB7 \uC0AC\uAC74 \uC804\uACFC \uADF8 \uC774\uD6C4";
-      let count = 0;
-      const content = document.createDocumentFragment();
-      content.append(heading, scope);
-      for (const [id, title, event] of works) {
-        let record = records.find((r) => r?.version === 1 && r.id === id);
-        if (!record) {
-          try {
-            record = JSON.parse(localStorage.getItem(`hybrid-exhibition:${id}:v1`) || "null");
-          } catch {
-          }
-        }
-        const frames = (Array.isArray(record?.eventFrames) ? record.eventFrames : []).slice(-9).filter(valid);
-        if (!frames.length) continue;
-        const cycle = Math.max(...frames.map((f) => f.cycle));
-        const section = document.createElement("section");
-        section.className = "voyage-event-work";
-        const h = document.createElement("h4");
-        h.textContent = `${title} \xB7 ${event}`;
-        const grid = document.createElement("div");
-        grid.className = "voyage-event-grid";
-        for (const frame of frames.filter((f) => f.cycle === cycle).sort((a, b) => a.stage - b.stage)) {
-          const figure = document.createElement("figure"), label = ["\uC0AC\uAC74 \uC804", event, "\uC0AC\uAC74 \uC774\uD6C4"][frame.stage];
-          if (frame.image instanceof Blob && /^image\/(?:jpeg|png|webp)$/.test(frame.image.type) && frame.image.size <= 18e4) {
-            const img = document.createElement("img"), url = URL.createObjectURL(frame.image);
-            urls.push(url);
-            img.src = url;
-            img.alt = `${title} \xB7 ${label} \xB7 ${clock(frame.at)}`;
-            img.loading = "lazy";
-            img.decoding = "async";
-            figure.append(img);
-          }
-          const caption = document.createElement("figcaption");
-          caption.textContent = `${label} \xB7 ${clock(frame.at)}`;
-          figure.append(caption);
-          grid.append(figure);
-          count++;
-        }
-        section.append(h, grid);
-        content.append(section);
-      }
-      host.hidden = count === 0;
-      if (count) host.append(content);
-    }
-    addEventListener("pageshow", refresh);
-    addEventListener("focus", refresh);
-    document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) refresh();
-    });
-    addEventListener("pagehide", (e) => {
-      if (!e.persisted) urls.splice(0).forEach((u) => URL.revokeObjectURL(u));
-    });
-    void refresh();
-  }
-  mountVoyageRecords();
+    <script>(()=>{
+var vehicleContexts={
+terra:"행성 1",
+desert:"행성 2",
+granite:"행성 3",
+candidate:"행성 4",
+migration:"이주 항해",
+arrival:"목적지 도착",
+};
+var vehicleFields={
+role:"임무",
+phase:"운용 단계",
+mission:"탐사 구역",
+finish:"선체 표면",
+travelDistance:"누적 주행 거리",
+surfaceSeconds:"지표 탐사 시간",
+recordedLandings:"착륙 횟수",
+charge:"축전지 충전율",
+position:"장면 내 좌표",
+observedSites:"관측 완료 지점",
+preservationBoundary:"보존 구역의 X 경계",
+voyageDays:"항해 경과 일수",
+surfaceHistory:"표면 손상 이력",
+shot:"촬영 구도",
+ships:"함대 기체 수",
+ringPeriodSeconds:"고리 1회전 주기",
+sceneSeconds:"장면 경과 시간",
+};
+var names={
+"OBSERVATION / SAMPLE RETURN":"지표 관측 · 시료 회수",
+"TRANSPORT / SUPPLY":"로버 운송 · 탐사 지원",
+"HABITATION / CONTINUOUS LOAD":"장기 항해 · 거주 설비 운용",
+landing:"착륙",
+deploy:"출입 경사로 전개",
+egress:"로버 지상 전개",
+survey:"지표 탐사",
+return:"로버 귀환",
+align:"출입구 정렬",
+dock:"로버 수납실 진입",
+stow:"로버 수납·고정",
+uplink:"함대에 자료 송신",
+decision:"정착 조건 검토",
+complete:"임무 완료",
+"surface standby":"지상 대기",
+idle:"대기",
+returning:"로버 귀환",
+lowering:"출입 경사로 전개",
+approach:"로버 수납실 진입",
+secure:"로버 고정",
+closing:"출입문 폐쇄",
+docked:"로버 수납 완료",
+"compress-out":"귀환 전환",
+"compress-in":"기체 재구성",
+"ring-passage":"환형 이주선 근접 통과",
+"ring-rear":"환형 이주선 후면",
+"escort-closeup":"함대 정면",
+"opening-underpass":"선체 하부 통과",
+};
+function vehicleValue(key,value){
+if(key==="mission")return vehicleContexts[value]||String(value);
+if(key==="position"){
+const values=Array.isArray(value)
+?value.map((v,i)=>[["X","Y","Z"][i]||String(i+1),v])
+:Object.entries(value||{});
+return values
+.map(([axis,v])=>`${axis.toUpperCase()} ${Number(v).toFixed(2)}`)
+.join(" · ");
+}
+if(Number.isFinite(value)){
+if(key==="charge"&&value>=0&&value<=1)return`${Math.round(value*100)}%`;
+const units={
+travelDistance:"m",
+surfaceSeconds:"초",
+sceneSeconds:"초",
+voyageDays:"일",
+ringPeriodSeconds:"초",
+recordedLandings:"회",
+observedSites:"곳",
+ships:"척",
+};
+return`${Number.isInteger(value)?value:value.toFixed(1)}${units[key]?" "+units[key]:""}`;
+}
+return names[value]||(Array.isArray(value)?value.join(" / "):String(value));
+}
+var CANDIDATE_SITE=Object.freeze({
+x:-1400,
+z:3300,
+size:640,
+planet:"candidate",
+});
+var CANDIDATE_NAVIGATION=Object.freeze({
+frame:"TF-NAV-01",
+units:"AU",
+origin:"작품 내 항성 중심",
+x:1.2846,
+y:-0.0821,
+z:0.4368,
+fictional:true,
+});
+var LIFE_ELEMENTS=Object.freeze(["H","O","C","N","P","S"]);
+var PRESERVE_X= -1310;
+var INTERVENTION=Object.freeze({
+minX:-1475,
+maxX:-1325,
+minZ:3120,
+maxZ:3480,
+});
+var CANDIDATE_STATIONS=Object.freeze([
+{
+id:"P04-001",
+body:"candidate",
+planet:"PLANET 04",
+world:"CANDIDATE BASIN",
+label:"H · O / HYDRATED MINERALS",
+ko:"H · O — 수소·산소 함유 광물",
+elements:["H","O"],
+compounds:"수화광물 · 물 추출 후보",
+x:-1320,
+z:3280,
+radius:8,
+order:0,
+capture:{
+profile:"wide",
+lens:"FOLLOW CAMERA",
+viewpoint:"ROVER FOLLOW / BOUNDARY",
+aspect:1.6,
+zoom:1,
+projection:"rectilinear",
+},
+},
+{
+id:"P04-002",
+body:"candidate",
+planet:"PLANET 04",
+world:"CANDIDATE BASIN",
+label:"C · N / CARBONATE AND NITRATE",
+ko:"C · N — 탄소·질소 함유 물질",
+elements:["C","N"],
+compounds:"탄산염 · 질산염",
+x:-1410,
+z:3300,
+radius:8,
+order:1,
+capture:{
+profile:"wide",
+lens:"FOLLOW CAMERA",
+viewpoint:"ROVER FOLLOW / FOOTPRINT",
+aspect:1.6,
+zoom:1,
+projection:"rectilinear",
+},
+},
+{
+id:"P04-003",
+body:"candidate",
+planet:"PLANET 04",
+world:"CANDIDATE BASIN",
+label:"P · S / PHOSPHATE AND SULFATE",
+ko:"P · S — 인·황 함유 광물",
+elements:["P","S"],
+compounds:"인산염 · 황산염",
+x:-1450,
+z:3220,
+radius:8,
+order:2,
+capture:{
+profile:"wide",
+lens:"FOLLOW CAMERA",
+viewpoint:"ROVER FOLLOW / REFERENCE",
+aspect:1.6,
+zoom:1,
+projection:"rectilinear",
+},
+},
+]);
+function validDecision(d){
+return(
+d?.version===1&&
+d.planet==="candidate"&&
+d.status==="limited-settlement"&&
+d.preserveX===PRESERVE_X&&
+Object.keys(INTERVENTION).every((k)=>d.intervention?.[k]===INTERVENTION[k])&&
+Array.isArray(d.observations)&&
+d.observations.length===3&&
+CANDIDATE_STATIONS.every((s)=>d.observations.includes(s.id))
+);
+}
+var EXHIBITION_DB="beyond-known-place-v1";
+var connection;
+function openExhibition(){
+if(connection)return connection;
+connection=new Promise((resolve,reject)=>{
+const request=indexedDB.open(EXHIBITION_DB,1);
+request.onupgradeneeded=()=>{
+for(const name of["world","frames","vehicles"])
+request.result.createObjectStore(name,{keyPath:"id"});
+};
+request.onsuccess=()=>resolve(request.result);
+request.onerror=()=>reject(request.error);
+request.onblocked=()=>reject(new Error("Installation storage is blocked"));
+}).catch((error)=>{
+connection=null;
+throw error;
+});
+return connection;
+}
+async function readExhibition(){
+const db=await openExhibition();
+return new Promise((resolve,reject)=>{
+const tx=db.transaction(["world","frames","vehicles"],"readonly");
+const world=tx.objectStore("world").get("basin");
+const frames=tx.objectStore("frames").getAll();
+const vehicles=tx.objectStore("vehicles").getAll();
+tx.oncomplete=()=>
+resolve({
+version:1,
+scope:"this-browser-and-address",
+world:world.result??null,
+frames:frames.result,
+vehicles:vehicles.result,
+});
+tx.onerror=()=>reject(tx.error);
+tx.onabort=()=>reject(tx.error||new Error("Storage read aborted"));
+});
+}
+var recordTime=(seconds)=>`${Math.floor(seconds/60)}분 ${Math.floor(seconds%60)}초`;
+function cameraKey(record){
+const c=record.camera,
+p=record.site;
+if(
+!c||
+!p||
+!Array.isArray(c.position)||
+c.position.length!==3||
+!Array.isArray(c.quaternion)||
+c.quaternion.length!==4
+)
+return null;
+const values=[...c.position,...c.quaternion,c.fov,c.aspect,p.x,p.z,p.size];
+return values.every(Number.isFinite)?values.map((v)=>v.toFixed(6)).join("/"):null;
+}
+function matchingSequence(records){
+const groups=new Map();
+for(const record of records){
+const key=cameraKey(record);
+if(!key)continue;
+if(!groups.has(key))groups.set(key,[]);
+groups.get(key).push(record);
+}
+const sameView=[...groups.values()].sort((a,b)=>b.length-a.length)[0]??[];
+const chronological=sameView
+.sort((a,b)=>a.seconds-b.seconds)
+.filter((r,i,a)=>i===0||r.seconds!==a[i-1].seconds);
+if(chronological.length<=8)return chronological;
+return[
+chronological[0],
+chronological[1],
+...Array.from(
+{length:6},
+(_,i)=>chronological[2+Math.round((i*(chronological.length-3))/5)],
+),
+];
+}
+function mountRecordSequence(parent,records){
+const frames=matchingSequence(records);
+if(frames.length<2)return;
+const figure=document.createElement("figure");
+figure.className="place-sequence";
+figure.setAttribute("aria-label","같은 구도로 촬영한 장소의 변화");
+const viewport=document.createElement("div");
+viewport.className="place-sequence-view";
+const images=[new Image(),new Image()];
+for(const img of images){
+img.width=640;
+img.height=400;
+img.alt="";
+viewport.append(img);
+}
+const caption=document.createElement("figcaption");
+const label=document.createElement("span");
+const button=document.createElement("button");
+button.type="button";
+caption.append(label,button);
+const note=document.createElement("p");
+note.className="place-sequence-note";
+note.textContent=
+"저장된 촬영 기록을 시간순으로 보여줍니다. 기록 사이의 전환은 실제 변화 속도와 다릅니다.";
+figure.append(viewport,caption,note);
+parent.append(figure);
+const motion=matchMedia("(prefers-reduced-motion: reduce)");
+let index=0,
+elapsed=0,
+last=0,
+raf=0;
+let paused=motion.matches,
+visible=false,
+hidden=document.hidden,
+done=false;
+const HOLD=6e3,
+FADE=2400;
+function show(){
+images[0].src=frames[index].image;
+images[1].src=frames[Math.min(index+1,frames.length-1)].image;
+images[1].style.opacity="0";
+label.textContent=`${recordTime(frames[index].seconds)} · ${frames[index].status}`;
+figure.dataset.index=String(index);
+figure.dataset.seconds=String(frames[index].seconds);
+figure.dataset.transition="false";
+}
+function controls(){
+button.textContent=motion.matches
+?done
+?"처음 기록 보기"
+:"다음 기록 보기"
+:done
+?"다시 보기"
+:paused
+?"이어서 보기"
+:"일시 정지";
+figure.dataset.playing=String(!paused&& !done&&visible&& !hidden);
+}
+function tick(now){
+raf=0;
+if(paused||done|| !visible||hidden){
+last=0;
+controls();
+return;
+}
+if(last)elapsed+=Math.min(100,now-last);
+last=now;
+if(elapsed>=HOLD&&(!images[1].complete|| !images[1].naturalWidth))elapsed=HOLD;
+const fraction=Math.max(0,Math.min(1,(elapsed-HOLD)/FADE));
+if(fraction>0)
+images[1].style.opacity=String(fraction*fraction*(3-2*fraction));
+if(fraction>0&&figure.dataset.transition!=="true"){
+label.textContent=`${recordTime(frames[index].seconds)} · ${recordTime(frames[index+1].seconds)} 기록 전환`;
+figure.dataset.transition="true";
+}
+if(elapsed>=HOLD+FADE){
+index++;
+elapsed=0;
+done=index===frames.length-1;
+figure.dataset.transition="false";
+show();
+controls();
+}
+if(!done)raf=requestAnimationFrame(tick);
+}
+function schedule(){
+if(raf)cancelAnimationFrame(raf);
+raf=0;
+last=0;
+controls();
+if(!paused&& !done&&visible&& !hidden)raf=requestAnimationFrame(tick);
+}
+button.addEventListener("click",()=>{
+if(motion.matches){
+index=done?0:index+1;
+done=index===frames.length-1;
+paused=true;
+elapsed=0;
+show();
+}else if(done){
+index=0;
+elapsed=0;
+done=false;
+paused=false;
+show();
+}else paused= !paused;
+schedule();
+});
+motion.addEventListener("change",()=>{
+paused=true;
+elapsed=0;
+show();
+schedule();
+});
+const observer=new IntersectionObserver(
+(entries)=>{
+visible=entries[0].isIntersecting;
+schedule();
+},
+{threshold:0.15},
+);
+observer.observe(figure);
+document.addEventListener("visibilitychange",()=>{
+hidden=document.hidden;
+schedule();
+});
+window.addEventListener("pagehide",()=>{
+hidden=true;
+schedule();
+});
+window.addEventListener("pageshow",()=>{
+hidden=document.hidden;
+schedule();
+});
+show();
+controls();
+}
+var imageOK=(v)=>
+typeof v==="string"&&
+v.length<3e5&&
+/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(v);
+var el=(tag,text)=>{
+const n=document.createElement(tag);
+if(text!==void 0)n.textContent=text;
+return n;
+};
+async function mountPlaceArchive(anchor){
+const section=el("section");
+section.className="place-archive is-empty";
+section.id="place-history";
+section.append(el("h2","PLACE HISTORY · 장소의 변화 기록"));
+const note=el(
+"p",
+"도착 이후 장소의 변화가 기록됩니다.",
+);
+section.append(note);
+anchor.after(section);
+try{
+const data=await readExhibition();
+const frames=data.frames
+.filter((r)=>imageOK(r.image)&&Number.isFinite(r.seconds))
+.sort((a,b)=>a.seconds-b.seconds);
+if(!frames.length){
+return;
+}
+section.classList.remove("is-empty");
+note.textContent="같은 좌표·화각으로 기록한 개입 전, 설비 가동, 이후 경과. 기록은 이 주소와 브라우저에 남습니다.";
+document.body.classList.add("has-place-history");
+mountRecordSequence(section,frames);
+const grid=el("div");
+grid.className="place-comparison";
+const before=frames.find((r)=>r.stage==="before"),
+intervention=frames.find((r)=>r.stage==="intervention");
+const aftermath=frames.filter((r)=>r.stage==="aftermath");
+for(const[label,r]of[
+["개입 이전",before],
+["설비 가동",intervention],
+["이후 경과",aftermath.at(-1)],
+]){
+const figure=el("figure");
+figure.append(el("h3",label));
+if(r){
+const img=el("img");
+img.src=r.image;
+img.alt=`${label} · 동일 분지 관찰 구도`;
+img.loading="lazy";
+img.width=640;
+img.height=400;
+figure.append(img);
+figure.append(
+el(
+"figcaption",
+`${r.status} · 경과 시간 ${Math.floor(r.seconds/60)}분 ${Math.floor(r.seconds%60)}초`,
+),
+);
+const stats=el(
+"p",
+`물 저장량 ${r.resources.stored.toFixed(1)} kg · 축전지 충전율 ${Math.round(r.resources.reserve*100)}%`,
+);
+figure.append(stats);
+}else
+figure.append(
+el("p","아직 촬영되지 않았습니다. 이전 상태를 추정해 채우지 않습니다."),
+);
+grid.append(figure);
+}
+section.append(grid);
+const last=frames.at(-1);
+const regions=el(
+"p",
+"개입이 적은 경계 지역과 물 회수 설비 주변을 함께 기록합니다. 설비의 대기 상태는 고장이 아닙니다. 여기서 다루는 것은 밀폐된 거주 시설의 운전 조건이며, 행성 전체의 거주 가능성을 뜻하지 않습니다.",
+);
+section.append(regions);
+if(last.resources?.operation?.source==="mission-record"){
+const operation=last.resources.operation;
+const detail=el("details");
+detail.append(el("summary","탐사 기록과 설비 운전"));
+detail.append(
+el(
+"p",
+"행성 1의 재료 기록, 행성 2의 수화광물 신호, 행성 3의 Si·Fe·Ti·Mg 원료 기록을 종합했습니다. 행성 4에서는 H·O·C·N·P·S 자원을 확인하고 함대에 항법 좌표를 송신했습니다. 지원 탐사선과 화물착륙선이 지정 구역에 설비를 설치하고, 무인 시험 가동을 마친 뒤 유인 착륙선이 진입합니다. 광물 식별 결과, 수분 관측 신호, 세 지점의 지질 비교 기록으로 운전 조건을 정했습니다. 탐사 자료와 설비 설정의 대응 관계는 작품의 가정이며 실제 설비의 성능 예측값은 아닙니다.",
+),
+);
+detail.append(
+el(
+"p",
+`기준 운전 대비 가열기 소비 전력 ${Math.round(operation.heatCost*100)}% · 회수 펌프 소비 전력 ${Math.round(operation.pumpCost*100)}% · 최대 회수 유량 ${Math.round(operation.recoveryRate*100)}%`,
+),
+);
+detail.append(
+el(
+"p",
+`물 저장량·축전지 충전율·온도가 설정 범위에서 ${operation.stableSeconds.toFixed(1)}초 이상 유지되면 안정 운전 단계로 전환합니다.`,
+),
+);
+section.append(detail);
+}
+const history2=el("details");
+history2.append(el("summary",`시간별 관찰 ${frames.length}건`));
+for(const r of[...frames].reverse()){
+const row=el("details");
+row.append(el("summary",`${r.status} · ${r.seconds.toFixed(1)}초`));
+const img=el("img");
+img.src=r.image;
+img.alt="같은 좌표의 기록";
+img.loading="lazy";
+img.width=640;
+img.height=400;
+row.append(img);
+for(const zone of r.regions)
+row.append(
+el(
+"p",
+`${zone.side<0?"왼쪽":zone.side>0?"오른쪽":"중앙"} ${zone.zone} · 얼음 ${zone.ice.toFixed(3)} / 액체 물 ${zone.liquid.toFixed(3)} kg/m²${Number.isFinite(zone.deposited)&&Number.isFinite(zone.eroded)?` · 퇴적 ${zone.deposited.toFixed(4)} / 침식 ${zone.eroded.toFixed(4)} kg/m²`:""}`,
+),
+);
+history2.append(row);
+}
+section.append(history2);
+const vehicles=data.vehicles;
+if(vehicles.length){
+const details=el("details");
+details.append(el("summary",`이 기기에 남은 기체 기록 ${vehicles.length}건`));
+for(const r of vehicles){
+if(!imageOK(r.image))continue;
+const figure=el("figure"),
+img=el("img");
+img.src=r.image;
+img.alt=`${r.kind} · ${r.context}`;
+img.loading="lazy";
+figure.append(img,el("figcaption",`${r.status.role||r.kind} · ${r.context}`));
+details.append(figure);
+}
+section.append(details);
+}
+section.append(
+el(
+"p",
+"최초 개입 전·가동 기록과 최근 32개 경과를 보관합니다. 브라우저 데이터 삭제 시 지워지며, 다른 기기와 자동 공유되지 않습니다.",
+),
+);
+section.dataset.records=String(frames.length);
+section.dataset.latest=String(last.seconds);
+}catch{
+note.textContent=
+"이 브라우저에서 장기 기록 저장소를 열 수 없습니다. 현재 탐사 세션 기록은 유지됩니다.";
+section.dataset.storage="unavailable";
+}
+}
+var VEHICLE_ARCHIVE_KEY="terra-incognita:vehicle-archive:v1";
+var kinds=new Set(["rover","surveyor","fleet"]);
+var contexts=new Set([
+"terra",
+"desert",
+"granite",
+"candidate",
+"migration",
+"arrival",
+]);
+function readVehicleArchive(storage){
+try{
+const source=JSON.parse(storage.getItem(VEHICLE_ARCHIVE_KEY)||"null");
+if(source?.version!==1)return[];
+return(Array.isArray(source.records)?source.records:[])
+.slice(0,10)
+.filter(
+(r)=>
+r&&
+r.id===`${r.kind}:${r.context}`&&
+kinds.has(r.kind)&&
+contexts.has(r.context)&&
+typeof r.image==="string"&&
+r.image.length<1e5&&
+/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(r.image)&&
+Number.isFinite(r.seconds)&&
+r.status&&
+typeof r.status==="object",
+);
+}catch{
+return[];
+}
+}
+var FIELD_ARCHIVE_VERSION=4;
+var DEFAULT_FIELD_ARCHIVE_KEY="terra-incognita:field-archive:v4";
+var FIELD_ARCHIVE_CAPACITY=32;
+var finite=(value,fallback=0)=>
+Number.isFinite(Number(value))?Number(value):fallback;
+var clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
+var ARCHIVE_TRANSLATIONS=Object.freeze([
+["철-니켈 합금 시료","IRON–NICKEL ALLOY SAMPLE"],
+["규산염 세라믹 시료","SILICATE CERAMIC SAMPLE"],
+["탄소 복합재 시료","CARBON COMPOSITE SAMPLE"],
+["전도성 격자 시료","CONDUCTIVE LATTICE SAMPLE"],
+["분자 질소(N₂) 서리층","MOLECULAR NITROGEN (N₂) FROST"],
+["에탄올 결정상","ETHANOL CRYSTALLINE PHASE"],
+["조사 지점","SITE"],
+["관측 증거","SAMPLE RECORD"],
+["후보 지점","MODEL CANDIDATE"],
+]);
+function archiveEnglish(value,fallback="UNRESOLVED DATUM"){
+let text=String(value??fallback);
+for(const[ko,en]of ARCHIVE_TRANSLATIONS)text=text.replaceAll(ko,en);
+text=text
+.replace(/\bFIELD (\d+)\b/g,"SITE $1")
+.replace(/\bRESOLVED POTENTIAL\b/g,"MODEL CANDIDATE");
+return/[\uac00-\ud7a3]/.test(text)?fallback:text;
+}
+function archiveImage(value){
+return typeof value==="string"&&
+value.length<=9e5&&
+/^data:image\/(?:png|jpeg|webp);base64,[a-z0-9+/=\s]+$/i.test(value)
+?value
+:null;
+}
+var CAPTURE_SCHEDULE=Object.freeze({
+terra:Object.freeze(["fisheye","wide","tele","macro","rear","panorama"]),
+desert:Object.freeze([
+"wide",
+"tele",
+"fisheye",
+"portrait",
+"rear",
+"macro",
+"panorama",
+]),
+granite:Object.freeze(["panorama","macro","portrait","tele","fisheye"]),
+});
+var ARCHIVE_CAPTURE_PROFILES=Object.freeze({
+fisheye:Object.freeze({
+lens:"FISHEYE 8MM",
+viewpoint:"MAST / FORWARD",
+aspect:1,
+zoom:1.04,
+focusX:0.5,
+focusY:0.52,
+projection:"fisheye",
+}),
+wide:Object.freeze({
+lens:"ULTRAWIDE 18MM",
+viewpoint:"LOW FRONT",
+aspect:16/9,
+zoom:1.08,
+focusX:0.5,
+focusY:0.56,
+projection:"rectilinear",
+}),
+rear:Object.freeze({
+lens:"STANDARD 35MM",
+viewpoint:"REAR FOLLOW",
+aspect:3/2,
+zoom:1.28,
+focusX:0.5,
+focusY:0.53,
+projection:"rectilinear",
+}),
+tele:Object.freeze({
+lens:"TELEPHOTO 120MM",
+viewpoint:"MATERIAL FACE",
+aspect:4/3,
+zoom:2.24,
+focusX:0.53,
+focusY:0.5,
+projection:"rectilinear",
+}),
+macro:Object.freeze({
+lens:"MACRO 90MM",
+viewpoint:"GROUND CLOSE",
+aspect:4/5,
+zoom:2.82,
+focusX:0.5,
+focusY:0.68,
+projection:"rectilinear",
+}),
+portrait:Object.freeze({
+lens:"WIDE 24MM",
+viewpoint:"LATERAL RISE",
+aspect:3/4,
+zoom:1.6,
+focusX:0.64,
+focusY:0.5,
+projection:"rectilinear",
+}),
+panorama:Object.freeze({
+lens:"PANORAMA 24MM",
+viewpoint:"HORIZON SWEEP",
+aspect:2.39,
+zoom:1.04,
+focusX:0.46,
+focusY:0.5,
+projection:"rectilinear",
+}),
+});
+var stationOrder=(source)=>{
+const explicit=finite(source?.order,NaN);
+if(Number.isFinite(explicit))return Math.max(0,Math.floor(explicit));
+const fromId=String(source?.id??"").match(/-(\d+)$/);
+return fromId?Math.max(0,Number(fromId[1])-1):0;
+};
+function archiveCaptureProfile(source={}){
+const body=String(source?.body??"terra");
+const schedule=CAPTURE_SCHEDULE[body]??CAPTURE_SCHEDULE.terra;
+const requested=String(
+source?.capture?.profile??schedule[stationOrder(source)%schedule.length],
+);
+const base=ARCHIVE_CAPTURE_PROFILES[requested]??ARCHIVE_CAPTURE_PROFILES.wide;
+const capture=source?.capture??{};
+return{
+profile:ARCHIVE_CAPTURE_PROFILES[requested]?requested:"wide",
+lens:archiveEnglish(capture.lens,base.lens),
+viewpoint:archiveEnglish(capture.viewpoint,base.viewpoint),
+aspect:clamp(finite(capture.aspect,base.aspect),0.5,2.5),
+zoom:clamp(finite(capture.zoom,base.zoom),1,3.2),
+focusX:clamp(finite(capture.focusX,base.focusX),0,1),
+focusY:clamp(finite(capture.focusY,base.focusY),0,1),
+projection:["fisheye","rectilinear"].includes(capture.projection)
+?capture.projection
+:base.projection,
+};
+}
+function cleanStation(source){
+return{
+id:String(source?.id??"UNRESOLVED"),
+body:String(source?.body??"terra"),
+planet:String(source?.planet??"PLANET 01"),
+world:String(source?.world??"UNRESOLVED SURFACE"),
+label:archiveEnglish(source?.label),
+x:finite(source?.x),
+z:finite(source?.z),
+radius:clamp(finite(source?.radius,10),1,120),
+order:stationOrder(source),
+resourceItem:
+source?.resourceItem==null
+?null
+:Math.max(0,Math.floor(finite(source.resourceItem))),
+resourceVariant:
+source?.resourceVariant==null
+?null
+:Math.max(0,Math.floor(finite(source.resourceVariant))),
+archiveRole:["unresolved","evidence","potential"].includes(source?.archiveRole)
+?source.archiveRole
+:"unresolved",
+potentialCount:Math.max(0,Math.floor(finite(source?.potentialCount))),
+resolved:!!source?.resolved,
+capture:archiveCaptureProfile(source),
+};
+}
+function archiveData(value,depth=0){
+if(depth>5)return null;
+if(typeof value==="number")return Number.isFinite(value)?value:null;
+if(typeof value==="boolean"||value===null)return value;
+if(typeof value==="string")return value.slice(0,240);
+if(Array.isArray(value))return value.slice(0,24).map((v)=>archiveData(v,depth+1));
+if(value&&typeof value==="object")
+return Object.fromEntries(
+Object.entries(value)
+.filter(([k])=> !["__proto__","constructor","prototype"].includes(k))
+.slice(0,32)
+.map(([k,v])=>[k,archiveData(v,depth+1)]),
+);
+return null;
+}
+function cleanRecord(source){
+const image=archiveImage(source?.image);
+const capture=archiveCaptureProfile(source);
+const imageWidth=Math.max(0,Math.floor(finite(source?.imageWidth)));
+const imageHeight=Math.max(0,Math.floor(finite(source?.imageHeight)));
+return{
+id:String(source?.id??"UNRESOLVED"),
+body:String(source?.body??"terra"),
+planet:String(source?.planet??"PLANET 01"),
+world:String(source?.world??"UNRESOLVED SURFACE"),
+label:archiveEnglish(source?.label),
+x:finite(source?.x),
+z:finite(source?.z),
+heading:finite(source?.heading),
+shot:String(source?.shot??"WIDE"),
+frame:Math.max(0,Math.floor(finite(source?.frame))),
+capturedAt:Math.max(0,finite(source?.capturedAt)),
+kind:source?.kind==="resource-evidence"?"resource-evidence":"camera-return",
+image,
+data:archiveData(source?.data),
+capturePosition:archiveData(source?.capturePosition),
+imageWidth,
+imageHeight,
+capture,
+};
+}
+function repairResourceLabels(data){
+for(const station of data.stations){
+if(station.body!=="terra"|| !/^P01-\d{3}$/.test(station.id))continue;
+const item=station.resourceItem??Math.floor(station.order/2);
+const evidence=data.records.find(
+(record2)=>record2.body==="terra"&&record2.data?.item===item,
+);
+const sample=evidence?.data?.sample??data.missions.terra?.samples?.[item]?.sample;
+if(!sample)continue;
+if(station.label==="UNRESOLVED DATUM"){
+const suffix=
+station.archiveRole==="potential"
+?`MODEL CANDIDATE ×${station.potentialCount}`
+:station.archiveRole==="evidence"
+?"SAMPLE RECORD"
+:`SITE ${station.resourceVariant??0}`;
+station.label=`${archiveEnglish(sample)} · ${suffix}`;
+}
+const record=data.records.find((entry)=>entry.id===station.id);
+if(record?.label==="UNRESOLVED DATUM")record.label=station.label;
+}
+return data;
+}
+function readFieldArchive(storage,key=DEFAULT_FIELD_ARCHIVE_KEY){
+const empty={
+version:FIELD_ARCHIVE_VERSION,
+stations:[],
+records:[],
+missions:{},
+transmission:null,
+};
+const keys=
+key===DEFAULT_FIELD_ARCHIVE_KEY
+?[key,"terra-incognita:field-archive:v3","terra-incognita:field-archive:v2"]
+:[key];
+const cleanList=(items,clean)=>
+[
+...new Map(
+items
+.filter((item)=>item&&typeof item.id==="string")
+.map((item)=>[item.id,clean(item)]),
+).values(),
+].slice(0,FIELD_ARCHIVE_CAPACITY);
+for(const candidate of keys){
+try{
+const source=JSON.parse(storage?.getItem(candidate)??"null");
+if(![2,3,FIELD_ARCHIVE_VERSION].includes(source?.version))continue;
+if(!Array.isArray(source.stations)|| !Array.isArray(source.records))continue;
+return repairResourceLabels({
+version:FIELD_ARCHIVE_VERSION,
+stations:cleanList(source.stations,cleanStation),
+records:cleanList(source.records,cleanRecord),
+missions:archiveData(source.missions)||{},
+transmission:archiveData(source.transmission),
+});
+}catch{}
+}
+return empty;
+}
+var number=(v)=>(Number.isFinite(Number(v))?Number(v):null);
+function createArchiveExport(
+{
+stations=[],
+vehicles=[],
+records=[],
+seed=null,
+missions={},
+transmission=null,
+},
+now=new Date(),
+){
+const captured=new Map(records.map((record)=>[record.id,record]));
+const fields=stations.map((station)=>{
+const record=captured.get(station.id),
+capture=archiveCaptureProfile(record??station);
+return{
+id:String(station.id),
+planet:archiveEnglish(station.planet),
+world:archiveEnglish(station.world),
+label:archiveEnglish(station.label),
+x:number(station.x),
+z:number(station.z),
+data:archiveData(record?.data),
+status:record
+?archiveImage(record.image)
+?"FRAME RECORDED"
+:"DATA ONLY"
+:station.archiveRole==="potential"
+?"MODEL CANDIDATE"
+:"UNRESOLVED",
+capture:record
+?{
+lens:capture.lens,
+viewpoint:capture.viewpoint,
+projection:capture.projection,
+aspect:capture.aspect,
+capturePosition:archiveData(record.capturePosition),
+imageWidth:number(record.imageWidth),
+imageHeight:number(record.imageHeight),
+frame:number(record.frame),
+pageElapsedMs:number(record.capturedAt),
+image:archiveImage(record.image),
+}
+:null,
+};
+});
+for(const vehicle of vehicles)
+fields.push({
+id:vehicle.id,
+planet:vehicle.context,
+world:vehicle.context,
+label:vehicle.kind,
+status:"VEHICLE FRAME",
+x:null,
+z:null,
+data:archiveData(vehicle.status),
+capture:{
+image:archiveImage(vehicle.image),
+imageWidth:vehicle.width,
+imageHeight:vehicle.height,
+pageElapsedMs:vehicle.seconds*1e3,
+viewpoint:"randomly sampled rendered scene",
+lens:"scene camera",
+},
+});
+return{
+schema:"terra-incognita.field-archive",
+version:1,
+exportedAt:now.toISOString(),
+missions:archiveData(missions),
+transmission:archiveData(transmission),
+universeSeed:typeof seed==="string"&& /^[0-9a-f]{6}$/i.test(seed)?seed:null,
+coordinates:"FICTIONAL LOCAL X/Z; NOT CELESTIAL COORDINATES",
+captureTime:"Milliseconds since the capturing page initialized; not UTC.",
+count:fields.filter((field)=>field.capture).length,
+stations:fields,
+};
+}
+function csvCell(value){
+let text=String(value??"");
+if(typeof value==="string"&& /^[\s]*[=+@-]/.test(text))text="'"+text;
+return'"'+text.replaceAll('"','""')+'"';
+}
+function archiveCSV(data){
+const rows=[
+[
+"ID",
+"PLANET",
+"WORLD",
+"LABEL",
+"X",
+"Z",
+"STATUS",
+"LENS",
+"VIEWPOINT",
+"FRAME",
+"PAGE_ELAPSED_MS",
+"HAS_IMAGE",
+"OBSERVATION_DATA",
+],
+];
+for(const field of data.stations)
+rows.push([
+field.id,
+field.planet,
+field.world,
+field.label,
+field.x,
+field.z,
+field.status,
+field.capture?.lens,
+field.capture?.viewpoint,
+field.capture?.frame,
+field.capture?.pageElapsedMs,
+field.capture?.image?"YES":"NO",
+field.data?JSON.stringify(field.data):"",
+]);
+return"\uFEFF"+rows.map((row)=>row.map(csvCell).join(",")).join("\r\n")+"\r\n";
+}
+var MIGRATION_OPENING_SPEED=0.7;
+var OPENING_PATH_DURATION=28/MIGRATION_OPENING_SPEED;
+var OPENING_PASS_SPEED=8960/OPENING_PATH_DURATION;
+var APPROACH_DURATION=16;
+var APPROACH_INITIAL_SPEED=24;
+var OPENING_START_OFFSET=
+8960-(OPENING_PASS_SPEED-APPROACH_INITIAL_SPEED)*APPROACH_DURATION*0.5;
+var MIGRATION_OPENING=OPENING_PATH_DURATION-10;
+var MIGRATION_EXTENSION=MIGRATION_OPENING-3;
+var RING_PASSAGE_DURATION=52;
+var RING_REAR_DURATION=9;
+var ringStart=23+MIGRATION_EXTENSION;
+var MIGRATION_CUTS=Object.freeze([
+MIGRATION_OPENING,
+ringStart,
+ringStart+RING_PASSAGE_DURATION,
+ringStart+RING_PASSAGE_DURATION+RING_REAR_DURATION,
+]);
+var FLEET_FRONT_DURATION=14;
+var MIGRATION_DURATION=MIGRATION_CUTS[3]+FLEET_FRONT_DURATION;
+function validSurvey(s){
+return(
+s?.version===1&&
+s.sampleCount===6&&
+s.siteCount===3&&
+[
+"insulation",
+"conduction",
+"thermalDemand",
+"fines",
+"correlation",
+"substrate",
+].every((k)=>Number.isFinite(s[k])&&s[k]>=0&&s[k]<=1)
+);
+}
+var BASE_OPERATION=Object.freeze({
+version:1,
+source:"baseline",
+heatCost:1,
+pumpCost:1,
+heatTransfer:1,
+recoveryRate:1,
+stableSeconds:10,
+});
+var POST_KEY="beyond-known:post-mission:v1";
+var POST_PHASES=Object.freeze({
+migration:{
+file:"migration.html",
+start:0,
+duration:MIGRATION_DURATION,
+next:"arrival",
+},
+arrival:{
+file:"arrival.html",
+start:68,
+duration:180,
+openEnded:true,
+next:"ending",
+},
+ending:{
+file:"ending.html",
+start:0,
+duration:18,
+openEnded:true,
+next:null,
+},
+});
+function readPostMission(){
+try{
+const s=JSON.parse(sessionStorage.getItem(POST_KEY)||"null");
+if(
+s?.version!==1||
+!Object.hasOwn(POST_PHASES,s.phase)||
+!Number.isFinite(s.elapsed)||
+s.elapsed<0||
+[s.basinOrigin,s.endingOrigin].some(
+(t)=>t!==void 0&&(!Number.isFinite(t)||t<0),
+)||
+(!POST_PHASES[s.phase].openEnded&&s.elapsed>POST_PHASES[s.phase].duration)
+)
+return null;
+if(
+s.evidence&&
+(!/^[0-9a-f]{6}$/i.test(s.seed)||
+!Number.isFinite(s.evidence.temperature)||
+!Number.isFinite(s.evidence.energy)||
+!Number.isFinite(s.evidence.radiation)||
+s.evidence.samples!==6||
+s.evidence.water!==true||
+s.evidence.nodes!==3)
+)
+return null;
+if(
+s.evidence?.settlementDecision!=null&&
+!validDecision(s.evidence.settlementDecision)
+)
+return null;
+const signatures=s.evidence?.sampleSignatures;
+if(s.evidence?.settlementSurvey!=null&& !validSurvey(s.evidence.settlementSurvey))
+return null;
+if(
+signatures!=null&&
+(!Array.isArray(signatures)||
+signatures.length!==6||
+signatures.some((v)=> !Number.isFinite(v)||v<0||v>1))
+)
+return null;
+return s;
+}catch{
+return null;
+}
+}
+(()=>{
+const FALLBACK=[
+[
+"P01-001",
+"terra",
+"PLANET 01",
+"SHEAR WORLD",
+"IRON–NICKEL ALLOY SAMPLE · SITE 1",
+231.6,
+543.4,
+0,
+],
+[
+"P01-002",
+"terra",
+"PLANET 01",
+"SHEAR WORLD",
+"IRON–NICKEL ALLOY SAMPLE · SITE 2",
+247,
+519,
+1,
+],
+[
+"P01-003",
+"terra",
+"PLANET 01",
+"SHEAR WORLD",
+"SILICATE CERAMIC SAMPLE · SITE 1",
+199.1,
+516.1,
+2,
+],
+[
+"P01-004",
+"terra",
+"PLANET 01",
+"SHEAR WORLD",
+"SILICATE CERAMIC SAMPLE · SITE 2",
+185,
+536,
+3,
+],
+[
+"P01-005",
+"terra",
+"PLANET 01",
+"SHEAR WORLD",
+"CARBON COMPOSITE SAMPLE · SITE 1",
+209.9,
+471.4,
+4,
+],
+[
+"P01-006",
+"terra",
+"PLANET 01",
+"SHEAR WORLD",
+"CARBON COMPOSITE SAMPLE · SITE 2",
+190,
+484,
+5,
+],
+[
+"P01-007",
+"terra",
+"PLANET 01",
+"SHEAR WORLD",
+"CONDUCTIVE LATTICE SAMPLE · SITE 1",
+168.5,
+445.3,
+6,
+],
+[
+"P01-008",
+"terra",
+"PLANET 01",
+"SHEAR WORLD",
+"CONDUCTIVE LATTICE SAMPLE · SITE 2",
+151,
+466,
+7,
+],
+[
+"P01-009",
+"terra",
+"PLANET 01",
+"SHEAR WORLD",
+"MOLECULAR NITROGEN (N₂) FROST · SITE 1",
+173.9,
+391.9,
+8,
+],
+[
+"P01-010",
+"terra",
+"PLANET 01",
+"SHEAR WORLD",
+"MOLECULAR NITROGEN (N₂) FROST · SITE 2",
+153,
+403,
+9,
+],
+[
+"P01-011",
+"terra",
+"PLANET 01",
+"SHEAR WORLD",
+"ETHANOL CRYSTALLINE PHASE · SITE 1",
+127.7,
+352.8,
+10,
+],
+[
+"P01-012",
+"terra",
+"PLANET 01",
+"SHEAR WORLD",
+"ETHANOL CRYSTALLINE PHASE · SITE 2",
+111,
+371,
+11,
+],
+["P02-001","desert","PLANET 02","YARDANG FIELD","LANDING DATUM",96,520,0],
+["P02-002","desert","PLANET 02","YARDANG FIELD","YARDANG INGRESS",88,503,1],
+["P02-003","desert","PLANET 02","YARDANG FIELD","ERODED PASSAGE",79,486,2],
+["P02-004","desert","PLANET 02","YARDANG FIELD","WIND-SHADOW CUT",70,468,3],
+[
+"P02-005",
+"desert",
+"PLANET 02",
+"YARDANG FIELD",
+"HYDRATION-SIGNAL TRANSECT",
+62,
+450,
+4,
+],
+[
+"P02-006",
+"desert",
+"PLANET 02",
+"YARDANG FIELD",
+"SPECTRAL TARGET APPROACH",
+56,
+438,
+5,
+],
+[
+"P02-007",
+"desert",
+"PLANET 02",
+"YARDANG FIELD",
+"HYDRATION-SIGNAL SITE",
+52,
+428,
+6,
+],
+["P03-001","granite","PLANET 03","JOINTED GRANITE","LANDING DATUM",120,460,0],
+[
+"P03-002",
+"granite",
+"PLANET 03",
+"JOINTED GRANITE",
+"Si / SILICATE RESOURCE",
+107,
+431,
+1,
+],
+["P03-003","granite","PLANET 03","JOINTED GRANITE","SURVEY TRANSECT",124,402,2],
+[
+"P03-004",
+"granite",
+"PLANET 03",
+"JOINTED GRANITE",
+"Fe · Ti / OXIDE RESOURCE",
+150,
+383,
+3,
+],
+[
+"P03-005",
+"granite",
+"PLANET 03",
+"JOINTED GRANITE",
+"Mg / SILICATE RESOURCE",
+170,
+345,
+4,
+],
+].map(([id,body,planet,world,label,x,z,order])=>({
+id,
+body,
+planet,
+world,
+label,
+x,
+z,
+order,
+resourceItem:body==="terra"?Math.floor(order/2):null,
+resourceVariant:body==="terra"?order%2:null,
+archiveRole:"unresolved",
+potentialCount:0,
+resolved:false,
+capture:archiveCaptureProfile({id,body,order}),
+}));
+FALLBACK.push(
+...CANDIDATE_STATIONS.map((s)=>({
+...s,
+archiveRole:"unresolved",
+resolved:false,
+capture:archiveCaptureProfile(s),
+})),
+);
+const byId=(items)=>new Map(items.map((item)=>[item.id,item]));
+const escape=(value)=>
+String(value??"").replace(
+/[&<>\"]/g,
+(char)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[char],
+);
+let storage;
+try{
+storage=sessionStorage;
+}catch{
+storage=null;
+}
+const source=readFieldArchive(storage);
+const bodyOrder=["terra","desert","granite","candidate"];
+const fallbackById=byId(FALLBACK);
+const storedStations=source.stations
+.filter((station)=>fallbackById.has(station.id))
+.map((station)=>({
+...fallbackById.get(station.id),
+...station,
+body:fallbackById.get(station.id).body,
+planet:fallbackById.get(station.id).planet,
+world:fallbackById.get(station.id).world,
+label:archiveEnglish(station.label,fallbackById.get(station.id).label),
+}));
+const stations=[...byId([...FALLBACK,...storedStations]).values()].sort(
+(a,b)=>bodyOrder.indexOf(a.body)-bodyOrder.indexOf(b.body)||a.order-b.order,
+);
+const stationsById=byId(stations);
+const stationNumbers=new Map(
+stations.map((station,index)=>[station.id,String(index).padStart(3,"0")]),
+);
+const records=(source.records||[]).filter((record)=>stationsById.has(record.id));
+const recordsById=byId(records);
+const vehicles=readVehicleArchive(storage);
+const vehicleSection=document.createElement("section");
+vehicleSection.className="vehicle-archive";
+vehicleSection.id="vehicle-history";
+vehicleSection.classList.toggle("is-empty",!vehicles.length);
+vehicleSection.setAttribute("aria-label","기체 운용 기록");
+const names2={
+rover:"ROVER · 로버",
+surveyor:"SURVEYOR · 탐사선",
+fleet:"MIGRATION FLEET · 이주선",
+};
+vehicleSection.innerHTML=
+`<h2>VEHICLE LOG · 기체 운용 기록</h2>`+
+(vehicles.length
+?`<p>실제 장면에서 무작위 선정한 화면과 기록 시점의 상태. 항목을 누르면 펼쳐집니다.</p>`+vehicles
+.map(
+(r)=>
+`<details><summary>${escape(names2[r.kind])} / ${escape(vehicleContexts[r.context]||r.context)} / ${r.seconds.toFixed(1)}초</summary><img loading="lazy" src="${escape(r.image)}" alt="${escape(names2[r.kind])} 실제 장면 기록"><dl>${Object.entries(
+r.status,
+)
+.map(
+([k,v])=>
+`<dt>${escape(vehicleFields[k]||k)}</dt><dd>${escape(vehicleValue(k,v))}</dd>`,
+)
+.join("")}</dl></details>`,
+)
+.join("")
+:`<p>탐사와 항해 중 자동으로 기록됩니다.</p>`);
+document.querySelector(".archive").after(vehicleSection);
+document.querySelectorAll("[data-export]").forEach((button)=>
+button.addEventListener("click",async()=>{
+try{
+const data=createArchiveExport({
+stations,
+records,
+vehicles,
+missions:source.missions,
+transmission:source.transmission,
+seed:storage?.getItem("universe_seed"),
+});
+const csv=button.dataset.export==="csv";
+if(!csv){
+try{
+data.placeHistory=await readExhibition();
+}catch{
+data.placeHistory={available:false};
+}
+}
+const blob=new Blob([csv?archiveCSV(data):JSON.stringify(data,null,2)],{
+type:csv?"text/csv;charset=utf-8":"application/json",
+});
+const url=URL.createObjectURL(blob),
+link=document.createElement("a");
+link.href=url;
+link.download=`terra-incognita-${data.exportedAt.slice(0,10)}.${csv?"csv":"json"}`;
+document.body.append(link);
+link.click();
+link.remove();
+setTimeout(()=>URL.revokeObjectURL(url),3e4);
+document.getElementById("fa-export-status").textContent=
+`${csv?"CSV":"JSON"} export prepared · ${data.count} acquired records`;
+}catch{
+document.getElementById("fa-export-status").textContent=
+"Export unavailable. Please try again.";
+}
+}),
+);
+const ledger=document.getElementById("fa-ledger");
+const image=document.getElementById("fa-image");
+const empty=document.getElementById("fa-empty");
+const emptyTitle=empty.querySelector("b");
+const emptyStatus=empty.querySelector("span");
+const count=document.getElementById("fa-count");
+const preview=document.getElementById("fa-preview");
+const previewTitle=document.getElementById("fa-preview-title");
+const previewCoordinates=document.getElementById("fa-preview-coordinates");
+const previewClose=document.getElementById("fa-preview-close");
+const siteHeader=document.querySelector(".site-header");
+const planetFilters=document.querySelector(".filters");
+const frameSurface=preview.querySelector(".frame");
+const selection=document.getElementById("fa-selection");
+let filter="all";
+let selected=null;
+let pinnedId=null;
+let restoringFocus=false;
+let expandedHeaderHeight=siteHeader.getBoundingClientRect().height;
+let recordNodes=new Map();
+const coord=(station)=>
+`X ${Number(station.x).toFixed(1)}  /  Z ${Number(station.z).toFixed(1)}`;
+function filtered(){
+return stations.filter((station)=>filter==="all"||station.body===filter);
+}
+function positionPreview(node=selected&&recordNodes.get(selected.id)){
+if(!node)return;
+const rect=node.getBoundingClientRect();
+const headerBottom=siteHeader.getBoundingClientRect().bottom;
+if(planetFilters.hidden||rect.bottom<=headerBottom||rect.top>=innerHeight){
+clearPreview();
+return;
+}
+selection.style.top=`${rect.top}px`;
+selection.style.height=`${rect.height}px`;
+selection.classList.toggle("on",rect.bottom>0&&rect.top<innerHeight);
+if(innerWidth>700){
+const minimum=headerBottom+12;
+const available=Math.max(minimum,innerHeight-preview.offsetHeight-24);
+const top=Math.max(minimum,Math.min(rect.top-preview.offsetHeight*0.36,available));
+preview.style.setProperty("--preview-top",`${top}px`);
+}
+}
+function sizePreview(capture){
+const aspect=capture?.aspect??2.392;
+const horizontalPad=Math.max(16,innerWidth*0.01875);
+const maxWidth=innerWidth>700?innerWidth*0.475:innerWidth-horizontalPad*2;
+preview.style.width=`${Math.floor(maxWidth)}px`;
+const detail=document.getElementById("fa-observation-data");
+const extra=preview.querySelector(".preview-heading").offsetHeight+previewCoordinates.offsetHeight+detail.offsetHeight;
+const maxHeight=Math.max(60,innerHeight-siteHeader.getBoundingClientRect().bottom-extra-44);
+preview.style.setProperty("--capture-aspect",String(aspect));
+const noFrame=frameSurface.classList.contains("empty");
+frameSurface.style.width=`${Math.floor(noFrame?maxWidth:Math.max(48,Math.min(maxWidth,maxHeight*aspect)))}px`;
+frameSurface.style.height=noFrame?`${Math.min(140,maxHeight)}px`:"";
+frameSurface.style.marginInline="auto";
+}
+function select(station,node){
+selected=station;
+const record=recordsById.get(station.id);
+const capture=archiveCaptureProfile(record??station);
+for(const[id,recordNode]of recordNodes)
+recordNode.setAttribute("aria-pressed",String(id===station.id));
+frameSurface.dataset.capture=capture.profile;
+previewTitle.textContent=`${station.planet} · ${station.label}`;
+previewCoordinates.textContent=coord(station);
+if(record&&archiveImage(record.image)){
+image.alt=`${station.planet} ${station.label} · ${capture.lens} ${capture.viewpoint}`;
+image.src=record.image;
+image.classList.add("on");
+empty.hidden=true;
+frameSurface.classList.remove("empty");
+}else{
+image.removeAttribute("src");
+image.classList.remove("on");
+empty.hidden=false;
+frameSurface.classList.add("empty");
+const potential=station.archiveRole==="potential";
+emptyTitle.textContent=potential?"MODEL CANDIDATE":"NO IMAGE";
+emptyStatus.textContent=potential
+?"모형상 후보 지점이며 아직 촬영되지 않았습니다."
+:record?"수치 기록이 있으며 촬영 화면은 없습니다.":"아직 촬영되지 않은 지점입니다.";
+}
+const detail=document.getElementById("fa-observation-data");
+const measurement=record?.data;
+detail.textContent=measurement
+?Object.entries(measurement)
+.filter(
+([k,v])=>
+!["id","x","z","confirmed"].includes(k)&&
+v!=null&&
+(typeof v!=="object"||Array.isArray(v)),
+)
+.slice(0,6)
+.map(
+([k,v])=>
+`${k.replace(/([A-Z])/g," $1").toUpperCase()} ${typeof v==="number"?Number(v.toFixed(3)):Array.isArray(v)?v.join(" / "):v}`,
+)
+.join(" · ")
+:"";
+preview.classList.add("on");
+preview.setAttribute("aria-hidden","false");
+sizePreview(capture);
+positionPreview(node);
+}
+function clearPreview(){
+selected=null;
+pinnedId=null;
+for(const node of recordNodes.values())node.setAttribute("aria-pressed","false");
+image.removeAttribute("src");
+image.classList.remove("on");
+preview.style.removeProperty("width");
+preview.style.removeProperty("--capture-aspect");
+frameSurface.style.removeProperty("width");
+frameSurface.style.removeProperty("margin-inline");
+frameSurface.style.removeProperty("height");
+delete frameSurface.dataset.capture;
+empty.hidden=false;
+preview.classList.remove("on");
+preview.setAttribute("aria-hidden","true");
+selection.classList.remove("on");
+}
+function closePreview(){
+const node=selected&&recordNodes.get(selected.id);
+clearPreview();
+if(node){
+restoringFocus=true;
+node.focus({preventScroll:true});
+restoringFocus=false;
+}
+}
+previewClose.addEventListener("click",closePreview);
+document.addEventListener("keydown",(event)=>{
+if(event.key==="Escape"&&selected){
+event.preventDefault();
+closePreview();
+}
+});
+function updateArchiveContext(){
+const beyond=ledger.getBoundingClientRect().bottom<=expandedHeaderHeight+12;
+if(beyond&&planetFilters.contains(document.activeElement))document.activeElement.blur();
+planetFilters.hidden=beyond;
+siteHeader.classList.toggle("is-beyond-coordinates",beyond);
+if(beyond&&selected)clearPreview();
+}
+function render(){
+const visible=filtered();
+if(!visible.some((station)=>station.id===selected?.id))selected=null;
+ledger.innerHTML=
+visible
+.map((station)=>{
+const acquired=recordsById.has(station.id),
+hasImage= !!archiveImage(recordsById.get(station.id)?.image);
+const role=
+station.archiveRole==="evidence"
+?"evidence"
+:station.archiveRole==="potential"
+?"potential"
+:"unresolved";
+const number2=stationNumbers.get(station.id);
+const status=
+role==="evidence"
+?"SAMPLE"
+:role==="potential"
+?"CANDIDATE"
+:acquired
+?hasImage
+?"RECORDED"
+:"DATA ONLY"
+:"—";
+const spoken=
+role==="evidence"
+?"sample record"
+:role==="potential"
+?`model candidate ${station.potentialCount||0}`
+:acquired
+?hasImage
+?"frame recorded"
+:"data recorded, image unavailable"
+:"frame not captured";
+return`<button class="record" type="button" data-id="${escape(station.id)}" data-role="${role}" aria-label="${escape(`${number2} ${station.planet} ${station.label} ${coord(station)} ${spoken}`)}" aria-pressed="false"><span class="record-number">${number2}</span><span class="record-planet">${escape(station.planet)}</span><span class="record-label">${escape(station.label)}</span><span class="status ${role}">${status}</span></button>`;
+})
+.join("")||`<p class="empty-ledger">NO COORDINATE RECORDS</p>`;
+recordNodes=new Map(
+[...ledger.querySelectorAll(".record")].map((node)=>[node.dataset.id,node]),
+);
+for(const[id,node]of recordNodes){
+const station=stationsById.get(id);
+node.addEventListener("pointerenter",(event)=>{
+if(event.pointerType==="mouse"&& !pinnedId)select(station,node);
+});
+node.addEventListener("focus",()=>{
+if(!restoringFocus&&node.matches(":focus-visible")&& !pinnedId)select(station,node);
+});
+node.addEventListener("click",()=>{
+if(pinnedId===id)closePreview();
+else{pinnedId=id;select(station,node);}
+});
+}
+count.textContent=`${String(records.length).padStart(2,"0")} / ${String(stations.length).padStart(2,"0")} OBSERVATIONS RECORDED`;
+document.getElementById("fa-footer").textContent=records.length
+?`${records.length} records / ${records.filter((r)=>archiveImage(r.image)).length} images retained for this session.${source.transmission?.status==="received"?" · FLEET RECEIVED":""}`
+:"No field observations in this session.";
+if(selected)select(selected,recordNodes.get(selected.id));
+else clearPreview();
+}
+ledger.addEventListener("pointerleave",(event)=>{
+if(
+event.pointerType==="mouse"&&
+!pinnedId&&
+!document.activeElement?.classList.contains("record")
+)
+clearPreview();
+});
+document.querySelectorAll(".filter").forEach((node)=>
+node.addEventListener("click",()=>{
+filter=node.dataset.filter;
+clearPreview();
+document
+.querySelectorAll(".filter")
+.forEach((button)=>button.setAttribute("aria-pressed",String(button===node)));
+render();
+}),
+);
+addEventListener("resize",()=>{
+siteHeader.classList.remove("is-beyond-coordinates");
+expandedHeaderHeight=siteHeader.getBoundingClientRect().height;
+updateArchiveContext();
+if(selected)
+sizePreview(archiveCaptureProfile(recordsById.get(selected.id)??selected));
+positionPreview();
+});
+addEventListener("scroll",()=>{updateArchiveContext();positionPreview();},{passive:true});
+addEventListener("pageshow",()=>{updateArchiveContext();positionPreview();});
+image.addEventListener("load",()=>positionPreview());
+image.addEventListener("error",()=>{
+image.classList.remove("on");
+empty.hidden=false;
+emptyTitle.textContent="NO IMAGE";
+emptyStatus.textContent="기록된 이미지를 불러올 수 없습니다.";
+frameSurface.classList.add("empty");
+if(selected){
+sizePreview(archiveCaptureProfile(recordsById.get(selected.id)??selected));
+positionPreview();
+}
+});
+const returnLink=document.querySelector("[data-return]");
+let returnPage="planet-01.html";
+try{
+const saved=sessionStorage.getItem("terra-incognita:last-planet");
+if(/^planet-0[1234]\.html$/.test(saved))returnPage=saved;
+}catch{}
+const post=readPostMission();
+if(post)returnPage=POST_PHASES[post.phase].file;
+if(returnLink){
+const destinations={"migration.html":"이주 항해","arrival.html":"도착 지점","ending.html":"마지막 장면"};
+const destination=destinations[returnPage]||`Planet ${returnPage.match(/0[1-4]/)?.[0]||"01"}`;
+returnLink.href=returnPage;
+const label=`${destination}${returnPage==="migration.html"|| /^planet-/.test(returnPage)?"로":"으로"} 돌아가기`;
+returnLink.querySelector("small").textContent=label;
+returnLink.setAttribute("aria-label",label);
+}
+render();
+const placeReady=mountPlaceArchive(vehicleSection);
+requestAnimationFrame(updateArchiveContext);
+const archiveLinks=[...document.querySelectorAll(".archive-index a")];
+const archiveHashes=new Set(archiveLinks.map((link)=>link.hash));
+const scrollSpace=document.getElementById("archive-scroll-space");
+let navigationFrame=0,inputRevision=0,currentNavigation=null;
+const navigationGap=16;
+function archiveHeading(hash){
+if(!archiveHashes.has(hash))return null;
+const section=document.getElementById(hash.slice(1));
+return section?.querySelector("h2")||section;
+}
+function sizeScrollSpace(){
+const lastHeading=archiveHeading("#voyage-conditions");
+if(!lastHeading)return;
+const collapsed=siteHeader.classList.contains("is-beyond-coordinates");
+siteHeader.classList.add("is-beyond-coordinates");
+const headerHeight=siteHeader.getBoundingClientRect().height;
+siteHeader.classList.toggle("is-beyond-coordinates",collapsed);
+const naturalHeight=document.documentElement.scrollHeight-scrollSpace.offsetHeight;
+const lastTop=lastHeading.getBoundingClientRect().top+scrollY;
+const needed=lastTop-headerHeight-(document.querySelector(".archive-index")?.offsetHeight||0)-navigationGap+innerHeight-naturalHeight;
+scrollSpace.style.height=`${Math.max(0,Math.ceil(needed))}px`;
+}
+function alignArchive(hash,focus){
+const heading=archiveHeading(hash);
+if(!heading)return;
+clearPreview();
+const coordinates=hash==="#coordinate-records";
+planetFilters.hidden= !coordinates;
+siteHeader.classList.toggle("is-beyond-coordinates",!coordinates);
+sizeScrollSpace();
+const top=heading.getBoundingClientRect().top+scrollY-siteHeader.getBoundingClientRect().height-(document.querySelector(".archive-index")?.offsetHeight||0)-navigationGap;
+scrollTo({top:Math.max(0,Math.round(top)),behavior:"auto"});
+updateArchiveContext();
+for(const link of archiveLinks){
+if(link.hash===hash)link.setAttribute("aria-current","location");
+else link.removeAttribute("aria-current");
+}
+if(focus){
+heading.setAttribute("tabindex","-1");
+heading.focus({preventScroll:true});
+}
+}
+function scheduleArchive(hash,focus=false){
+if(!archiveHeading(hash))return;
+if(navigationFrame)cancelAnimationFrame(navigationFrame);
+const revision=inputRevision;
+currentNavigation={hash,revision};
+navigationFrame=requestAnimationFrame(()=>{
+navigationFrame=requestAnimationFrame(()=>{
+navigationFrame=0;
+if(revision===inputRevision)alignArchive(hash,focus);
+});
+});
+}
+for(const name of["wheel","touchstart","pointerdown","keydown"])
+addEventListener(name,()=>{inputRevision++;},{passive:true,capture:true});
+for(const link of archiveLinks)link.addEventListener("click",(event)=>{
+if(event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
+if(!archiveHeading(link.hash))return;
+event.preventDefault();
+if(location.hash!==link.hash){
+try{history.pushState(null,"",link.hash);}
+catch{location.hash=link.hash;}
+}
+scheduleArchive(link.hash,true);
+});
+const followArchiveHash=()=>scheduleArchive(location.hash);
+addEventListener("hashchange",followArchiveHash);
+addEventListener("popstate",followArchiveHash);
+addEventListener("pageshow",followArchiveHash);
+addEventListener("resize",()=>{
+if(currentNavigation?.revision===inputRevision)scheduleArchive(currentNavigation.hash);
+});
+placeReady.then(()=>{
+if(currentNavigation?.revision===inputRevision)scheduleArchive(currentNavigation.hash);
+});
+if(archiveHashes.has(location.hash))scheduleArchive(location.hash);
 })();
-
-    </script>
-  <script id="visitor-navigation">(function enhanceVisitorNavigation() {
-  const run = () => {
-    if (document.documentElement.dataset.visitorNavigation) return;
-    document.documentElement.dataset.visitorNavigation = '1';
-    const style = document.createElement('style');
-    style.textContent = `
+})();
+</script>
+    <script id="voyage-event-reader">(()=>{
+function mountVoyageRecords(){
+const host=document.getElementById("voyage-event-archive");
+if(!host)return;
+const works=[
+["echo","ECHO","\uC815\uB82C"],
+["transfer","TRANSFER","\uD1B5\uACFC"],
+["delay","DELAY","\uC2E0\uD638\uC758 \uADC0\uD658"],
+["abyss","ABYSS","\uC18C\uC2E4"]
+];
+const urls=[];
+let revision=0;
+const clock=(t)=>`${String(Math.floor(t/60)).padStart(2,"0")}:${String(Math.floor(t%60)).padStart(2,"0")}`;
+function read(){
+return new Promise((resolve)=>{
+let done=false,db=null;
+const finish=(value)=>{
+if(done)return;
+done=true;
+clearTimeout(timer);
+db?.close();
+resolve(value);
+};
+const timer=setTimeout(()=>finish([]),1600);
+try{
+const request=indexedDB.open("hybrid-exhibition-20-v1");
+request.onupgradeneeded=()=>request.transaction.abort();
+request.onerror=request.onblocked=()=>finish([]);
+request.onsuccess=()=>{
+db=request.result;
+if(done){
+db.close();
+return;
+}
+if(!db.objectStoreNames.contains("artworks")){
+finish([]);
+return;
+}
+const tx=db.transaction("artworks","readonly"),query=tx.objectStore("artworks").getAll();
+tx.oncomplete=()=>finish(query.result||[]);
+tx.onabort=tx.onerror=()=>finish([]);
+};
+}catch{
+finish([]);
+}
+});
+}
+function valid(f){
+return f&&Number.isInteger(f.cycle)&&f.cycle>0&&Number.isInteger(f.stage)&&f.stage>=0&&f.stage<=2&&Number.isFinite(f.at)&&f.at>=0&&Number.isFinite(f.eventAt)&&f.eventAt>=0&&(f.stage===0?f.at<f.eventAt:f.at>=f.eventAt)&&Array.isArray(f.summary)&&f.summary.length<=7&&f.summary.every((s)=>typeof s==="string"&&s.length<=180);
+}
+async function refresh(){
+const ticket= ++revision,records=await read();
+if(ticket!==revision)return;
+urls.splice(0).forEach((url)=>URL.revokeObjectURL(url));
+host.replaceChildren();
+const heading=document.createElement("h3");
+heading.textContent="\uD56D\uD574\uC758 \uAE30\uB85D";
+const scope=document.createElement("p");
+scope.className="voyage-record-scope";
+scope.textContent="\uC774 \uBE0C\uB77C\uC6B0\uC800\uC5D0 \uB0A8\uC740 \uC2E4\uC81C \uC7A5\uBA74 \xB7 \uC0AC\uAC74 \uC804\uACFC \uADF8 \uC774\uD6C4";
+let count=0;
+const content=document.createDocumentFragment();
+content.append(heading,scope);
+for(const[id,title,event]of works){
+let record=records.find((r)=>r?.version===1&&r.id===id);
+if(!record){
+try{
+record=JSON.parse(localStorage.getItem(`hybrid-exhibition:${id}:v1`)||"null");
+}catch{
+}
+}
+const frames=(Array.isArray(record?.eventFrames)?record.eventFrames:[]).slice(-9).filter(valid);
+if(!frames.length)continue;
+const cycle=Math.max(...frames.map((f)=>f.cycle));
+const section=document.createElement("section");
+section.className="voyage-event-work";
+const h=document.createElement("h4");
+h.textContent=`${title} \xB7 ${event}`;
+const grid=document.createElement("div");
+grid.className="voyage-event-grid";
+for(const frame of frames.filter((f)=>f.cycle===cycle).sort((a,b)=>a.stage-b.stage)){
+const figure=document.createElement("figure"),label=["\uC0AC\uAC74 \uC804",event,"\uC0AC\uAC74 \uC774\uD6C4"][frame.stage];
+if(frame.image instanceof Blob&& /^image\/(?:jpeg|png|webp)$/.test(frame.image.type)&&frame.image.size<=18e4){
+const img=document.createElement("img"),url=URL.createObjectURL(frame.image);
+urls.push(url);
+img.src=url;
+img.alt=`${title} \xB7 ${label} \xB7 ${clock(frame.at)}`;
+img.loading="lazy";
+img.decoding="async";
+figure.append(img);
+}
+const caption=document.createElement("figcaption");
+caption.textContent=`${label} \xB7 ${clock(frame.at)}`;
+figure.append(caption);
+grid.append(figure);
+count++;
+}
+section.append(h,grid);
+content.append(section);
+}
+host.hidden=count===0;
+if(count)host.append(content);
+}
+addEventListener("pageshow",refresh);
+addEventListener("focus",refresh);
+document.addEventListener("visibilitychange",()=>{
+if(!document.hidden)refresh();
+});
+addEventListener("pagehide",(e)=>{
+if(!e.persisted)urls.splice(0).forEach((u)=>URL.revokeObjectURL(u));
+});
+void refresh();
+}
+mountVoyageRecords();
+})();
+</script>
+  <script id="visitor-navigation">(function enhanceVisitorNavigation(){
+const run=()=>{
+if(document.documentElement.dataset.visitorNavigation)return;
+document.documentElement.dataset.visitorNavigation='1';
+const style=document.createElement('style');
+style.textContent=`
 #opening-archive-link{position:fixed;left:28px;bottom:calc(max(16px,env(safe-area-inset-bottom)) + 8px);z-index:120;display:inline-flex;align-items:center;min-height:44px;color:#b8c3cb;font:var(--site-nav-size,10px)/1.4 Arial,sans-serif;letter-spacing:.12em;text-decoration:none}
 body:has(#opening-archive-link) #vehicle-preview-link{left:160px;right:auto}
 #opening-archive-link:hover,#opening-archive-link:focus-visible{text-decoration:underline;text-underline-offset:4px;outline:none}
@@ -3021,49 +2992,49 @@ body .visitor-vehicle-index a{flex:none;white-space:nowrap}
 .visitor-vehicle-index a[aria-current="location"]{text-decoration:underline;text-underline-offset:4px}
 @media(max-width:640px){#opening-archive-link{left:16px}body:has(#opening-archive-link) #vehicle-preview-link{left:148px}footer nav.series-nav{column-gap:12px}.archive-overview{gap:0 18px;font-size:10px}}
 `;
-    document.head.append(style);
-    const path = location.pathname;
-    if (document.querySelector('#ti-prologue') && document.querySelector('#ti-start')) {
-      const a=document.createElement('a');a.id='opening-archive-link';a.href=path.includes('/works/opening/')?'../terra_incognita/field-archive.dev.html?from=index.html':'field-archive.html?from=index.html';a.textContent='FIELD ARCHIVE';document.body.append(a);
-    }
-    const archive=document.querySelector('.archive-index'),header=document.querySelector('.site-header');
-    if(archive && header){
-      archive.classList.add('visitor-persistent');document.body.append(archive);
-      const size=()=>document.documentElement.style.setProperty('--visitor-header',header.getBoundingClientRect().height+'px');size();new ResizeObserver(size).observe(header);
-      const overview=document.createElement('nav');overview.className='archive-overview';overview.setAttribute('aria-label','관람 구성');
-      for(const [hash,label] of [['#coordinate-records','본편 탐사 기록'],['#observation-conditions','관측의 조건 3부작'],['#voyage-conditions','항해의 조건 4부작']]){const a=document.createElement('a');a.href=hash;a.textContent=label;overview.append(a);}
-      document.querySelector('.archive').prepend(overview);
-      const links=[...archive.querySelectorAll('a')];let pending=false;
-      const update=()=>{pending=false;let active=links[0];const edge=header.getBoundingClientRect().height+archive.offsetHeight+24;for(const a of links){const s=document.querySelector(a.hash);const h=s?.querySelector('h2')||s;if(h && h.getBoundingClientRect().top<=edge)active=a;}for(const a of links){if(a===active)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current');}};
-      addEventListener('scroll',()=>{if(!pending){pending=true;requestAnimationFrame(update);}},{passive:true});update();
-    }
-    const returnLink=document.querySelector('.site-header [data-return]');
-    if(returnLink){
-      const names={'index.html':'시작 화면','voyage/echo.html':'ECHO','voyage/transfer.html':'TRANSFER','voyage/delay.html':'DELAY','voyage/abyss.html':'ABYSS','observe/fold.html':'FOLD','observe/frame_drag.html':'FRAME DRAG','observe/occlusion.html':'OCCLUSION'};
-      const from=new URLSearchParams(location.search).get('from');
-      if(Object.hasOwn(names,from)){
-        const apply=()=>{if(returnLink.getAttribute('href')!==from)returnLink.setAttribute('href',from);const label=names[from]+'으로 돌아가기';returnLink.setAttribute('aria-label',label);const small=returnLink.querySelector('small');if(small&&small.textContent!==label)small.textContent=label;};
-        apply();new MutationObserver(apply).observe(returnLink,{attributes:true,attributeFilter:['href'],childList:true,subtree:true});
-      }
-    }
-    const series=document.querySelector('footer nav.series-nav,footer nav.series');
-    if(series){
-      const order=path.includes('/observe/')?['fold','frame_drag','occlusion']:['echo','transfer','delay','abyss'];
-      const key=path.split('/').pop().replace('.html',''),i=order.indexOf(key);
-      if(i>0&&!series.querySelector('.series-prev')){const a=document.createElement('a');a.className='series-prev';a.href=order[i-1]+'.html';a.textContent='이전 작품 · '+order[i-1].replace('_',' ').toUpperCase();series.prepend(a);}
-      const hint=document.querySelector('#hint');
-      if(hint){const fit=()=>{hint.style.bottom='';const h=hint.getBoundingClientRect(),s=series.getBoundingClientRect();if(h.right>s.left&&h.left<s.right&&h.bottom>s.top-12)hint.style.bottom=(innerHeight-s.top+12)+'px';};new ResizeObserver(fit).observe(series);addEventListener('resize',fit);fit();}
-
-    }
-    const index=document.querySelector('main .intro .index'),topbar=document.querySelector('.topbar');
-    if(index&&topbar){
-      index.classList.add('visitor-vehicle-index');document.querySelector('.intro').after(index);
-      const size=()=>{const h=topbar.getBoundingClientRect().height;document.documentElement.style.setProperty('--visitor-preview-header',h+'px');document.documentElement.style.scrollPaddingTop=(h+index.offsetHeight+18)+'px';};size();new ResizeObserver(size).observe(topbar);new ResizeObserver(size).observe(index);
-      const links=[...index.querySelectorAll('a')];let pending=false;
-      const update=()=>{pending=false;let active=links[0];const edge=topbar.offsetHeight+index.offsetHeight+40;for(const a of links){if(document.querySelector(a.hash)?.getBoundingClientRect().top<=edge)active=a;}if(scrollY+innerHeight>=document.documentElement.scrollHeight-2)active=links.at(-1);for(const a of links){if(a===active)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current');}};
-      addEventListener('scroll',()=>{if(!pending){pending=true;requestAnimationFrame(update);}},{passive:true});update();
-    }
-  };
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
-})();</script></body>
+document.head.append(style);
+const path=location.pathname;
+if(document.querySelector('#ti-prologue')&&document.querySelector('#ti-start')){
+const a=document.createElement('a');a.id='opening-archive-link';a.href=path.includes('/works/opening/')?'../terra_incognita/field-archive.dev.html?from=index.html':'field-archive.html?from=index.html';a.textContent='FIELD ARCHIVE';document.body.append(a);
+}
+const archive=document.querySelector('.archive-index'),header=document.querySelector('.site-header');
+if(archive&&header){
+archive.classList.add('visitor-persistent');document.body.append(archive);
+const size=()=>document.documentElement.style.setProperty('--visitor-header',header.getBoundingClientRect().height+'px');size();new ResizeObserver(size).observe(header);
+const overview=document.createElement('nav');overview.className='archive-overview';overview.setAttribute('aria-label','관람 구성');
+for(const[hash,label]of[['#coordinate-records','본편 탐사 기록'],['#observation-conditions','관측의 조건 3부작'],['#voyage-conditions','항해의 조건 4부작']]){const a=document.createElement('a');a.href=hash;a.textContent=label;overview.append(a);}
+document.querySelector('.archive').prepend(overview);
+const links=[...archive.querySelectorAll('a')];let pending=false;
+const update=()=>{pending=false;let active=links[0];const edge=header.getBoundingClientRect().height+archive.offsetHeight+24;for(const a of links){const s=document.querySelector(a.hash);const h=s?.querySelector('h2')||s;if(h&&h.getBoundingClientRect().top<=edge)active=a;}for(const a of links){if(a===active)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current');}};
+addEventListener('scroll',()=>{if(!pending){pending=true;requestAnimationFrame(update);}},{passive:true});update();
+}
+const returnLink=document.querySelector('.site-header [data-return]');
+if(returnLink){
+const names={'index.html':'시작 화면','voyage/echo.html':'ECHO','voyage/transfer.html':'TRANSFER','voyage/delay.html':'DELAY','voyage/abyss.html':'ABYSS','observe/fold.html':'FOLD','observe/frame_drag.html':'FRAME DRAG','observe/occlusion.html':'OCCLUSION'};
+const from=new URLSearchParams(location.search).get('from');
+if(Object.hasOwn(names,from)){
+const apply=()=>{if(returnLink.getAttribute('href')!==from)returnLink.setAttribute('href',from);const label=names[from]+'으로 돌아가기';returnLink.setAttribute('aria-label',label);const small=returnLink.querySelector('small');if(small&&small.textContent!==label)small.textContent=label;};
+apply();new MutationObserver(apply).observe(returnLink,{attributes:true,attributeFilter:['href'],childList:true,subtree:true});
+}
+}
+const series=document.querySelector('footer nav.series-nav,footer nav.series');
+if(series){
+const order=path.includes('/observe/')?['fold','frame_drag','occlusion']:['echo','transfer','delay','abyss'];
+const key=path.split('/').pop().replace('.html',''),i=order.indexOf(key);
+if(i>0&&!series.querySelector('.series-prev')){const a=document.createElement('a');a.className='series-prev';a.href=order[i-1]+'.html';a.textContent='이전 작품 · '+order[i-1].replace('_',' ').toUpperCase();series.prepend(a);}
+const hint=document.querySelector('#hint');
+if(hint){const fit=()=>{hint.style.bottom='';const h=hint.getBoundingClientRect(),s=series.getBoundingClientRect();if(h.right>s.left&&h.left<s.right&&h.bottom>s.top-12)hint.style.bottom=(innerHeight-s.top+12)+'px';};new ResizeObserver(fit).observe(series);addEventListener('resize',fit);fit();}
+}
+const index=document.querySelector('main .intro .index'),topbar=document.querySelector('.topbar');
+if(index&&topbar){
+index.classList.add('visitor-vehicle-index');document.querySelector('.intro').after(index);
+const size=()=>{const h=topbar.getBoundingClientRect().height;document.documentElement.style.setProperty('--visitor-preview-header',h+'px');document.documentElement.style.scrollPaddingTop=(h+index.offsetHeight+18)+'px';};size();new ResizeObserver(size).observe(topbar);new ResizeObserver(size).observe(index);
+const links=[...index.querySelectorAll('a')];let pending=false;
+const update=()=>{pending=false;let active=links[0];const edge=topbar.offsetHeight+index.offsetHeight+40;for(const a of links){if(document.querySelector(a.hash)?.getBoundingClientRect().top<=edge)active=a;}if(scrollY+innerHeight>=document.documentElement.scrollHeight-2)active=links.at(-1);for(const a of links){if(a===active)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current');}};
+addEventListener('scroll',()=>{if(!pending){pending=true;requestAnimationFrame(update);}},{passive:true});update();
+}
+};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
+})();
+</script></body>
 </html>

@@ -65,66 +65,65 @@
           format("woff2");
       }
     </style>
-    <script>
-      (() => {
-        let frame = 0;
-        let settleTimer = 0;
-        let tailTimer = 0;
-        const sync = () => {
-          frame = 0;
-          const viewport = window.visualViewport;
-          const width = Math.max(1, Math.round(viewport?.width || window.innerWidth));
-          const height = Math.max(1, Math.round(viewport?.height || window.innerHeight));
-          const root = document.documentElement;
-          root.style.setProperty("--viewport-width", `${width}px`);
-          root.style.setProperty("--viewport-height", `${height}px`);
-          root.style.setProperty(
-            "--viewport-top",
-            `${Math.max(0, Math.round(viewport?.offsetTop || 0))}px`,
-          );
-          root.style.setProperty(
-            "--viewport-left",
-            `${Math.max(0, Math.round(viewport?.offsetLeft || 0))}px`,
-          );
-          root.style.setProperty(
-            "--viewport-bottom",
-            `${Math.max(0, window.innerHeight - height - (viewport?.offsetTop || 0))}px`,
-          );
-          if (!root.classList.contains("ti-viewport-ready")) {
-            root.classList.add("ti-viewport-ready");
-            dispatchEvent(
-              new CustomEvent("ti-viewportready", {
-                detail: { width, height },
-              }),
-            );
-          }
-        };
-        const schedule = () => {
-          if (!frame) frame = requestAnimationFrame(sync);
-          clearTimeout(settleTimer);
-          clearTimeout(tailTimer);
-          settleTimer = setTimeout(() => {
-            if (!frame) frame = requestAnimationFrame(sync);
-          }, 140);
-          tailTimer = setTimeout(() => {
-            if (!frame) frame = requestAnimationFrame(sync);
-          }, 520);
-        };
-        sync();
-        addEventListener("resize", schedule, { passive: true });
-        addEventListener("orientationchange", schedule, { passive: true });
-        addEventListener("pageshow", schedule, { passive: true });
-        window.visualViewport?.addEventListener("resize", schedule, {
-          passive: true,
-        });
-        window.visualViewport?.addEventListener("scroll", schedule, {
-          passive: true,
-        });
-        document.addEventListener("visibilitychange", () => {
-          if (document.visibilityState === "visible") schedule();
-        });
-      })();
-    </script>
+    <script>(()=>{
+let frame=0;
+let settleTimer=0;
+let tailTimer=0;
+const sync=()=>{
+frame=0;
+const viewport=window.visualViewport;
+const width=Math.max(1,Math.round(viewport?.width||window.innerWidth));
+const height=Math.max(1,Math.round(viewport?.height||window.innerHeight));
+const root=document.documentElement;
+root.style.setProperty("--viewport-width",`${width}px`);
+root.style.setProperty("--viewport-height",`${height}px`);
+root.style.setProperty(
+"--viewport-top",
+`${Math.max(0,Math.round(viewport?.offsetTop||0))}px`,
+);
+root.style.setProperty(
+"--viewport-left",
+`${Math.max(0,Math.round(viewport?.offsetLeft||0))}px`,
+);
+root.style.setProperty(
+"--viewport-bottom",
+`${Math.max(0,window.innerHeight-height-(viewport?.offsetTop||0))}px`,
+);
+if(!root.classList.contains("ti-viewport-ready")){
+root.classList.add("ti-viewport-ready");
+dispatchEvent(
+new CustomEvent("ti-viewportready",{
+detail:{width,height},
+}),
+);
+}
+};
+const schedule=()=>{
+if(!frame)frame=requestAnimationFrame(sync);
+clearTimeout(settleTimer);
+clearTimeout(tailTimer);
+settleTimer=setTimeout(()=>{
+if(!frame)frame=requestAnimationFrame(sync);
+},140);
+tailTimer=setTimeout(()=>{
+if(!frame)frame=requestAnimationFrame(sync);
+},520);
+};
+sync();
+addEventListener("resize",schedule,{passive:true});
+addEventListener("orientationchange",schedule,{passive:true});
+addEventListener("pageshow",schedule,{passive:true});
+window.visualViewport?.addEventListener("resize",schedule,{
+passive:true,
+});
+window.visualViewport?.addEventListener("scroll",schedule,{
+passive:true,
+});
+document.addEventListener("visibilitychange",()=>{
+if(document.visibilityState==="visible")schedule();
+});
+})();
+</script>
     <style>
       :root {
         --viewport-width: 100vw;
@@ -2333,11 +2332,11 @@
       id="ti-restoration"
       role="status"
       aria-live="polite"
-      aria-label="착륙선 구조재와 공급원료 회수 진행 상황"
+      aria-label="착륙선 구조재와 원료 회수 진행 상황"
     >
       <div class="head" aria-hidden="true">
         <span>TI–01 / 착륙선 구성재 등록</span
-        ><span id="ti-restoration-progress">외피 구조재 0 / 4 · 공급원료 0 / 2</span>
+        ><span id="ti-restoration-progress">외피 구조재 0 / 4 · 원료 0 / 2</span>
       </div>
       <div class="registration-field" aria-hidden="true">
         <div class="registration-bank">
@@ -2354,7 +2353,7 @@
           <small id="ti-registration-module">구성재 등록 · 대기</small>
         </div>
       </div>
-      <div id="ti-restoration-label"> 설계 상태 · 외피 구조재 4종과 공급원료 2종 필요 </div>
+      <div id="ti-restoration-label"> 설계 상태 · 외피 구조재 4종과 원료 2종 필요 </div>
     </div>
     <div class="bar t"></div>
     <div class="bar b"></div>
@@ -2429,113 +2428,112 @@
     <a id="ti-ending-archive" href="field-archive.html" hidden>FIELD ARCHIVE</a>
     <div id="ti-dawn-title" hidden>우리는 이제, 여기서 시작한다.</div>
 
-    <script>
-      (function () {
-        var s;
-        try {
-          s = sessionStorage.getItem("universe_seed");
-        } catch {}
-        if (!s) {
-          s = Math.floor(Math.random() * 16777216)
-            .toString(16)
-            .padStart(6, "0")
-            .toUpperCase();
-          try {
-            sessionStorage.setItem("universe_seed", s);
-          } catch {}
-        }
-        window.UNIVERSE_SEED = s;
-        var lbl = document.getElementById("universe-label");
-        if (lbl) {
-          lbl.textContent = "#" + s;
-          return;
-        }
-        var el = document.getElementById("universe-id");
-        if (!el) {
-          el = document.createElement("div");
-          el.id = "universe-id";
-          document.body.appendChild(el);
-        }
-        el.textContent = "UNIVERSE #" + s;
-      })();
-      (function () {
-        var a = document.getElementById("arrive"),
-          d = document.getElementById("depart");
-        window.TI_REVEAL_PLANET = function () {
-          a.style.transition = "opacity 1.2s ease";
-          a.style.opacity = "0";
-        };
-        addEventListener("pageshow", function (e) {
-          if (e.persisted) {
-            a.style.opacity = "0";
-            d.style.opacity = "0";
-          }
-        });
-        document.addEventListener(
-          "click",
-          function (e) {
-            var link = e.target.closest ? e.target.closest("a[href]") : null;
-            if (!link || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-            var href = link.getAttribute("href");
-            if (!href || href.startsWith("http") || href.startsWith("#")) return;
-            e.preventDefault();
-            d.style.opacity = "1";
-            setTimeout(function () {
-              location.href = href;
-            }, 650);
-          },
-          true,
-        );
-      })();
-      (function () {
-        var timer = 0,
-          stage = "module";
-        function hide() {
-          var el = document.getElementById("fh-watchdog");
-          if (el) el.classList.remove("on");
-        }
-        function fail() {
-          if (window.TI_READY) {
-            hide();
-            return;
-          }
-          var el = document.getElementById("fh-watchdog");
-          if (!el) return;
-          var en = document.getElementById("fh-watchdog-en"),
-            ko = document.getElementById("fh-watchdog-ko");
-          if (en)
-            en.textContent =
-              "Boot stage " +
-              stage.toUpperCase() +
-              " did not complete within 30 seconds. Reload the local exhibition file or inspect the GPU status.";
-          if (ko)
-            ko.textContent =
-              "\uC2DC\uC791 \uB2E8\uACC4 " +
-              stage.toUpperCase() +
-              "\uAC00 30\uCD08 \uC548\uC5D0 \uC644\uB8CC\uB418\uC9C0 \uC54A\uC558\uB2E4. \uC804\uC2DC \uD30C\uC77C\uC744 \uB2E4\uC2DC \uC5F4\uAC70\uB098 GPU \uC0C1\uD0DC\uB97C \uD655\uC778\uD560 \uAC83.";
-          el.classList.add("on");
-        }
-        function schedule() {
-          clearTimeout(timer);
-          timer = setTimeout(fail, 3e4);
-        }
-        window.TI_BOOT = {
-          beat: function (next) {
-            stage = next || stage;
-            hide();
-            schedule();
-          },
-          ready: function () {
-            window.TI_READY = true;
-            clearTimeout(timer);
-            hide();
-          },
-        };
-        window.TI_BOOT.beat("module");
-      })();
-    </script>
+    <script>(function(){
+var s;
+try{
+s=sessionStorage.getItem("universe_seed");
+}catch{}
+if(!s){
+s=Math.floor(Math.random()*16777216)
+.toString(16)
+.padStart(6,"0")
+.toUpperCase();
+try{
+sessionStorage.setItem("universe_seed",s);
+}catch{}
+}
+window.UNIVERSE_SEED=s;
+var lbl=document.getElementById("universe-label");
+if(lbl){
+lbl.textContent="#"+s;
+return;
+}
+var el=document.getElementById("universe-id");
+if(!el){
+el=document.createElement("div");
+el.id="universe-id";
+document.body.appendChild(el);
+}
+el.textContent="UNIVERSE #"+s;
+})();
+(function(){
+var a=document.getElementById("arrive"),
+d=document.getElementById("depart");
+window.TI_REVEAL_PLANET=function(){
+a.style.transition="opacity 1.2s ease";
+a.style.opacity="0";
+};
+addEventListener("pageshow",function(e){
+if(e.persisted){
+a.style.opacity="0";
+d.style.opacity="0";
+}
+});
+document.addEventListener(
+"click",
+function(e){
+var link=e.target.closest?e.target.closest("a[href]"):null;
+if(!link||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
+var href=link.getAttribute("href");
+if(!href||href.startsWith("http")||href.startsWith("#"))return;
+e.preventDefault();
+d.style.opacity="1";
+setTimeout(function(){
+location.href=href;
+},650);
+},
+true,
+);
+})();
+(function(){
+var timer=0,
+stage="module";
+function hide(){
+var el=document.getElementById("fh-watchdog");
+if(el)el.classList.remove("on");
+}
+function fail(){
+if(window.TI_READY){
+hide();
+return;
+}
+var el=document.getElementById("fh-watchdog");
+if(!el)return;
+var en=document.getElementById("fh-watchdog-en"),
+ko=document.getElementById("fh-watchdog-ko");
+if(en)
+en.textContent=
+"Boot stage "+
+stage.toUpperCase()+
+" did not complete within 30 seconds. Reload the local exhibition file or inspect the GPU status.";
+if(ko)
+ko.textContent=
+"\uC2DC\uC791 \uB2E8\uACC4 "+
+stage.toUpperCase()+
+"\uAC00 30\uCD08 \uC548\uC5D0 \uC644\uB8CC\uB418\uC9C0 \uC54A\uC558\uB2E4. \uC804\uC2DC \uD30C\uC77C\uC744 \uB2E4\uC2DC \uC5F4\uAC70\uB098 GPU \uC0C1\uD0DC\uB97C \uD655\uC778\uD560 \uAC83.";
+el.classList.add("on");
+}
+function schedule(){
+clearTimeout(timer);
+timer=setTimeout(fail,3e4);
+}
+window.TI_BOOT={
+beat:function(next){
+stage=next||stage;
+hide();
+schedule();
+},
+ready:function(){
+window.TI_READY=true;
+clearTimeout(timer);
+hide();
+},
+};
+window.TI_BOOT.beat("module");
+})();
+</script>
     <script defer src="./planet-engine.js"></script>
-    <nav id="journey-links" aria-label="사운드와 외장 보기"
+    <nav id="journey-links" aria-label="소리와 외장 보기"
       ><button id="ti-sound" type="button" aria-pressed="false" data-audio-state="start">
         <svg class="ti-utility-icon" viewBox="0 0 24 24" aria-hidden="true">
           <path class="speaker" d="M4 10h4l5-4v12l-5-4H4z" />
