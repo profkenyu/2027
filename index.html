@@ -18940,7 +18940,7 @@ if(archive&&header){
 archive.classList.add('visitor-persistent');document.body.append(archive);
 const size=()=>document.documentElement.style.setProperty('--visitor-header',header.getBoundingClientRect().height+'px');size();new ResizeObserver(size).observe(header);
 const overview=document.createElement('nav');overview.className='archive-overview';overview.setAttribute('aria-label','관람 구성');
-for(const[hash,label]of[['#coordinate-records','본편 탐사 기록'],['#observation-conditions','관측의 조건 3부작'],['#voyage-conditions','항해의 조건 4부작']]){const a=document.createElement('a');a.href=hash;a.textContent=label;overview.append(a);}
+for(const[hash,label]of[['#coordinate-records','본편 탐사 기록'],['#observation-conditions','관측의 조건 4부작'],['#voyage-conditions','항해의 조건 3부작']]){const a=document.createElement('a');a.href=hash;a.textContent=label;overview.append(a);}
 document.querySelector('.archive').prepend(overview);
 const links=[...archive.querySelectorAll('a')];let pending=false;
 const update=()=>{pending=false;let active=links[0];const edge=header.getBoundingClientRect().height+archive.offsetHeight+24;for(const a of links){const s=document.querySelector(a.hash);const h=s?.querySelector('h2')||s;if(h&&h.getBoundingClientRect().top<=edge)active=a;}for(const a of links){if(a===active)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current');}};
@@ -18948,7 +18948,7 @@ addEventListener('scroll',()=>{if(!pending){pending=true;requestAnimationFrame(u
 }
 const returnLink=document.querySelector('.site-header [data-return]');
 if(returnLink){
-const names={'index.html':'시작 화면','voyage/echo.html':'ECHO','voyage/transfer.html':'TRANSFER','voyage/delay.html':'DELAY','voyage/abyss.html':'ABYSS','observe/fold.html':'FOLD','observe/frame_drag.html':'FRAME DRAG','observe/occlusion.html':'OCCLUSION'};
+const names={'index.html':'시작 화면','observe/echo.html':'ECHO','voyage/echo.html':'ECHO','voyage/transfer.html':'TRANSFER','voyage/delay.html':'DELAY','voyage/abyss.html':'ABYSS','observe/fold.html':'FOLD','observe/frame_drag.html':'FRAME DRAG','observe/occlusion.html':'OCCLUSION'};
 const from=new URLSearchParams(location.search).get('from');
 if(Object.hasOwn(names,from)){
 const apply=()=>{if(returnLink.getAttribute('href')!==from)returnLink.setAttribute('href',from);const label=names[from]+'으로 돌아가기';returnLink.setAttribute('aria-label',label);const small=returnLink.querySelector('small');if(small&&small.textContent!==label)small.textContent=label;};
@@ -18957,7 +18957,7 @@ apply();new MutationObserver(apply).observe(returnLink,{attributes:true,attribut
 }
 const series=document.querySelector('footer nav.series-nav,footer nav.series');
 if(series){
-const order=path.includes('/observe/')?['fold','frame_drag','occlusion']:['echo','transfer','delay','abyss'];
+const order=path.includes('/observe/')?['fold','frame_drag','echo','occlusion']:['transfer','delay','abyss'];
 const key=path.split('/').pop().replace('.html',''),i=order.indexOf(key);
 if(i>0&&!series.querySelector('.series-prev')){const a=document.createElement('a');a.className='series-prev';a.href=order[i-1]+'.html';a.textContent='이전 작품 · '+order[i-1].replace('_',' ').toUpperCase();series.prepend(a);}
 const hint=document.querySelector('#hint');
