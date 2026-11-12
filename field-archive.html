@@ -2920,8 +2920,9 @@ addEventListener('scroll',()=>{if(!pending){pending=true;requestAnimationFrame(u
 }
 const returnLink=document.querySelector('.site-header [data-return]');
 if(returnLink){
-const names={'index.html':'시작 화면','observe/echo.html':'ECHO','voyage/echo.html':'ECHO','voyage/transfer.html':'TRANSFER','voyage/delay.html':'DELAY','voyage/abyss.html':'ABYSS','observe/fold.html':'FOLD','observe/frame_drag.html':'FRAME DRAG','observe/occlusion.html':'OCCLUSION'};
-const from=new URLSearchParams(location.search).get('from');
+const names={'index.html':'시작 화면','observe/echo.html':'ECHO','voyage/transfer.html':'TRANSFER','voyage/delay.html':'DELAY','voyage/abyss.html':'ABYSS','observe/fold.html':'FOLD','observe/frame_drag.html':'FRAME DRAG','observe/occlusion.html':'OCCLUSION'};
+const rawFrom=new URLSearchParams(location.search).get('from');
+const from=rawFrom==='voyage/echo.html'?'observe/echo.html':rawFrom;
 if(Object.hasOwn(names,from)){
 const apply=()=>{if(returnLink.getAttribute('href')!==from)returnLink.setAttribute('href',from);const label=names[from]+'으로 돌아가기';returnLink.setAttribute('aria-label',label);const small=returnLink.querySelector('small');if(small&&small.textContent!==label)small.textContent=label;};
 apply();new MutationObserver(apply).observe(returnLink,{attributes:true,attributeFilter:['href'],childList:true,subtree:true});
