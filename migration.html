@@ -360,7 +360,28 @@
       </nav>
     </footer>
 
-    <script type="module">var __create=Object.create;
+    <script type="module">
+// 2026-11-12: world-space planetary bounce and valve-driven attitude.
+// Bounded yaw response to the same valve clock as the existing gas puffs.
+// Analytic integration avoids per-frame drift. This is an authored inertia cue,
+// not a force/mass reconstruction of the spacecraft.
+const ATTITUDE_DEFLECTION={carrier:.0011,escort:.0018,capsule:.0014,habitat:.0007};
+function valveIntegral(t,valve){
+  if(t<=0)return 0;
+  if(t>=valve)return t-valve*.5;
+  const u=t/valve;
+  return valve*u**4*(2.5+u*(-3+u));
+}
+function btkAttitudeOffset(seconds,index,kind='carrier'){
+  const p=ATTITUDE_PROFILES[kind],time=seconds-(6.4+index*1.87);
+  if(time<=0)return 0;
+  const period=p.period+index*.73,cycle=Math.floor(time/period),phase=time-cycle*period;
+  const amplitude=ATTITUDE_DEFLECTION[kind];
+  const angle=amplitude/p.response*(valveIntegral(phase,p.valve)-valveIntegral(phase-p.response,p.valve));
+  return cycle%2?amplitude-angle:angle;
+}
+
+var __create=Object.create;
 var __defProp=Object.defineProperty;
 var __getOwnPropDesc=Object.getOwnPropertyDescriptor;
 var __getOwnPropNames=Object.getOwnPropertyNames;
@@ -36531,7 +36552,7 @@ return{
 get surface(){
 return ensureSurface();
 },
-planetPosition:()=>planet.position.toArray(),
+planetPosition:(out)=>out?out.copy(planet.position):planet.position.toArray(),
 get observerHeight(){
 return surface?surface.observerHeight:groundHeight(850,1800);
 },
@@ -58197,6 +58218,7 @@ ship.scale.setScalar(s.scale),
 let correction=smooth5((flightTime-64-i*3)/22);
 (ship.rotation.set(-0.025+i*8e-3,-0.13+correction*0.085,(i-2)*0.012),
 phase==="migration"&&openingFlyby(ship.position,i,seconds,ship.quaternion),
+phase==="migration"&&ship.rotateY(btkAttitudeOffset(seconds,i,ship.userData.jets[0]?.userData.kind)),
 updateAttitudeJets(ship,i,phase==="migration"?seconds:-1),
 (motion[i].deploy=
 phase==="arrival"?1:radiatorClosure(seconds,i,response.duration)),
@@ -58299,7 +58321,7 @@ camera.position.z,
 keyLight.position.copy(keyLight.target.position).add(sunlightOffset))
 :(keyLight.target.position.copy(shadowSubject.position),
 keyLight.position.copy(shadowSubject.position).add(sunlightOffset));
-((fillLight.intensity=opening?0.62:0.22),
+((fillLight.intensity=opening?0.38:0.22),
 opening
 ?(fillLight.position
 .set(0,-1250,1350)
@@ -58316,6 +58338,7 @@ sceneTime,
 phase==="migration"&&
 (opening||currentShot==="ring-rear"||currentShot==="escort-closeup"),
 ),
+phase==="migration"&&(environment.planetPosition(fillLight.position),fillLight.target.position.copy(shadowSubject.position)),
 habitat&&audio.setEnvironment(habitat.model.state));
 let enter=smooth5((seconds-segment.start)/0.75),
 exit=1-smooth5((seconds-(endTime-1.2))/0.9),
@@ -58432,7 +58455,7 @@ planetColor:[0.105,0.112,0.13],
 (scene.environmentIntensity=0.55),
 (hemisphereLight=new HemisphereLight(12111079,4278871,0.16)),
 scene.add(hemisphereLight),
-(keyLight=new DirectionalLight(14806271,2.45)),
+(keyLight=new DirectionalLight(14806271,2.60)),
 (keyLight.castShadow= !0),
 keyLight.shadow.mapSize.setScalar(quality.shadow),
 Object.assign(keyLight.shadow.camera,{

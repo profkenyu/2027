@@ -223,7 +223,27 @@
       </nav>
     </footer>
 
-    <script type="module">var __create=Object.create;
+    <script type="module">
+// 2026-11-12: coupled attitude and planetary bounce.
+// Authored manoeuvre in exhibition units: accelerate, coast, counter-thrust.
+// One clock drives yaw and the existing two jets; no rigid-body simulation.
+const btkTurnIntegral = (u) => u ** 4 * (2.5 + u * (-3 + u));
+function btkTransitYaw(t) {
+  const elapsed = Math.max(0, Math.min(8, t - 40)), valve = 0.4;
+  const rate = 0.09 / (8 - valve);
+  const turn = elapsed < valve
+    ? valve * btkTurnIntegral(elapsed / valve)
+    : elapsed <= 8 - valve
+      ? elapsed - valve * 0.5
+      : 8 - 1.5 * valve + valve * ((elapsed - 8 + valve) / valve - btkTurnIntegral((elapsed - 8 + valve) / valve));
+  return -0.24 + rate * turn;
+}
+function btkTransitJet(t, index) {
+  const u = (t - (index === 0 ? 40 : 47.6)) / 0.4;
+  return u > 0 && u < 1 ? 16 * u * u * (1 - u) * (1 - u) : 0;
+}
+
+var __create=Object.create;
 var __defProp=Object.defineProperty;
 var __getOwnPropDesc=Object.getOwnPropertyDescriptor;
 var __getOwnPropNames=Object.getOwnPropertyNames;
@@ -28686,9 +28706,9 @@ var flightSun=(passage2)=>new Vector3(passage2===2? -28:28,24,26);
 function flightMaterial(rgb,kind,tier2="mid",profile=null){
 let properties={
 ceramic:[0.7,0.025],
-metal:[0.45,0.9],
+metal:[0.38,0.9],
 graphite:[0.9,0.04],
-foil:[0.5,0.86],
+foil:[0.56,0.86],
 glass:[0.18,0],
 dark:[0.87,0.05],
 },
@@ -28697,7 +28717,7 @@ options={
 color:new Color(...rgb),
 roughness,
 metalness,
-envMapIntensity:kind==="glass"?0.65:kind==="metal"?0.58:0.45,
+envMapIntensity:kind==="glass"?0.65:kind==="metal"?0.68:kind==="foil"?0.55:0.45,
 side:DoubleSide,
 };
 profile??=
@@ -29258,10 +29278,14 @@ let deployment=
 MathUtils.smoothstep(t2,20,34)*
 (1-MathUtils.smoothstep(t2,52,62))*
 response2.radiator;
-(hardware.setDeployment(deployment),
-jets.forEach(
-(j)=>(j.visible=(t2>=40&&t2<40.25)||(t2>47.75&&t2<48)),
-));
+hardware.setDeployment(deployment);
+let jetPower=0;
+jets.forEach((jet,index)=>{
+const strength=btkTransitJet(t2,index);
+jet.visible=strength>0.001;
+jetPower=Math.max(jetPower,strength);
+});
+jetMaterial.opacity=0.16*jetPower;
 },
 radiators,
 }
@@ -29315,7 +29339,7 @@ return passage2===2
 function shotPose(camera2,ship,t2,passage2=1){
 ((t2=MathUtils.clamp(t2,0,DURATION)),
 ship.position.set(0,0,-displacement(t2)),
-ship.rotation.set(0.045,-0.24+smooth(40,48,t2)*0.09,0.06));
+ship.rotation.set(0.045,btkTransitYaw(t2),0.06));
 let portrait=camera2.aspect<1,
 shot=shotAt(t2);
 if(passage2===2){
@@ -47171,6 +47195,7 @@ camera,
 surveyor,
 voidScene,
 keyLight,
+fillLight,
 recovery,
 t=test?0:transfer?.stage==="flight"?Math.min(transfer.elapsed,DURATION):0,
 paused= !1,
@@ -47205,7 +47230,9 @@ pose(camera,surveyor.group,t,passage),
 surveyor.update(t,response),
 voidScene.stars.position.copy(camera.position),
 keyLight.target.position.copy(surveyor.group.position),
-keyLight.position.copy(surveyor.group.position).add(lightOffset));
+keyLight.position.copy(surveyor.group.position).add(lightOffset),
+fillLight.position.copy(voidScene.planet.position),
+fillLight.target.position.copy(surveyor.group.position));
 let blackout=passageEdit(t,cuts).veil;
 (blackout!==veilOpacity&&
 ((veilOpacity=blackout),(veil.style.opacity=String(blackout))),
@@ -47268,8 +47295,8 @@ document.body.prepend(renderer.domElement),
 (scene.background=new Color(197895)),
 (scene.environment=createFlightEnvironment(renderer,tier,passage).texture),
 (camera=new PerspectiveCamera(43,innerWidth/innerHeight,0.25,3e4)),
-scene.add(new HemisphereLight(10202298,1380621,0.23)),
-(keyLight=new DirectionalLight(16770244,2.45)),
+scene.add(new HemisphereLight(10202298,1380621,0.14)),
+(keyLight=new DirectionalLight(16770244,2.65)),
 (keyLight.castShadow= !0),
 keyLight.shadow.mapSize.setScalar(quality.shadow),
 Object.assign(keyLight.shadow.camera,{
@@ -47284,9 +47311,8 @@ far:100,
 (keyLight.shadow.bias= -15e-5),
 scene.add(keyLight,keyLight.target),
 passage===2&&keyLight.color.setHex(15002867));
-let fill=new DirectionalLight(passage===2?9547204:12165514,0.13);
-(fill.position.set(10,-6,-20),
-scene.add(fill),
+fillLight=new DirectionalLight(passage===2?9547204:12165514,0.15);
+(scene.add(fillLight,fillLight.target),
 (surveyor=createSurveyor(tier,passage,modelAsset.data)),
 (modelAsset.data=null),
 scene.add(surveyor.group),
