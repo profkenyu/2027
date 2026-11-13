@@ -23986,7 +23986,9 @@ var forced=names.indexOf((params.get("quality")||"").toUpperCase());
 var level=forced>=0?forced:Math.min(innerWidth,innerHeight)<640||(navigator.deviceMemory||8)<=4?0:matchMedia("(pointer:coarse)").matches||(navigator.hardwareConcurrency||8)<=6||devicePixelRatio>1.8?1:2;
 var renderer;
 var scene;
+var instrumentKey;
 var camera;
+const observerOffset=new Vector2(),observerAim=new Vector2();
 var annulus;
 var absence;
 var vessel;
@@ -24066,6 +24068,16 @@ hint.classList.add("faded");
 function clock(value){
 const sec=Math.max(0,value);
 return`${String(Math.floor(sec/60)).padStart(2,"0")}:${(sec%60).toFixed(1).padStart(4,"0")}`;
+}
+// Observation instrument: sound represents received data / onboard vibration.
+// This envelope is artistic timing; the scientific state continues unchanged.
+function observationWindow(approach, now, eventAt = null, hold = 4) {
+  const t = Math.max(0, Math.min(1, (approach - .72) / .24));
+  const before = 1 - t * t * (3 - 2 * t);
+  if (!Number.isFinite(eventAt) || eventAt < 0 || now < eventAt) return before;
+  if (hold === Infinity) return 0;
+  const after = Math.max(0, Math.min(1, (now - eventAt - hold) / 2));
+  return before * after * after * (3 - 2 * after);
 }
 var audio=(()=>{
 let ctx=null,master=null,noise=null,carrierWave=null;
@@ -24220,7 +24232,15 @@ enabled=false;
 }
 sync();
 }
+function receptionLevel(){
+  // Only received redshift / arrival intervals drive the receiver; no future source data.
+  const approach=model.hasImage?Math.min(.09/Math.max(.001,model.image[8]),model.lastInterval/8):0;
+  return observationWindow(approach,model.now,model.signatureAt,8);
+}
+function observationQuiet(){if(receptionLevel()<.01)cancel();}
 function receive(g,late=0,kind=0,signalMark=null){
+const reception=receptionLevel();
+if(reception<.01)return;
 if(!Number.isFinite(g)||g<=0|| !Number.isFinite(late)||kind<0)return;
 if(signalMark&&(mark!==signalMark||signalMark.exhausted))return;
 const freq=1800*g;
@@ -24241,7 +24261,7 @@ return;
 }
 const t=ctx.currentTime+0.006;
 const duration=signalMark?MARK_WINDOW:Math.min(kind?4.8:1.8,(kind?0.24:0.08)/Math.max(1e-3,g));
-const level=(kind?0.23:0.064)*tunedGain*Math.pow(Math.min(1,g/0.7),0.3);
+const level=(kind?0.23:0.064)*tunedGain*Math.pow(Math.min(1,g/0.7),0.3)*reception;
 const carrier=ctx.createOscillator(),grain=ctx.createBufferSource();
 const edge=ctx.createBiquadFilter(),grainGain=ctx.createGain(),gain=ctx.createGain();
 carrier.setPeriodicWave(carrierWave);
@@ -24321,6 +24341,7 @@ lastFollow= -Infinity;
 receive(g,late,1,mark);
 }
 function follow(g,observedAt){
+if(receptionLevel()<.01){cancel();return;}
 if(!mark||mark.exhausted|| !ctx|| !enabled||blocked||ctx.state!=="running"|| !Number.isFinite(observedAt)|| !Number.isFinite(g)||g<=0)return;
 const age=Math.max(0,observedAt-mark.at),t=ctx.currentTime;
 if(age>=MARK_WINDOW||1800*g<28){
@@ -24339,7 +24360,7 @@ return;
 }
 const freq=1800*g;
 const tuned=Math.exp(-0.5*Math.pow((Math.log2(Math.max(1,freq))-receiverLog)/receiverBandwidth,2));
-const level=0.23*tuned*Math.pow(Math.min(1,g/0.7),0.3)*Math.exp(-age/5.5);
+const level=0.23*tuned*Math.pow(Math.min(1,g/0.7),0.3)*Math.exp(-age/5.5)*receptionLevel();
 signalVoice.carrier.frequency.setTargetAtTime(freq,t,0.035);
 signalVoice.grain.playbackRate.setTargetAtTime(Math.max(0.04,Math.min(2,g)),t,0.035);
 signalVoice.edge.frequency.setTargetAtTime(Math.max(70,Math.min(7000,freq*1.45)),t,0.035);
@@ -24352,6 +24373,7 @@ return{
 receive,
 receiveEdge,
 follow,
+observationQuiet,
 cancel,
 enable,
 gesture(){
@@ -24532,10 +24554,12 @@ signalLabel.textContent="영상 신호 수신 대기";
 }
 const image=model.hasImage?model.image:initialProbeImage,r=image[2],g=image[8];
 const distance=100+88*Math.log(r);
+// The disk light follows a luminous annulus, not the dark central sphere.
 const receivedDepth=clamp2(Math.log(R_START/r)/Math.log(R_START),0,1);
 receivedScale=0.14+0.86*Math.pow(1-receivedDepth,0.85);
 vessel.scale.setScalar((height>width?15:12)*receivedScale);
 vessel.position.copy(outward).multiplyScalar(distance).addScaledVector(normal,72+0.55*(distance-100));
+if(instrumentKey)instrumentKey.position.set(vessel.position.x,0,vessel.position.z).normalize().multiplyScalar(160);
 const exposure=Math.pow(clamp2(g/0.7,0,1),0.62)*fade(1e-3,0.012,g)*(0.72+0.28*receivedScale);
 receivedExposure=model.hasImage?exposure:0;
 const redness=1-clamp2(g/0.7,0,1);
@@ -24607,6 +24631,9 @@ resize();
 }
 function render(){
 if(!ready||lost)return;
+const observerDistance=height>width?1050*Math.max(1,.7/camera.aspect):850;
+camera.position.copy(normal).multiplyScalar(observerDistance).addScaledVector(right,observerOffset.x).addScaledVector(screenUp,observerOffset.y);
+camera.lookAt(0,0,0);camera.updateMatrixWorld();
 const heldArchive=model.now<archiveHoldUntil;
 diskUniforms.uArchiveT.value=heldArchive?archiveHoldT:model.hasImage?model.image[1]:0;
 diskUniforms.uNow.value=model.now;
@@ -24757,6 +24784,8 @@ pointerMark.classList.add("active");
 }
 function pointerMove(e){
 if(paused||lost||dialog.open)return;
+const view=host.getBoundingClientRect();
+observerAim.set(((e.clientX-view.left)/width-.5)*55,(.5-(e.clientY-view.top)/height)*26);
 const point=contacts.get(e.pointerId);
 if(!point){
 if(e.pointerType!=="touch"&&e.buttons===0&&contacts.size===0){
@@ -24835,7 +24864,7 @@ function reset(){
 journeyMemory?.newVoyage();
 release(false);
 audio.cancel();
-model.reset();
+model.reset();observerOffset.set(0,0);observerAim.set(0,0);
 receivedScale=1;
 receivedExposure=0;
 hintHidden=false;
@@ -24980,6 +25009,8 @@ diskUniforms.uReplyEnd.value.setComponent((replyCursor-1)%4,reply[0]);
 }
 function update(seconds){
 const result=model.update(seconds,receiveReply);
+audio.observationQuiet();
+observerOffset.lerp(observerAim,1-Math.exp(-seconds*2));
 for(let i=0;i<2;i++)
 contactWeights[i]+=(contactTargets[i]-contactWeights[i])*(1-Math.exp(-seconds/0.085));
 if(result.newPackets)
@@ -25069,11 +25100,11 @@ renderer.toneMappingExposure=0.95;
 host.appendChild(renderer.domElement);
 buildSpace();
 buildVessel();
-scene.add(new HemisphereLight(12765128,2170136,0.65));
+scene.add(new HemisphereLight(12765128,2170136,0.42));
 const key=new DirectionalLight(14868180,2.7);
-key.position.set(-220,450,650);
+instrumentKey=key;key.position.set(160,0,0);key.target=vessel;
 scene.add(key);
-const rim=new DirectionalLight(9599840,0.8);
+const rim=new DirectionalLight(9599840,0.25);
 rim.position.set(-300,-180,-350);
 scene.add(rim);
 resize();

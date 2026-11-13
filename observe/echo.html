@@ -24155,10 +24155,20 @@ if(model.eventAt===null)return 0;
 const age=model.now-model.eventAt;
 return smooth2(0,1.4,age)*(1-smooth2(4,8.5,age));
 }
+// Observation instrument: sound represents received data / onboard vibration.
+// This envelope is artistic timing; the scientific state continues unchanged.
+function observationWindow(approach, now, eventAt = null, hold = 4) {
+  const t = Math.max(0, Math.min(1, (approach - .72) / .24));
+  const before = 1 - t * t * (3 - 2 * t);
+  if (!Number.isFinite(eventAt) || eventAt < 0 || now < eventAt) return before;
+  if (hold === Infinity) return 0;
+  const after = Math.max(0, Math.min(1, (now - eventAt - hold) / 2));
+  return before * after * after * (3 - 2 * after);
+}
 var audio=(()=>{
 let ctx=null,master=null,wanted=false,enabled=false;
 let played=0,lastPlay= -100,epoch=0,cursor=0,suppressed=0;
-const voiceLimit=8,voices=new Map();
+const voiceLimit=4,voices=new Map();
 const indices=[0,1,3,8,20,59,149,299];
 const seen=new Float64Array(indices.length*2),buffers=[];
 const button=document.getElementById("sound");
@@ -24195,6 +24205,7 @@ function cancel(){
 if(!ctx)return;
 const t=ctx.currentTime;
 for(const[source,voice]of voices){
+if(voice.stopping)continue;voice.stopping=true;
 if(ctx.state==="running"){
 hold(voice.gain.gain,t);
 voice.gain.gain.linearRampToValueAtTime(0,t+0.018);
@@ -24293,9 +24304,10 @@ ctx.suspend().catch(()=>{});
 }
 sync();
 }
-function sound(j,arm,disagreement,envelope){
+function sound(j,arm,disagreement,envelope,level){
 const i=indices[j],received=model.channels[arm].received;
 const magnitude=Math.pow(clamp2(Math.log1p(received.amplitude[i]*2500)/7.5,0,1),0.55);
+envelope*=level;
 const gain=ctx.createGain(),pan=ctx.createStereoPanner(),source=ctx.createBufferSource();
 const t=ctx.currentTime+0.003,side=arm?1:-1;
 source.buffer=buffers[j];
@@ -24315,7 +24327,9 @@ source.stop(t+0.82);
 played++;
 }
 function update2(){
-const silence=model.eventAt!==null&&model.now-model.eventAt<8.5;
+const level=observationWindow(model.mixed.agreement,model.now,model.eventAt,8.5);
+const silence=level<.01;
+if(silence&&voices.size)cancel();
 const running=enabled&&ctx?.state==="running"&&allowed()&& !silence;
 for(let step=0;step<indices.length;step++){
 const j=(cursor+step)%indices.length,i=indices[j];
@@ -24325,11 +24339,11 @@ const at=j*2+arm,version=model.arrivalVersion[i*2+arm];
 const envelope=model.envelope[i*2+arm];
 if(seen[at]===version||envelope<0.08)continue;
 seen[at]=version;
-if(!running||disagreement<0.1||voices.size>=voiceLimit||model.now-lastPlay<0.055){
+if(!running||disagreement<0.1||voices.size>=voiceLimit||model.now-lastPlay<0.22){
 suppressed++;
 continue;
 }
-sound(j,arm,disagreement,envelope);
+sound(j,arm,disagreement,envelope,level);
 lastPlay=model.now;
 }
 }
@@ -24523,6 +24537,8 @@ camera.updateMatrixWorld();
 applyQuality();
 lastDraw=0;
 }
+var instrumentKey,instrumentFill;
+const observerOffset=new Vector2(),observerAim=new Vector2();
 function updateVessel(dt=0,snap=false){
 const c=model.channels[0];
 fieldOrigin.set((c.sigma-1.35)*18,0,0);
@@ -24539,8 +24555,18 @@ if(snap)vessel.quaternion.copy(pose);
 else vessel.quaternion.slerp(pose,1-Math.exp(-2.2*dt));
 led.material.opacity=model.now-model.lastTransmit<0.12?0.38:0.045;
 vessel.updateReceivedImages(model.mixed.agreement);
+if(instrumentKey){
+  const centre=uniforms.uWall.value.x,span=uniforms.uWall.value.y;
+  instrumentKey.position.set(fieldOrigin.x,centre+span*.22,12);
+  instrumentFill.position.set(fieldOrigin.x,centre-span*.22,-12);
+  // The A/B arrival envelopes already drawn at 72% / 28% illuminate the receiver.
+  instrumentKey.intensity=1.25+.8*model.envelope[0];
+  instrumentFill.intensity=.35+.5*model.envelope[1];
+}
 }
 function render(){
+const distance=315/Math.tan(MathUtils.degToRad(camera.fov*.5));
+camera.position.set(observerOffset.x,observerOffset.y,distance);camera.lookAt(0,0,0);camera.updateMatrixWorld();
 uniforms.uTime.value=model.now;
 uniforms.uIntro.value=smooth2(0,3,model.now+0.3);
 uniforms.uAlign.value=alignment();
@@ -24616,6 +24642,9 @@ hideHint();
 audio.gesture();
 }
 function pointerMove(e){
+if(paused||lost||dialog.open)return;
+const bounds=host.getBoundingClientRect();
+observerAim.set(((e.clientX-bounds.left)/width-.5)*48,(.5-(e.clientY-bounds.top)/height)*20);
 const arm=pointers.get(e.pointerId);
 if(arm===void 0)return;
 e.preventDefault();
@@ -24660,7 +24689,7 @@ function startObservation(reference=null,gesture=true){
 releaseAll(false);
 audio.reset();
 inheritedObservation=normalizeObservation(reference);
-model.reset(inheritedObservation);
+model.reset(inheritedObservation);observerOffset.set(0,0);observerAim.set(0,0);
 for(const c of contacts)c.weight=c.target=0;
 hintHidden=false;
 hint.classList.remove("faded");
@@ -24705,6 +24734,8 @@ model.aim(arm,c.targetSigma+v*0.15*dt,c.targetTau+h*10*dt);
 dirty=true;
 }
 }
+observerOffset.lerp(observerAim,1-Math.exp(-dt*2));
+if(observerOffset.distanceToSquared(observerAim)>.001)dirty=true;
 const activeBefore=model.now-model.lastTransmit<MAX_DELAY+11||model.now-model.lastMotion<MAX_DELAY+2;
 if(model.update(dt)){
 say("\uC11C\uB85C \uB2E4\uB978 \uB450 \uAD00\uCE21\uC774 \uC7A0\uC2DC \uD558\uB098\uC758 \uBA74\uC73C\uB85C \uBAA8\uC785\uB2C8\uB2E4",7);
@@ -24825,12 +24856,12 @@ opacity:0.08
 );
 led.position.set(-0.65,2.83,0);
 vessel.add(led);
-scene.add(new HemisphereLight(11780812,1450024,0.85));
+scene.add(new HemisphereLight(11780812,1450024,0.55));
 const key=new DirectionalLight(14477293,2.2);
-key.position.set(120,280,400);
+instrumentKey=key;key.target=vessel;key.position.set(0,120,12);
 scene.add(key);
 const edge=new DirectionalLight(9216944,0.65);
-edge.position.set(-260,-20,-100);
+instrumentFill=edge;edge.target=vessel;edge.position.set(0,-120,-12);
 scene.add(edge);
 resize();
 updateVessel(0,true);

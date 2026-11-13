@@ -21788,14 +21788,64 @@ const texture=new DataTexture(table,N,1,RGBAFormat,FloatType);texture.minFilter=
 const params=new URLSearchParams(location.search),names=['LOW','MID','HIGH'],tiers=[{segments:14000,dpr:1,fps:30},{segments:28000,dpr:1.25,fps:60},{segments:44000,dpr:1.5,fps:60}];
 const forced=names.indexOf((params.get('quality')||'').toUpperCase());let level=forced>=0?forced:Math.min(innerWidth,innerHeight)<650||(navigator.deviceMemory||8)<=4?0:devicePixelRatio>1.8?1:2;
 const state={time:0,compression:0,targetCompression:0,twist:0,viewX:0,viewY:0,x:0,y:0,press:0,event:false,eventAt:null,paused:false,lost:false,ready:false,interaction:0,qualityChanges:0};
-let observerAngle=.54;
+let observerAngle=.54,fieldClock=0;
 const reducedMotion=matchMedia('(prefers-reduced-motion:reduce)');
 const pointers=new Map(),keys=new Set(),marks=[document.querySelector('#contact-a'),document.querySelector('#contact-b')],host=document.querySelector('#view'),dialog=document.querySelector('#record'),notice=document.querySelector('#notice'),loading=document.querySelector('#loading');
 let renderer,scene,camera,world,nebula,stars,geometry,material,vessel,frame=0,last=0,lastDraw=0,average=0,slow=0,pairDistance=0,pairAngle=0,lastAudioCell=-1,lastAudio=0,lastInput=0,recordImage=null,recordLabel='아직 개입하지 않았습니다.';
 const uniforms={uTable:{value:texture},uTime:{value:0},uCompress:{value:0},uTwist:{value:0},uPress:{value:0},uContact:{value:new Vector2()},uAspect:{value:innerWidth/innerHeight}};
 function gap(){const x=EDGE+.23*(1-state.compression)*(1-state.compression);return wAt(x)-wAt(x,true)}
 function report(message){notice.textContent=message}
-const audio=(()=>{let ctx=null,master=null,enabled=false;return{snapshot:()=>({enabled,state:ctx?.state||'uninitialized'}),async toggle(){try{if(!ctx){ctx=new(window.AudioContext||window.webkitAudioContext)();master=ctx.createGain();master.gain.value=.23;master.connect(ctx.destination)}enabled=!enabled;if(enabled)await ctx.resume();else await ctx.suspend();document.querySelector('#sound').setAttribute('aria-pressed',String(enabled));document.querySelector('#sound').setAttribute('aria-label',enabled?'소리 끄기':'소리 켜기')}catch{enabled=false;report('이 브라우저에서는 소리를 사용할 수 없습니다.')}},gesture(){if(!enabled||!ctx||ctx.state!=='running'||gap()<.003||ctx.currentTime-lastAudio<.12)return;const cell=Math.round(state.targetCompression*70+state.twist*3);if(cell===lastAudioCell)return;lastAudioCell=cell;lastAudio=ctx.currentTime;const x=EDGE+.23*(1-state.compression)**2;for(const lower of[false,true]){const now=ctx.currentTime,o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(160+Math.abs(wAt(x,lower)+1)*72,now);g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(.06,now+.008);g.gain.exponentialRampToValueAtTime(.0001,now+.2);o.connect(g);g.connect(master);o.start(now);o.stop(now+.23);o.onended=()=>{o.disconnect();g.disconnect()}}},suspend(){ctx?.suspend().catch(()=>{})},resume(){if(enabled)ctx?.resume().catch(()=>{})}}})();
+// Observation instrument: sound represents received data / onboard vibration.
+// This envelope is artistic timing; the scientific state continues unchanged.
+function observationWindow(approach, now, eventAt = null, hold = 4) {
+  const t = Math.max(0, Math.min(1, (approach - .72) / .24));
+  const before = 1 - t * t * (3 - 2 * t);
+  if (!Number.isFinite(eventAt) || eventAt < 0 || now < eventAt) return before;
+  if (hold === Infinity) return 0;
+  const after = Math.max(0, Math.min(1, (now - eventAt - hold) / 2));
+  return before * after * after * (3 - 2 * after);
+}
+const audio=(()=>{
+let ctx=null,master=null,enabled=false;
+const voices=new Set();
+function cancel(){
+  for(const v of voices){try{v.o.stop();}catch{}v.o.disconnect();v.g.disconnect();}
+  voices.clear();
+}
+function allowed(){return !state.paused&&!state.lost&&!document.hidden&&!dialog.open;}
+return{
+  snapshot:()=>({enabled,state:ctx?.state||'uninitialized',voices:voices.size,voiceLimit:2,continuousSources:0,design:'branch-data'}),
+  async toggle(){try{
+    if(!ctx){ctx=new(window.AudioContext||window.webkitAudioContext)();master=ctx.createGain();master.gain.value=.23;master.connect(ctx.destination);}
+    enabled=!enabled;
+    if(enabled&&allowed())await ctx.resume();else{cancel();await ctx.suspend();}
+    document.querySelector('#sound').setAttribute('aria-pressed',String(enabled));
+    document.querySelector('#sound').setAttribute('aria-label',enabled?'소리 끄기':'소리 켜기');
+  }catch{enabled=false;report('이 브라우저에서는 소리를 사용할 수 없습니다.');}},
+  update(){
+    if(!enabled||ctx?.state!=='running'||!allowed())return;
+    const level=observationWindow(state.compression,state.time,state.eventAt,4);
+    if(level<.01||gap()<.003){if(voices.size)cancel();return;}
+    if(ctx.currentTime-lastAudio<.3||voices.size)return;
+    // Read the displayed, smoothed state, never the pointer's future target.
+    const cell=Math.round(state.compression*70+state.twist*3);
+    if(cell===lastAudioCell)return;
+    lastAudioCell=cell;lastAudio=ctx.currentTime;
+    const x=EDGE+.23*(1-state.compression)**2;
+    for(const lower of[false,true]){
+      const now=ctx.currentTime,o=ctx.createOscillator(),g=ctx.createGain(),v={o,g};
+      o.type='sine';o.frequency.setValueAtTime(160+Math.abs(wAt(x,lower)+1)*72,now);
+      g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(.06*level,now+.025);
+      g.gain.exponentialRampToValueAtTime(.0001,now+.24);
+      o.connect(g);g.connect(master);voices.add(v);
+      o.onended=()=>{voices.delete(v);o.disconnect();g.disconnect();};o.start(now);o.stop(now+.27);
+    }
+  },
+  reset(){cancel();lastAudioCell=-1;lastAudio=-Infinity;},
+  suspend(){cancel();ctx?.suspend().catch(()=>{});},
+  resume(){if(enabled&&allowed())ctx?.resume().catch(()=>{});}
+};
+})();
 function createVessel(){
 const root=new Group(),batches=new Map();
 root.name="TR-Q1-cruise";
@@ -21884,21 +21934,21 @@ function resize(){if(!renderer)return;camera.aspect=innerWidth/innerHeight;camer
 function snapshot(){return{work:'lambert',quality:names[level],time:state.time,finite:[state.compression,state.twist,camera?.position.x||0,gap()].every(Number.isFinite),contacts:pointers.size,interaction:state.interaction,inputCount:state.interaction,signature:state.event,signatureAt:state.eventAt,reversible:true,autoRotation:true,nebulaRotation:nebula?.rotation.toArray().slice(0,3)||[],compression:state.compression,targetCompression:state.targetCompression,gap:gap(),twist:state.twist,paused:state.paused,lost:state.lost,ready:state.ready,frames:frame,drawCalls:renderer?.info.render.calls||0,segments:tiers[level].segments,residual,qualityChanges:state.qualityChanges,vesselVisible:!!vessel?.visible,vesselScale:vessel?.scale.x||0,vesselPosition:vessel?.position.toArray()||[],vesselDesign:vessel?.userData.design||null,audio:audio.snapshot(),camera:camera?.position.toArray()||[],observerAngle,observerHold:smooth(.66,.96,state.compression),viewport:[innerWidth,innerHeight]}}
 function saveRecord(){if(!renderer)return;try{paint();recordImage=renderer.domElement.toDataURL('image/jpeg',.66)}catch{}recordLabel=`압축 ${(state.compression*100).toFixed(1)}% · 분지 간격 ${gap().toFixed(4)} · ${gap()<.003?'두 분지가 하나의 경계에 닿았습니다.':state.event?'닿았던 두 분지가 다시 펼쳐졌습니다.':'두 분지는 아직 떨어져 있습니다.'}`;document.querySelector('#saved-state').textContent=recordLabel;if(recordImage){const img=document.querySelector('#saved-image');img.src=recordImage;img.classList.add('has-image')}}
 function complete(){if(state.event||gap()>.003)return;state.event=true;state.eventAt=state.time;report('두 갈래가 하나의 경계에 닿았습니다. 다시 펼칠 수 있습니다.');saveRecord()}
-function adjust(amount,twist=0){if(state.paused||state.lost)return;state.targetCompression=clamp(state.targetCompression+amount);state.twist+=twist;state.interaction++;lastInput=state.time;audio.gesture()}
+function adjust(amount,twist=0){if(state.paused||state.lost)return;state.targetCompression=clamp(state.targetCompression+amount);state.twist+=twist;state.interaction++;lastInput=state.time}
 function contact(x,y){uniforms.uContact.value.set(x/innerWidth*2-1,1-y/innerHeight*2)}
 function pair(){if(pointers.size!==2){pairDistance=0;return}const[a,b]=pointers.values();pairDistance=Math.hypot(a.x-b.x,a.y-b.y);pairAngle=Math.atan2(b.y-a.y,b.x-a.x)}
 function down(e){if(e.button>0||state.paused||state.lost||dialog.open||pointers.size>=2)return;e.preventDefault();host.focus({preventScroll:true});const occupied=[...pointers.values()].map(p=>p.mark),mark=occupied.includes(0)?1:0;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY,mark});host.setPointerCapture(e.pointerId);marks[mark].classList.add('active');marks[mark].style.left=e.clientX+'px';marks[mark].style.top=e.clientY+'px';contact(e.clientX,e.clientY);pair();state.interaction++;lastInput=state.time}
 function move(e){state.x=(e.clientX/innerWidth-.5)*2;state.y=(.5-e.clientY/innerHeight)*2;const p=pointers.get(e.pointerId);if(!p||state.paused||state.lost)return;e.preventDefault();const dx=e.clientX-p.x,dy=e.clientY-p.y,span=Math.min(innerWidth,innerHeight);if(pointers.size===2){const previousDistance=pairDistance,previousAngle=pairAngle;p.x=e.clientX;p.y=e.clientY;pair();const angle=Math.atan2(Math.sin(pairAngle-previousAngle),Math.cos(pairAngle-previousAngle));adjust((previousDistance-pairDistance)/span*1.1,angle*.8)}else{p.x=e.clientX;p.y=e.clientY;adjust(-dy/span*.85,dx/span*2.4)}marks[p.mark].style.left=e.clientX+'px';marks[p.mark].style.top=e.clientY+'px';contact(e.clientX,e.clientY)}
 function release(id,record=true){const p=pointers.get(id);if(!p)return;pointers.delete(id);marks[p.mark].classList.remove('active');try{host.releasePointerCapture(id)}catch{}pair();if(record&&pointers.size===0&&state.interaction)saveRecord()}
 function releaseAll(record=false){for(const id of[...pointers.keys()])release(id,record);keys.clear()}
-function reset(){releaseAll();observerAngle=.54;state.time=0;state.interaction=0;state.press=state.viewX=state.viewY=state.x=state.y=0;state.compression=state.targetCompression=0;state.twist=0;state.event=false;state.eventAt=null;state.paused=false;last=lastDraw=0;lastAudioCell=-1;report('새 관측을 시작합니다.');audio.resume();queue()}
+function reset(){releaseAll();observerAngle=.54;fieldClock=0;state.time=0;state.interaction=0;state.press=state.viewX=state.viewY=state.x=state.y=0;state.compression=state.targetCompression=0;state.twist=0;state.event=false;state.eventAt=null;state.paused=false;last=lastDraw=0;lastAudioCell=-1;report('새 관측을 시작합니다.');audio.reset();audio.resume();queue()}
 function pause(value){state.paused=value;releaseAll(false);last=lastDraw=0;if(value){stop();audio.suspend();report('관측 일시 정지')}else{audio.resume();report('');queue()}}
-function update(dt){state.time+=dt;const rotationRate=reducedMotion.matches?.25:1;observerAngle+=dt*.15*rotationRate*(1-smooth(.66,.96,state.compression));const follow=1-Math.exp(-dt*9);state.compression+=(state.targetCompression-state.compression)*follow;if(state.targetCompression===1&&state.compression>.9999)state.compression=1;if(state.interaction>0)complete();state.press+=(pointers.size?1-state.press:-state.press)*(1-Math.exp(-dt*(pointers.size?15:4)));state.viewX+=(-state.y*.22-state.viewX)*(1-Math.exp(-dt*2));state.viewY+=(state.x*.28-state.viewY)*(1-Math.exp(-dt*2));if(keys.has('ArrowUp'))adjust(dt*.3);if(keys.has('ArrowDown'))adjust(-dt*.3);if(keys.has('ArrowLeft'))adjust(0,-dt*.8);if(keys.has('ArrowRight'))adjust(0,dt*.8)}
+function update(dt){state.time+=dt;fieldClock+=dt*(1-smooth(.72,.96,state.compression));const rotationRate=reducedMotion.matches?.25:1;observerAngle+=dt*.15*rotationRate*(1-smooth(.66,.96,state.compression));const follow=1-Math.exp(-dt*9);state.compression+=(state.targetCompression-state.compression)*follow;if(state.targetCompression===1&&state.compression>.9999)state.compression=1;if(state.interaction>0)complete();state.press+=(pointers.size?1-state.press:-state.press)*(1-Math.exp(-dt*(pointers.size?15:4)));state.viewX+=(-state.y*.22-state.viewX)*(1-Math.exp(-dt*2));state.viewY+=(state.x*.28-state.viewY)*(1-Math.exp(-dt*2));if(keys.has('ArrowUp'))adjust(dt*.3);if(keys.has('ArrowDown'))adjust(-dt*.3);if(keys.has('ArrowLeft'))adjust(0,-dt*.8);if(keys.has('ArrowRight'))adjust(0,dt*.8);audio.update()}
 function poseVessel(){if(!vessel)return;const x=EDGE+.23*(1-state.compression)*(1-state.compression),w=wAt(x,true),r=absW(w)*12,phase=200/3+(w+1)*3.6,angle=phase+state.twist*(.2+.8*Math.exp(-r*r/2000));vessel.position.set(Math.cos(angle)*r,Math.sin(angle)*r,phase*.6-40);vessel.rotation.set(.48+(w+1)*.09,state.twist*.12,.25+(w+1)*.9);vessel.scale.setScalar(2.2);vessel.visible=true}
 function absW(w){return Math.abs(w)}
-function paint(){poseVessel();const motion=reducedMotion.matches?.25:1;world.rotation.set(state.viewX,state.viewY,0);nebula.rotation.set(0,state.time*.042*motion,state.time*.03*motion);const theta=observerAngle,convergence=smooth(.55,.98,state.compression);const radius=(innerWidth<innerHeight?190:175)*(1-.12*convergence);camera.position.set(Math.cos(theta)*radius,8,Math.sin(theta)*radius);camera.lookAt(0,0,-3);uniforms.uTime.value=state.time;uniforms.uCompress.value=state.compression;uniforms.uTwist.value=state.twist;uniforms.uPress.value=state.press;renderer.render(scene,camera);frame++;if(frame%12===0){const t=Math.floor(state.time);document.querySelector('#elapsed').textContent=String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0');document.querySelector('#gap').textContent=gap().toFixed(3)}}
+function paint(){poseVessel();const motion=reducedMotion.matches?.25:1;world.rotation.set(state.viewX,state.viewY,0);nebula.rotation.set(0,fieldClock*.042*motion,fieldClock*.03*motion);const theta=observerAngle,convergence=smooth(.55,.98,state.compression);const radius=(innerWidth<innerHeight?190:175)*(1-.12*convergence);camera.position.set(Math.cos(theta)*radius,8,Math.sin(theta)*radius);camera.lookAt(0,0,-3);uniforms.uTime.value=state.time;uniforms.uCompress.value=state.compression;uniforms.uTwist.value=state.twist;uniforms.uPress.value=state.press;renderer.render(scene,camera);frame++;if(frame%12===0){const t=Math.floor(state.time);document.querySelector('#elapsed').textContent=String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0');document.querySelector('#gap').textContent=gap().toFixed(3)}}
 let loop=0,pageActive=true;function queue(){if(!loop&&pageActive&&!document.hidden&&!state.lost&&!state.paused&&!dialog.open)loop=requestAnimationFrame(tick)}function stop(){if(loop)cancelAnimationFrame(loop);loop=0;last=lastDraw=0}function tick(now){loop=0;if(!pageActive||document.hidden||state.lost||dialog.open){last=lastDraw=0;return}const dt=last?Math.min(.06,(now-last)*.001):0;last=now;if(!state.paused)update(dt);if(now-lastDraw>=1000/tiers[level].fps-.7){const start=performance.now();paint();lastDraw=now;const cost=performance.now()-start;average=average*.96+cost*.04;if(forced<0&&!state.paused&&state.time>5&&level>0){slow=average>16?slow+dt:Math.max(0,slow-dt*.5);if(slow>5){level--;state.qualityChanges++;slow=0;applyQuality()}}}queue()}
-try{scene=new Scene();scene.background=new Color('#030612');camera=new PerspectiveCamera(50,innerWidth/innerHeight,.1,1200);renderer=new WebGLRenderer({antialias:level>0,powerPreference:'default',preserveDrawingBuffer:false});renderer.outputColorSpace=SRGBColorSpace;host.appendChild(renderer.domElement);world=new Group();nebula=new Group();scene.add(world);world.add(nebula);build();vessel=createVessel();nebula.add(vessel);scene.add(new HemisphereLight(11780812,1450024,.85));const key=new DirectionalLight(14477293,2.2);key.position.set(120,280,400);scene.add(key);const edge=new DirectionalLight(9216944,.65);edge.position.set(-260,-20,-100);scene.add(edge);resize();state.ready=true;paint();loading.classList.add('done');loading.setAttribute('aria-hidden','true');queue();
+try{scene=new Scene();scene.background=new Color('#030612');camera=new PerspectiveCamera(50,innerWidth/innerHeight,.1,1200);renderer=new WebGLRenderer({antialias:level>0,powerPreference:'default',preserveDrawingBuffer:false});renderer.outputColorSpace=SRGBColorSpace;host.appendChild(renderer.domElement);world=new Group();nebula=new Group();scene.add(world);world.add(nebula);build();vessel=createVessel();nebula.add(vessel);scene.add(new HemisphereLight(11780812,1450024,.48));const key=new DirectionalLight(14477293,2.2);key.position.set(0,0,-3);key.target=vessel;nebula.add(key);const edge=new DirectionalLight(9216944,.25);edge.position.set(-260,-20,-100);scene.add(edge);resize();state.ready=true;paint();loading.classList.add('done');loading.setAttribute('aria-hidden','true');queue();
 renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();state.lost=true;releaseAll();stop();audio.suspend();loading.textContent='화면 복원 대기 중';loading.classList.remove('done')});renderer.domElement.addEventListener('webglcontextrestored',()=>{state.lost=false;texture.needsUpdate=true;geometry.attributes.aSeed.needsUpdate=true;applyQuality();paint();loading.classList.add('done');queue()});
 }catch(error){console.error(error);loading.textContent='화면을 시작할 수 없습니다. WebGL 2 지원 브라우저에서 다시 열어 주세요.'}
 host.addEventListener('pointerdown',down);host.addEventListener('pointermove',move);for(const name of['pointerup','pointercancel','lostpointercapture'])host.addEventListener(name,e=>release(e.pointerId,name==='pointerup'));host.addEventListener('wheel',e=>{e.preventDefault();adjust(e.deltaY*.0007);saveRecord()},{passive:false});host.addEventListener('contextmenu',e=>e.preventDefault());

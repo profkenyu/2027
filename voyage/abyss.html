@@ -23785,6 +23785,16 @@ function setStatus(text){
 status.textContent=text;
 status.hidden= !text;
 }
+// Observation instrument: sound represents received data / onboard vibration.
+// This envelope is artistic timing; the scientific state continues unchanged.
+function observationWindow(approach, now, eventAt = null, hold = 4) {
+  const t = Math.max(0, Math.min(1, (approach - .72) / .24));
+  const before = 1 - t * t * (3 - 2 * t);
+  if (!Number.isFinite(eventAt) || eventAt < 0 || now < eventAt) return before;
+  if (hold === Infinity) return 0;
+  const after = Math.max(0, Math.min(1, (now - eventAt - hold) / 2));
+  return before * after * after * (3 - 2 * after);
+}
 var audio=(()=>{
 const VOICE_LIMIT=6,BASE_HZ=164;
 const voices=new Set(),button=document.getElementById("sound");
@@ -23907,9 +23917,11 @@ frequencyLow=BASE_HZ*Math.pow(2,clamp2((model.branch[0]+1)*0.42,-1.75,1.4));
 frequencyHigh=BASE_HZ*Math.pow(2,clamp2((model.branch[1]+1)*0.42,-1.75,1.4));
 stereoWidth=0.82*clamp2((model.branch[1]-model.branch[0])/model.gapStart,0,1);
 if(state.captured){capture();return;}
+const reception=observationWindow(state.progress,state.elapsed,state.eventAt,Infinity);
+if(reception<.01){for(const voice of voices)stopVoice(voice,.032);return;}
 if(!enabled||ctx?.state!=="running"||paused||lost||document.hidden||dialog.open||motion<0.045||ctx.currentTime<gate||voices.size>VOICE_LIMIT-2)return;
 gate=ctx.currentTime+0.25+state.progress*0.23;
-const power=(0.17+0.1*motion)*(1-0.28*state.progress);
+const power=(0.17+0.1*motion)*(1-0.28*state.progress)*reception;
 const at=ctx.currentTime+0.005;
 soundBranch(frequencyLow,-stereoWidth,power,0,at);
 soundBranch(frequencyHigh,stereoWidth,power*0.88,1,at);
@@ -24386,14 +24398,15 @@ vessel=createVessel();
 vessel.updateObservedLoss=installObservationLoss(vessel);
 vesselRoot.add(vessel);
 nebula.add(vesselRoot);
-scene.add(new HemisphereLight(12900063,1251100,1.7));
+scene.add(new HemisphereLight(12900063,1251100,.6));
 const key=new DirectionalLight(14738920,3.2);
-key.position.set(180,150,220);
-scene.add(key);
-const rim=new DirectionalLight(8697551,1.2);
+// A single existing light approximates illumination from the selected fold.
+key.position.copy(target);key.position.z+=3;key.target=vesselRoot;
+nebula.add(key);
+const rim=new DirectionalLight(8697551,.35);
 rim.position.set(-180,-40,-70);
 scene.add(rim);
-const warm=new DirectionalLight(12351586,0.65);
+const warm=new DirectionalLight(12351586,.18);
 warm.position.set(40,-100,70);
 scene.add(warm);
 installCinemaFrame((width,height,left,top)=>{

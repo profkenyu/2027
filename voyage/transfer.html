@@ -23891,13 +23891,23 @@ notice.textContent=text;
 notice.classList.toggle("visible",!!text);
 noticeUntil=sim.elapsed+seconds;
 }
+// Observation instrument: sound represents received data / onboard vibration.
+// This envelope is artistic timing; the scientific state continues unchanged.
+function observationWindow(approach, now, eventAt = null, hold = 4) {
+  const t = Math.max(0, Math.min(1, (approach - .72) / .24));
+  const before = 1 - t * t * (3 - 2 * t);
+  if (!Number.isFinite(eventAt) || eventAt < 0 || now < eventAt) return before;
+  if (hold === Infinity) return 0;
+  const after = Math.max(0, Math.min(1, (now - eventAt - hold) / 2));
+  return before * after * after * (3 - 2 * after);
+}
 var audio=(()=>{
 let ctx=null,master=null,compressor=null,noiseGain=null;
 let noiseFilter=null,hullGain=null,ribGain=null,hull=null,rib=null;
 let enabled=false,wanted=false,revision=0,suspendTimer=null,pendingSuspend=null;
 let lastServiceVersion=0,lastServiceSound= -Infinity,serviceSounds=0,transferSounds=0;
 let eventArmed=true,lastControlTime= -Infinity,previousThrottle=0;
-let hissBuffer=null,relayBuffer=null,pressureBuffer=null;
+let hissBuffer=null,relayBuffer=null;
 const serviceVoices=new Set(),voices=new Set(),voiceLimit=8;
 const levels={thrust:0,shell:0,ribs:0,openness:0};
 const button=document.getElementById("sound");
@@ -23958,7 +23968,6 @@ return attack*(n*Math.exp(-t*130)*0.35+
 Math.sin(2*Math.PI*287*t)*Math.exp(-t*62)*0.45+
 Math.sin(2*Math.PI*631*t)*Math.exp(-t*88)*0.12);
 });
-pressureBuffer=buffer(0.64,(t,n)=>n*Math.min(1,t/0.014)*Math.exp(-t*8));
 const source=ctx.createBufferSource();
 source.buffer=hissBuffer;source.loop=true;
 noiseFilter=ctx.createBiquadFilter();
@@ -24060,10 +24069,14 @@ lastServiceVersion=version;
 if(!ctx|| !enabled||ctx.state!=="running")return;
 if(blocked()){cancel();return;}
 const t=ctx.currentTime;
+// Approaching the L1 passage closes the monitoring mix, not the physical throttle.
+const approach=!sim.transferred&&sim.s[2]>0&&Math.abs(sim.s[1])<.48?clampAudio((sim.s[0]+.35)/.35,0,1):0;
+const reception=observationWindow(approach,sim.elapsed,sim.eventAt,4.5);
+if(reception<.01){if(levels.thrust||levels.shell||levels.ribs||voices.size)cancel();return;}
 if(changed&&t-lastServiceSound>0.3&&serviceVoices.size<3&&sim.status!=="collision"&&(!sim.transferred||sim.elapsed-sim.eventAt>4.5)){
 lastServiceSound=t;
 const tx=operations.s.transmission>0;
-const v=shot(relayBuffer,(tx?0.105:0.09)*(sim.transferred?0.65:0.35),0.004,
+const v=shot(relayBuffer,(tx?0.105:0.09)*(sim.transferred?0.65:0.35)*reception,0.004,
 tx?1.55:operations.s.pump?0.73:1.05,tx?0.34:-0.24);
 if(v){serviceVoices.add(v);serviceSounds++;}
 }
@@ -24074,9 +24087,9 @@ const openness=clampAudio((C1-jacobi(sim.s))*0.8,0,1);
 const throat=Math.exp(-Math.abs(sim.s[0])*5-Math.abs(sim.s[1])*3);
 const running=sim.status!=="collision"&&sim.status!=="escaped"&&throttle>0.001;
 levels.openness=openness;
-levels.thrust=running?0.44*Math.pow(throttle,0.8):0;
-levels.shell=running?0.14*Math.pow(throttle,1.35):0;
-levels.ribs=running?0.055*throttle:0;
+levels.thrust=running?0.44*Math.pow(throttle,0.8)*reception:0;
+levels.shell=running?0.14*Math.pow(throttle,1.35)*reception:0;
+levels.ribs=running?0.055*throttle*reception:0;
 smooth(noiseGain.gain,levels.thrust,running?0.045:0.018);
 smooth(hullGain.gain,levels.shell,running?0.06:0.018);
 smooth(ribGain.gain,levels.ribs,running?0.055:0.018);
@@ -24089,10 +24102,8 @@ function event(){
 if(!eventArmed)return;
 eventArmed=false;
 if(!ctx|| !enabled||ctx.state!=="running"||blocked())return;
-const v=shot(pressureBuffer,0.38,0.008,0.9,0,460);
-shot(relayBuffer,0.20,0.035,0.66,-0.3);
-shot(relayBuffer,0.14,0.235,0.88,0.3);
-if(v)transferSounds++;
+// Arrival is observed in silence; the next real service transition can sound after the hold.
+cancel();
 }
 function gesture(){
 if(wanted&&(!enabled||ctx?.state!=="running"))enable(true,false);
@@ -24807,18 +24818,18 @@ createPrediction();
 createTransitTrail();
 vessel=createVessel();
 scene.add(vessel);
-const ambient=new HemisphereLight(12172476,2105890,1);
+const ambient=new HemisphereLight(12172476,2105890,.5);
 scene.add(ambient);
 const warm=new PointLight(13027525,46e3,0,2);
-warm.position.set(-S*0.5,50,35);
+warm.position.set(-S*0.5,0,0);
 scene.add(warm);
 const cool=new PointLight(10331044,46e3,0,2);
-cool.position.set(S*0.5,50,-35);
+cool.position.set(S*0.5,0,0);
 scene.add(cool);
-const key=new DirectionalLight(14277850,3.4);
+const key=new DirectionalLight(14277850,.5);
 key.position.set(140,220,160);
 scene.add(key);
-const observerLight=new DirectionalLight(12568004,1.3);
+const observerLight=new DirectionalLight(12568004,.18);
 observerLight.position.set(0,400,520);
 scene.add(observerLight);
 for(const[side,color]of[

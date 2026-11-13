@@ -22001,7 +22001,17 @@ resize();dirty=true;
 }
 function resize(){if(!gl||lost)return;const q=tiers[level];width=innerWidth;height=innerHeight;dpr=Math.min(devicePixelRatio||1,q.ratio,q.cap/Math.max(width,height));canvas.width=Math.max(1,Math.round(width*dpr));canvas.height=Math.max(1,Math.round(height*dpr));gl.viewport(0,0,canvas.width,canvas.height);resizeProbe();dirty=true;}
 function failure(error){console.error(error);status.textContent='화면을 시작할 수 없습니다. WebGL 2 지원 브라우저에서 다시 열어 주세요.';status.classList.remove('done');}
-const audio=(()=>{let context=null,on=false,lastCell=-1;return{get enabled(){return on},async toggle(){try{if(!context)context=new(window.AudioContext||window.webkitAudioContext)();on=!on;if(on)await context.resume();else await context.suspend();$('sound').setAttribute('aria-pressed',String(on));$('sound').setAttribute('aria-label',on?'소리 끄기':'소리 켜기');}catch{on=false;notice.textContent='소리를 시작할 수 없습니다.';}},contact(){if(!on||!context||context.state!=='running')return;const cell=Math.floor(sim.distance*2)+Math.floor(sim.gate*9);if(cell===lastCell)return;lastCell=cell;const t=context.currentTime,o=context.createOscillator(),g=context.createGain();o.type='sine';o.frequency.setValueAtTime(72+sim.distance*4,t);o.frequency.exponentialRampToValueAtTime(58+sim.distance*2,t+.16);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.03*(1-sim.gate*.8),t+.006);g.gain.exponentialRampToValueAtTime(.0001,t+.2);o.connect(g);g.connect(context.destination);o.start(t);o.stop(t+.23);o.onended=()=>{o.disconnect();g.disconnect();};},suspend(){context?.suspend().catch(()=>{});},resume(){if(on)context?.resume().catch(()=>{});},snapshot(){return{enabled:on,state:context?.state||'uninitialized'};}}})();
+// Observation instrument: sound represents received data / onboard vibration.
+// This envelope is artistic timing; the scientific state continues unchanged.
+function observationWindow(approach, now, eventAt = null, hold = 4) {
+  const t = Math.max(0, Math.min(1, (approach - .72) / .24));
+  const before = 1 - t * t * (3 - 2 * t);
+  if (!Number.isFinite(eventAt) || eventAt < 0 || now < eventAt) return before;
+  if (hold === Infinity) return 0;
+  const after = Math.max(0, Math.min(1, (now - eventAt - hold) / 2));
+  return before * after * after * (3 - 2 * after);
+}
+const audio=(()=>{let context=null,on=false,lastCell=-1,lastSound=-Infinity;const voices=new Set();function cancel(){for(const v of voices){try{v.o.stop();}catch{}v.o.disconnect();v.g.disconnect();}voices.clear();}return{get enabled(){return on},async toggle(){try{if(!context)context=new(window.AudioContext||window.webkitAudioContext)();on=!on;if(on)await context.resume();else{cancel();await context.suspend();}$('sound').setAttribute('aria-pressed',String(on));$('sound').setAttribute('aria-label',on?'소리 끄기':'소리 켜기');}catch{on=false;notice.textContent='소리를 시작할 수 없습니다.';}},contact(){if(!on||!context||context.state!=='running'||paused||lost||dialog.open||document.hidden)return;const level=observationWindow(sim.gate/.92,clock,sim.signatureAt,4)*(1-sim.gate);if(level<.01){if(voices.size)cancel();return;}if(clock-lastSound<.32||voices.size>=1)return;const cell=Math.floor(sim.distance*2)+Math.floor(sim.gate*9);if(cell===lastCell)return;lastCell=cell;lastSound=clock;const t=context.currentTime,o=context.createOscillator(),g=context.createGain();o.type='sine';o.frequency.setValueAtTime(72+sim.distance*4,t);o.frequency.exponentialRampToValueAtTime(58+sim.distance*2,t+.16);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.03*(1-sim.gate*.8)*level,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.2);o.connect(g);g.connect(context.destination);const voice={o,g};voices.add(voice);o.start(t);o.stop(t+.23);o.onended=()=>{voices.delete(voice);o.disconnect();g.disconnect();};},reset(){cancel();lastCell=-1;lastSound=-Infinity;},suspend(){cancel();context?.suspend().catch(()=>{});},resume(){if(on&&!paused&&!lost&&!document.hidden&&!dialog.open)context?.resume().catch(()=>{});},snapshot(){return{enabled:on,state:context?.state||'uninitialized',voices:voices.size,voiceLimit:1,continuousSources:0,design:'received-path-data'};}}})();
 let probe=null,probeLost=false,probePhase=.90;
 function createProbe(){
 const T=window.__VoyageGeometry,scene=new T.Scene();
@@ -22010,14 +22020,14 @@ const renderer=new T.WebGLRenderer({alpha:true,antialias:level>0,powerPreference
 renderer.setClearColor(0,0);renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=.96;
 const layer=renderer.domElement;layer.id='probe-layer';layer.style.pointerEvents='none';layer.style.zIndex='1';layer.setAttribute('aria-hidden','true');document.body.appendChild(layer);
 const root=new T.Group(),ship=T.createVessel();root.add(ship);scene.add(root);
-scene.add(new T.HemisphereLight(0xc3d2d8,0x111924,.83));
-const key=new T.DirectionalLight(0xe5e4d8,2.85);key.position.set(-3,5,8);scene.add(key);
-const rim=new T.DirectionalLight(0x869fae,.75);rim.position.set(4,-2,-5);scene.add(rim);
+scene.add(new T.HemisphereLight(0xc3d2d8,0x111924,.38));
+const key=new T.DirectionalLight(0xe5e4d8,2.85);key.position.set(3.5,0,0);key.target=root;scene.add(key);
+const rim=new T.DirectionalLight(0x869fae,.22);rim.position.set(4,-2,-5);scene.add(rim);
 const mask=new T.Mesh(new T.SphereGeometry(1,48,32),new T.MeshBasicMaterial({colorWrite:false,depthWrite:true,depthTest:true}));
 mask.renderOrder=-100;scene.add(mask);
 layer.addEventListener('webglcontextlost',e=>{e.preventDefault();probeLost=true;release();audio.suspend();status.textContent='탐사선 관측면 복원 대기 중';status.classList.remove('done');lastTick=lastDraw=0;});
 layer.addEventListener('webglcontextrestored',()=>{probeLost=false;lastTick=lastDraw=0;resizeProbe();if(!lost){paint();status.classList.add('done');audio.resume();}});
-return{T,scene,camera,renderer,root,ship,mask,point:new T.Vector3(),ahead:new T.Vector3(),heading:new T.Vector3(),forward:new T.Vector3(0,0,1),rotation:new T.Quaternion(),radius:4.8,approach:0};
+return{T,scene,camera,renderer,root,ship,mask,key,opacity:1,point:new T.Vector3(),ahead:new T.Vector3(),heading:new T.Vector3(),forward:new T.Vector3(0,0,1),rotation:new T.Quaternion(),radius:4.8,approach:0};
 }
 function resizeProbe(){
 if(!probe||probeLost)return;
@@ -22038,7 +22048,13 @@ P.root.position.copy(P.point);P.root.quaternion.copy(P.rotation);P.ship.rotation
 const baseScale=.075*Math.max(1,600/Math.min(width,height));
 const distance=c.position.distanceTo(P.point),maxPixels=width<height?46:80;
 const legibleLimit=maxPixels*distance/(5.8*1.3*Math.min(width,height));
-P.root.scale.setScalar(Math.min(baseScale,legibleLimit));P.root.visible=sim.gate<.70;
+P.root.scale.setScalar(Math.min(baseScale,legibleLimit));P.root.visible=sim.gate<.999;
+// Direct probe image uses the same reception factor (1-gate) as short disk paths.
+// The existing depth mask is an apparent-shadow approximation, not a ray-traced hull.
+const reception=1-sim.gate;
+if(P.opacity!==reception&&(Math.abs(P.opacity-reception)>.002||reception===0||reception===1)){P.opacity=reception;P.renderer.domElement.style.opacity=String(reception);}
+// Existing light follows the nearest luminous inner annulus in world coordinates.
+P.key.position.set(P.point.x,0,P.point.z).normalize().multiplyScalar(3.5);
 P.mask.scale.setScalar(3*Math.sqrt(3)/2*Math.sqrt(1-1/sim.distance));
 P.renderer.render(P.scene,c);
 }
@@ -22057,8 +22073,8 @@ sim.interaction++;dirty=true;
 function release(e){if(e)contacts.delete(e.pointerId);else contacts.clear();pair=describePair();dirty=true;}
 for(const[name,fn]of[['pointerdown',pointerDown],['pointermove',pointerMove],['pointerup',release],['pointercancel',release],['lostpointercapture',release]])canvas.addEventListener(name,fn);
 canvas.addEventListener('wheel',e=>{if(paused||dialog.open)return;e.preventDefault();input.distance=clamp(input.distance+e.deltaY*.012,3.15,22);sim.interaction++;dirty=true;},{passive:false});canvas.addEventListener('contextmenu',e=>e.preventDefault());
-function reset(){Object.assign(input,{azimuth:.18,elevation:.29,distance:14,gate:0,shear:0,observerX:0,observerY:0});Object.assign(sim,{azimuth:.18,elevation:.29,distance:14,gate:0,shear:0,interaction:0,signature:false,signatureAt:null,near:0});release();clock=0;probePhase=.90;paused=false;notice.textContent='';lastTick=lastDraw=0;audio.resume();}
-function update(dt){clock+=dt;probePhase+=dt*.07;if(contacts.size===1){const p=contacts.values().next().value;p.still+=dt;if(p.still>.55)input.gate=clamp(input.gate+p.gateDirection*dt*.30,0,1);}const a=1-Math.exp(-dt*5);for(const k of['azimuth','elevation','distance','gate','shear'])sim[k]+=(input[k]-sim[k])*a;sim.near=clamp((14-sim.distance)/10.85,0,1);if(!sim.signature&&sim.gate>.92){sim.signature=true;sim.signatureAt=clock;notice.textContent='짧은 경로가 닫히고, 감긴 빛이 남습니다.';}audio.contact();}
+function reset(){Object.assign(input,{azimuth:.18,elevation:.29,distance:14,gate:0,shear:0,observerX:0,observerY:0});Object.assign(sim,{azimuth:.18,elevation:.29,distance:14,gate:0,shear:0,interaction:0,signature:false,signatureAt:null,near:0});release();clock=0;probePhase=.90;paused=false;audio.reset();notice.textContent='';lastTick=lastDraw=0;audio.resume();}
+function update(dt){clock+=dt;probePhase+=dt*.07*observationWindow(sim.gate/.92,clock,sim.signatureAt,4);if(contacts.size===1){const p=contacts.values().next().value;p.still+=dt;if(p.still>.55)input.gate=clamp(input.gate+p.gateDirection*dt*.30,0,1);}const a=1-Math.exp(-dt*5);for(const k of['azimuth','elevation','distance','gate','shear'])sim[k]+=(input[k]-sim[k])*a;sim.near=clamp((14-sim.distance)/10.85,0,1);if(!sim.signature&&sim.gate>.92){sim.signature=true;sim.signatureAt=clock;notice.textContent='짧은 경로가 닫히고, 감긴 빛이 남습니다.';}audio.contact();}
 function paint(){if(lost||probeLost||!gl)return;gl.useProgram(program);gl.uniform2f(uniforms.uResolution,canvas.width,canvas.height);gl.uniform1f(uniforms.uTime,clock);gl.uniform1f(uniforms.uRadius,sim.distance);gl.uniform1f(uniforms.uAzimuth,sim.azimuth+input.observerX);gl.uniform1f(uniforms.uElevation,sim.elevation+input.observerY);gl.uniform1f(uniforms.uGate,sim.gate);gl.uniform1f(uniforms.uShear,sim.shear);gl.uniform1f(uniforms.uNear,sim.near);gl.drawArrays(gl.TRIANGLES,0,3);drawProbe();renderCount++;}
 function ui(){$('radius').textContent=sim.distance.toFixed(2)+' Rₛ';$('lapse').textContent=Math.sqrt(1-1/sim.distance).toFixed(3);$('gate').textContent=sim.gate<.05?'열림':sim.gate>.9?'감긴 빛':Math.round(sim.gate*100)+'%';}
 function frame(now){requestAnimationFrame(frame);if(document.hidden||lost||probeLost||dialog.open){lastTick=lastDraw=0;return;}const dt=lastTick?Math.min((now-lastTick)*.001,.05):0;lastTick=now;if(!paused)update(dt);if(paused&&!dirty)return;if(now-lastDraw<1000/tiers[level].fps-.8)return;const interval=now-lastDraw;lastDraw=now;paint();dirty=false;if(now-lastReadout>150){ui();lastReadout=now;}if(!query.has('quality')&&level>0&&!paused&&interval<150){mean+=(interval-mean)*.025;slow=mean>1000/tiers[level].fps*1.9?slow+dt:Math.max(0,slow-dt*.5);if(slow>6){level--;qualityChanges++;slow=0;try{initGL();}catch(error){failure(error);}}}}

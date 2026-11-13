@@ -22034,7 +22034,7 @@ const uniforms={
 uCenters:{value:new Float32Array(BANDS.map(b=>(b[0]+b[1])*.5))},
 uPhase:{value:phaseGPU},uMemory:{value:memoryGPU},uStrain:{value:strainGPU},
 uTime:{value:0},uFault:{value:-1},uPeel:{value:0},uContactAngle:{value:0},
-uRMin:{value:RMIN},uRMax:{value:RMAX},uEye:{value:new T.Vector3()}
+uRMin:{value:RMIN},uRMax:{value:RMAX},uEye:{value:new T.Vector3()},uKeyDirection:{value:new T.Vector3(-.70,.29,.47).normalize()}
 };
 const vertex=`
     attribute vec4 aSheet;
@@ -22077,7 +22077,7 @@ const vertex=`
 const fragment=`
     precision highp float;
     uniform float uTime,uFault,uPeel;
-    uniform vec3 uEye;
+    uniform vec3 uEye,uKeyDirection;
     varying vec3 vWorld;
     varying vec4 vSheet;
     varying vec3 vFace;
@@ -22087,7 +22087,7 @@ const fragment=`
       if(reveal<.002)discard;
       vec3 n=normalize(cross(dFdx(vWorld),dFdy(vWorld)));
       vec3 view=normalize(uEye-vWorld);if(dot(n,view)<0.)n=-n;
-      vec3 key=normalize(vec3(-.70,.29,.47));
+      vec3 key=normalize(uKeyDirection);
       float diffuse=max(0.,dot(n,key));
       float edge=exp(-pow(min(vSheet.x,1.-vSheet.x)/.018,2.));
       float top=step(.5,abs(vFace.x));
@@ -22294,6 +22294,16 @@ else if(e.code==='KeyM'&&!e.repeat)Audio.toggle();
 else if(e.code.startsWith('Arrow')&&!state.paused){keys.add(e.code);syncDrive();queue();}
 });
 addEventListener('keyup',e=>{keys.delete(e.code);syncDrive();});
+// Observation instrument: sound represents received data / onboard vibration.
+// This envelope is artistic timing; the scientific state continues unchanged.
+function observationWindow(approach, now, eventAt = null, hold = 4) {
+  const t = Math.max(0, Math.min(1, (approach - .72) / .24));
+  const before = 1 - t * t * (3 - 2 * t);
+  if (!Number.isFinite(eventAt) || eventAt < 0 || now < eventAt) return before;
+  if (hold === Infinity) return 0;
+  const after = Math.max(0, Math.min(1, (now - eventAt - hold) / 2));
+  return before * after * after * (3 - 2 * after);
+}
 const Audio=(()=>{
 let context=null,master=null,buffer=null,enabled=false,lastSound=-100,played=0,silenced=0;
 const voices=new Set();
@@ -22319,11 +22329,13 @@ $('sound').setAttribute('aria-pressed',String(enabled));$('sound').setAttribute(
 },
 update(){
 if(!enabled||context?.state!=='running'||S.eventAt>=0||state.paused||dialog.open)return;
+const level=observationWindow(Math.min(S.work/2.1,S.shear/1.1),S.time,S.eventAt,Infinity);
+if(level<.01){if(voices.size)cancel();return;}
 if(S.inputTorque>-.08||S.opposition<.004||S.time-lastSound<.48||voices.size>=3)return;
 lastSound=S.time;
 const source=context.createBufferSource(),gain=context.createGain(),now=context.currentTime;
 source.buffer=buffer;source.playbackRate.value=.45+clamp(S.opposition*5,0,.35);
-gain.gain.setValueAtTime(0,now);gain.gain.linearRampToValueAtTime(.16+clamp(S.shear*.012,0,.12),now+.008);
+gain.gain.setValueAtTime(0,now);gain.gain.linearRampToValueAtTime((.16+clamp(S.shear*.012,0,.12))*level,now+.018);
 gain.gain.exponentialRampToValueAtTime(.0001,now+.22);source.connect(gain);gain.connect(master);
 const voice={source,gain};voices.add(voice);source.onended=()=>{voices.delete(voice);source.disconnect();gain.disconnect();};
 source.start(now);source.stop(now+.24);played++;
@@ -22461,7 +22473,7 @@ material=new T.ShaderMaterial({uniforms,vertexShader:vertex,fragmentShader:fragm
 buildGeometry();sheets=new T.Mesh(geometry,material);sheets.frustumCulled=false;scene.add(sheets);
 vessel=new T.Group();ship=T.createVessel();vessel.add(ship);scene.add(vessel);
 scene.add(new T.HemisphereLight(0xa5b9c7,0x020307,.55));
-const key=new T.DirectionalLight(0xe4e0ce,2.5);key.position.set(-6,9,5);scene.add(key);
+const key=new T.DirectionalLight(0xe4e0ce,2.5);key.position.copy(uniforms.uKeyDirection.value).multiplyScalar(12);scene.add(key);
 const rim=new T.DirectionalLight(0x627e92,.55);rim.position.set(5,-2,-8);scene.add(rim);
 state.ready=true;resize();paint();ui();status.hidden=true;captureFrame('관측 시작');queue();
 }catch(e){
