@@ -1108,13 +1108,6 @@
         gap: 1px;
         line-height: 1.4;
       }
-      .preview-actions small {
-        font-size: 9px;
-        font-weight: 400;
-        color: var(--dim);
-        letter-spacing: 0;
-        white-space: nowrap;
-      }
       .archive-index {
         display: flex;
         flex-wrap: wrap;
@@ -1255,9 +1248,6 @@
         .preview-actions {
           gap: 12px;
         }
-        .preview-actions small {
-          font-size: 9px;
-        }
         .archive-index {
           gap: 0 18px;
         }
@@ -1313,9 +1303,9 @@
             id="vehicle-preview-link"
             href="preview.html?from=field-archive.html"
             aria-label="로버 · 탐사선 · 이주선 외장 보기"
-            ><span>PREVIEW</span><small>기체 외형 보기</small></a
-          ><a class="back" href="planet-01.html" data-return
-            ><span>RETURN</span><small id="fa-return-label">Planet 01로 돌아가기</small></a
+            ><span>PREVIEW</span></a
+          ><a class="back" href="planet-01.html" data-return aria-label="이전 화면으로 돌아가기"
+            ><span>RETURN</span></a
           ></div
         >
       </header>
@@ -3181,8 +3171,6 @@
             returnLink.href = POST_PHASES[post.phase].file;
             if (post.phase === "ending") {
               returnLink.setAttribute("aria-label", "엔딩으로 돌아가기");
-              const label = returnLink.querySelector("small");
-              if (label) label.textContent = "엔딩으로 돌아가기";
             }
           }
           returnLink?.addEventListener("click", (event) => {
@@ -3457,15 +3445,11 @@ body .visitor-vehicle-index a{flex:none;white-space:nowrap}
                 if (returnLink.getAttribute("href") !== from) returnLink.setAttribute("href", from);
                 const label = names[from] + "으로 돌아가기";
                 returnLink.setAttribute("aria-label", label);
-                const small = returnLink.querySelector("small");
-                if (small && small.textContent !== label) small.textContent = label;
               };
               apply();
               new MutationObserver(apply).observe(returnLink, {
                 attributes: true,
                 attributeFilter: ["href"],
-                childList: true,
-                subtree: true,
               });
             }
           }

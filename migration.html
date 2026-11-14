@@ -31086,16 +31086,16 @@ void main() {
         },
         transit: {
           high: {
-            file: "high-97ee82ab118416ef.json",
-            bytes: 1338201,
+            file: "high-0e3a563f96c21306.json",
+            bytes: 1342521,
           },
           mid: {
-            file: "mid-85f35e7a0949a014.json",
-            bytes: 1209320,
+            file: "mid-bf1c9ee580decf65.json",
+            bytes: 1213640,
           },
           low: {
-            file: "low-3d2876fc50d76a19.json",
-            bytes: 646278,
+            file: "low-6cb8c5ddf470ecad.json",
+            bytes: 650598,
           },
         },
         arrival: {
@@ -36461,10 +36461,13 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
             transparent: !0,
             depthWrite: !1,
             vertexColors: !0,
-            uniforms: { pixelScale: { value: Math.min(devicePixelRatio, 1.5) } },
+            uniforms: {
+              pixelScale: { value: Math.min(devicePixelRatio, 1.5) },
+              visibility: { value: 1 },
+            },
             vertexShader:
               "attribute float starSize;uniform float pixelScale;varying vec3 tint;void main(){tint=color;gl_PointSize=starSize*pixelScale;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}",
-            fragmentShader: `varying vec3 tint;void main(){float r=length(gl_PointCoord-.5)*2.;float alpha=1.-smoothstep(.2,1.,r);if(alpha<.01)discard;gl_FragColor=vec4(tint,alpha);
+            fragmentShader: `uniform float visibility;varying vec3 tint;void main(){float r=length(gl_PointCoord-.5)*2.;float alpha=1.-smoothstep(.2,1.,r);if(alpha<.01)discard;gl_FragColor=vec4(tint,alpha*visibility);
 #include <colorspace_fragment>
 }`,
           }),
@@ -36476,6 +36479,9 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
         return {
           get surface() {
             return ensureSurface();
+          },
+          setStarVisibility(value) {
+            starfield.material.uniforms.visibility.value = value;
           },
           planetPosition: (out) => (out ? out.copy(planet.position) : planet.position.toArray()),
           get observerHeight() {
@@ -39374,13 +39380,31 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           camera2.lookAt(migrationRearTarget),
           camera2.updateProjectionMatrix());
       }
+      function openingCameraAxial(t) {
+        const u = MathUtils.clamp(t / 30, 0, 1), ramp = 0.18;
+        const integral = (v) => v ** 4 * (2.5 + v * (-3 + v));
+        const p = u < ramp ? ramp * integral(u / ramp) / (1 - ramp)
+          : u > 1 - ramp ? 1 - ramp * integral((1 - u) / ramp) / (1 - ramp)
+          : (u - ramp / 2) / (1 - ramp);
+        const angleAt = (z) => {
+          const edge = Math.max(0, 1 - (z / 2800) ** 2);
+          const height = 185 + 235 * Math.exp(-((z / 700) ** 2)) * edge * edge;
+          return Math.atan2(185, -z * 185 / height);
+        };
+        const angle = MathUtils.lerp(angleAt(1800), angleAt(-1400), p);
+        let lo = -1400, hi = 1800;
+        for (let i = 0; i < 24; i++) {
+          const z = (lo + hi) / 2;
+          if (angleAt(z) < angle) lo = z; else hi = z;
+        }
+        return (lo + hi) / 2;
+      }
       function directMigrationSequence(camera2, t, fleet2, surface) {
         if (t < 30) {
           let portrait = camera2.aspect < 1,
             ship = fleet2[0];
           ((camera2.near = 1), (camera2.fov = portrait ? 64 : 52));
-          let offset = openingPassageOffset(t);
-          camera2.position.set(0, -185, -2800 + offset / ship.scale.z);
+          camera2.position.set(0, -185, openingCameraAxial(t));
           let axial = camera2.position.z,
             edge = Math.max(0, 1 - (axial / 2800) ** 2),
             gazeHeight = 185 + 235 * Math.exp(-((axial / 700) ** 2)) * edge * edge;
@@ -57994,10 +58018,19 @@ vShieldFinish=shieldFinish;`,
             (environment.planetPosition(fillLight.position),
             fillLight.target.position.copy(shadowSubject.position)),
           habitat && audio.setEnvironment(habitat.model.state));
+        if (phase === "migration") {
+          const distance = camera.position.distanceTo(shadowSubject.position);
+          const brightHull = 1 - MathUtils.smootherstep(distance, 700, 4500);
+          environment.setStarVisibility(1 - 0.84 * brightHull);
+          renderer.toneMappingExposure = 1.05 - 0.12 * brightHull;
+          scene.environmentIntensity *= 0.78;
+          hemisphereLight.intensity *= 0.66;
+          fillLight.intensity *= 0.76;
+        }
         let enter = smooth5((seconds - segment.start) / 0.75),
           exit = 1 - smooth5((seconds - (endTime - 1.2)) / 0.9),
           veil = Math.max(1 - enter, 1 - exit);
-        for (let at of cutTimes) veil = Math.max(veil, transitionVeil(seconds, at));
+        for (const at of cutTimes) veil = Math.max(veil, transitionVeil(seconds, at));
         if (
           (veil !== cutOpacity && ((cutOpacity = veil), (cut.style.opacity = String(veil))),
           arrivalIntro && phase === "arrival")
@@ -58106,7 +58139,7 @@ vShieldFinish=shieldFinish;`,
             sunColor: [0.89, 0.95, 1],
             planetColor: [0.105, 0.112, 0.13],
           }).texture),
-          (scene.environmentIntensity = 0.55),
+          (scene.environmentIntensity = phase === "migration" ? 0.43 : 0.55),
           (hemisphereLight = new HemisphereLight(12111079, 4278871, 0.16)),
           scene.add(hemisphereLight),
           (keyLight = new DirectionalLight(14806271, 2.6)),

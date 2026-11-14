@@ -1086,16 +1086,16 @@
         },
         transit: {
           high: {
-            file: "high-97ee82ab118416ef.json",
-            bytes: 1338201,
+            file: "high-0e3a563f96c21306.json",
+            bytes: 1342521,
           },
           mid: {
-            file: "mid-85f35e7a0949a014.json",
-            bytes: 1209320,
+            file: "mid-bf1c9ee580decf65.json",
+            bytes: 1213640,
           },
           low: {
-            file: "low-3d2876fc50d76a19.json",
-            bytes: 646278,
+            file: "low-6cb8c5ddf470ecad.json",
+            bytes: 650598,
           },
         },
         arrival: {
@@ -29415,7 +29415,7 @@
           (6 * delta - 3 * m0 - 3 * m1) * u ** 5
         );
       }
-      function pose(camera2, ship, t2, passage2 = 1) {
+      function trackingPose(camera2, ship, t2, passage2 = 1) {
         let shot = shotPose(camera2, ship, t2, passage2),
           cut = (passage2 === 2 ? [26, 44] : CUTS).find(
             (c) => Math.abs(t2 - c) < bridgeRadius(passage2, c),
@@ -29468,6 +29468,51 @@
           candidateBank(camera2, t2, passage2),
           shot
         );
+      }
+      // Authored lens response and a four-second observation hold, not auto exposure.
+      // Pure timeline evaluation keeps resize, replay and arbitrary seeks deterministic.
+      var SPACE_HOLD = Object.freeze({ release: 40, start: 58, end: 62 }),
+        holdCamera = new PerspectiveCamera(),
+        holdShip = new Group(),
+        holdAim = new Vector3(),
+        holdDirection = new Vector3();
+      function pose(camera2, ship, t2, passage2 = 1) {
+        const duration = SPACE_HOLD.start - SPACE_HOLD.release;
+        const u = travel(SPACE_HOLD.release, SPACE_HOLD.start, t2);
+        const cameraTime =
+          t2 <= SPACE_HOLD.release ? t2 : SPACE_HOLD.release + duration * (u - integratedEase(u));
+        const shot = trackingPose(camera2, ship, cameraTime, passage2);
+        if (t2 > SPACE_HOLD.release) {
+          holdCamera.aspect = camera2.aspect;
+          trackingPose(holdCamera, holdShip, SPACE_HOLD.release + duration / 2, passage2);
+          // Turn toward the planetary limb, leaving the near hull outside the frame.
+          const halfWidth = Math.atan(Math.tan((holdCamera.fov * Math.PI) / 360) * camera2.aspect);
+          holdDirection.subVectors(holdShip.position, holdCamera.position).normalize();
+          const yaw =
+            Math.atan2(holdDirection.x, -holdDirection.z) + halfWidth + 0.24;
+          holdAim
+            .set(Math.sin(yaw), 0.12, -Math.cos(yaw))
+            .normalize()
+            .multiplyScalar(5000)
+            .add(holdCamera.position);
+          holdCamera.lookAt(holdAim);
+          camera2.quaternion.slerp(holdCamera.quaternion, smooth(0, 1, u));
+          camera2.getWorldDirection(holdDirection);
+          camera2.userData.focus.copy(camera2.position).addScaledVector(holdDirection, 5000);
+          camera2.updateMatrixWorld();
+          // The camera stops; the spacecraft retains its original inertial trajectory.
+          ship.position.set(0, 0, -displacement(t2));
+          ship.rotation.set(0.045, btkTransitYaw(t2), 0.06);
+        }
+        return t2 >= SPACE_HOLD.start ? "horizon-hold" : shot;
+      }
+      function spaceLensResponse(camera2, ship, t2) {
+        const proximity = 1 - smooth(85, 220, camera2.position.distanceTo(ship.position));
+        const brightHull = proximity * (1 - smooth(52, 62, t2));
+        return {
+          stars: 0.9 * (1 - 0.82 * brightHull),
+          exposure: 1.05 - 0.12 * brightHull,
+        };
       }
       function createVoid(scene2, tier2, passage2 = 1) {
         let stars = new Group(),
@@ -47039,7 +47084,7 @@
       );
       function passageEdit(t2, cuts2) {
         let enter = 1 - easeEdit((t2 - 0.12) / 1.65),
-          exit = easeEdit((t2 - 61.7) / 2.05);
+          exit = easeEdit((t2 - SPACE_HOLD.end) / 1.75);
         return {
           veil: Math.max(enter, exit),
           audio:
@@ -47213,6 +47258,9 @@
           keyLight.position.copy(surveyor.group.position).add(lightOffset),
           fillLight.position.copy(voidScene.planet.position),
           fillLight.target.position.copy(surveyor.group.position));
+        const lensResponse = spaceLensResponse(camera, surveyor.group, t);
+        voidScene.stars.children[0].material.opacity = lensResponse.stars;
+        renderer.toneMappingExposure = lensResponse.exposure;
         let blackout = passageEdit(t, cuts).veil;
         (blackout !== veilOpacity &&
           ((veilOpacity = blackout), (veil.style.opacity = String(blackout))),
@@ -47275,7 +47323,8 @@
           (scene.background = new Color(197895)),
           (scene.environment = createFlightEnvironment(renderer, tier, passage).texture),
           (camera = new PerspectiveCamera(43, innerWidth / innerHeight, 0.25, 3e4)),
-          scene.add(new HemisphereLight(10202298, 1380621, 0.14)),
+          scene.add(new HemisphereLight(10202298, 1380621, 0.085)),
+          (scene.environmentIntensity = 0.72),
           (keyLight = new DirectionalLight(16770244, 2.65)),
           (keyLight.castShadow = !0),
           keyLight.shadow.mapSize.setScalar(quality.shadow),
@@ -47291,7 +47340,7 @@
           (keyLight.shadow.bias = -15e-5),
           scene.add(keyLight, keyLight.target),
           passage === 2 && keyLight.color.setHex(15002867));
-        fillLight = new DirectionalLight(passage === 2 ? 9547204 : 12165514, 0.15);
+        fillLight = new DirectionalLight(passage === 2 ? 9547204 : 12165514, 0.11);
         (scene.add(fillLight, fillLight.target),
           (surveyor = createSurveyor(tier, passage, modelAsset.data)),
           (modelAsset.data = null),
@@ -47305,7 +47354,7 @@
               passage,
               seconds: t,
               duration: DURATION,
-              shot: shotAt(t, passage),
+              shot: t >= SPACE_HOLD.start ? "horizon-hold" : shotAt(t, passage),
               tier,
               modelLoad: modelAsset.info,
               performance: pacer.snapshot(),
@@ -47322,6 +47371,11 @@
               position: surveyor.group.position.toArray(),
               cameraPosition: camera.position.toArray(),
               cameraFov: camera.fov,
+              observationHold: {
+                ...SPACE_HOLD,
+                duration: SPACE_HOLD.end - SPACE_HOLD.start,
+              },
+              lensResponse: spaceLensResponse(camera, surveyor.group, t),
               cameraFocus: camera.userData.focus.toArray(),
             }),
             ...(test ? { seek: render, arrive } : {}),

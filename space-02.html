@@ -1086,16 +1086,16 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
         },
         transit: {
           high: {
-            file: "high-97ee82ab118416ef.json",
-            bytes: 1338201,
+            file: "high-0e3a563f96c21306.json",
+            bytes: 1342521,
           },
           mid: {
-            file: "mid-85f35e7a0949a014.json",
-            bytes: 1209320,
+            file: "mid-bf1c9ee580decf65.json",
+            bytes: 1213640,
           },
           low: {
-            file: "low-3d2876fc50d76a19.json",
-            bytes: 646278,
+            file: "low-6cb8c5ddf470ecad.json",
+            bytes: 650598,
           },
         },
         arrival: {
@@ -29291,9 +29291,9 @@ vHullPosition=position;`,
         return (
           passage2 === 2
             ? (position.set(portrait ? -5 : -22, 15 + p * 12, 75 + p * 95),
-              focus.set(portrait ? -18 : -46, 19, -150))
+              focus.set(portrait ? -3 : -9, 3.5, -20))
             : (position.set(portrait ? 5 - p * 5 : 28 - p * 16, 12 + p * 8, 52 + p * 88),
-              focus.set(portrait ? 14 + p * 8 : 14 + p * 35, 10, -90 - p * 110)),
+              focus.set(portrait ? 3 : 7, 4.5, -18)),
           portrait ? 66 : 46
         );
       }
@@ -29313,22 +29313,34 @@ vHullPosition=position;`,
         let u = (t2 - 52) / 12;
         return 384 + 96 * (u - integratedEase(u));
       }
+      function closingDistance(t2, passage2) {
+        const start = passage2 === 2 ? 44 : 40;
+        const progress = travel(start, DURATION, t2);
+        return (passage2 === 2 ? 900 : 1100) * smooth(0, 1, progress);
+      }
       function shotAt(t2, passage2 = 1) {
         return passage2 === 2
           ? t2 < 26
             ? "keel"
             : t2 < 44
               ? "crossing"
-              : "horizon"
+              : "destination"
           : t2 < 20
             ? "departure"
             : t2 < 40
               ? "structure"
               : "destination";
       }
+      function cruiseFov(aspect, t2, passage2) {
+        if (aspect < 1) return 66;
+        const narrow = smooth(passage2 === 2 ? 50 : 48, 62, t2);
+        const panoramicFov =
+          (360 / Math.PI) * Math.atan(Math.tan((46 * Math.PI) / 360) * Math.min(1, 1.9 / aspect));
+        return MathUtils.lerp(46, panoramicFov, narrow);
+      }
       function shotPose(camera2, ship, t2, passage2 = 1) {
         ((t2 = MathUtils.clamp(t2, 0, DURATION)),
-          ship.position.set(0, 0, -displacement(t2)),
+          ship.position.set(0, 0, -displacement(t2) - closingDistance(t2, passage2)),
           ship.rotation.set(0.045, btkTransitYaw(t2), 0.06));
         let portrait = camera2.aspect < 1,
           shot = shotAt(t2);
@@ -29350,7 +29362,7 @@ vHullPosition=position;`,
               camera2.position.add(ship.position),
               target.add(ship.position));
           return (
-            (camera2.fov = portrait ? 66 : 46),
+            (camera2.fov = cruiseFov(camera2.aspect, t2, passage2)),
             camera2.lookAt(target),
             camera2.updateProjectionMatrix(),
             camera2.updateMatrixWorld(),
@@ -29374,7 +29386,7 @@ vHullPosition=position;`,
             camera2.position.add(ship.position),
             target.add(ship.position));
         return (
-          (camera2.fov = portrait ? 66 : 46),
+          (camera2.fov = cruiseFov(camera2.aspect, t2, passage2)),
           camera2.lookAt(target),
           camera2.updateProjectionMatrix(),
           camera2.updateMatrixWorld(),
@@ -29454,6 +29466,14 @@ vHullPosition=position;`,
           camera2.updateMatrixWorld(),
           shot
         );
+      }
+      function spaceLensResponse(camera2, ship, t2) {
+        const proximity = 1 - smooth(85, 220, camera2.position.distanceTo(ship.position));
+        const brightHull = proximity * (1 - smooth(52, 62, t2));
+        return {
+          stars: 0.9 * (1 - 0.82 * brightHull),
+          exposure: 1.05 - 0.12 * brightHull,
+        };
       }
       function createVoid(scene2, tier2, passage2 = 1) {
         let stars = new Group(),
@@ -29559,7 +29579,11 @@ vHullPosition=position;`,
           ),
           planetMaterial,
         );
-        (planet.position.set(passage2 === 2 ? -1650 : 1450, passage2 === 2 ? -100 : -430, -5700),
+        (planet.position.set(
+          passage2 === 2 ? -520 : 445,
+          passage2 === 2 ? 110 : -280,
+          passage2 === 2 ? -5550 : -5150,
+        ),
           scene2.add(planet));
         let atmosphere = null;
         return (
@@ -47025,7 +47049,7 @@ vHullPosition=position;`,
       );
       function passageEdit(t2, cuts2) {
         let enter = 1 - easeEdit((t2 - 0.12) / 1.65),
-          exit = easeEdit((t2 - 61.7) / 2.05);
+          exit = easeEdit((t2 - 62) / 1.75);
         return {
           veil: Math.max(enter, exit),
           audio:
@@ -47199,6 +47223,9 @@ vHullPosition=position;`,
           keyLight.position.copy(surveyor.group.position).add(lightOffset),
           fillLight.position.copy(voidScene.planet.position),
           fillLight.target.position.copy(surveyor.group.position));
+        const lensResponse = spaceLensResponse(camera, surveyor.group, t);
+        voidScene.stars.children[0].material.opacity = lensResponse.stars;
+        renderer.toneMappingExposure = lensResponse.exposure;
         let blackout = passageEdit(t, cuts).veil;
         (blackout !== veilOpacity &&
           ((veilOpacity = blackout), (veil.style.opacity = String(blackout))),
@@ -47261,7 +47288,8 @@ vHullPosition=position;`,
           (scene.background = new Color(197895)),
           (scene.environment = createFlightEnvironment(renderer, tier, passage).texture),
           (camera = new PerspectiveCamera(43, innerWidth / innerHeight, 0.25, 3e4)),
-          scene.add(new HemisphereLight(10202298, 1380621, 0.14)),
+          scene.add(new HemisphereLight(10202298, 1380621, 0.085)),
+          (scene.environmentIntensity = 0.72),
           (keyLight = new DirectionalLight(16770244, 2.65)),
           (keyLight.castShadow = !0),
           keyLight.shadow.mapSize.setScalar(quality.shadow),
@@ -47277,7 +47305,7 @@ vHullPosition=position;`,
           (keyLight.shadow.bias = -15e-5),
           scene.add(keyLight, keyLight.target),
           passage === 2 && keyLight.color.setHex(15002867));
-        fillLight = new DirectionalLight(passage === 2 ? 9547204 : 12165514, 0.15);
+        fillLight = new DirectionalLight(passage === 2 ? 9547204 : 12165514, 0.11);
         (scene.add(fillLight, fillLight.target),
           (surveyor = createSurveyor(tier, passage, modelAsset.data)),
           (modelAsset.data = null),
@@ -47308,6 +47336,7 @@ vHullPosition=position;`,
               position: surveyor.group.position.toArray(),
               cameraPosition: camera.position.toArray(),
               cameraFov: camera.fov,
+              lensResponse: spaceLensResponse(camera, surveyor.group, t),
               cameraFocus: camera.userData.focus.toArray(),
             }),
             ...(test ? { seek: render, arrive } : {}),

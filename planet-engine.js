@@ -52278,14 +52278,19 @@ var<${access}> ${name} : ${structName};`;
           ndl = saturate2(
             dot2(normalize3(normalWorld2), vec32(sun[0] / sl, sun[1] / sl, sun[2] / sl)),
           ),
+          detail = float2(1).sub(smoothstep3(12, 80, positionView2.length())),
           fleck = sin2(positionWorld2.x.mul(2.17).add(positionWorld2.z.mul(2.83)))
             .mul(0.5)
             .add(0.5),
           quartz = pow5(abs2(sin2(positionWorld2.x.mul(5.41).sub(positionWorld2.z.mul(3.73)))), 14),
           mica = pow5(abs2(sin2(positionWorld2.x.mul(9.17).add(positionWorld2.y.mul(11.3)))), 24),
-          stone = mix2(vec32(0.052, 0.058, 0.064), vec32(0.225, 0.204, 0.218), fleck.mul(0.34))
-            .add(vec32(0.2, 0.23, 0.25).mul(quartz.mul(0.25)))
-            .add(vec32(0.34, 0.32, 0.38).mul(mica.mul(0.18)));
+          stone = mix2(
+            vec32(0.052, 0.058, 0.064),
+            vec32(0.225, 0.204, 0.218),
+            mix2(float2(0.5), fleck, detail).mul(0.34),
+          )
+            .add(vec32(0.2, 0.23, 0.25).mul(quartz.mul(0.25).mul(detail)))
+            .add(vec32(0.34, 0.32, 0.38).mul(mica.mul(0.18).mul(detail)));
         ((material.colorNode = stone.mul(ndl.mul(0.92).add(float2(0.16)))),
           (this.mesh = new Group()),
           (this.batches = Array.from({ length: 6 }, (_, variant) => {
@@ -52351,7 +52356,7 @@ var<${access}> ${name} : ${structName};`;
               pz2 = (iz + 0.16 + hash22(ix, iz, 3) * 0.68) * this.cell,
               sx =
                 hash22(ix, iz, 4) > 0.945
-                  ? 0.62 + hash22(ix, iz, 5) * 0.72
+                  ? 0.78 + hash22(ix, iz, 5) * 0.82
                   : 0.09 + Math.pow(hash22(ix, iz, 5), 1.8) * 0.62,
               sz = sx * (0.42 + hash22(ix, iz, 6) * 1.02),
               sy = sx * (0.28 + hash22(ix, iz, 7) * 0.72);
@@ -62139,7 +62144,7 @@ body.ti-voyage #ti-transfer-trigger {
         }
         (this.camera.rotateY(this.rover.lookYaw),
           this.camera.rotateX(this.rover.lookPitch),
-          (this.camera.fov = 112),
+          (this.camera.fov = this.camera.aspect < 1 ? 84 : 72),
           this._aim
             .set(0, 0, -1)
             .applyQuaternion(this.camera.quaternion)
@@ -62157,15 +62162,16 @@ body.ti-voyage #ti-transfer-trigger {
         ((dx /= separation), (dz /= separation));
         let sideX = -dz,
           sideZ = dx,
-          includeLander = this.openingActive || separation <= 52,
-          midX = includeLander ? (l.x + r.x) * 0.5 : r.x - dx * 5.5,
-          midZ = includeLander ? (l.z + r.z) * 0.5 : r.z - dz * 5.5,
-          breadth = includeLander ? Math.max(25, separation * 0.72) : 27,
+          // A continuous distance band prevents a framing cut at the old 52-unit boundary.
+          landerWeight = this.openingActive ? 1 : 1 - MathUtils.smootherstep(separation, 44, 64),
+          midX = MathUtils.lerp(r.x - dx * 5.5, (l.x + r.x) * 0.5, landerWeight),
+          midZ = MathUtils.lerp(r.z - dz * 5.5, (l.z + r.z) * 0.5, landerWeight),
+          breadth = MathUtils.lerp(27, Math.max(25, separation * 0.72), landerWeight),
           breath = this.reducedMotion ? 0 : Math.sin(now2 * 65e-6) * Math.min(3, breadth * 0.035),
-          axial = includeLander ? separation * 0.06 : 3.8,
+          axial = MathUtils.lerp(3.8, separation * 0.06, landerWeight),
           x = midX + sideX * (breadth + breath) - dx * axial,
           z = midZ + sideZ * (breadth + breath) - dz * axial,
-          subjectY = includeLander ? l.y + 9 + separation * 0.22 : this.rover.deckY + 8.4,
+          subjectY = MathUtils.lerp(this.rover.deckY + 8.4, l.y + 9 + separation * 0.22, landerWeight),
           y = Math.max(this.heightAt(x, z) + 4.5, subjectY);
         (this._camera.set(x, y, z),
           this._aim.set(midX, Math.max(l.y + 3.1, this.rover.deckY + 0.28), midZ),
@@ -63392,7 +63398,7 @@ body.ti-voyage #ti-transfer-trigger {
         (this.pos = new Vector3(0, 0, 0)),
         (this.heading = 0),
         (this.lookYaw = 0),
-        (this.lookPitch = -0.04),
+        (this.lookPitch = -0.085),
         (this.pitch = 0),
         (this.roll = 0),
         (this.deckY = 0),
@@ -63802,7 +63808,7 @@ body.ti-voyage #ti-transfer-trigger {
         this.pos.set(x, 0, z),
         (this.heading = heading),
         (this.lookYaw = 0),
-        (this.lookPitch = -0.04),
+        (this.lookPitch = -0.085),
         (this.speed = 0),
         (this.odometer = 0),
         (this.settled = !1),
@@ -67056,7 +67062,10 @@ body.ti-voyage #ti-transfer-trigger {
     albedoGround =
       (C) =>
       ({ slope, worldPos: worldPos2, normal: normal2, sun }) => {
-        let sediment = fbm(worldPos2.xz.mul(0.018).add(19.7), 3),
+        // Resolve local mineral texture; retain large terrain forms at the horizon.
+        // This is distance filtering, not atmospheric fog or altered terrain motion.
+        let detail = float2(1).sub(smoothstep3(14, 95, positionView2.length())),
+          sediment = fbm(worldPos2.xz.mul(0.018).add(19.7), 3),
           p = worldPos2.xz,
           loose = float2(1).sub(smoothstep3(0.025, 0.22, slope)),
           high = smoothstep3(-2, 18, worldPos2.y.add(sediment.sub(0.5).mul(12))),
@@ -67079,7 +67088,9 @@ body.ti-voyage #ti-transfer-trigger {
           ),
           frost = loose.mul(high).mul(sheltered.mul(0.65).add(0.35)).mul(0.18),
           terra = mix2(coldVein, vec32(0.085, 0.112, 0.128), frost).mul(
-            float2(0.72).add(sediment.mul(0.18)).add(grain(worldPos2.xz).mul(0.2)),
+            float2(0.72)
+              .add(sediment.mul(0.18))
+              .add(mix2(float2(0.5), grain(worldPos2.xz), detail).mul(0.2)),
           ),
           u = p.x.mul(D2.windCos).add(p.y.mul(D2.windSin)),
           v = p.x.mul(-D2.windSin).add(p.y.mul(D2.windCos)),
@@ -67133,8 +67144,8 @@ body.ti-voyage #ti-transfer-trigger {
             waterCore.mul(0.78),
           ),
           desert = mix2(hydrated, vec32(...BODY02_WATER_SITE.visual.saltTint), waterHalo.mul(0.48))
-            .mul(float2(0.975).add(windBand.mul(0.025).mul(loose)))
-            .mul(float2(0.94).add(grain(p.mul(0.72)).mul(0.06))),
+            .mul(float2(0.975).add(mix2(float2(0.5), windBand, detail).mul(0.025).mul(loose)))
+            .mul(float2(0.94).add(mix2(float2(0.5), grain(p.mul(0.72)), detail).mul(0.06))),
           granitePattern = geologyNoise2(p.mul(0.033).add(122.6), 3),
           quartz = smoothstep3(float2(0.69), float2(0.9), granitePattern),
           feldspar = smoothstep3(float2(0.58), float2(0.84), grain(p.mul(0.48).add(17.2))),
@@ -67148,12 +67159,12 @@ body.ti-voyage #ti-transfer-trigger {
             saturate2(slope.mul(0.76).add(granitePattern.mul(0.48))),
           ),
           quartzFace = mix2(graniteBase, vec32(0.285, 0.31, 0.315), quartz.mul(0.52)),
-          feldsparFace = mix2(quartzFace, vec32(0.19, 0.16, 0.135), feldspar.mul(0.12)),
+          feldsparFace = mix2(quartzFace, vec32(0.19, 0.16, 0.135), feldspar.mul(0.12).mul(detail)),
           oxidisedJoint = mix2(feldsparFace, vec32(0.09, 0.084, 0.075), jointStain.mul(0.32)),
           fines = loose.mul(float2(1).sub(high)).mul(sediment).mul(0.28),
           granite = mix2(oxidisedJoint, vec32(0.09, 0.086, 0.078), fines)
-            .add(vec32(0.31, 0.34, 0.39).mul(mica.mul(0.23)))
-            .mul(float2(0.91).add(grain(p.mul(0.92)).mul(0.11)));
+            .add(vec32(0.31, 0.34, 0.39).mul(mica.mul(0.23).mul(detail)))
+            .mul(float2(0.91).add(mix2(float2(0.5), grain(p.mul(0.92)), detail).mul(0.11)));
         return mix2(mix2(terra, desert, uWorldMix), granite, uWorldGranite);
       },
     shadeGround = (C) => (ctx) => {
