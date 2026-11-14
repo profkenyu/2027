@@ -25281,6 +25281,7 @@ void main() {
             qualityChanges: 0,
           };
           let observerAngle = 0.54,
+            orbitMotion = 1,
             fieldClock = 0;
           const reducedMotion = matchMedia("(prefers-reduced-motion:reduce)");
           const pointers = new Map(),
@@ -25308,7 +25309,7 @@ void main() {
             pairAngle = 0,
             lastAudioCell = -1,
             lastAudio = 0,
-            lastInput = 0,
+            lastInput = -Infinity,
             recordImage = null,
             recordLabel = "아직 화면을 조작하지 않았습니다.";
           const uniforms = {
@@ -25812,7 +25813,9 @@ void main() {
           function reset() {
             releaseAll();
             observerAngle = 0.54;
+            orbitMotion = 1;
             fieldClock = 0;
+            lastInput = -Infinity;
             state.time = 0;
             state.interaction = 0;
             state.press = state.viewX = state.viewY = state.x = state.y = 0;
@@ -25844,9 +25847,12 @@ void main() {
           }
           function update(dt) {
             state.time += dt;
-            fieldClock += dt * (1 - smooth(0.72, 0.96, state.compression));
-            const rotationRate = reducedMotion.matches ? 0.25 : 1;
-            observerAngle += dt * 0.15 * rotationRate * (1 - smooth(0.66, 0.96, state.compression));
+            // Keep the framing still during gestures and let it drift back after input ends.
+            const interacting = pointers.size > 0 || keys.size > 0 || state.time - lastInput < 1;
+            orbitMotion = clamp(orbitMotion + dt * (interacting ? -1 / 0.8 : 1 / 1.8));
+            const driftTime = dt * smooth(0, 1, orbitMotion) * (reducedMotion.matches ? 0.25 : 1);
+            observerAngle += driftTime * (Math.PI / 120) * (1 - smooth(0.66, 0.96, state.compression));
+            fieldClock += driftTime * (1 - smooth(0.72, 0.96, state.compression));
             const follow = 1 - Math.exp(-dt * 9);
             state.compression += (state.targetCompression - state.compression) * follow;
             if (state.targetCompression === 1 && state.compression > 0.9999) state.compression = 1;
@@ -25879,9 +25885,8 @@ void main() {
           }
           function paint() {
             poseVessel();
-            const motion = reducedMotion.matches ? 0.25 : 1;
             world.rotation.set(state.viewX, state.viewY, 0);
-            nebula.rotation.set(0, fieldClock * 0.042 * motion, fieldClock * 0.03 * motion);
+            nebula.rotation.set(0, fieldClock * 0.008, fieldClock * 0.005);
             const theta = observerAngle,
               convergence = smooth(0.55, 0.98, state.compression);
             const radius = (innerWidth < innerHeight ? 190 : 175) * (1 - 0.12 * convergence);

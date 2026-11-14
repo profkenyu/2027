@@ -1285,28 +1285,11 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
           }
       }
       function createShadowBudget(renderer2, tier2) {
-        let last = -1 / 0,
-          lastKey = null,
-          updates = 0,
-          reuses = 0;
+        let updates = 0;
+        renderer2.shadowMap.autoUpdate = true;
         return {
-          update(seconds, key, { moving = !0, close = !1 } = {}) {
-            if (tier2 !== "low") return;
-            let changed = key !== lastKey || seconds < last,
-              due = moving && seconds - last >= 1 / (close ? 30 : 15) - 1e-3;
-            ((renderer2.shadowMap.autoUpdate = !1),
-              changed || due || renderer2.shadowMap.needsUpdate
-                ? ((renderer2.shadowMap.needsUpdate = !0),
-                  (last = seconds),
-                  (lastKey = key),
-                  updates++)
-                : reuses++);
-          },
-          snapshot: () => ({
-            mode: tier2 === "low" ? "scheduled" : "authored",
-            updates,
-            reuses,
-          }),
+          update() { updates++; },
+          snapshot: () => ({ mode: "synchronized", updates, reuses: 0 }),
         };
       }
       function performanceTier(
@@ -1405,6 +1388,7 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
             : audio2.enable();
         }),
           addEventListener("pointerdown", unlock),
+          addEventListener("touchend", unlock, { passive: true }),
           addEventListener("keydown", unlock),
           chosen() === "0" && audio2.enable());
       }
@@ -28788,11 +28772,11 @@ vHullPosition=position;`,
                   "#include <normal_fragment_maps>",
                   `#include <normal_fragment_maps>
       // Derivative surface gradient in view space; detail disappears when unresolved.
-      float relief=resolved*${kind === "foil" ? "0.00035" : "0.000025"}*grain;
+      float relief=resolved*${tier2 === "low" ? "0.0" : kind === "foil" ? "0.00035" : "0.000025"}*grain;
       vec3 dx=dFdx(-vViewPosition),dy=dFdy(-vViewPosition);
       vec3 rx=cross(dy,normal),ry=cross(normal,dx);
       float det=dot(dx,rx);
-      normal=normalize(abs(det)*normal-sign(det)*(dFdx(relief)*rx+dFdy(relief)*ry));
+      if(abs(det)>1.e-10) normal=normalize(abs(det)*normal-sign(det)*(dFdx(relief)*rx+dFdy(relief)*ry));
     `,
                 )));
           }),
@@ -29220,7 +29204,7 @@ vHullPosition=position;`,
             geometry.computeBoundingSphere());
           let material = sourceMaterial(batch, tier2),
             mesh = new Mesh(
-              aerospaceUV(bevelHullTiles(geometry), batch.profile === "foil" ? 1.6 : 0.85),
+              aerospaceUV(tier2 === "low" ? geometry : bevelHullTiles(geometry), batch.profile === "foil" ? 1.6 : 0.85),
               material,
             );
           ((mesh.castShadow = !0), (mesh.receiveShadow = !0), group.add(mesh));
@@ -46915,12 +46899,124 @@ vHullPosition=position;`,
           },
         };
       }
+      // Authored onboard sound: engine and machinery vibration.
+      function createVesselAudio({ phase, duration, onState = () => {}, inspect = false }) {
+        let context = null, graph = null, enabled = false, paused = false, disposed = false;
+        let seconds = 0, distance = 0, envelope = 1;
+        const migration = phase === "migration";
+        const smooth = (a, b, value) => {
+          const p = Math.max(0, Math.min(1, (value - a) / (b - a)));
+          return p * p * (3 - 2 * p);
+        };
+        const preference = (muted) => {
+          try { sessionStorage.setItem("ti_audio_muted", muted ? "1" : "0"); } catch {}
+        };
+        const snapshot = () => {
+          const data = graph && inspect ? new Float32Array(256) : null;
+          if (data) graph.meter.getFloatTimeDomainData(data);
+          return {
+            enabled, ready: !!graph, context: context?.state ?? "locked",
+            state: context?.state ?? "locked", phase, time: seconds, duration,
+            gain: graph?.master.gain.value ?? 0,
+            sounds: ["engine", "machinery"],
+            ...(data ? { waveform: Array.from(data) } : {}),
+          };
+        };
+        const notify = () => { if (!disposed) onState(snapshot()); };
+        function build() {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          context = new AudioContext();
+          context.onstatechange = notify;
+          const master = context.createGain();
+          master.gain.value = 0;
+          const compressor = context.createDynamicsCompressor();
+          compressor.threshold.value = -18;
+          compressor.ratio.value = 4;
+          compressor.attack.value = 0.025;
+          compressor.release.value = 0.4;
+          const meter = context.createAnalyser();
+          meter.fftSize = 256;
+          master.connect(compressor).connect(meter).connect(context.destination);
+          const sources = [];
+          const gate = () => {
+            const node = context.createGain();
+            node.gain.value = 0;
+            node.connect(master);
+            return node;
+          };
+          const engine = gate(), machinery = gate();
+          const tone = (hz, type, gain, output) => {
+            const source = context.createOscillator(), volume = context.createGain();
+            source.frequency.value = hz;
+            source.type = type;
+            volume.gain.value = gain;
+            source.connect(volume).connect(output);
+            source.start();
+            sources.push(source);
+          };
+          // Upper harmonics make the machinery audible on small phone speakers.
+          tone(migration ? 52 : 74, "sine", 0.12, engine);
+          tone(migration ? 156 : 222, "triangle", 0.08, engine);
+          tone(migration ? 260 : 370, "sine", 0.045, machinery);
+          tone(migration ? 263 : 373, "sine", 0.025, machinery);
+          graph = { master, engine, machinery, meter, sources };
+        }
+        function update(time, range = 0, level = 1) {
+          seconds = Math.max(0, Math.min(duration, time));
+          distance = range;
+          envelope = Math.max(0, Math.min(1, level));
+          if (!graph) return;
+          const now = context.currentTime;
+          const set = (param, value, decay = 0.08) => param.setTargetAtTime(value, now, decay);
+          const coast = migration ? 0 : smooth(8, 14, seconds) * (1 - smooth(48, 54, seconds));
+          const proximity = migration ? 0.55 + 0.45 / (1 + distance / 1600) : 1;
+          const fade = smooth(0, 2, seconds) * (1 - smooth(duration - 3, duration, seconds));
+          set(graph.engine.gain, (0.18 + 0.32 * (1 - coast)) * proximity);
+          set(graph.machinery.gain, 0.45 + 0.08 * Math.sin(seconds * 0.27));
+          set(graph.master.gain, enabled && !paused ? 0.8 * fade * envelope : 0, 0.12);
+        }
+        async function enable() {
+          if (disposed) return false;
+          enabled = true;
+          preference(false);
+          try {
+            if (!graph) build();
+            // Invoke resume directly inside every gesture, even after an autoplay rejection.
+            const resumed = context.resume();
+            notify();
+            await resumed;
+            if (disposed) return false;
+            if (paused || !enabled) { update(seconds, distance, envelope); return false; }
+            update(seconds, distance, envelope);
+            notify();
+            return context.state === "running";
+          } catch (error) {
+            console.warn("Vessel audio could not start", error);
+            notify();
+            return false;
+          }
+        }
+        return {
+          snapshot, update, enable,
+          get enabled() { return enabled; },
+          mute() { enabled = false; preference(true); update(seconds, distance, envelope); notify(); },
+          pause() { paused = true; update(seconds, distance, envelope); context?.suspend().catch(() => {}); notify(); },
+          resume() { paused = false; if (enabled) return enable(); notify(); },
+          replay() { seconds = 0; update(0); if (enabled) enable(); },
+          dispose() {
+            disposed = true;
+            graph?.sources.forEach(source => source.stop());
+            if (context) { context.onstatechange = null; context.close().catch(() => {}); }
+            graph = null;
+          },
+        };
+      }
       function createCabinAudio(
         response2,
         onState = () => {},
         { tier: tier2 = "low", passage: passage2 = 1, inspect = !1 } = {},
       ) {
-        return createJourneyAudio({
+        return createVesselAudio({
           phase: `space-0${passage2}`,
           duration: 64,
           tier: tier2,
@@ -47287,7 +47383,7 @@ vHullPosition=position;`,
           (scene = new Scene()),
           (scene.background = new Color(197895)),
           (scene.environment = createFlightEnvironment(renderer, tier, passage).texture),
-          (camera = new PerspectiveCamera(43, innerWidth / innerHeight, 0.25, 3e4)),
+          (camera = new PerspectiveCamera(43, innerWidth / innerHeight, 2, 3e4)),
           scene.add(new HemisphereLight(10202298, 1380621, 0.085)),
           (scene.environmentIntensity = 0.72),
           (keyLight = new DirectionalLight(16770244, 2.65)),
