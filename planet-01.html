@@ -65,65 +65,66 @@
           format("woff2");
       }
     </style>
-    <script>(()=>{
-let frame=0;
-let settleTimer=0;
-let tailTimer=0;
-const sync=()=>{
-frame=0;
-const viewport=window.visualViewport;
-const width=Math.max(1,Math.round(viewport?.width||window.innerWidth));
-const height=Math.max(1,Math.round(viewport?.height||window.innerHeight));
-const root=document.documentElement;
-root.style.setProperty("--viewport-width",`${width}px`);
-root.style.setProperty("--viewport-height",`${height}px`);
-root.style.setProperty(
-"--viewport-top",
-`${Math.max(0,Math.round(viewport?.offsetTop||0))}px`,
-);
-root.style.setProperty(
-"--viewport-left",
-`${Math.max(0,Math.round(viewport?.offsetLeft||0))}px`,
-);
-root.style.setProperty(
-"--viewport-bottom",
-`${Math.max(0,window.innerHeight-height-(viewport?.offsetTop||0))}px`,
-);
-if(!root.classList.contains("ti-viewport-ready")){
-root.classList.add("ti-viewport-ready");
-dispatchEvent(
-new CustomEvent("ti-viewportready",{
-detail:{width,height},
-}),
-);
-}
-};
-const schedule=()=>{
-if(!frame)frame=requestAnimationFrame(sync);
-clearTimeout(settleTimer);
-clearTimeout(tailTimer);
-settleTimer=setTimeout(()=>{
-if(!frame)frame=requestAnimationFrame(sync);
-},140);
-tailTimer=setTimeout(()=>{
-if(!frame)frame=requestAnimationFrame(sync);
-},520);
-};
-sync();
-addEventListener("resize",schedule,{passive:true});
-addEventListener("orientationchange",schedule,{passive:true});
-addEventListener("pageshow",schedule,{passive:true});
-window.visualViewport?.addEventListener("resize",schedule,{
-passive:true,
-});
-window.visualViewport?.addEventListener("scroll",schedule,{
-passive:true,
-});
-document.addEventListener("visibilitychange",()=>{
-if(document.visibilityState==="visible")schedule();
-});
-})();
-</script>
+    <script>
+      (() => {
+        let frame = 0;
+        let settleTimer = 0;
+        let tailTimer = 0;
+        const sync = () => {
+          frame = 0;
+          const viewport = window.visualViewport;
+          const width = Math.max(1, Math.round(viewport?.width || window.innerWidth));
+          const height = Math.max(1, Math.round(viewport?.height || window.innerHeight));
+          const root = document.documentElement;
+          root.style.setProperty("--viewport-width", `${width}px`);
+          root.style.setProperty("--viewport-height", `${height}px`);
+          root.style.setProperty(
+            "--viewport-top",
+            `${Math.max(0, Math.round(viewport?.offsetTop || 0))}px`,
+          );
+          root.style.setProperty(
+            "--viewport-left",
+            `${Math.max(0, Math.round(viewport?.offsetLeft || 0))}px`,
+          );
+          root.style.setProperty(
+            "--viewport-bottom",
+            `${Math.max(0, window.innerHeight - height - (viewport?.offsetTop || 0))}px`,
+          );
+          if (!root.classList.contains("ti-viewport-ready")) {
+            root.classList.add("ti-viewport-ready");
+            dispatchEvent(
+              new CustomEvent("ti-viewportready", {
+                detail: { width, height },
+              }),
+            );
+          }
+        };
+        const schedule = () => {
+          if (!frame) frame = requestAnimationFrame(sync);
+          clearTimeout(settleTimer);
+          clearTimeout(tailTimer);
+          settleTimer = setTimeout(() => {
+            if (!frame) frame = requestAnimationFrame(sync);
+          }, 140);
+          tailTimer = setTimeout(() => {
+            if (!frame) frame = requestAnimationFrame(sync);
+          }, 520);
+        };
+        sync();
+        addEventListener("resize", schedule, { passive: true });
+        addEventListener("orientationchange", schedule, { passive: true });
+        addEventListener("pageshow", schedule, { passive: true });
+        window.visualViewport?.addEventListener("resize", schedule, {
+          passive: true,
+        });
+        window.visualViewport?.addEventListener("scroll", schedule, {
+          passive: true,
+        });
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "visible") schedule();
+        });
+      })();
+    </script>
     <style>
       :root {
         --viewport-width: 100vw;
@@ -1429,7 +1430,7 @@ if(document.visibilityState==="visible")schedule();
           inset 0 1px 1px rgba(255, 255, 255, 0.06),
           inset 0 -6px 12px rgba(0, 0, 0, 0.74);
         font:
-          700 max(var(--site-type-min), 8px)/1 "DM Mono",
+          700 max(var(--site-type-min), 8px) / 1 "DM Mono",
           ui-monospace,
           monospace;
         letter-spacing: 0.16em;
@@ -2201,7 +2202,10 @@ if(document.visibilityState==="visible")schedule();
       }
     </style>
     <style id="site-typography">
-      html:root { --site-type-min: 9px; --site-nav-size: 10px; }
+      html:root {
+        --site-type-min: 9px;
+        --site-nav-size: 10px;
+      }
       body #vehicle-preview-link,
       body .preview-actions #vehicle-preview-link,
       body #journey-links #vehicle-preview-link,
@@ -2209,15 +2213,24 @@ if(document.visibilityState==="visible")schedule();
       body footer nav.series-nav a,
       body .preview-actions .back,
       body .topbar a,
-      body #ti-ending-archive { font-size: var(--site-nav-size); }
+      body #ti-ending-archive {
+        font-size: var(--site-nav-size);
+      }
       body #ti-copyright,
       body footer #credit,
-      body .footer > span { font-size: 9px; }
+      body .footer > span {
+        font-size: 9px;
+      }
       @media (max-width: 760px), (pointer: coarse) and (max-width: 1024px) {
-        html:root { --site-type-min: 6px; --site-nav-size: 9px; }
+        html:root {
+          --site-type-min: 6px;
+          --site-nav-size: 9px;
+        }
         body #ti-copyright,
         body footer #credit,
-        body .footer > span { font-size: 8px; }
+        body .footer > span {
+          font-size: 8px;
+        }
       }
 
       body #fh-hud,
@@ -2227,87 +2240,180 @@ if(document.visibilityState==="visible")schedule();
       body #fh-mission .experience,
       body #fh-mission .body-label,
       body #fh-mission .objective,
-      body #fh-keys { font-size: 10px; }
-      body #fh-mission .systems { font-size: 9px; }
-      body #fh-cap-line .ko { font-size: 12px; }
-      body #fh-cap-line .en { font-size: 9px; }
+      body #fh-keys {
+        font-size: 10px;
+      }
+      body #fh-mission .systems {
+        font-size: 9px;
+      }
+      body #fh-cap-line .ko {
+        font-size: 12px;
+      }
+      body #fh-cap-line .en {
+        font-size: 9px;
+      }
       body #ti-sound .ti-utility-label,
       body #ti-light .ti-utility-label,
       body #ti-camera .ti-utility-label,
       body #ti-field-archive span,
-      body #ti-mobile-drive button { font-size: 10px; }
+      body #ti-mobile-drive button {
+        font-size: 10px;
+      }
       body #ti-registration-phase,
       body #ti-registration-module,
       body.ti-completion-tableau #ti-restoration .head,
-      body.ti-completion-tableau #ti-restoration-cells span { font-size: 9px; }
-      body #ti-registration-sample { font-size: clamp(12px, 1.35vw, 19px); }
+      body.ti-completion-tableau #ti-restoration-cells span {
+        font-size: 9px;
+      }
+      body #ti-registration-sample {
+        font-size: clamp(12px, 1.35vw, 19px);
+      }
       body.ti-completion-tableau #ti-restoration-cells b,
       body.ti-completion-tableau #ti-raw-material-gauges b,
-      body.ti-completion-tableau #ti-raw-material-gauges small { font-size: 10px; }
+      body.ti-completion-tableau #ti-raw-material-gauges small {
+        font-size: 10px;
+      }
       body #ti-voyage-route b,
-      body #ti-fleet-uplink b { font-size: 10.5px; }
-      body #ti-fleet-uplink { font-size: 9px; }
-      body #ti-dawn-title { font-size: clamp(11.5px, 1.1vw, 18px); }
-      body #ti-prior-mission { font-size: 10.5px; }
-      body #fh-watchdog h1 { font-size: 11.5px; }
-      body #fh-watchdog p { font-size: 10px; }
-      body #ti-prologue h1 { font-size: clamp(11.5px, 1.3vw, 17.5px); }
-      body #ti-prologue .ko { font-size: clamp(12.5px, 1.25vw, 16.5px); }
-      body #ti-prologue .en { font-size: clamp(11.5px, 1.08vw, 15px); }
-      body #ti-shot-cue { font-size: max(var(--site-type-min), 7px); }
-      body .ti-rover-reticle .ground-horizon-label { font-size: max(var(--site-type-min), 7px); }
-      body .ti-rover-reticle .sensor-center text[style] { font-size: max(var(--site-type-min), 6px) !important; }
+      body #ti-fleet-uplink b {
+        font-size: 10.5px;
+      }
+      body #ti-fleet-uplink {
+        font-size: 9px;
+      }
+      body #ti-dawn-title {
+        font-size: clamp(11.5px, 1.1vw, 18px);
+      }
+      body #ti-prior-mission {
+        font-size: 10.5px;
+      }
+      body #fh-watchdog h1 {
+        font-size: 11.5px;
+      }
+      body #fh-watchdog p {
+        font-size: 10px;
+      }
+      body #ti-prologue h1 {
+        font-size: clamp(11.5px, 1.3vw, 17.5px);
+      }
+      body #ti-prologue .ko {
+        font-size: clamp(12.5px, 1.25vw, 16.5px);
+      }
+      body #ti-prologue .en {
+        font-size: clamp(11.5px, 1.08vw, 15px);
+      }
+      body #ti-shot-cue {
+        font-size: max(var(--site-type-min), 7px);
+      }
+      body .ti-rover-reticle .ground-horizon-label {
+        font-size: max(var(--site-type-min), 7px);
+      }
+      body .ti-rover-reticle .sensor-center text[style] {
+        font-size: max(var(--site-type-min), 6px) !important;
+      }
       /* Mode switches use a shared 76 by 24 pixel footprint. */
       body #ti-green,
       body #ti-drive-mode {
-        width: 76px; height: 24px; min-width: 0; min-height: 24px;
-        padding: 1px; font-size: 9px; letter-spacing: -.02em;
+        width: 76px;
+        height: 24px;
+        min-width: 0;
+        min-height: 24px;
+        padding: 1px;
+        font-size: 9px;
+        letter-spacing: -0.02em;
       }
-      body { --ti-mode-edge: 24px; }
-      body.ti-mobile { --ti-mode-edge: max(14px, env(safe-area-inset-right)); }
+      body {
+        --ti-mode-edge: 24px;
+      }
+      body.ti-mobile {
+        --ti-mode-edge: max(14px, env(safe-area-inset-right));
+      }
       body #ti-green,
-      body.ti-mobile #ti-green { right: var(--ti-mode-edge); }
+      body.ti-mobile #ti-green {
+        right: var(--ti-mode-edge);
+      }
       body #ti-drive-mode,
-      body.ti-mobile #ti-drive-mode { right: calc(var(--ti-mode-edge) + 79px); }
+      body.ti-mobile #ti-drive-mode {
+        right: calc(var(--ti-mode-edge) + 79px);
+      }
       @media (max-width: 760px) {
-        body { --ti-mode-edge: max(14px, env(safe-area-inset-right)); }
+        body {
+          --ti-mode-edge: max(14px, env(safe-area-inset-right));
+        }
       }
       @media (pointer: coarse) and (orientation: landscape) and (max-height: 520px) {
-        body.ti-mobile { --ti-mode-edge: max(68px, calc(var(--safe-right) + 64px)); }
+        body.ti-mobile {
+          --ti-mode-edge: max(68px, calc(var(--safe-right) + 64px));
+        }
       }
       @media (orientation: landscape) and (max-height: 440px) {
-        body.ti-mobile { --ti-mode-edge: max(14px, env(safe-area-inset-right)); }
+        body.ti-mobile {
+          --ti-mode-edge: max(14px, env(safe-area-inset-right));
+        }
       }
       body #ti-green .mode,
-      body #ti-drive-mode .mode { min-width: 0; }
+      body #ti-drive-mode .mode {
+        min-width: 0;
+      }
       @media (max-width: 760px), (pointer: coarse) and (max-width: 1024px) {
-        body #fh-cap-line .ko { font-size: 10.5px; }
-        body #fh-cap-line .en { font-size: 8px; }
-        body #ti-registration-sample { font-size: 14px; }
+        body #fh-cap-line .ko {
+          font-size: 10.5px;
+        }
+        body #fh-cap-line .en {
+          font-size: 8px;
+        }
+        body #ti-registration-sample {
+          font-size: 14px;
+        }
         body.ti-completion-tableau #ti-restoration-cells b,
         body.ti-completion-tableau #ti-raw-material-gauges b,
-        body.ti-completion-tableau #ti-raw-material-gauges small { font-size: 9px; }
-        body #ti-prologue h1 { font-size: 10.5px; }
-        body #ti-prologue .ko { font-size: 11.5px; }
-        body #ti-prologue .en { font-size: 10.5px; }
+        body.ti-completion-tableau #ti-raw-material-gauges small {
+          font-size: 9px;
+        }
+        body #ti-prologue h1 {
+          font-size: 10.5px;
+        }
+        body #ti-prologue .ko {
+          font-size: 11.5px;
+        }
+        body #ti-prologue .en {
+          font-size: 10.5px;
+        }
         body #ti-green,
-        body #ti-drive-mode { font-size: 7px; letter-spacing: 0; }
+        body #ti-drive-mode {
+          font-size: 7px;
+          letter-spacing: 0;
+        }
       }
       @media (max-width: 360px) and (max-height: 620px) and (orientation: portrait) {
-        body #ti-prologue h1 { font-size: 9px; }
-        body #ti-prologue .ko { font-size: 9.5px; }
-        body #ti-prologue .en { font-size: 8.5px; }
+        body #ti-prologue h1 {
+          font-size: 9px;
+        }
+        body #ti-prologue .ko {
+          font-size: 9.5px;
+        }
+        body #ti-prologue .en {
+          font-size: 8.5px;
+        }
       }
       @media (max-height: 520px) and (orientation: landscape) {
-        body.ti-mobile #ti-prologue .ko { font-size: 10.5px; }
-        body.ti-mobile #ti-prologue .en { font-size: 9.5px; }
-        body.ti-completion-tableau #fh-cap-line .ko { font-size: 9px; }
-        body.ti-completion-tableau #fh-cap-line .en { font-size: max(var(--site-type-min), 6px); }
-        body #ti-registration-sample { font-size: 9px; }
+        body.ti-mobile #ti-prologue .ko {
+          font-size: 10.5px;
+        }
+        body.ti-mobile #ti-prologue .en {
+          font-size: 9.5px;
+        }
+        body.ti-completion-tableau #fh-cap-line .ko {
+          font-size: 9px;
+        }
+        body.ti-completion-tableau #fh-cap-line .en {
+          font-size: max(var(--site-type-min), 6px);
+        }
+        body #ti-registration-sample {
+          font-size: 9px;
+        }
       }
     </style>
-</head
-  >
+  </head>
   <body>
     <canvas
       id="gl"
@@ -2358,7 +2464,7 @@ if(document.visibilityState==="visible")schedule();
     <div class="bar t"></div>
     <div class="bar b"></div>
     <div id="ti-copyright">©2026 KIM GUNWOO. ALL RIGHTS RESERVED.</div>
-    <div id="ti-rover-tools" aria-label="로버 유틸리티">
+    <div id="ti-rover-tools" aria-label="로버 조작 도구">
       <button
         id="ti-light"
         type="button"
@@ -2416,7 +2522,7 @@ if(document.visibilityState==="visible")schedule();
       <h1>BOOT STAGE STALLED</h1>
       <div class="r"></div>
       <p id="fh-watchdog-en"> The current boot stage did not complete within 30 seconds. </p>
-      <p id="fh-watchdog-ko">시작 단계가 30초 동안 응답하지 않았습니다.</p>
+      <p id="fh-watchdog-ko">화면 준비가 지연되고 있습니다. 잠시 후 다시 시도해 주세요.</p>
     </div>
 
     <div id="arrive">
@@ -2428,110 +2534,111 @@ if(document.visibilityState==="visible")schedule();
     <a id="ti-ending-archive" href="field-archive.html" hidden>FIELD ARCHIVE</a>
     <div id="ti-dawn-title" hidden>우리는 이제, 여기서 시작한다.</div>
 
-    <script>(function(){
-var s;
-try{
-s=sessionStorage.getItem("universe_seed");
-}catch{}
-if(!s){
-s=Math.floor(Math.random()*16777216)
-.toString(16)
-.padStart(6,"0")
-.toUpperCase();
-try{
-sessionStorage.setItem("universe_seed",s);
-}catch{}
-}
-window.UNIVERSE_SEED=s;
-var lbl=document.getElementById("universe-label");
-if(lbl){
-lbl.textContent="#"+s;
-return;
-}
-var el=document.getElementById("universe-id");
-if(!el){
-el=document.createElement("div");
-el.id="universe-id";
-document.body.appendChild(el);
-}
-el.textContent="UNIVERSE #"+s;
-})();
-(function(){
-var a=document.getElementById("arrive"),
-d=document.getElementById("depart");
-window.TI_REVEAL_PLANET=function(){
-a.style.transition="opacity 1.2s ease";
-a.style.opacity="0";
-};
-addEventListener("pageshow",function(e){
-if(e.persisted){
-a.style.opacity="0";
-d.style.opacity="0";
-}
-});
-document.addEventListener(
-"click",
-function(e){
-var link=e.target.closest?e.target.closest("a[href]"):null;
-if(!link||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
-var href=link.getAttribute("href");
-if(!href||href.startsWith("http")||href.startsWith("#"))return;
-e.preventDefault();
-d.style.opacity="1";
-setTimeout(function(){
-location.href=href;
-},650);
-},
-true,
-);
-})();
-(function(){
-var timer=0,
-stage="module";
-function hide(){
-var el=document.getElementById("fh-watchdog");
-if(el)el.classList.remove("on");
-}
-function fail(){
-if(window.TI_READY){
-hide();
-return;
-}
-var el=document.getElementById("fh-watchdog");
-if(!el)return;
-var en=document.getElementById("fh-watchdog-en"),
-ko=document.getElementById("fh-watchdog-ko");
-if(en)
-en.textContent=
-"Boot stage "+
-stage.toUpperCase()+
-" did not complete within 30 seconds. Reload the local exhibition file or inspect the GPU status.";
-if(ko)
-ko.textContent=
-"\uC2DC\uC791 \uB2E8\uACC4 "+
-stage.toUpperCase()+
-"\uAC00 30\uCD08 \uC548\uC5D0 \uC644\uB8CC\uB418\uC9C0 \uC54A\uC558\uB2E4. \uC804\uC2DC \uD30C\uC77C\uC744 \uB2E4\uC2DC \uC5F4\uAC70\uB098 GPU \uC0C1\uD0DC\uB97C \uD655\uC778\uD560 \uAC83.";
-el.classList.add("on");
-}
-function schedule(){
-clearTimeout(timer);
-timer=setTimeout(fail,3e4);
-}
-window.TI_BOOT={
-beat:function(next){
-stage=next||stage;
-hide();
-schedule();
-},
-ready:function(){
-window.TI_READY=true;
-clearTimeout(timer);
-hide();
-},
-};
-window.TI_BOOT.beat("module");
-})();
-</script>
+    <script>
+      (function () {
+        var s;
+        try {
+          s = sessionStorage.getItem("universe_seed");
+        } catch {}
+        if (!s) {
+          s = Math.floor(Math.random() * 16777216)
+            .toString(16)
+            .padStart(6, "0")
+            .toUpperCase();
+          try {
+            sessionStorage.setItem("universe_seed", s);
+          } catch {}
+        }
+        window.UNIVERSE_SEED = s;
+        var lbl = document.getElementById("universe-label");
+        if (lbl) {
+          lbl.textContent = "#" + s;
+          return;
+        }
+        var el = document.getElementById("universe-id");
+        if (!el) {
+          el = document.createElement("div");
+          el.id = "universe-id";
+          document.body.appendChild(el);
+        }
+        el.textContent = "UNIVERSE #" + s;
+      })();
+      (function () {
+        var a = document.getElementById("arrive"),
+          d = document.getElementById("depart");
+        window.TI_REVEAL_PLANET = function () {
+          a.style.transition = "opacity 1.2s ease";
+          a.style.opacity = "0";
+        };
+        addEventListener("pageshow", function (e) {
+          if (e.persisted) {
+            a.style.opacity = "0";
+            d.style.opacity = "0";
+          }
+        });
+        document.addEventListener(
+          "click",
+          function (e) {
+            var link = e.target.closest ? e.target.closest("a[href]") : null;
+            if (!link || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+            var href = link.getAttribute("href");
+            if (!href || href.startsWith("http") || href.startsWith("#")) return;
+            e.preventDefault();
+            d.style.opacity = "1";
+            setTimeout(function () {
+              location.href = href;
+            }, 650);
+          },
+          true,
+        );
+      })();
+      (function () {
+        var timer = 0,
+          stage = "module";
+        function hide() {
+          var el = document.getElementById("fh-watchdog");
+          if (el) el.classList.remove("on");
+        }
+        function fail() {
+          if (window.TI_READY) {
+            hide();
+            return;
+          }
+          var el = document.getElementById("fh-watchdog");
+          if (!el) return;
+          var en = document.getElementById("fh-watchdog-en"),
+            ko = document.getElementById("fh-watchdog-ko");
+          if (en)
+            en.textContent =
+              "Boot stage " +
+              stage.toUpperCase() +
+              " did not complete within 30 seconds. Reload the local exhibition file or inspect the GPU status.";
+          if (ko)
+            ko.textContent =
+              "\uC2DC\uC791 \uB2E8\uACC4 " +
+              stage.toUpperCase() +
+              "가 30초 안에 완료되지 않았습니다. 전시 파일을 다시 열거나 그래픽 장치 상태를 확인해 주세요.";
+          el.classList.add("on");
+        }
+        function schedule() {
+          clearTimeout(timer);
+          timer = setTimeout(fail, 3e4);
+        }
+        window.TI_BOOT = {
+          beat: function (next) {
+            stage = next || stage;
+            hide();
+            schedule();
+          },
+          ready: function () {
+            window.TI_READY = true;
+            clearTimeout(timer);
+            hide();
+          },
+        };
+        window.TI_BOOT.beat("module");
+      })();
+    </script>
     <script defer src="./planet-engine.js"></script>
     <nav id="journey-links" aria-label="소리와 외장 보기"
       ><button id="ti-sound" type="button" aria-pressed="false" data-audio-state="start">
