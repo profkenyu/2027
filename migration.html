@@ -39407,14 +39407,19 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           - 0.55 * (1 - openingEase(t / 10));
         out.copy(position).addScaledVector(passageSight.set(0, Math.sin(angle), -Math.cos(angle)), 1000);
       }
+      function openingCameraVibration(camera2, t) {
+        const settleAt = 5.5;
+        if (t <= 0 || t >= settleAt) return;
+        const fadeIn = openingEase(t / 0.85);
+        const fadeOut = 1 - openingEase((t - 0.85) / (settleAt - 0.85));
+        camera2.rotateX(0.00062 * fadeIn * fadeOut * wave(t, 3.2));
+      }
       function openingRetreatDrift(camera2, t, distance) {
         // Sub-degree, low-frequency drift appears only as the observer recedes.
         // Absolute-time evaluation prevents accumulation at low frame rates.
         const amount = openingEase((t - 17) / 6) * openingEase((distance - 700) / 1300)
           * (1 - openingEase((t - 28) / 2));
         camera2.rotateX(amount * 0.0010 * (0.7 * Math.sin(t * 1.27) + 0.3 * Math.sin(t * 2.11 + 0.4)));
-        camera2.rotateY(amount * 0.0007 * Math.sin(t * 0.93 + 1.2));
-        camera2.rotateZ(amount * 0.0005 * Math.sin(t * 0.67 + 0.6));
       }
       function directMigrationSequence(camera2, t, fleet2, surface) {
         if (t < 30) {
@@ -39431,6 +39436,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
             passageSight.subVectors(target, camera2.position).normalize(),
             camera2.up.crossVectors(passageLateral, passageSight).normalize().negate(),
             camera2.lookAt(target),
+            openingCameraVibration(camera2, t),
             openingRetreatDrift(camera2, t, camera2.position.distanceTo(ship.position)),
             camera2.updateProjectionMatrix(),
             { name: "lead-underpass", subject: 0 }
@@ -57564,7 +57570,8 @@ vPlumeNormal=normalize(normalMatrix*normal);vPlumeView=-mvPosition.xyz;`,
                   let material = original.clone(),
                     isPaint = !!original.userData.vehicleMarking,
                     plateFinish = !!mesh.geometry.getAttribute("shieldFinish"),
-                    finishKind = isPaint ? "paint" : original.userData.aerospace?.kind;
+                    finishKind = isPaint ? "paint" : original.userData.aerospace?.kind,
+                    closeHullWear = index === 0 && ["white", "steel", "titanium"].includes(finishKind);
                   (isPaint && paintMaterials++, material.bumpMap && (material.bumpScale *= 40));
                   let depositStrength =
                     finishKind === "foil" ? 0.025 : finishKind === "white" ? 0.13 : 0.065;
@@ -57720,6 +57727,38 @@ vShieldFinish=shieldFinish;`,
             ageChip = max(ageChip,ageRim*step(.96,ageOffset.x)*.65);
             ageChip*=${finishKind === "white" ? "1.0" : "0.0"};
             diffuseColor.rgb = mix(diffuseColor.rgb,vec3(.39,.40,.39),ageChip*.78);
+            ${closeHullWear ? `
+            // Fixed hull-space wear: small handling scratches, local deposits and
+            // shallow nicks. Pixel footprints soften unresolved details on phones.
+            vec3 wearNormal = abs(normalize(vVoyageNormal));
+            vec2 wearPlane = wearNormal.y >= max(wearNormal.x, wearNormal.z) ? vVoyageHull.xz
+              : (wearNormal.x >= wearNormal.z ? vVoyageHull.yz : vVoyageHull.xy);
+            vec2 wearGrid = wearPlane / vec2(18.0, 23.0);
+            vec3 wearCell = vec3(floor(wearGrid), voyageSeed + 71.0);
+            float wearSeed = voyageHash(wearCell);
+            float wearAngle = (voyageHash(wearCell + 13.7) - .5) * 2.2;
+            vec2 wearCentre = .3 + .4 * vec2(voyageHash(wearCell + 7.2), voyageHash(wearCell + 29.1));
+            vec2 wearLocal = (fract(wearGrid) - wearCentre) * vec2(18.0, 23.0);
+            vec2 wearDirection = vec2(cos(wearAngle), sin(wearAngle));
+            float wearAlong = dot(wearLocal, wearDirection);
+            float wearAcross = dot(wearLocal, vec2(-wearDirection.y, wearDirection.x));
+            float wearLength = mix(1.3, 3.8, voyageHash(wearCell + 42.8));
+            float wearDistance = length(vec2(max(abs(wearAlong) - wearLength, 0.0), wearAcross));
+            float wearPixel = max(length(fwidth(wearPlane)), .001);
+            float wearVisibility = 1.0 - smoothstep(.3, 1.8, wearPixel);
+            float wearWidth = mix(.08, .18, voyageHash(wearCell + 58.6));
+            float wearScratch = (1.0 - smoothstep(wearWidth, wearWidth + wearPixel, wearDistance))
+              * step(.88, wearSeed) * wearVisibility;
+            float wearRadius = mix(.16, .45, voyageHash(wearCell + 93.1));
+            float wearPit = (1.0 - smoothstep(wearRadius, wearRadius + wearPixel, length(wearLocal)))
+              * step(wearSeed, .035) * wearVisibility;
+            float wearPatch = voyageNoise(ageP * vec3(.072, .091, .041) + vec3(18.3));
+            float wearResidue = smoothstep(.52, .76, wearPatch)
+              * smoothstep(.38, .64, ageBroad) * (.25 + .75 * ageEdgeMask);
+            diffuseColor.rgb *= mix(vec3(1.0), vec3(.59, .56, .51), wearResidue * .32);
+            diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.43, .45, .46), wearScratch * .28);
+            diffuseColor.rgb *= 1.0 - wearPit * .24;
+            ` : ""}
 
             // Two flush service patches use the same hull-space register on
             // coatings and printed IDs. A maintained area accumulates less residue.
@@ -57744,6 +57783,7 @@ vShieldFinish=shieldFinish;`,
             #include <roughnessmap_fragment>
             ${plateFinish ? "roughnessFactor=clamp(roughnessFactor+(vShieldFinish-.5)*.15,.54,.94);" : ""}
             roughnessFactor = min(1.0, roughnessFactor + ageDeposit*.055 + agePit*.09 + engineResidue*.085 - ageChip*.17);
+            ${closeHullWear ? "roughnessFactor = clamp(roughnessFactor + wearResidue*.14 + wearPit*.08 - wearScratch*.18, .22, .96);" : ""}
           `,
                         )),
                         (shader.fragmentShader = shader.fragmentShader.replace(
@@ -57760,8 +57800,25 @@ vShieldFinish=shieldFinish;`,
                           `
             #include <metalnessmap_fragment>
             metalnessFactor = mix(metalnessFactor*(1.0-ageDeposit*.075-engineResidue*.1),.72,ageChip);
+            ${closeHullWear ? "metalnessFactor = mix(metalnessFactor * (1.0 - wearResidue*.12), .65, wearScratch*.35);" : ""}
           `,
-                        )));
+                        )),
+                        closeHullWear && detail > 0 &&
+                          (shader.fragmentShader = shader.fragmentShader.replace(
+                            "#include <normal_fragment_maps>",
+                            `#include <normal_fragment_maps>
+            // Shallow relief affects highlights without changing the hull silhouette.
+            float wearHeight = -.045 * wearPit - .012 * wearScratch;
+            vec3 wearDx = dFdx(-vViewPosition), wearDy = dFdy(-vViewPosition);
+            vec3 wearCrossX = cross(wearDy, normal), wearCrossY = cross(normal, wearDx);
+            float wearDet = dot(wearDx, wearCrossX);
+            vec3 wearGradient = dFdx(wearHeight) * wearCrossX + dFdy(wearHeight) * wearCrossY;
+            if (abs(wearDet) > 0.000001) {
+              vec3 wearRelief = normalize(abs(wearDet) * normal - sign(wearDet) * wearGradient);
+              normal = normalize(mix(normal, wearRelief, .35));
+            }
+`,
+                          )));
                     }),
                     tier2 === "low")
                   ) {
@@ -57795,7 +57852,7 @@ vShieldFinish=shieldFinish;`,
                   }
                   return (
                     (material.customProgramCacheKey = () =>
-                      "voyage-ageing-v12-" +
+                      "voyage-ageing-v13-" +
                       index +
                       "-" +
                       detail +
@@ -58087,7 +58144,7 @@ vShieldFinish=shieldFinish;`,
                   MIGRATION_CUTS[1],
                   camera.position.distanceTo(fleet[0].position),
                 );
-          (approachVibration.update(seconds, camera, hullStrength, opening ? 0.18 : 1),
+          (approachVibration.update(seconds, camera, hullStrength, opening ? 0 : 1),
             ringVibration.update(
               seconds,
               camera,
