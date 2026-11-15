@@ -34321,7 +34321,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
         });
         let strength = 0;
         return {
-          update(t, camera2, override = null) {
+          update(t, camera2, override = null, cameraAmount = 1) {
             strength =
               override ?? approachVibrationStrength(t, camera2.position.distanceTo(ship.position));
             let load = propulsionLoad(t),
@@ -34343,7 +34343,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
                       0.2 * chatter)),
                   (part.rotation.y = y + strength * 9e-4 * load * wave(t, 8.6, i * 1.1)));
               }),
-              applyCameraVibration(t, camera2, strength));
+              applyCameraVibration(t, camera2, strength * cameraAmount));
           },
           snapshot: () => ({
             strength,
@@ -39381,36 +39381,49 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           camera2.lookAt(migrationRearTarget),
           camera2.updateProjectionMatrix());
       }
-      function openingCameraAxial(t) {
-        const u = MathUtils.clamp(t / 30, 0, 1), ramp = 0.18;
-        const integral = (v) => v ** 4 * (2.5 + v * (-3 + v));
-        const p = u < ramp ? ramp * integral(u / ramp) / (1 - ramp)
-          : u > 1 - ramp ? 1 - ramp * integral((1 - u) / ramp) / (1 - ramp)
-          : (u - ramp / 2) / (1 - ramp);
-        const angleAt = (z) => {
-          const edge = Math.max(0, 1 - (z / 2800) ** 2);
-          const height = 185 + 235 * Math.exp(-((z / 700) ** 2)) * edge * edge;
-          return Math.atan2(185, -z * 185 / height);
-        };
-        const angle = MathUtils.lerp(angleAt(1800), angleAt(-1400), p);
-        let lo = -1400, hi = 1800;
-        for (let i = 0; i < 24; i++) {
-          const z = (lo + hi) / 2;
-          if (angleAt(z) < angle) lo = z; else hi = z;
-        }
-        return (lo + hi) / 2;
+      // Authored flyby: a close hull enters the frame, passes overhead, then
+      // recedes into a rear tracking view. This is camera choreography, not dynamics.
+      function openingEase(value) {
+        const x = MathUtils.clamp(value, 0, 1);
+        return x * x * x * (x * (x * 6 - 15) + 10);
+      }
+      function openingFlybyTravel(t) {
+        const time = MathUtils.clamp(t, 0, 30);
+        const integral = (u) => u ** 4 * (2.5 + u * (-3 + u));
+        // Slow through the close passage; match the ship's 224-unit/s world
+        // translation (140 * 1.6) on exit so the observer settles in space.
+        if (time < 6) return 70 * time - 35 * 6 * integral(time / 6);
+        if (time < 14) return 315 + 35 * (time - 6);
+        if (time < 22) return 595 + 35 * (time - 14) + 105 * 8 * integral((time - 14) / 8);
+        return 1295 + 140 * (time - 22);
+      }
+      function openingCameraPosition(position, t) {
+        position.set(0, -230, 480 - openingFlybyTravel(t));
+      }
+      function openingCameraTarget(out, position, t) {
+        // Initially look past the approaching hull. Acquire it gradually instead
+        // of pinning its centre to the frame, then let perspective drive the pan.
+        const angle = Math.atan2(-position.y, position.z)
+          - 0.55 * (1 - openingEase(t / 10));
+        out.copy(position).addScaledVector(passageSight.set(0, Math.sin(angle), -Math.cos(angle)), 1000);
+      }
+      function openingRetreatDrift(camera2, t, distance) {
+        // Sub-degree, low-frequency drift appears only as the observer recedes.
+        // Absolute-time evaluation prevents accumulation at low frame rates.
+        const amount = openingEase((t - 17) / 6) * openingEase((distance - 700) / 1300)
+          * (1 - openingEase((t - 28) / 2));
+        camera2.rotateX(amount * 0.0010 * (0.7 * Math.sin(t * 1.27) + 0.3 * Math.sin(t * 2.11 + 0.4)));
+        camera2.rotateY(amount * 0.0007 * Math.sin(t * 0.93 + 1.2));
+        camera2.rotateZ(amount * 0.0005 * Math.sin(t * 0.67 + 0.6));
       }
       function directMigrationSequence(camera2, t, fleet2, surface) {
         if (t < 30) {
           let portrait = camera2.aspect < 1,
             ship = fleet2[0];
           ((camera2.near = 1), (camera2.fov = portrait ? 64 : 52));
-          camera2.position.set(0, -185, openingCameraAxial(t));
-          let axial = camera2.position.z,
-            edge = Math.max(0, 1 - (axial / 2800) ** 2),
-            gazeHeight = 185 + 235 * Math.exp(-((axial / 700) ** 2)) * edge * edge;
+          openingCameraPosition(camera2.position, t);
           return (
-            target.set(0, 0, axial * (1 - 185 / gazeHeight)),
+            openingCameraTarget(target, camera2.position, t),
             ship.updateMatrixWorld(!0),
             ship.localToWorld(camera2.position),
             ship.localToWorld(target),
@@ -39418,6 +39431,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
             passageSight.subVectors(target, camera2.position).normalize(),
             camera2.up.crossVectors(passageLateral, passageSight).normalize().negate(),
             camera2.lookAt(target),
+            openingRetreatDrift(camera2, t, camera2.position.distanceTo(ship.position)),
             camera2.updateProjectionMatrix(),
             { name: "lead-underpass", subject: 0 }
           );
@@ -58073,7 +58087,7 @@ vShieldFinish=shieldFinish;`,
                   MIGRATION_CUTS[1],
                   camera.position.distanceTo(fleet[0].position),
                 );
-          (approachVibration.update(seconds, camera, hullStrength),
+          (approachVibration.update(seconds, camera, hullStrength, opening ? 0.18 : 1),
             ringVibration.update(
               seconds,
               camera,

@@ -29265,201 +29265,107 @@
           }
         );
       }
-      function approachFrame(position, focus, aspect2, passage2, t2 = 64) {
-        let portrait = aspect2 < 1,
-          p =
-            Math.max(
-              0,
-              Math.min(1, (t2 - (passage2 === 2 ? 44 : 40)) / (passage2 === 2 ? 20 : 24)),
-            ) * 0.5;
-        return (
-          passage2 === 2
-            ? (position.set(portrait ? -5 : -22, 15 + p * 12, 75 + p * 95),
-              focus.set(portrait ? -18 : -46, 19, -150))
-            : (position.set(portrait ? 5 - p * 5 : 28 - p * 16, 12 + p * 8, 52 + p * 88),
-              focus.set(portrait ? 14 + p * 8 : 14 + p * 35, 10, -90 - p * 110)),
-          portrait ? 66 : 46
-        );
-      }
       var DURATION = 64,
         CUTS = [20, 40],
         target = new Vector3(),
         offset = new Vector3(),
         smooth = (a, b, t2) => {
-          let x = MathUtils.clamp((t2 - a) / (b - a), 0, 1);
+          const x = MathUtils.clamp((t2 - a) / (b - a), 0, 1);
           return x * x * x * (x * (x * 6 - 15) + 10);
         },
         travel = (a, b, t2) => MathUtils.clamp((t2 - a) / (b - a), 0, 1),
-        integratedEase = (u) => u * u * u * u * (2.5 + u * (-3 + u));
+        integratedEase = (u) => u ** 4 * (2.5 + u * (-3 + u));
       function displacement(t2) {
-        if (((t2 = MathUtils.clamp(t2, 0, DURATION)), t2 < 8)) return 64 * integratedEase(t2 / 8);
+        t2 = MathUtils.clamp(t2, 0, DURATION);
+        if (t2 < 8) return 64 * integratedEase(t2 / 8);
         if (t2 < 52) return 32 + 8 * (t2 - 8);
-        let u = (t2 - 52) / 12;
+        const u = (t2 - 52) / 12;
         return 384 + 96 * (u - integratedEase(u));
       }
       function shotAt(t2, passage2 = 1) {
         return passage2 === 2
-          ? t2 < 26
-            ? "keel"
-            : t2 < 44
-              ? "crossing"
-              : "horizon"
-          : t2 < 20
-            ? "departure"
-            : t2 < 40
-              ? "structure"
-              : "destination";
+          ? t2 < 26 ? "keel" : t2 < 44 ? "crossing" : "destination"
+          : t2 < 20 ? "departure" : t2 < 40 ? "structure" : "destination";
       }
-      function shotPose(camera2, ship, t2, passage2 = 1) {
-        ((t2 = MathUtils.clamp(t2, 0, DURATION)),
-          ship.position.set(0, 0, -displacement(t2)),
-          ship.rotation.set(0.045, btkTransitYaw(t2), 0.06));
-        let portrait = camera2.aspect < 1,
-          shot = shotAt(t2);
-        if (passage2 === 2) {
-          if (t2 < 26) {
-            let p = travel(0, 26, t2);
-            (camera2.position
-              .copy(ship.position)
-              .add(offset.set(-(portrait ? 36 : 30) + p * 5, -10 + p * 14, -37 + p * 65)),
-              target.copy(ship.position).add(offset.set(0, 2, 0)));
-          } else if (t2 < 44) {
-            let p = travel(26, 44, t2);
-            (camera2.position
-              .copy(ship.position)
-              .add(offset.set(-65 + p * 30, 20 - p * 7, 60 + p * 10)),
-              target.copy(ship.position).add(offset.set(portrait ? -2 : -10, 3, 0)));
-          } else
-            (approachFrame(camera2.position, target, camera2.aspect, passage2, t2),
-              camera2.position.add(ship.position),
-              target.add(ship.position));
-          return (
-            (camera2.fov = portrait ? 66 : 46),
-            camera2.lookAt(target),
-            camera2.updateProjectionMatrix(),
-            camera2.updateMatrixWorld(),
-            (camera2.userData.focus ??= new Vector3()),
-            camera2.userData.focus.copy(target),
-            shotAt(t2, passage2)
-          );
-        }
-        if (shot === "departure") {
-          let p = travel(0, 20, t2);
-          (camera2.position.set((portrait ? 38 : 58) - p * 7, 21 - p * 3, -215 + t2 * 0.6),
-            target.copy(ship.position).add(offset.set(portrait ? -4 : -18, -4 + p * 2, 0)));
-        } else if (shot === "structure") {
-          let p = travel(20, 40, t2);
-          (camera2.position
-            .copy(ship.position)
-            .add(offset.set(portrait ? 36 - p * 4 : 30 - p * 5, 10 - p * 8, -25 + p * 53)),
-            target.copy(ship.position).add(offset.set(0, 3.2 - p * 0.8, -2 + p * 5)));
-        } else if (
-          (approachFrame(camera2.position, target, camera2.aspect, passage2, t2),
-          camera2.position.add(ship.position),
-          target.add(ship.position),
-          passage2 === 3)
-        ) {
-          let observation = smooth(40, 49, t2) * (1 - smooth(56, 64, t2));
-          ((camera2.position.x += observation * (portrait ? 5 : 12)),
-            (camera2.position.y += observation * 9),
-            (target.x -= observation * (portrait ? 3 : 8)),
-            (target.y -= observation * 5));
-        }
-        return (
-          (camera2.fov = portrait ? 66 : 46),
-          camera2.lookAt(target),
-          camera2.updateProjectionMatrix(),
-          camera2.updateMatrixWorld(),
-          (camera2.userData.focus ??= new Vector3()),
-          camera2.userData.focus.copy(target),
-          shot
-        );
+      function cruiseFov(aspect, t2, passage2) {
+        if (aspect < 1) return 66;
+        const narrow = passage2 === 3 ? 0 : smooth(passage2 === 2 ? 50 : 48, 62, t2);
+        const panoramicFov =
+          (360 / Math.PI) * Math.atan(Math.tan((46 * Math.PI) / 360) * Math.min(1, 1.9 / aspect));
+        return MathUtils.lerp(46, panoramicFov, narrow);
       }
-      var bridgeRadius = (passage2, cut) => (passage2 === 1 && cut === 40 ? 8 : 6),
-        probes = Array.from({ length: 4 }, () => new PerspectiveCamera()),
-        directions = Array.from({ length: 4 }, () => new Vector3()),
-        sightline = new Vector3(),
-        probeShip = new Group(),
-        axes = ["x", "y", "z"],
-        bridgeKey = "";
-      function candidateBank(camera2, t2, passage2) {
-        if (passage2 !== 3) return;
-        let bank = smooth(40, 49, t2) * (1 - smooth(56, 64, t2));
-        (camera2.rotateZ(-0.4 * bank), camera2.updateMatrixWorld());
-      }
-      function hermite(a, b, va, vb, u, d) {
-        let delta = b - a,
-          m0 = va * d,
-          m1 = vb * d;
-        return (
-          a +
-          m0 * u +
-          (10 * delta - 6 * m0 - 4 * m1) * u ** 3 +
-          (-15 * delta + 8 * m0 + 7 * m1) * u ** 4 +
-          (6 * delta - 3 * m0 - 3 * m1) * u ** 5
-        );
+      // One continuous tracking arc: gently accelerate, coast, then settle aft.
+      // Radius and height are independent C2 curves; neither the clock nor the
+      // look direction resets at the descriptive shot boundaries.
+      function trackingProgress(t2, duration, ramp = 0.16) {
+        const u = travel(0, duration, t2);
+        if (u < ramp) return ramp * integratedEase(u / ramp) / (1 - ramp);
+        if (u > 1 - ramp) return 1 - ramp * integratedEase((1 - u) / ramp) / (1 - ramp);
+        return (u - ramp * 0.5) / (1 - ramp);
       }
       function trackingPose(camera2, ship, t2, passage2 = 1) {
-        let shot = shotPose(camera2, ship, t2, passage2),
-          cut = (passage2 === 2 ? [26, 44] : CUTS).find(
-            (c) => Math.abs(t2 - c) < bridgeRadius(passage2, c),
-          );
-        if (cut === void 0) return (candidateBank(camera2, t2, passage2), shot);
-        let radius = bridgeRadius(passage2, cut),
-          duration = radius * 2,
-          a = cut - radius,
-          b = cut + radius,
-          e = 1e-3,
-          u = (t2 - a) / duration,
-          key = `${passage2}:${cut}:${camera2.aspect}`;
-        if (key !== bridgeKey) {
-          for (let i = 0; i < 4; i++)
-            ((probes[i].aspect = camera2.aspect),
-              shotPose(probes[i], probeShip, [a, a + e, b - e, b][i], passage2),
-              probes[i].getWorldDirection(directions[i]));
-          bridgeKey = key;
-        }
-        for (let axis of axes)
-          ((camera2.position[axis] = hermite(
-            probes[0].position[axis],
-            probes[3].position[axis],
-            (probes[1].position[axis] - probes[0].position[axis]) / e,
-            (probes[3].position[axis] - probes[2].position[axis]) / e,
-            u,
-            duration,
-          )),
-            (sightline[axis] = hermite(
-              directions[0][axis],
-              directions[3][axis],
-              (directions[1][axis] - directions[0][axis]) / e,
-              (directions[3][axis] - directions[2][axis]) / e,
-              u,
-              duration,
-            )));
-        return (
-          (camera2.fov = hermite(
-            probes[0].fov,
-            probes[3].fov,
-            (probes[1].fov - probes[0].fov) / e,
-            (probes[3].fov - probes[2].fov) / e,
-            u,
-            duration,
-          )),
-          camera2.userData.focus.copy(camera2.position).addScaledVector(sightline.normalize(), 100),
-          camera2.lookAt(camera2.userData.focus),
-          camera2.updateProjectionMatrix(),
-          camera2.updateMatrixWorld(),
-          candidateBank(camera2, t2, passage2),
-          shot
-        );
+        t2 = MathUtils.clamp(t2, 0, DURATION);
+        ship.position.set(0, 0, -displacement(t2));
+        ship.rotation.set(0.045, btkTransitYaw(t2), 0.06);
+        const portrait = camera2.aspect < 1;
+        const second = passage2 === 2;
+        const arc = trackingProgress(t2, second ? 52 : 50);
+        const approach = smooth(0, second ? 24 : 28, t2);
+        const release = smooth(second ? 24 : 28, DURATION, t2);
+        const startAngle = second ? Math.atan2(portrait ? -36 : -30, -37)
+          : Math.atan2(portrait ? 38 : 58, -215);
+        const endAngle = second ? Math.atan2(portrait ? -5 : -22, 122.5)
+          : Math.atan2(portrait ? 2.5 : 20, 96);
+        const angle = MathUtils.lerp(startAngle, endAngle, arc);
+        const startRadius = second ? 72 : Math.hypot(portrait ? 38 : 58, 215);
+        const nearRadius = second ? 48 : 52;
+        const endRadius = second ? Math.hypot(portrait ? 5 : 22, 122.5)
+          : Math.hypot(portrait ? 2.5 : 20, 96);
+        const radius = MathUtils.lerp(startRadius, nearRadius, approach)
+          + (endRadius - nearRadius) * release;
+        const height = second ? -12 + 16 * approach + 17 * release
+          : 21 - 14 * approach + 9 * release;
+        camera2.position.copy(ship.position).add(offset.set(
+          Math.sin(angle) * radius, height, Math.cos(angle) * radius,
+        ));
+        // Allow a little lead room; hold the spacecraft steadily during the arc.
+        const framing = smooth(34, 60, t2);
+        target.copy(ship.position).add(offset.set(
+          second ? (portrait ? -3 : -9) * framing : (portrait ? 3 : 7) * framing,
+          3 + (second ? 0.5 : 1.5) * framing,
+          (second ? -20 : -18) * framing,
+        ));
+        camera2.up.set(0, 1, 0);
+        camera2.fov = cruiseFov(camera2.aspect, t2, passage2);
+        camera2.lookAt(target);
+        camera2.updateProjectionMatrix();
+        camera2.updateMatrixWorld();
+        (camera2.userData.focus ??= new Vector3()).copy(target);
+        return shotAt(t2, passage2);
       }
       // Authored lens response and a four-second observation hold, not auto exposure.
       // Pure timeline evaluation keeps resize, replay and arbitrary seeks deterministic.
-      var SPACE_HOLD = Object.freeze({ release: 40, start: 58, end: 62 }),
+      var SPACE_HOLD = Object.freeze({ release: 30, start: 58, end: 62 }),
         holdCamera = new PerspectiveCamera(),
+        holdEntryCamera = new PerspectiveCamera(),
+        holdEntryProbe = new PerspectiveCamera(),
         holdShip = new Group(),
         holdAim = new Vector3(),
-        holdDirection = new Vector3();
+        holdDirection = new Vector3(),
+        holdAngles = {},
+        holdKey = "";
+      function observationAngle(start, end, initialRate, elapsed, duration) {
+        // Match the tracking velocity, cruise, and brake over the final 7 seconds.
+        // Integrating the velocity avoids the speed surge of blending two pans.
+        const entry = 4, brake = 7;
+        const rate = (end - start - initialRate * entry * 0.5) / (duration - (entry + brake) * 0.5);
+        if (elapsed < entry)
+          return start + initialRate * elapsed
+            + (rate - initialRate) * entry * integratedEase(elapsed / entry);
+        if (elapsed < duration - brake)
+          return start + (initialRate + rate) * entry * 0.5 + rate * (elapsed - entry);
+        return end - rate * brake * integratedEase(Math.max(0, (duration - elapsed) / brake));
+      }
       function pose(camera2, ship, t2, passage2 = 1) {
         const duration = SPACE_HOLD.start - SPACE_HOLD.release;
         const u = travel(SPACE_HOLD.release, SPACE_HOLD.start, t2);
@@ -29467,22 +29373,34 @@
           t2 <= SPACE_HOLD.release ? t2 : SPACE_HOLD.release + duration * (u - integratedEase(u));
         const shot = trackingPose(camera2, ship, cameraTime, passage2);
         if (t2 > SPACE_HOLD.release) {
-          holdCamera.aspect = camera2.aspect;
-          trackingPose(holdCamera, holdShip, SPACE_HOLD.release + duration / 2, passage2);
-          // Turn toward the planetary limb, leaving the near hull outside the frame.
-          const halfWidth = Math.atan(Math.tan((holdCamera.fov * Math.PI) / 360) * camera2.aspect);
-          holdDirection.subVectors(holdShip.position, holdCamera.position).normalize();
-          const yaw =
-            Math.atan2(holdDirection.x, -holdDirection.z) + halfWidth + 0.24;
+          const key = `${passage2}:${camera2.aspect}`;
+          if (holdKey !== key) {
+            holdCamera.aspect = holdEntryCamera.aspect = holdEntryProbe.aspect = camera2.aspect;
+            trackingPose(holdCamera, holdShip, SPACE_HOLD.release + duration / 2, passage2);
+            // Leave the spacecraft outside the frame while retaining the planetary limb.
+            const halfWidth = Math.atan(Math.tan((holdCamera.fov * Math.PI) / 360) * camera2.aspect);
+            holdDirection.subVectors(holdShip.position, holdCamera.position).normalize();
+            holdAngles.endYaw = Math.atan2(holdDirection.x, -holdDirection.z) + halfWidth + 0.24;
+            holdAngles.endPitch = Math.atan(0.12);
+            trackingPose(holdEntryCamera, holdShip, SPACE_HOLD.release, passage2);
+            holdEntryCamera.getWorldDirection(holdDirection);
+            holdAngles.yaw = Math.atan2(holdDirection.x, -holdDirection.z);
+            holdAngles.pitch = Math.asin(holdDirection.y);
+            trackingPose(holdEntryProbe, holdShip, SPACE_HOLD.release + 0.001, passage2);
+            holdEntryProbe.getWorldDirection(holdDirection);
+            holdAngles.yawRate = (Math.atan2(holdDirection.x, -holdDirection.z) - holdAngles.yaw) / 0.001;
+            holdAngles.pitchRate = (Math.asin(holdDirection.y) - holdAngles.pitch) / 0.001;
+            holdKey = key;
+          }
+          const elapsed = Math.min(duration, t2 - SPACE_HOLD.release);
+          const yaw = observationAngle(holdAngles.yaw, holdAngles.endYaw, holdAngles.yawRate, elapsed, duration);
+          const pitch = observationAngle(holdAngles.pitch, holdAngles.endPitch, holdAngles.pitchRate, elapsed, duration);
           holdAim
-            .set(Math.sin(yaw), 0.12, -Math.cos(yaw))
-            .normalize()
+            .set(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch))
             .multiplyScalar(5000)
-            .add(holdCamera.position);
-          holdCamera.lookAt(holdAim);
-          camera2.quaternion.slerp(holdCamera.quaternion, smooth(0, 1, u));
-          camera2.getWorldDirection(holdDirection);
-          camera2.userData.focus.copy(camera2.position).addScaledVector(holdDirection, 5000);
+            .add(camera2.position);
+          camera2.userData.focus.copy(holdAim);
+          camera2.lookAt(camera2.userData.focus);
           camera2.updateMatrixWorld();
           // The camera stops; the spacecraft retains its original inertial trajectory.
           ship.position.set(0, 0, -displacement(t2));
