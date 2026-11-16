@@ -27463,11 +27463,27 @@ void main() {
           const hullScale = 0.54;
           const hullOffsetY = -1.313;
           const outline = [
-            [0, -3.65], [1.95, -3.28], [3.35, -2.3], [3.65, 0.55],
-            [2.85, 2.9], [1.55, 3.35], [0, 3.42], [-1.55, 3.35],
-            [-2.85, 2.9], [-3.65, 0.55], [-3.35, -2.3], [-1.95, -3.28],
+            [0, -3.65],
+            [1.95, -3.28],
+            [3.35, -2.3],
+            [3.65, 0.55],
+            [2.85, 2.9],
+            [1.55, 3.35],
+            [0, 3.42],
+            [-1.55, 3.35],
+            [-2.85, 2.9],
+            [-3.65, 0.55],
+            [-3.35, -2.3],
+            [-1.95, -3.28],
           ];
-          const sections = [[2.55, 0.82], [3.05, 0.72], [3.58, 1], [4.38, 1], [5.08, 0.76], [5.45, 0.46]];
+          const sections = [
+            [2.55, 0.82],
+            [3.05, 0.72],
+            [3.58, 1],
+            [4.38, 1],
+            [5.08, 0.76],
+            [5.45, 0.46],
+          ];
           const rings = sections.map(([y, radius]) =>
             outline.map(([x, z]) => [x * radius, y, z * radius]),
           );
@@ -27475,8 +27491,10 @@ void main() {
           for (let i = 0; i < outline.length; i++) {
             const j = (i + 1) % outline.length;
             for (let r = 1; r < rings.length; r++) {
-              const a = rings[r - 1][i], b = rings[r - 1][j];
-              const c = rings[r][i], d = rings[r][j];
+              const a = rings[r - 1][i],
+                b = rings[r - 1][j];
+              const c = rings[r][i],
+                d = rings[r][j];
               shell.push(...a, ...c, ...b, ...b, ...c, ...d);
             }
             shell.push(0, sections[0][0], 0, ...rings[0][i], ...rings[0][j]);
@@ -27504,15 +27522,19 @@ void main() {
 
           for (let i = 0; i < 6; i++) {
             const angle = (i * Math.PI) / 3;
-            const c = Math.cos(angle), s = Math.sin(angle);
+            const c = Math.cos(angle),
+              s = Math.sin(angle);
             const at = (radius, y) => [c * radius, y, s * radius];
             rod(at(3.05, 2.24), at(4.18, 2.73), 0.18, white);
             rod(at(4.18, 2.73), at(4.5, 3.78), 0.13);
             add(new BoxGeometry(0.84, 1.22, 0.24), metal, ...at(4.5, 3.78), 0, Math.PI / 2 - angle);
           }
           for (const [x, z, radius] of [
-            [0, 0, 0.94], [-1.45, -1.25, 0.31], [1.45, -1.25, 0.31],
-            [-1.45, 1.25, 0.31], [1.45, 1.25, 0.31],
+            [0, 0, 0.94],
+            [-1.45, -1.25, 0.31],
+            [1.45, -1.25, 0.31],
+            [-1.45, 1.25, 0.31],
+            [1.45, 1.25, 0.31],
           ]) {
             add(new CylinderGeometry(radius * 0.48, radius, 0.63, 8, 1, true), metal, x, 0.77, z);
             add(new CylinderGeometry(radius * 0.48, radius * 0.48, 0.05, 8), dark, x, 1.07, z);

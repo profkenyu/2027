@@ -408,18 +408,14 @@
         const u = t / valve;
         return valve * u ** 4 * (2.5 + u * (-3 + u));
       }
+      const ATTITUDE_CORRECTION_AT = { 0: 39, 1: 114, 5: 93 };
       function btkAttitudeOffset(seconds, index, kind = "carrier") {
         const p = ATTITUDE_PROFILES[kind],
-          time = seconds - (6.4 + index * 1.87);
-        if (time <= 0) return 0;
-        const period = p.period + index * 0.73,
-          cycle = Math.floor(time / period),
-          phase = time - cycle * period;
-        const amplitude = ATTITUDE_DEFLECTION[kind];
-        const angle =
-          (amplitude / p.response) *
-          (valveIntegral(phase, p.valve) - valveIntegral(phase - p.response, p.valve));
-        return cycle % 2 ? amplitude - angle : angle;
+          cue = ATTITUDE_CORRECTION_AT[index];
+        if (cue === undefined || seconds <= cue) return 0;
+        const elapsed = seconds - cue;
+        return (ATTITUDE_DEFLECTION[kind] / p.response) *
+          (valveIntegral(elapsed, p.valve) - valveIntegral(elapsed - p.response, p.valve));
       }
 
       var __create = Object.create;
@@ -33907,10 +33903,12 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
         return u * u * u * (u * (u * 6 - 15) + 10);
       }
       function poseRadiators(ship, closure, opening = 1, updateDrives = !0) {
-        let angle = (1 - closure) * (1.05 + 0.23 * opening);
-        for (let { pivot, side, leaf = 1 } of ship.userData.deployables)
-          pivot.rotation.z = side * leaf * angle;
-        updateDrives && updateWingDrives(ship);
+        const angle = (1 - closure) * (1.05 + 0.23 * opening);
+        for (const { pivot, side, leaf = 1 } of ship.userData.deployables) {
+          const rotation = side * leaf * angle;
+          if (!Object.is(pivot.rotation.z, rotation)) pivot.rotation.z = rotation;
+        }
+        if (updateDrives) updateWingDrives(ship);
       }
       var VEHICLE_ARCHIVE_KEY = "terra-incognita:vehicle-archive:v1",
         kinds = new Set(["rover", "surveyor", "fleet"]),
@@ -34038,7 +34036,6 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
         },
         ATTITUDE_PROFILES = {
           carrier: {
-            period: 19.5,
             response: 4.1,
             valve: 0.38,
             tail: 0.62,
@@ -34047,7 +34044,6 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
             opacity: 0.26,
           },
           escort: {
-            period: 16.8,
             response: 2.4,
             valve: 0.13,
             tail: 0.36,
@@ -34056,7 +34052,6 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
             opacity: 0.21,
           },
           capsule: {
-            period: 21.4,
             response: 3.2,
             valve: 0.22,
             tail: 0.48,
@@ -34065,7 +34060,6 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
             opacity: 0.23,
           },
           habitat: {
-            period: 25.6,
             response: 5.8,
             valve: 0.62,
             tail: 0.95,
@@ -34075,12 +34069,10 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           },
         };
       function attitudePulse(seconds2, index, pair, kind = "carrier") {
-        let p = ATTITUDE_PROFILES[kind],
-          time = seconds2 - (6.4 + index * 1.87),
-          period = p.period + index * 0.73;
-        if (time < 0) return -1;
-        let cycle = Math.floor(time / period),
-          age = time - cycle * period - (pair === cycle % 2 ? 0 : p.response);
+        const p = ATTITUDE_PROFILES[kind],
+          cue = ATTITUDE_CORRECTION_AT[index];
+        if (cue === undefined) return -1;
+        const age = seconds2 - cue - (pair === 0 ? 0 : p.response);
         return age >= 0 && age < p.valve + p.tail ? age : -1;
       }
       function createAttitudeJets(ship, tier2, stations, kind = "carrier") {
@@ -34220,24 +34212,24 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           n = 2 * a - 1;
         return 3 * u ** n * (a + (1 - a) * u);
       }
-      function openingPassageOffset(t) {
-        if (t >= 30) return 0;
-        let time = Math.max(0, t);
-        if (time < 16) {
-          let u = time / 16;
-          return 7360 - (24 * time + 3200 * (u * u * u - 0.5 * u * u * u * u));
-        }
-        return 8960 * (1 - time / 40);
+      const MIGRATION_HEADING = -0.09;
+      const MIGRATION_FORWARD_X = Math.sin(MIGRATION_HEADING);
+      const MIGRATION_FORWARD_Z = Math.cos(MIGRATION_HEADING);
+      const MIGRATION_OPENING_SPEED = 224;
+      const MIGRATION_CRUISE_SPEED = 125;
+      const MIGRATION_LEAD_SCALE = 1.6;
+      function integratedSmootherstep(u) {
+        return u ** 4 * (2.5 + u * (-3 + u));
       }
-      function openingFlyby(position, index, t, attitude) {
-        if (index !== 0) return;
-        let offset = openingPassageOffset(t);
-        if (attitude) {
-          let { x, y, z, w } = attitude;
-          ((position.x -= offset * 2 * (x * z + w * y)),
-            (position.y -= offset * 2 * (y * z - w * x)),
-            (position.z -= offset * (1 - 2 * (x * x + y * y))));
-        } else position.z -= offset;
+      function migrationFormationTravel(t) {
+        // The world-space flight path is shared by every ship and continuous across cuts.
+        const elapsed = t - MIGRATION_CUTS[0];
+        if (elapsed <= 0) return MIGRATION_OPENING_SPEED * elapsed;
+        const transition = 14;
+        const change = MIGRATION_CRUISE_SPEED - MIGRATION_OPENING_SPEED;
+        const u = Math.min(1, elapsed / transition);
+        return MIGRATION_OPENING_SPEED * elapsed + change *
+          (transition * integratedSmootherstep(u) + Math.max(0, elapsed - transition));
       }
       var HABITAT_RING_Z = Object.freeze([87.5, -146.5]),
         HABITAT_RING_SCALE = Object.freeze([1.44, 1.44]),
@@ -34366,14 +34358,15 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           let sphere = new Box3().setFromObject(ship).getBoundingSphere(new Sphere());
           radii.set(ship, sphere.radius + sphere.center.distanceTo(ship.position));
         }
-        let lastSpan = -1;
-        return (ship) => {
+        let lastSpan = -1, lastUnderpass = false;
+        return (ship, underpass = false) => {
           let span =
             Math.ceil(
               ((radii.get(ship) || 900) * Math.max(ship.scale.x, ship.scale.y, ship.scale.z) + 32) /
                 8,
             ) * 8;
-          if (span === lastSpan) return;
+          if (span === lastSpan && underpass === lastUnderpass) return;
+          lastUnderpass = underpass;
           ((lastSpan = span),
             Object.assign(light.shadow.camera, {
               left: -span,
@@ -34383,8 +34376,11 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
             }),
             light.shadow.camera.updateProjectionMatrix());
           let texel = (2 * span) / light.shadow.mapSize.x;
-          ((light.shadow.normalBias = Math.max(0.12, Math.min(1.1, texel * 0.16))),
-            (light.shadow.bias = -45e-6));
+          // The shallow underside angle needs a larger offset at coarse map resolutions.
+          light.shadow.normalBias = underpass
+            ? 0.22 + (light.shadow.mapSize.x <= 512 ? 0.86 : 0.62) * texel
+            : Math.max(0.12, Math.min(1.1, texel * 0.16));
+          light.shadow.bias = underpass ? -95e-6 : -45e-6;
         };
       }
       function createRingEncounter() {
@@ -34591,6 +34587,12 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           foil,
           shipMaterial("titanium", tier),
           dark,
+          new MeshStandardMaterial({
+            color: 0xadb6b6,
+            emissive: 0xd2d8d3,
+            emissiveIntensity: 0.3,
+            roughness: 0.7,
+          }),
         ];
         let sharedPressureGeometry, sharedPressureFittings;
         const create = (index) => {
@@ -34676,14 +34678,15 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
               MathUtils.lerp(a[0], b[0], t),
             );
           };
-          const plate = (corners, colour, thickness) => {
+          const plate = (corners, colour, thickness, facing, material = 0, cornerLight) => {
             const centre = corners.reduce((v, p) => v.add(p), new Vector3()).multiplyScalar(0.25);
             const n = new Vector3()
               .subVectors(corners[1], corners[0])
               .cross(new Vector3().subVectors(corners[3], corners[0]))
               .normalize();
-            if (n.dot(new Vector3(centre.x, centre.y, 0)) < 0) {
+            if (n.dot(facing ?? new Vector3(centre.x, centre.y, 0)) < 0) {
               corners.reverse();
+              cornerLight?.reverse();
               n.negate();
             }
             const p = [];
@@ -34707,6 +34710,20 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
                   ],
             );
             const flat = g.toNonIndexed();
+            if (carrier) {
+              // Tile coordinates stay fixed to each panel. Corner light approximates the limited
+              // indirect light in cuts and recesses without adding a shadow pass.
+              const surface = [];
+              const uv = [[0, 0], [1, 0], [1, 1], [0, 1]];
+              for (let i = 0; i < g.index.count; i++) {
+                const vertex = g.index.getX(i);
+                const bevel = thickness > 0 && i >= 12;
+                const contact = bevel ? 0.67 : 1;
+                const finish = thickness > 0 && i >= 6 && i < 12 ? 1 : material;
+                surface.push(...uv[vertex % 4], contact * (cornerLight?.[vertex % 4] ?? 1), finish);
+              }
+              flat.setAttribute("shieldSurface", new Float32BufferAttribute(surface, 4));
+            }
             g.dispose();
             flat.computeVertexNormals();
             const colors = [],
@@ -34735,22 +34752,74 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
             meshParts.push(flat);
             return { centre, n };
           };
+          // Clear the same opening in the structural skin and shield tiles.
+          const bay = { section: 2, u0: 0.67, u1: 0.96, v0: 4.37, v1: 4.63, depth: 31 };
+          const bayProfile = profile[bay.section];
+          const bayLength = profile[bay.section + 1][0] - bayProfile[0];
+          const bayStart = bayProfile[0] + bayLength * bay.u0;
+          const bayEnd = bayProfile[0] + bayLength * bay.u1;
+          const quad = (a, b, u0, u1, v0, v1) => [
+            facet(a, b, u0, v0),
+            facet(a, b, u1, v0),
+            facet(a, b, u1, v1),
+            facet(a, b, u0, v1),
+          ];
+          const plateAroundBay = (a, b, u0, u1, v0, v1, colour, thickness) => {
+            for (const [ua, ub, va, vb] of [
+              [u0, bay.u0, v0, v1],
+              [bay.u1, u1, v0, v1],
+              [bay.u0, bay.u1, v0, bay.v0],
+              [bay.u0, bay.u1, bay.v1, v1],
+            ]) plate(quad(a, b, ua, ub, va, vb), colour, thickness);
+          };
+          const buildMaintenanceBay = (a, b) => {
+            const slope = (a[2] - b[2]) / (b[0] - a[0]);
+            const outward = new Vector3(0, -1, slope).normalize();
+            const contour = (uInset, vInset, depth) =>
+              quad(a, b, bay.u0 + uInset, bay.u1 - uInset, bay.v0 + vInset, bay.v1 - vInset)
+                .map((p) => p.addScaledVector(outward, -depth));
+            const lip = contour(0, 0, -2.4);
+            const throat = contour(0.013, 0.018, 5.5);
+            const back = contour(0.024, 0.033, bay.depth);
+            const centre = back.reduce((sum, p) => sum.add(p), new Vector3()).multiplyScalar(0.25);
+            const join = (outer, inner, color, material, outerLight, innerLight) => {
+              for (let i = 0; i < 4; i++) {
+                const next = (i + 1) % 4;
+                const facing = centre.clone().sub(outer[i]).add(centre).sub(outer[next]);
+                plate([outer[i], outer[next], inner[next], inner[i]], color, 0, facing, material,
+                  [outerLight, outerLight, innerLight, innerLight]);
+              }
+            };
+            join(lip, throat, 0x87929a, 2, 0.98, 0.8);
+            join(throat, back, 0x454e52, 3, 0.8, 0.54);
+            plate(back, 0x4d5657, 0, outward, 3, [0.54, 0.54, 0.54, 0.54]);
+
+            const orientation = new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), -Math.atan(slope));
+            const put = (material, x, y, z, w, h, d) => {
+              const p = new Vector3(x, y, z).applyQuaternion(orientation).add(centre);
+              add(material, p.x, p.y, p.z, w, h, d, orientation);
+            };
+            for (const x of [-21, 21]) {
+              put(0, x, -2.5, 0, 2.6, 5, 64);
+              for (const z of [-27, 0, 27]) put(0, x, -4, z, 6, 8, 3.6);
+              put(1, x * 0.74, -2.7, 18, 10, 5.4, 19);
+              put(9, x, -5.2, -18, 2.5, 0.6, 8);
+            }
+            for (const z of [-27, 27]) put(0, 0, -1.2, z, 41, 2.4, 3.6);
+          };
           for (let s = 0; s < profile.length - 1; s++) {
             const a = profile[s],
               b = profile[s + 1];
             for (let face = 0; face < 8; face++) {
-              plate(
-                [
-                  facet(a, b, 0, face),
-                  facet(a, b, 1, face),
-                  facet(a, b, 1, face + 1),
-                  facet(a, b, 0, face + 1),
-                ],
-                0x313a3e,
-                0,
-              );
               const underside = face === 4;
-              const cuts = underside ? [0, 0.24, 0.43, 0.57, 0.76, 1] : [0, 0.5, 1];
+              const bayFace = carrier && underside && s === bay.section;
+              if (bayFace) {
+                plateAroundBay(a, b, 0, 1, face, face + 1, 0x313a3e, 0);
+                buildMaintenanceBay(a, b);
+                serviceBays++;
+              } else plate(quad(a, b, 0, 1, face, face + 1), 0x313a3e, 0);
+              const cuts = bayFace ? [0, 0.24, 0.32, 0.68, 0.76, 1]
+                : underside ? [0, 0.24, 0.43, 0.57, 0.76, 1] : [0, 0.5, 1];
               const longitudinal =
                 s === 0 ? [0, 0.38, 1] : s === 1 ? [0, 0.28, 0.72, 1] : [0, 0.62, 1];
               for (let col = 0; col < longitudinal.length - 1; col++)
@@ -34764,6 +34833,10 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
                     0.85 +
                     0.035 *
                       Math.sin(s * 1.7 + col * 0.83 + Math.min(row, cuts.length - 2 - row) * 0.71);
+                  if (bayFace && col === 1 && central) {
+                    plateAroundBay(a, b, u0, u1, v0, v1, new Color().setScalar(shade), 2.4);
+                    continue;
+                  }
                   const corners = [
                     facet(a, b, u0, v0),
                     facet(a, b, u1, v0),
@@ -34870,36 +34943,42 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
             mesh.material.side = DoubleSide;
             root.add(mesh);
           }
+          const keelStation = (z) => {
+            const { w, h } = section(z);
+            return [z, w, h];
+          };
+          const keelSections = carrier
+            ? [
+                [...profile.filter(([z]) => z < bayStart - 2), keelStation(bayStart - 2)],
+                [keelStation(bayEnd + 2), ...profile.filter(([z]) => z > bayEnd + 2)],
+              ]
+            : [profile];
           const keel = (width, top, bottom, material, name, x = 0) => {
             const positions = [],
               indices = [];
-            for (const [z, w, h] of profile) {
-              const half = Math.min(width * 0.5, w * 0.4);
-              positions.push(
-                x - half,
-                -h - top,
-                z,
-                x + half,
-                -h - top,
-                z,
-                x + half,
-                -h - bottom,
-                z,
-                x - half,
-                -h - bottom,
-                z,
-              );
-            }
-            for (let k = 0; k < profile.length - 1; k++)
-              for (let side = 0; side < 4; side++) {
-                const a = k * 4 + side,
-                  b = k * 4 + ((side + 1) % 4),
-                  c = b + 4,
-                  d = a + 4;
-                indices.push(a, c, b, a, d, c);
+            for (const stations of keelSections) {
+              const first = positions.length / 3;
+              for (const [z, w, h] of stations) {
+                const half = Math.min(width * 0.5, w * 0.4);
+                positions.push(
+                  x - half, -h - top, z,
+                  x + half, -h - top, z,
+                  x + half, -h - bottom, z,
+                  x - half, -h - bottom, z,
+                );
               }
-            const last = (profile.length - 1) * 4;
-            indices.push(0, 1, 2, 0, 2, 3, last, last + 2, last + 1, last, last + 3, last + 2);
+              for (let k = 0; k < stations.length - 1; k++)
+                for (let side = 0; side < 4; side++) {
+                  const a = first + k * 4 + side,
+                    b = first + k * 4 + ((side + 1) % 4),
+                    c = b + 4,
+                    d = a + 4;
+                  indices.push(a, c, b, a, d, c);
+                }
+              const last = first + (stations.length - 1) * 4;
+              indices.push(first, first + 1, first + 2, first, first + 2, first + 3,
+                last, last + 2, last + 1, last, last + 3, last + 2);
+            }
             const g = new BufferGeometry();
             g.setAttribute("position", new Float32BufferAttribute(positions, 3));
             g.setIndex(indices);
@@ -34920,6 +34999,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           keel(6, 2.5, 3.4, steel, "continuous-keel-spine");
           for (const side of [-1, 1]) keel(1.8, 1, 3.9, steel, "keel-edge-rail", side * 10.5);
           for (const z of [-390, -290, -190, -90, 10, 210, 310, 410]) {
+            if (carrier && z > bayStart && z < bayEnd) continue;
             const h = section(z).h;
             const k = profile.findIndex(
               (v, i) => i < profile.length - 1 && z >= v[0] && z < profile[i + 1][0],
@@ -35576,10 +35656,10 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           body.castShadow = body.receiveShadow = true;
           root.add(body);
           instances.forEach((list, i) => {
+            if (!list.length) return;
             const mesh = new InstancedMesh(i === 3 ? unitBox : box, materialList[i], list.length);
             list.forEach((m, j) => mesh.setMatrixAt(j, m));
-            mesh.castShadow = i !== 3;
-            mesh.receiveShadow = i !== 3;
+            mesh.castShadow = mesh.receiveShadow = i !== 3 && i !== 9;
             mesh.instanceMatrix.needsUpdate = true;
             mesh.computeBoundingSphere();
             root.add(mesh);
@@ -35588,7 +35668,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
             if (!list.length) return;
             const mesh = new InstancedMesh(unitBox, materialList[i], list.length);
             list.forEach((m, j) => mesh.setMatrixAt(j, m));
-            mesh.castShadow = mesh.receiveShadow = i !== 3;
+            mesh.castShadow = mesh.receiveShadow = i !== 3 && i !== 9;
             mesh.computeBoundingSphere();
             mesh.userData.distantOmit = true;
             root.add(mesh);
@@ -39389,24 +39469,32 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
       }
       function openingFlybyTravel(t) {
         const time = MathUtils.clamp(t, 0, 30);
-        const integral = (u) => u ** 4 * (2.5 + u * (-3 + u));
-        // Slow through the close passage; match the ship's 224-unit/s world
-        // translation (140 * 1.6) on exit so the observer settles in space.
-        if (time < 6) return 70 * time - 35 * 6 * integral(time / 6);
-        if (time < 14) return 315 + 35 * (time - 6);
-        if (time < 22) return 595 + 35 * (time - 14) + 105 * 8 * integral((time - 14) / 8);
-        return 1295 + 140 * (time - 22);
+        if (time < 6) return 70 * time - 35 * 6 * integratedSmootherstep(time / 6);
+        // Hold the ten-second close pass, then let the ship go past the observer.
+        if (time < 16) return 315 + 35 * (time - 6);
+        const exitSpeed = MIGRATION_OPENING_SPEED / MIGRATION_LEAD_SCALE;
+        const release = Math.min(time - 16, 8);
+        return 665 + 35 * release + (exitSpeed - 35) * 8 *
+          integratedSmootherstep(release / 8) + exitSpeed * Math.max(0, time - 24);
       }
       function openingCameraPosition(position, t) {
-        position.set(0, -230, 480 - openingFlybyTravel(t));
+        const alongside = openingEase((t - 2) / 6) * (1 - openingEase((t - 15) / 8));
+        position.set(32 * openingEase((t - 2) / 13), -180 + 10 * alongside,
+          480 - openingFlybyTravel(t));
       }
       function openingCameraTarget(out, position, t) {
-        // Initially look past the approaching hull. Acquire it gradually instead
-        // of pinning its centre to the frame, then let perspective drive the pan.
-        const angle = Math.atan2(-position.y, position.z)
-          - 0.55 * (1 - openingEase(t / 10));
-        out.copy(position).addScaledVector(passageSight.set(0, Math.sin(angle), -Math.cos(angle)), 1000);
+        // Glance into the bay as it passes, then hold a direction in space.
+        const bayFocus = openingEase((t - 3) / 5) * (1 - openingEase((t - 14) / 7));
+        const pitch = Math.atan2(-position.y + 16 * bayFocus, position.z - 20 * bayFocus) -
+          0.16 * (1 - openingEase(t / 10));
+        const release = openingEase((t - 22) / 7);
+        passageSight.set(-position.x * 0.48, Math.sin(pitch) * 180, -Math.cos(pitch) * 180)
+          .normalize()
+          .lerp(openingExitSight, release)
+          .normalize();
+        out.copy(position).addScaledVector(passageSight, 1000);
       }
+      const openingExitSight = new Vector3(0, 0.105, 1).normalize();
       function openingCameraVibration(camera2, t) {
         const settleAt = 5.5;
         if (t <= 0 || t >= settleAt) return;
@@ -39464,20 +39552,6 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
                 ? (directMigrationRear(camera2, t - 51, fleet2[5], 6),
                   { name: "ring-rear", subject: 5 })
                 : { name: directFleetCloseup(camera2, t - 57, fleet2[1]), subject: 1 }
-        );
-      }
-      function approachProgress(progress) {
-        let u = Math.max(0, Math.min(1, progress)),
-          brake = 0.86,
-          tail = 1 - brake,
-          coast = (x) => 0.08 * x + (2 * x * x * x) / 3,
-          speed = 0.08 + 2 * brake * brake,
-          total = coast(brake) + (speed * tail) / 2;
-        if (progress < 0) return (0.08 * progress) / total;
-        if (u <= brake) return coast(u) / total;
-        let q = (u - brake) / tail;
-        return (
-          (coast(brake) + speed * tail * (q / 2 + Math.sin(Math.PI * q) / (2 * Math.PI))) / total
         );
       }
       var version = "15.1.22";
@@ -57570,6 +57644,7 @@ vPlumeNormal=normalize(normalMatrix*normal);vPlumeView=-mvPosition.xyz;`,
                   let material = original.clone(),
                     isPaint = !!original.userData.vehicleMarking,
                     plateFinish = !!mesh.geometry.getAttribute("shieldFinish"),
+                    shieldSurface = !!mesh.geometry.getAttribute("shieldSurface"),
                     finishKind = isPaint ? "paint" : original.userData.aerospace?.kind,
                     closeHullWear = index === 0 && ["white", "steel", "titanium"].includes(finishKind);
                   (isPaint && paintMaterials++, material.bumpMap && (material.bumpScale *= 40));
@@ -57620,15 +57695,20 @@ vPlumeNormal=normalize(normalMatrix*normal);vPlumeView=-mvPosition.xyz;`,
                         plateFinish &&
                           ((shader.vertexShader =
                             `attribute float shieldFinish; varying float vShieldFinish;
-` + shader.vertexShader),
+` +
+                            (shieldSurface ? "attribute vec4 shieldSurface; varying vec4 vShieldSurface;\n" : "") +
+                            shader.vertexShader),
                           (shader.vertexShader = shader.vertexShader.replace(
                             "#include <begin_vertex>",
                             `#include <begin_vertex>
-vShieldFinish=shieldFinish;`,
+vShieldFinish=shieldFinish;
+${shieldSurface ? "vShieldSurface = shieldSurface;" : ""}`,
                           )),
                           (shader.fragmentShader =
                             `varying float vShieldFinish;
-` + shader.fragmentShader)),
+` +
+                            (shieldSurface ? "varying vec4 vShieldSurface;\n" : "") +
+                            shader.fragmentShader)),
                         (shader.fragmentShader =
                           `
             uniform float voyageAge;
@@ -57693,6 +57773,16 @@ vShieldFinish=shieldFinish;`,
             vec3 ageEdge = abs(abs(vVoyagePart)-vec3(1.0));
             float ageEdgeDistance = min(max(ageEdge.x,ageEdge.y),min(max(ageEdge.x,ageEdge.z),max(ageEdge.y,ageEdge.z)));
             float ageEdgeMask = 1.0-smoothstep(.012,.045,ageEdgeDistance);
+            ${shieldSurface ? `
+            float shieldBorder = min(min(vShieldSurface.x, 1.0 - vShieldSurface.x),
+              min(vShieldSurface.y, 1.0 - vShieldSurface.y));
+            float isTile = step(.5, vShieldSurface.w) * (1.0 - step(1.5, vShieldSurface.w));
+            float isTrim = step(1.5, vShieldSurface.w) * (1.0 - step(2.5, vShieldSurface.w));
+            float isLiner = step(2.5, vShieldSurface.w);
+            float seam = (1.0 - smoothstep(.002, .035, shieldBorder)) * isTile;
+            float shieldContact = vShieldSurface.z * (1.0 - seam * .24);
+            diffuseColor.rgb *= .83 + .17 * shieldContact;
+            ` : ""}
             float ageZone = max(exp(-engineField.x/46.0),ageEdgeMask*.42);
             float ageDeposit = smoothstep(.44,.73,ageBroad + (ageGrain-.5)*.18)*ageZone*voyageHistory.z*voyageDeposit;
             // Restrained, uneven discolouration; no terrestrial rust or liquid streaks.
@@ -57736,6 +57826,11 @@ vShieldFinish=shieldFinish;`,
             vec2 wearGrid = wearPlane / vec2(18.0, 23.0);
             vec3 wearCell = vec3(floor(wearGrid), voyageSeed + 71.0);
             float wearSeed = voyageHash(wearCell);
+            // Handling marks accumulate near fittings and propulsion. Tile faces stay quiet.
+            float wearExposure = max(exp(-engineField.x / 38.0), ${shieldSurface
+              ? "max(seam * .62, isTrim)"
+              : "mix(.18, .84, ageEdgeMask)"});
+            wearExposure = mix(.08, 1.0, wearExposure);
             float wearAngle = (voyageHash(wearCell + 13.7) - .5) * 2.2;
             vec2 wearCentre = .3 + .4 * vec2(voyageHash(wearCell + 7.2), voyageHash(wearCell + 29.1));
             vec2 wearLocal = (fract(wearGrid) - wearCentre) * vec2(18.0, 23.0);
@@ -57748,16 +57843,16 @@ vShieldFinish=shieldFinish;`,
             float wearVisibility = 1.0 - smoothstep(.3, 1.8, wearPixel);
             float wearWidth = mix(.08, .18, voyageHash(wearCell + 58.6));
             float wearScratch = (1.0 - smoothstep(wearWidth, wearWidth + wearPixel, wearDistance))
-              * step(.88, wearSeed) * wearVisibility;
+              * step(.88, wearSeed) * wearVisibility * wearExposure;
             float wearRadius = mix(.16, .45, voyageHash(wearCell + 93.1));
             float wearPit = (1.0 - smoothstep(wearRadius, wearRadius + wearPixel, length(wearLocal)))
-              * step(wearSeed, .035) * wearVisibility;
+              * step(wearSeed, .035) * wearVisibility * wearExposure;
             float wearPatch = voyageNoise(ageP * vec3(.072, .091, .041) + vec3(18.3));
             float wearResidue = smoothstep(.52, .76, wearPatch)
-              * smoothstep(.38, .64, ageBroad) * (.25 + .75 * ageEdgeMask);
-            diffuseColor.rgb *= mix(vec3(1.0), vec3(.59, .56, .51), wearResidue * .32);
-            diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.43, .45, .46), wearScratch * .28);
-            diffuseColor.rgb *= 1.0 - wearPit * .24;
+              * smoothstep(.38, .64, ageBroad) * wearExposure;
+            diffuseColor.rgb *= mix(vec3(1.0), vec3(.59, .56, .51), wearResidue * .18);
+            diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.43, .45, .46), wearScratch * .17);
+            diffuseColor.rgb *= 1.0 - wearPit * .14;
             ` : ""}
 
             // Two flush service patches use the same hull-space register on
@@ -57781,9 +57876,13 @@ vShieldFinish=shieldFinish;`,
                           "#include <roughnessmap_fragment>",
                           `
             #include <roughnessmap_fragment>
-            ${plateFinish ? "roughnessFactor=clamp(roughnessFactor+(vShieldFinish-.5)*.15,.54,.94);" : ""}
+            ${plateFinish ? "roughnessFactor=clamp(roughnessFactor+(vShieldFinish-.5)*.24,.48,.94);" : ""}
             roughnessFactor = min(1.0, roughnessFactor + ageDeposit*.055 + agePit*.09 + engineResidue*.085 - ageChip*.17);
-            ${closeHullWear ? "roughnessFactor = clamp(roughnessFactor + wearResidue*.14 + wearPit*.08 - wearScratch*.18, .22, .96);" : ""}
+            ${closeHullWear ? "roughnessFactor = clamp(roughnessFactor + wearResidue*.09 + wearPit*.05 - wearScratch*.12, .22, .96);" : ""}
+            ${shieldSurface ? `
+            roughnessFactor = mix(roughnessFactor, .37 + .06 * vShieldFinish, isTrim);
+            roughnessFactor = mix(roughnessFactor, .91, isLiner);
+            ` : ""}
           `,
                         )),
                         (shader.fragmentShader = shader.fragmentShader.replace(
@@ -57800,7 +57899,8 @@ vShieldFinish=shieldFinish;`,
                           `
             #include <metalnessmap_fragment>
             metalnessFactor = mix(metalnessFactor*(1.0-ageDeposit*.075-engineResidue*.1),.72,ageChip);
-            ${closeHullWear ? "metalnessFactor = mix(metalnessFactor * (1.0 - wearResidue*.12), .65, wearScratch*.35);" : ""}
+            ${closeHullWear ? "metalnessFactor = mix(metalnessFactor * (1.0 - wearResidue*.12), .65, wearScratch*.22);" : ""}
+            ${shieldSurface ? "metalnessFactor = mix(metalnessFactor, .74, isTrim) * (1.0 - isLiner);" : ""}
           `,
                         )),
                         closeHullWear && detail > 0 &&
@@ -57815,10 +57915,21 @@ vShieldFinish=shieldFinish;`,
             vec3 wearGradient = dFdx(wearHeight) * wearCrossX + dFdy(wearHeight) * wearCrossY;
             if (abs(wearDet) > 0.000001) {
               vec3 wearRelief = normalize(abs(wearDet) * normal - sign(wearDet) * wearGradient);
-              normal = normalize(mix(normal, wearRelief, .35));
+              normal = normalize(mix(normal, wearRelief, .2));
             }
 `,
                           )));
+                      if (shieldSurface) {
+                        shader.fragmentShader = shader.fragmentShader
+                          .replace("#include <lights_physical_fragment>", `#include <lights_physical_fragment>
+                                  material.specularColor *= 1.0 + isTile * (.22 * (vShieldFinish - .5));
+                                  material.specularColorBlended = mix(material.specularColor, diffuseColor.rgb, metalnessFactor);
+                      `)
+                          .replace("#include <aomap_fragment>", `#include <aomap_fragment>
+                                  reflectedLight.indirectDiffuse *= shieldContact;
+                                  reflectedLight.indirectSpecular *= mix(shieldContact * shieldContact, shieldContact, isTrim);
+                      `);
+                      }
                     }),
                     tier2 === "low")
                   ) {
@@ -57852,14 +57963,14 @@ vShieldFinish=shieldFinish;`,
                   }
                   return (
                     (material.customProgramCacheKey = () =>
-                      "voyage-ageing-v13-" +
+                      "voyage-ageing-v14-" +
                       index +
                       "-" +
                       detail +
                       "-" +
                       finishKind +
                       "-" +
-                      plateFinish),
+                      plateFinish + "-" + shieldSurface),
                     treated++,
                     material
                   );
@@ -57949,25 +58060,16 @@ vShieldFinish=shieldFinish;`,
           low: { dpr: 0.9, shadow: 512 },
         }[tier],
         smooth5 = (x) => ((x = MathUtils.clamp(x, 0, 1)), x * x * (3 - 2 * x)),
-        schedule = [
-          { start: 1.5, duration: 69, z: -150, x: 50, y: 20, scale: 1.6 },
-          { start: 4, duration: 70, z: -1400, x: -800, y: 220, scale: 0.65 },
-          { start: 6, duration: 72, z: -1750, x: 1050, y: 420, scale: 0.74 },
-          { start: 8, duration: 73, z: -2500, x: -1620, y: 80, scale: 0.6 },
-          { start: 9.5, duration: 74, z: -3200, x: 1830, y: 490, scale: 0.62 },
-          { start: 3, duration: 92, z: -4100, x: -1250, y: 620, scale: 2.8 },
+        migrationFormation = [
+          { z: -14950, x: 50, y: 20, scale: MIGRATION_LEAD_SCALE },
+          { z: -17200, x: -800, y: 220, scale: 0.65 },
+          { z: -19150, x: 1050, y: 420, scale: 0.74 },
+          { z: -21050, x: -1620, y: 80, scale: 0.6 },
+          { z: -22950, x: 1830, y: 490, scale: 0.62 },
+          { z: -24650, x: -1250, y: 620, scale: 2.8 },
         ],
-        motion = schedule.map(() => ({ approach: 0, deploy: 0 })),
         ringEncounter = createRingEncounter(),
-        hemisphereLight,
-        choreography = createTimeline({ autoplay: !1 });
-      schedule.forEach((s, i) => {
-        choreography.add(
-          motion[i],
-          { approach: [0, 1], duration: s.duration * 1e3, ease: "linear" },
-          s.start * 1e3,
-        );
-      });
+        hemisphereLight;
       var currentShot = "arrival",
         renderer,
         scene,
@@ -57990,6 +58092,7 @@ vShieldFinish=shieldFinish;`,
         }),
         shadowBudget,
         sunlightOffset = new Vector3(-1400, 2600, 1700),
+        underpassLightOffset = new Vector3(-1100, -1750, 2050),
         title = document.getElementById("line"),
         cut = document.getElementById("cut"),
         loading = document.getElementById("loading"),
@@ -58074,223 +58177,225 @@ vShieldFinish=shieldFinish;`,
         return 1 - u * u * u * (u * (u * 6 - 15) + 10);
       }
       function render2(t) {
-        ((seconds = MathUtils.clamp(t, segment.start, endTime)),
-          window.VOYAGE_AGEING?.update(phase, seconds),
-          window.VOYAGE_ENGINES?.update(seconds));
-        let migrationTime = migrationClock(seconds),
-          timelineTime =
-            phase === "arrival"
-              ? arrivalStoryTime(seconds)
-              : seconds < 30
-                ? (seconds * 20) / 30
-                : migrationTime <= 23
-                  ? migrationTime + 17
-                  : 40 + ((migrationTime - 23) * 28) / 52,
-          sceneTime = Math.min(timelineTime, 108),
-          simulationTime = voyageClock(seconds),
-          flightTime = simulationTime * 2;
-        choreography.seek(simulationTime * 1e3);
-        let opening = phase === "migration" && seconds < 30;
-        (fleet.forEach((ship, i) => {
-          let s = schedule[i],
-            p = opening
-              ? ((migrationClock(30) * 68) / 75 - s.start) / s.duration
-              : simulationTime < s.start
-                ? (simulationTime - s.start) / s.duration
-                : motion[i].approach,
-            anchorZ = 1e3,
-            near = anchorZ - s.z,
-            far = 16e3 + i * 2200,
-            travel = approachProgress(p),
-            depth = MathUtils.lerp(far, near, travel);
-          (ship.position.set(s.x, s.y, anchorZ - depth),
-            ship.scale.setScalar(s.scale),
-            (ship.visible = phase === "migration" && (!opening || i === 0)));
-          let correction = smooth5((flightTime - 64 - i * 3) / 22);
-          (ship.rotation.set(-0.025 + i * 8e-3, -0.13 + correction * 0.085, (i - 2) * 0.012),
-            phase === "migration" && openingFlyby(ship.position, i, seconds, ship.quaternion),
-            phase === "migration" &&
-              ship.rotateY(btkAttitudeOffset(seconds, i, ship.userData.jets[0]?.userData.kind)),
-            updateAttitudeJets(ship, i, phase === "migration" ? seconds : -1),
-            (motion[i].deploy =
-              phase === "arrival" ? 1 : radiatorClosure(seconds, i, response.duration)),
-            poseRadiators(ship, motion[i].deploy, response.opening, !1));
-        }),
-          ringEncounter.update(phase, seconds),
-          updateHabitatRings(fleet[5], phase, seconds));
-        let migrationShot =
-          phase === "migration"
-            ? directMigrationSequence(camera, seconds, fleet, environment.surfaceHeightAt)
-            : null;
-        if (
-          ((currentShot =
-            migrationShot?.name ??
-            directCamera(
-              camera,
-              sceneTime,
-              fleet[0],
-              environment.surfaceHeightAt,
-              fleet[5],
-              seconds,
-            )),
-          approachVibration)
-        ) {
-          let hullStrength =
-            seconds < 30
-              ? null
-              : closePassVibrationStrength(
-                  seconds,
-                  MIGRATION_CUTS[0],
-                  MIGRATION_CUTS[1],
-                  camera.position.distanceTo(fleet[0].position),
-                );
-          (approachVibration.update(seconds, camera, hullStrength, opening ? 0 : 1),
-            ringVibration.update(
-              seconds,
-              camera,
-              closePassVibrationStrength(
+        seconds = MathUtils.clamp(t, segment.start, endTime);
+        window.VOYAGE_AGEING?.update(phase, seconds);
+        window.VOYAGE_ENGINES?.update(seconds);
+
+        const migration = phase === "migration";
+        const arrival = phase === "arrival";
+        const elapsed = seconds - segment.start;
+        const opening = migration && seconds < MIGRATION_CUTS[0];
+        const migrationTime = migrationClock(seconds);
+        const timelineTime = arrival
+          ? arrivalStoryTime(seconds)
+          : seconds < 30
+            ? (seconds * 20) / 30
+            : migrationTime <= 23
+              ? migrationTime + 17
+              : 40 + ((migrationTime - 23) * 28) / 52;
+        const sceneTime = Math.min(timelineTime, 108);
+        const flightTime = voyageClock(seconds) * 2;
+        const travel = migrationFormationTravel(seconds);
+        const advanceX = MIGRATION_FORWARD_X * travel;
+        const advanceZ = MIGRATION_FORWARD_Z * travel;
+        const attitudeTime = migration ? seconds : -1;
+
+        fleet.forEach((ship, index) => {
+          const formation = migrationFormation[index];
+          ship.position.set(formation.x + advanceX, formation.y, formation.z + advanceZ);
+          ship.scale.setScalar(formation.scale);
+          ship.visible = migration && (!opening || index === 0);
+
+          const correction = btkAttitudeOffset(attitudeTime, index, ship.userData.jets[0]?.userData.kind);
+          ship.rotation.set(0, MIGRATION_HEADING + correction, index * 0.008);
+          updateAttitudeJets(ship, index, attitudeTime);
+
+          const deployment = arrival ? 1 : radiatorClosure(seconds, index, response.duration);
+          poseRadiators(ship, deployment, response.opening, false);
+        });
+        ringEncounter.update(phase, seconds);
+        updateHabitatRings(fleet[5], phase, seconds);
+
+        const migrationShot = migration
+          ? directMigrationSequence(camera, seconds, fleet, environment.surfaceHeightAt)
+          : null;
+        currentShot = migrationShot?.name ?? directCamera(
+          camera,
+          sceneTime,
+          fleet[0],
+          environment.surfaceHeightAt,
+          fleet[5],
+          seconds,
+        );
+        if (approachVibration) {
+          const hullStrength = seconds < MIGRATION_CUTS[0]
+            ? null
+            : closePassVibrationStrength(
                 seconds,
+                MIGRATION_CUTS[0],
                 MIGRATION_CUTS[1],
-                MIGRATION_CUTS[2],
-                camera.position.distanceTo(fleet[5].position),
-              ),
-            ));
+                camera.position.distanceTo(fleet[0].position),
+              );
+          approachVibration.update(seconds, camera, hullStrength, opening ? 0 : 1);
+          ringVibration.update(
+            seconds,
+            camera,
+            closePassVibrationStrength(
+              seconds,
+              MIGRATION_CUTS[1],
+              MIGRATION_CUTS[2],
+              camera.position.distanceTo(fleet[5].position),
+            ),
+          );
         }
-        if (
-          (fleet.forEach(updateWingDrives), phase === "migration" && seconds >= MIGRATION_CUTS[2])
-        ) {
-          let start2 = currentShot === "ring-rear" ? MIGRATION_CUTS[2] : MIGRATION_CUTS[3],
-            end = currentShot === "ring-rear" ? MIGRATION_CUTS[3] : segment.duration,
-            envelope =
-              smooth5((seconds - start2) / 1.5) *
-              smooth5((end - seconds) / (currentShot === "ring-rear" ? 1.5 : 4));
+
+        fleet.forEach(updateWingDrives);
+        const ringRear = currentShot === "ring-rear";
+        if (migration && seconds >= MIGRATION_CUTS[2]) {
+          const start = ringRear ? MIGRATION_CUTS[2] : MIGRATION_CUTS[3];
+          const end = ringRear ? MIGRATION_CUTS[3] : segment.duration;
+          const envelope =
+            smooth5((seconds - start) / 1.5) *
+            smooth5((end - seconds) / (ringRear ? 1.5 : 4));
           applyCameraVibration(seconds, camera, 0.7 * envelope);
         }
-        (phase === "arrival" &&
-          seconds >= 82 &&
-          placeArrivalFleet(fleet, camera, seconds, environment.surfaceHeightAt),
-          habitat &&
-            (habitat.update(basinOrigin + seconds - segment.start),
-            arrivalDrone.frame(camera, seconds - segment.start, !!state.placeInherited),
-            seconds - segment.start >= droneEnd(!!state.placeInherited) && habitat.frame(camera),
-            (habitat.group.visible = seconds - segment.start >= 34 && habitat.model.equipped),
-            seconds - segment.start >= 64 &&
-              fleet.forEach((ship) => {
-                ship.visible = !1;
-              })));
-        let shadowSubject = fleet[migrationShot?.subject ?? 0];
-        if ((phase === "migration" && fitVoyageShadow(shadowSubject), phase === "arrival")) {
-          if (seconds - segment.start < 64)
-            ((renderer.shadowMap.autoUpdate = !0),
-              (settledLighting = !1),
-              arrivalLight.update(camera, seconds));
-          else if (!settledLighting) {
-            (keyLight.target.position.set(-1400, environment.surfaceHeightAt(-1400, 3300), 3300),
-              keyLight.position.copy(keyLight.target.position).add(sunlightOffset),
-              Object.assign(keyLight.shadow.camera, {
-                left: -1e3,
-                right: 1e3,
-                top: 1e3,
-                bottom: -1e3,
-                near: 100,
-                far: 9e3,
-              }),
-              keyLight.shadow.camera.updateProjectionMatrix());
-            let texel = 2e3 / quality.shadow;
-            ((keyLight.shadow.bias = (-texel * 1.2) / 8900),
-              (keyLight.shadow.normalBias = texel * 1.5),
-              (renderer.shadowMap.autoUpdate = !1),
-              (renderer.shadowMap.needsUpdate = !0),
-              (settledLighting = !0));
+
+        if (arrival && seconds >= 82) {
+          placeArrivalFleet(fleet, camera, seconds, environment.surfaceHeightAt);
+        }
+        if (habitat) {
+          habitat.update(basinOrigin + seconds - segment.start);
+          arrivalDrone.frame(camera, elapsed, !!state.placeInherited);
+          if (elapsed >= droneEnd(!!state.placeInherited)) habitat.frame(camera);
+          habitat.group.visible = elapsed >= 34 && habitat.model.equipped;
+          if (elapsed >= 64) {
+            fleet.forEach((ship) => { ship.visible = false; });
           }
-        } else
-          currentShot.startsWith("surface")
-            ? (keyLight.target.position.set(
-                camera.position.x,
-                environment.surfaceHeightAt(camera.position.x, camera.position.z),
-                camera.position.z,
-              ),
-              keyLight.position.copy(keyLight.target.position).add(sunlightOffset))
-            : (keyLight.target.position.copy(shadowSubject.position),
-              keyLight.position.copy(shadowSubject.position).add(sunlightOffset));
-        ((fillLight.intensity = opening ? 0.38 : 0.22),
-          opening
-            ? (fillLight.position
-                .set(0, -1250, 1350)
-                .applyQuaternion(fleet[0].quaternion)
-                .add(fleet[0].position),
-              fillLight.target.position.copy(fleet[0].position))
-            : (fillLight.position.set(1800, -600, -2200), fillLight.target.position.set(0, 0, 0)),
-          ringEncounter.light(scene, hemisphereLight, fillLight, fleet[5]),
-          environment.update(
-            flightTime,
-            currentShot.startsWith("surface"),
-            camera,
-            sceneTime,
-            phase === "migration" &&
-              (opening || currentShot === "ring-rear" || currentShot === "escort-closeup"),
-          ),
-          phase === "migration" &&
-            (environment.planetPosition(fillLight.position),
-            fillLight.target.position.copy(shadowSubject.position)),
-          habitat && audio.setEnvironment(habitat.model.state));
-        if (phase === "migration") {
-          const distance = camera.position.distanceTo(shadowSubject.position);
-          const brightHull = 1 - MathUtils.smootherstep(distance, 700, 4500);
+        }
+
+        const subjectIndex = migrationShot?.subject ?? 0;
+        const shadowSubject = fleet[subjectIndex];
+        const surfaceShot = currentShot.startsWith("surface");
+
+        if (migration) {
+          // An oblique reflected key reveals the bay using the existing shadow map.
+          keyLight.intensity = opening ? 0.8 : 2.6;
+          fitVoyageShadow(shadowSubject, opening);
+        }
+        if (arrival) {
+          if (elapsed < 64) {
+            renderer.shadowMap.autoUpdate = true;
+            settledLighting = false;
+            arrivalLight.update(camera, seconds);
+          } else if (!settledLighting) {
+            keyLight.target.position.set(-1400, environment.surfaceHeightAt(-1400, 3300), 3300);
+            keyLight.position.copy(keyLight.target.position).add(sunlightOffset);
+            Object.assign(keyLight.shadow.camera, {
+              left: -1e3,
+              right: 1e3,
+              top: 1e3,
+              bottom: -1e3,
+              near: 100,
+              far: 9e3,
+            });
+            keyLight.shadow.camera.updateProjectionMatrix();
+            const texel = 2e3 / quality.shadow;
+            keyLight.shadow.bias = (-texel * 1.2) / 8900;
+            keyLight.shadow.normalBias = texel * 1.5;
+            renderer.shadowMap.autoUpdate = false;
+            renderer.shadowMap.needsUpdate = true;
+            settledLighting = true;
+          }
+        } else if (surfaceShot) {
+          keyLight.target.position.set(
+            camera.position.x,
+            environment.surfaceHeightAt(camera.position.x, camera.position.z),
+            camera.position.z,
+          );
+          keyLight.position.copy(keyLight.target.position).add(sunlightOffset);
+        } else {
+          keyLight.target.position.copy(shadowSubject.position);
+          keyLight.position.copy(shadowSubject.position).add(opening ? underpassLightOffset : sunlightOffset);
+        }
+
+        fillLight.intensity = opening ? 0.38 : 0.22;
+        if (opening) {
+          fillLight.position
+            .set(0, -1250, 1350)
+            .applyQuaternion(fleet[0].quaternion)
+            .add(fleet[0].position);
+          fillLight.target.position.copy(fleet[0].position);
+        } else {
+          fillLight.position.set(1800, -600, -2200);
+          fillLight.target.position.set(0, 0, 0);
+        }
+        ringEncounter.light(scene, hemisphereLight, fillLight, fleet[5]);
+        environment.update(
+          flightTime,
+          surfaceShot,
+          camera,
+          sceneTime,
+          migration && (opening || ringRear || currentShot === "escort-closeup"),
+        );
+        if (migration) {
+          environment.planetPosition(fillLight.position);
+          fillLight.target.position.copy(shadowSubject.position);
+        }
+        if (habitat) audio.setEnvironment(habitat.model.state);
+
+        const subjectDistance = camera.position.distanceTo(shadowSubject.position);
+        if (migration) {
+          const brightHull = 1 - MathUtils.smootherstep(subjectDistance, 700, 4500);
           environment.setStarVisibility(1 - 0.84 * brightHull);
           renderer.toneMappingExposure = 1.05 - 0.12 * brightHull;
           scene.environmentIntensity *= 0.78;
           hemisphereLight.intensity *= 0.66;
           fillLight.intensity *= 0.76;
         }
-        let enter = smooth5((seconds - segment.start) / 0.75),
-          exit = 1 - smooth5((seconds - (endTime - 1.2)) / 0.9),
-          veil = Math.max(1 - enter, 1 - exit);
+
+        const enter = smooth5(elapsed / 0.75);
+        const exit = 1 - smooth5((seconds - (endTime - 1.2)) / 0.9);
+        let veil = Math.max(1 - enter, 1 - exit);
         for (const at of cutTimes) veil = Math.max(veil, transitionVeil(seconds, at));
-        if (
-          (veil !== cutOpacity && ((cutOpacity = veil), (cut.style.opacity = String(veil))),
-          arrivalIntro && phase === "arrival")
-        ) {
-          let introTime = seconds - segment.start,
-            opacity = smooth5((introTime - 0.4) / 1.5) * (1 - smooth5((introTime - 5) / 2));
-          opacity !== introOpacity &&
-            ((introOpacity = opacity), (arrivalIntro.style.opacity = String(opacity)));
+        if (veil !== cutOpacity) {
+          cutOpacity = veil;
+          cut.style.opacity = String(veil);
         }
-        let archiveHidden = phase !== "arrival" || seconds - segment.start < 34;
-        (archive.hidden !== archiveHidden && (archive.hidden = archiveHidden),
-          audio.update(
-            seconds - segment.start,
-            camera.position.distanceTo(shadowSubject.position),
-            enter * exit,
-          ),
-          placeRecorder?.update(),
-          fleetLOD.update(
-            camera,
-            renderer.domElement.clientHeight || innerHeight,
-            phase === "migration" ? (migrationShot?.subject ?? 0) : -1,
-          ),
-          shadowBudget.update(seconds, currentShot, {
-            moving: !(phase === "arrival" && settledLighting),
-            close:
-              phase === "migration" && camera.position.distanceTo(shadowSubject.position) < 5e3,
+        if (arrivalIntro && arrival) {
+          const opacity = smooth5((elapsed - 0.4) / 1.5) * (1 - smooth5((elapsed - 5) / 2));
+          if (opacity !== introOpacity) {
+            introOpacity = opacity;
+            arrivalIntro.style.opacity = String(opacity);
+          }
+        }
+        const archiveHidden = !arrival || elapsed < 34;
+        if (archive.hidden !== archiveHidden) archive.hidden = archiveHidden;
+
+        const visibility = enter * exit;
+        audio.update(elapsed, subjectDistance, visibility);
+        placeRecorder?.update();
+        fleetLOD.update(camera, renderer.domElement.clientHeight || innerHeight, migration ? subjectIndex : -1);
+        shadowBudget.update(seconds, currentShot, {
+          moving: !(arrival && settledLighting),
+          close: migration && subjectDistance < 5e3,
+        });
+        renderer.render(scene, camera);
+        vehicleRecorder.sample({
+          kind: "fleet",
+          context: phase,
+          seconds,
+          source: renderer.domElement,
+          eligible: visibility > 0.95 && migration && !opening && seconds > 31,
+          status: () => ({
+            role: "HABITATION / CONTINUOUS LOAD",
+            voyageDays: window.VOYAGE_AGEING.snapshot().days ?? 340,
+            surfaceHistory: "항해 시간과 임무에 따른 표면 손상 표현",
+            shot: currentShot,
+            ships: fleet.length,
+            ringPeriodSeconds: HABITAT_RING_PERIOD[0],
+            sceneSeconds: seconds,
           }),
-          renderer.render(scene, camera),
-          vehicleRecorder.sample({
-            kind: "fleet",
-            context: phase,
-            seconds,
-            source: renderer.domElement,
-            eligible: enter * exit > 0.95 && phase === "migration" && !opening && seconds > 31,
-            status: () => ({
-              role: "HABITATION / CONTINUOUS LOAD",
-              voyageDays: window.VOYAGE_AGEING.snapshot().days ?? 340,
-              surfaceHistory: "항해 시간과 임무에 따른 표면 손상 표현",
-              shot: currentShot,
-              ships: fleet.length,
-              ringPeriodSeconds: HABITAT_RING_PERIOD[0],
-              sceneSeconds: seconds,
-            }),
-          }));
+        });
       }
       function tick2(now3) {
         if (
@@ -58500,8 +58605,10 @@ vShieldFinish=shieldFinish;`,
               detailLevels: fleetLOD.snapshot(),
               independent: !window.TI_WORLD,
               animation: "anime.js",
-              motion: "restrained-distant / accelerating-approach / finite-braking",
-              deployment: motion.map((s) => s.deploy),
+              motion: "shared-formation / eased-cruise",
+              deployment: fleet.map((_, i) =>
+                phase === "arrival" ? 1 : radiatorClosure(seconds, i, response.duration),
+              ),
             }),
             ...(params.has("test")
               ? {

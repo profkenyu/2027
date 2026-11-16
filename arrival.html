@@ -35595,9 +35595,11 @@
         return u * u * u * (u * (u * 6 - 15) + 10);
       }
       function poseRadiators(ship, closure, opening = 1, updateDrives = !0) {
-        let angle = (1 - closure) * (1.05 + 0.23 * opening);
-        for (let { pivot, side, leaf = 1 } of ship.userData.deployables)
-          pivot.rotation.z = side * leaf * angle;
+        const angle = (1 - closure) * (1.05 + 0.23 * opening);
+        for (const { pivot, side, leaf = 1 } of ship.userData.deployables) {
+          const rotation = side * leaf * angle;
+          if (!Object.is(pivot.rotation.z, rotation)) pivot.rotation.z = rotation;
+        }
         updateDrives && updateWingDrives(ship);
       }
       var VEHICLE_ARCHIVE_KEY = "terra-incognita:vehicle-archive:v1",
@@ -36278,6 +36280,12 @@
           foil,
           shipMaterial("titanium", tier),
           dark,
+          new MeshStandardMaterial({
+            color: 0xadb6b6,
+            emissive: 0xd2d8d3,
+            emissiveIntensity: 0.3,
+            roughness: 0.7,
+          }),
         ];
         let sharedPressureGeometry, sharedPressureFittings;
         const create = (index) => {
@@ -36363,14 +36371,15 @@
               MathUtils.lerp(a[0], b[0], t),
             );
           };
-          const plate = (corners, colour, thickness) => {
+          const plate = (corners, colour, thickness, facing, material = 0, cornerLight) => {
             const centre = corners.reduce((v, p) => v.add(p), new Vector3()).multiplyScalar(0.25);
             const n = new Vector3()
               .subVectors(corners[1], corners[0])
               .cross(new Vector3().subVectors(corners[3], corners[0]))
               .normalize();
-            if (n.dot(new Vector3(centre.x, centre.y, 0)) < 0) {
+            if (n.dot(facing ?? new Vector3(centre.x, centre.y, 0)) < 0) {
               corners.reverse();
+              cornerLight?.reverse();
               n.negate();
             }
             const p = [];
@@ -36394,6 +36403,20 @@
                   ],
             );
             const flat = g.toNonIndexed();
+            if (carrier) {
+              // Tile coordinates stay fixed to each panel. Corner light approximates the limited
+              // indirect light in cuts and recesses without adding a shadow pass.
+              const surface = [];
+              const uv = [[0, 0], [1, 0], [1, 1], [0, 1]];
+              for (let i = 0; i < g.index.count; i++) {
+                const vertex = g.index.getX(i);
+                const bevel = thickness > 0 && i >= 12;
+                const contact = bevel ? 0.67 : 1;
+                const finish = thickness > 0 && i >= 6 && i < 12 ? 1 : material;
+                surface.push(...uv[vertex % 4], contact * (cornerLight?.[vertex % 4] ?? 1), finish);
+              }
+              flat.setAttribute("shieldSurface", new Float32BufferAttribute(surface, 4));
+            }
             g.dispose();
             flat.computeVertexNormals();
             const colors = [],
@@ -36422,22 +36445,74 @@
             meshParts.push(flat);
             return { centre, n };
           };
+          // Clear the same opening in the structural skin and shield tiles.
+          const bay = { section: 2, u0: 0.67, u1: 0.96, v0: 4.37, v1: 4.63, depth: 31 };
+          const bayProfile = profile[bay.section];
+          const bayLength = profile[bay.section + 1][0] - bayProfile[0];
+          const bayStart = bayProfile[0] + bayLength * bay.u0;
+          const bayEnd = bayProfile[0] + bayLength * bay.u1;
+          const quad = (a, b, u0, u1, v0, v1) => [
+            facet(a, b, u0, v0),
+            facet(a, b, u1, v0),
+            facet(a, b, u1, v1),
+            facet(a, b, u0, v1),
+          ];
+          const plateAroundBay = (a, b, u0, u1, v0, v1, colour, thickness) => {
+            for (const [ua, ub, va, vb] of [
+              [u0, bay.u0, v0, v1],
+              [bay.u1, u1, v0, v1],
+              [bay.u0, bay.u1, v0, bay.v0],
+              [bay.u0, bay.u1, bay.v1, v1],
+            ]) plate(quad(a, b, ua, ub, va, vb), colour, thickness);
+          };
+          const buildMaintenanceBay = (a, b) => {
+            const slope = (a[2] - b[2]) / (b[0] - a[0]);
+            const outward = new Vector3(0, -1, slope).normalize();
+            const contour = (uInset, vInset, depth) =>
+              quad(a, b, bay.u0 + uInset, bay.u1 - uInset, bay.v0 + vInset, bay.v1 - vInset)
+                .map((p) => p.addScaledVector(outward, -depth));
+            const lip = contour(0, 0, -2.4);
+            const throat = contour(0.013, 0.018, 5.5);
+            const back = contour(0.024, 0.033, bay.depth);
+            const centre = back.reduce((sum, p) => sum.add(p), new Vector3()).multiplyScalar(0.25);
+            const join = (outer, inner, color, material, outerLight, innerLight) => {
+              for (let i = 0; i < 4; i++) {
+                const next = (i + 1) % 4;
+                const facing = centre.clone().sub(outer[i]).add(centre).sub(outer[next]);
+                plate([outer[i], outer[next], inner[next], inner[i]], color, 0, facing, material,
+                  [outerLight, outerLight, innerLight, innerLight]);
+              }
+            };
+            join(lip, throat, 0x87929a, 2, 0.98, 0.8);
+            join(throat, back, 0x454e52, 3, 0.8, 0.54);
+            plate(back, 0x4d5657, 0, outward, 3, [0.54, 0.54, 0.54, 0.54]);
+
+            const orientation = new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), -Math.atan(slope));
+            const put = (material, x, y, z, w, h, d) => {
+              const p = new Vector3(x, y, z).applyQuaternion(orientation).add(centre);
+              add(material, p.x, p.y, p.z, w, h, d, orientation);
+            };
+            for (const x of [-21, 21]) {
+              put(0, x, -2.5, 0, 2.6, 5, 64);
+              for (const z of [-27, 0, 27]) put(0, x, -4, z, 6, 8, 3.6);
+              put(1, x * 0.74, -2.7, 18, 10, 5.4, 19);
+              put(9, x, -5.2, -18, 2.5, 0.6, 8);
+            }
+            for (const z of [-27, 27]) put(0, 0, -1.2, z, 41, 2.4, 3.6);
+          };
           for (let s = 0; s < profile.length - 1; s++) {
             const a = profile[s],
               b = profile[s + 1];
             for (let face = 0; face < 8; face++) {
-              plate(
-                [
-                  facet(a, b, 0, face),
-                  facet(a, b, 1, face),
-                  facet(a, b, 1, face + 1),
-                  facet(a, b, 0, face + 1),
-                ],
-                0x313a3e,
-                0,
-              );
               const underside = face === 4;
-              const cuts = underside ? [0, 0.24, 0.43, 0.57, 0.76, 1] : [0, 0.5, 1];
+              const bayFace = carrier && underside && s === bay.section;
+              if (bayFace) {
+                plateAroundBay(a, b, 0, 1, face, face + 1, 0x313a3e, 0);
+                buildMaintenanceBay(a, b);
+                serviceBays++;
+              } else plate(quad(a, b, 0, 1, face, face + 1), 0x313a3e, 0);
+              const cuts = bayFace ? [0, 0.24, 0.32, 0.68, 0.76, 1]
+                : underside ? [0, 0.24, 0.43, 0.57, 0.76, 1] : [0, 0.5, 1];
               const longitudinal =
                 s === 0 ? [0, 0.38, 1] : s === 1 ? [0, 0.28, 0.72, 1] : [0, 0.62, 1];
               for (let col = 0; col < longitudinal.length - 1; col++)
@@ -36451,6 +36526,10 @@
                     0.85 +
                     0.035 *
                       Math.sin(s * 1.7 + col * 0.83 + Math.min(row, cuts.length - 2 - row) * 0.71);
+                  if (bayFace && col === 1 && central) {
+                    plateAroundBay(a, b, u0, u1, v0, v1, new Color().setScalar(shade), 2.4);
+                    continue;
+                  }
                   const corners = [
                     facet(a, b, u0, v0),
                     facet(a, b, u1, v0),
@@ -36557,36 +36636,42 @@
             mesh.material.side = DoubleSide;
             root.add(mesh);
           }
+          const keelStation = (z) => {
+            const { w, h } = section(z);
+            return [z, w, h];
+          };
+          const keelSections = carrier
+            ? [
+                [...profile.filter(([z]) => z < bayStart - 2), keelStation(bayStart - 2)],
+                [keelStation(bayEnd + 2), ...profile.filter(([z]) => z > bayEnd + 2)],
+              ]
+            : [profile];
           const keel = (width, top, bottom, material, name, x = 0) => {
             const positions = [],
               indices = [];
-            for (const [z, w, h] of profile) {
-              const half = Math.min(width * 0.5, w * 0.4);
-              positions.push(
-                x - half,
-                -h - top,
-                z,
-                x + half,
-                -h - top,
-                z,
-                x + half,
-                -h - bottom,
-                z,
-                x - half,
-                -h - bottom,
-                z,
-              );
-            }
-            for (let k = 0; k < profile.length - 1; k++)
-              for (let side = 0; side < 4; side++) {
-                const a = k * 4 + side,
-                  b = k * 4 + ((side + 1) % 4),
-                  c = b + 4,
-                  d = a + 4;
-                indices.push(a, c, b, a, d, c);
+            for (const stations of keelSections) {
+              const first = positions.length / 3;
+              for (const [z, w, h] of stations) {
+                const half = Math.min(width * 0.5, w * 0.4);
+                positions.push(
+                  x - half, -h - top, z,
+                  x + half, -h - top, z,
+                  x + half, -h - bottom, z,
+                  x - half, -h - bottom, z,
+                );
               }
-            const last = (profile.length - 1) * 4;
-            indices.push(0, 1, 2, 0, 2, 3, last, last + 2, last + 1, last, last + 3, last + 2);
+              for (let k = 0; k < stations.length - 1; k++)
+                for (let side = 0; side < 4; side++) {
+                  const a = first + k * 4 + side,
+                    b = first + k * 4 + ((side + 1) % 4),
+                    c = b + 4,
+                    d = a + 4;
+                  indices.push(a, c, b, a, d, c);
+                }
+              const last = first + (stations.length - 1) * 4;
+              indices.push(first, first + 1, first + 2, first, first + 2, first + 3,
+                last, last + 2, last + 1, last, last + 3, last + 2);
+            }
             const g = new BufferGeometry();
             g.setAttribute("position", new Float32BufferAttribute(positions, 3));
             g.setIndex(indices);
@@ -36607,6 +36692,7 @@
           keel(6, 2.5, 3.4, steel, "continuous-keel-spine");
           for (const side of [-1, 1]) keel(1.8, 1, 3.9, steel, "keel-edge-rail", side * 10.5);
           for (const z of [-390, -290, -190, -90, 10, 210, 310, 410]) {
+            if (carrier && z > bayStart && z < bayEnd) continue;
             const h = section(z).h;
             const k = profile.findIndex(
               (v, i) => i < profile.length - 1 && z >= v[0] && z < profile[i + 1][0],
@@ -37263,10 +37349,10 @@
           body.castShadow = body.receiveShadow = true;
           root.add(body);
           instances.forEach((list, i) => {
+            if (!list.length) return;
             const mesh = new InstancedMesh(i === 3 ? unitBox : box, materialList[i], list.length);
             list.forEach((m, j) => mesh.setMatrixAt(j, m));
-            mesh.castShadow = i !== 3;
-            mesh.receiveShadow = i !== 3;
+            mesh.castShadow = mesh.receiveShadow = i !== 3 && i !== 9;
             mesh.instanceMatrix.needsUpdate = true;
             mesh.computeBoundingSphere();
             root.add(mesh);
@@ -37275,7 +37361,7 @@
             if (!list.length) return;
             const mesh = new InstancedMesh(unitBox, materialList[i], list.length);
             list.forEach((m, j) => mesh.setMatrixAt(j, m));
-            mesh.castShadow = mesh.receiveShadow = i !== 3;
+            mesh.castShadow = mesh.receiveShadow = i !== 3 && i !== 9;
             mesh.computeBoundingSphere();
             mesh.userData.distantOmit = true;
             root.add(mesh);
@@ -59465,7 +59551,9 @@
                   let material = original.clone(),
                     isPaint = !!original.userData.vehicleMarking,
                     plateFinish = !!mesh.geometry.getAttribute("shieldFinish"),
-                    finishKind = isPaint ? "paint" : original.userData.aerospace?.kind;
+                    shieldSurface = !!mesh.geometry.getAttribute("shieldSurface"),
+                    finishKind = isPaint ? "paint" : original.userData.aerospace?.kind,
+                    closeHullWear = index === 0 && ["white", "steel", "titanium"].includes(finishKind);
                   (isPaint && paintMaterials++, material.bumpMap && (material.bumpScale *= 40));
                   let depositStrength =
                     finishKind === "foil" ? 0.025 : finishKind === "white" ? 0.13 : 0.065;
@@ -59491,7 +59579,7 @@
                         }),
                         (shader.vertexShader =
                           `uniform mat4 voyageToShip; uniform mat3 voyageNormalToShip; varying vec3 vVoyageNormal; uniform vec3 voyagePartCentre; uniform vec3 voyagePartExtent; varying vec3 vVoyagePart; varying vec3 vVoyageHull;
-      ` + shader.vertexShader),
+` + shader.vertexShader),
                         (shader.vertexShader = shader.vertexShader.replace(
                           "#include <project_vertex>",
                           `
@@ -59514,15 +59602,20 @@
                         plateFinish &&
                           ((shader.vertexShader =
                             `attribute float shieldFinish; varying float vShieldFinish;
-      ` + shader.vertexShader),
+` +
+                            (shieldSurface ? "attribute vec4 shieldSurface; varying vec4 vShieldSurface;\n" : "") +
+                            shader.vertexShader),
                           (shader.vertexShader = shader.vertexShader.replace(
                             "#include <begin_vertex>",
                             `#include <begin_vertex>
-      vShieldFinish=shieldFinish;`,
+vShieldFinish=shieldFinish;
+${shieldSurface ? "vShieldSurface = shieldSurface;" : ""}`,
                           )),
                           (shader.fragmentShader =
                             `varying float vShieldFinish;
-      ` + shader.fragmentShader)),
+` +
+                            (shieldSurface ? "varying vec4 vShieldSurface;\n" : "") +
+                            shader.fragmentShader)),
                         (shader.fragmentShader =
                           `
             uniform float voyageAge;
@@ -59556,7 +59649,7 @@
                 field=vec2(min(field.x,f.x),max(field.y,f.y));
               }`,
               ).join(`
-      `)}
+`)}
               return field;
             }
             varying vec3 vVoyagePart;
@@ -59587,6 +59680,16 @@
             vec3 ageEdge = abs(abs(vVoyagePart)-vec3(1.0));
             float ageEdgeDistance = min(max(ageEdge.x,ageEdge.y),min(max(ageEdge.x,ageEdge.z),max(ageEdge.y,ageEdge.z)));
             float ageEdgeMask = 1.0-smoothstep(.012,.045,ageEdgeDistance);
+            ${shieldSurface ? `
+            float shieldBorder = min(min(vShieldSurface.x, 1.0 - vShieldSurface.x),
+              min(vShieldSurface.y, 1.0 - vShieldSurface.y));
+            float isTile = step(.5, vShieldSurface.w) * (1.0 - step(1.5, vShieldSurface.w));
+            float isTrim = step(1.5, vShieldSurface.w) * (1.0 - step(2.5, vShieldSurface.w));
+            float isLiner = step(2.5, vShieldSurface.w);
+            float seam = (1.0 - smoothstep(.002, .035, shieldBorder)) * isTile;
+            float shieldContact = vShieldSurface.z * (1.0 - seam * .24);
+            diffuseColor.rgb *= .83 + .17 * shieldContact;
+            ` : ""}
             float ageZone = max(exp(-engineField.x/46.0),ageEdgeMask*.42);
             float ageDeposit = smoothstep(.44,.73,ageBroad + (ageGrain-.5)*.18)*ageZone*voyageHistory.z*voyageDeposit;
             // Restrained, uneven discolouration; no terrestrial rust or liquid streaks.
@@ -59621,7 +59724,44 @@
             ageChip = max(ageChip,ageRim*step(.96,ageOffset.x)*.65);
             ageChip*=${finishKind === "white" ? "1.0" : "0.0"};
             diffuseColor.rgb = mix(diffuseColor.rgb,vec3(.39,.40,.39),ageChip*.78);
-      
+            ${closeHullWear ? `
+            // Fixed hull-space wear: small handling scratches, local deposits and
+            // shallow nicks. Pixel footprints soften unresolved details on phones.
+            vec3 wearNormal = abs(normalize(vVoyageNormal));
+            vec2 wearPlane = wearNormal.y >= max(wearNormal.x, wearNormal.z) ? vVoyageHull.xz
+              : (wearNormal.x >= wearNormal.z ? vVoyageHull.yz : vVoyageHull.xy);
+            vec2 wearGrid = wearPlane / vec2(18.0, 23.0);
+            vec3 wearCell = vec3(floor(wearGrid), voyageSeed + 71.0);
+            float wearSeed = voyageHash(wearCell);
+            // Handling marks accumulate near fittings and propulsion. Tile faces stay quiet.
+            float wearExposure = max(exp(-engineField.x / 38.0), ${shieldSurface
+              ? "max(seam * .62, isTrim)"
+              : "mix(.18, .84, ageEdgeMask)"});
+            wearExposure = mix(.08, 1.0, wearExposure);
+            float wearAngle = (voyageHash(wearCell + 13.7) - .5) * 2.2;
+            vec2 wearCentre = .3 + .4 * vec2(voyageHash(wearCell + 7.2), voyageHash(wearCell + 29.1));
+            vec2 wearLocal = (fract(wearGrid) - wearCentre) * vec2(18.0, 23.0);
+            vec2 wearDirection = vec2(cos(wearAngle), sin(wearAngle));
+            float wearAlong = dot(wearLocal, wearDirection);
+            float wearAcross = dot(wearLocal, vec2(-wearDirection.y, wearDirection.x));
+            float wearLength = mix(1.3, 3.8, voyageHash(wearCell + 42.8));
+            float wearDistance = length(vec2(max(abs(wearAlong) - wearLength, 0.0), wearAcross));
+            float wearPixel = max(length(fwidth(wearPlane)), .001);
+            float wearVisibility = 1.0 - smoothstep(.3, 1.8, wearPixel);
+            float wearWidth = mix(.08, .18, voyageHash(wearCell + 58.6));
+            float wearScratch = (1.0 - smoothstep(wearWidth, wearWidth + wearPixel, wearDistance))
+              * step(.88, wearSeed) * wearVisibility * wearExposure;
+            float wearRadius = mix(.16, .45, voyageHash(wearCell + 93.1));
+            float wearPit = (1.0 - smoothstep(wearRadius, wearRadius + wearPixel, length(wearLocal)))
+              * step(wearSeed, .035) * wearVisibility * wearExposure;
+            float wearPatch = voyageNoise(ageP * vec3(.072, .091, .041) + vec3(18.3));
+            float wearResidue = smoothstep(.52, .76, wearPatch)
+              * smoothstep(.38, .64, ageBroad) * wearExposure;
+            diffuseColor.rgb *= mix(vec3(1.0), vec3(.59, .56, .51), wearResidue * .18);
+            diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.43, .45, .46), wearScratch * .17);
+            diffuseColor.rgb *= 1.0 - wearPit * .14;
+            ` : ""}
+
             // Two flush service patches use the same hull-space register on
             // coatings and printed IDs. A maintained area accumulates less residue.
             vec2 repairUV=vec2(vVoyageHull.z+300.0,abs(vVoyageHull.x)-86.0);
@@ -59634,7 +59774,7 @@
             diffuseColor.rgb*=1.0-ageDeposit*.08*voyageAge;`
                 : ""
             }
-      
+
             ${detail > 0 ? "diffuseColor.rgb *= .994+.009*ageGrain;" : ""}
             ${detail > 1 ? "diffuseColor.rgb *= .9965+.005*voyageNoise(ageP*1.3);" : ""}
           `,
@@ -59643,8 +59783,13 @@
                           "#include <roughnessmap_fragment>",
                           `
             #include <roughnessmap_fragment>
-            ${plateFinish ? "roughnessFactor=clamp(roughnessFactor+(vShieldFinish-.5)*.15,.54,.94);" : ""}
+            ${plateFinish ? "roughnessFactor=clamp(roughnessFactor+(vShieldFinish-.5)*.24,.48,.94);" : ""}
             roughnessFactor = min(1.0, roughnessFactor + ageDeposit*.055 + agePit*.09 + engineResidue*.085 - ageChip*.17);
+            ${closeHullWear ? "roughnessFactor = clamp(roughnessFactor + wearResidue*.09 + wearPit*.05 - wearScratch*.12, .22, .96);" : ""}
+            ${shieldSurface ? `
+            roughnessFactor = mix(roughnessFactor, .37 + .06 * vShieldFinish, isTrim);
+            roughnessFactor = mix(roughnessFactor, .91, isLiner);
+            ` : ""}
           `,
                         )),
                         (shader.fragmentShader = shader.fragmentShader.replace(
@@ -59661,8 +59806,37 @@
                           `
             #include <metalnessmap_fragment>
             metalnessFactor = mix(metalnessFactor*(1.0-ageDeposit*.075-engineResidue*.1),.72,ageChip);
+            ${closeHullWear ? "metalnessFactor = mix(metalnessFactor * (1.0 - wearResidue*.12), .65, wearScratch*.22);" : ""}
+            ${shieldSurface ? "metalnessFactor = mix(metalnessFactor, .74, isTrim) * (1.0 - isLiner);" : ""}
           `,
-                        )));
+                        )),
+                        closeHullWear && detail > 0 &&
+                          (shader.fragmentShader = shader.fragmentShader.replace(
+                            "#include <normal_fragment_maps>",
+                            `#include <normal_fragment_maps>
+            // Shallow relief affects highlights without changing the hull silhouette.
+            float wearHeight = -.045 * wearPit - .012 * wearScratch;
+            vec3 wearDx = dFdx(-vViewPosition), wearDy = dFdy(-vViewPosition);
+            vec3 wearCrossX = cross(wearDy, normal), wearCrossY = cross(normal, wearDx);
+            float wearDet = dot(wearDx, wearCrossX);
+            vec3 wearGradient = dFdx(wearHeight) * wearCrossX + dFdy(wearHeight) * wearCrossY;
+            if (abs(wearDet) > 0.000001) {
+              vec3 wearRelief = normalize(abs(wearDet) * normal - sign(wearDet) * wearGradient);
+              normal = normalize(mix(normal, wearRelief, .2));
+            }
+`,
+                          )));
+                      if (shieldSurface) {
+                        shader.fragmentShader = shader.fragmentShader
+                          .replace("#include <lights_physical_fragment>", `#include <lights_physical_fragment>
+                                  material.specularColor *= 1.0 + isTile * (.22 * (vShieldFinish - .5));
+                                  material.specularColorBlended = mix(material.specularColor, diffuseColor.rgb, metalnessFactor);
+                      `)
+                          .replace("#include <aomap_fragment>", `#include <aomap_fragment>
+                                  reflectedLight.indirectDiffuse *= shieldContact;
+                                  reflectedLight.indirectSpecular *= mix(shieldContact * shieldContact, shieldContact, isTrim);
+                      `);
+                      }
                     }),
                     tier2 === "low")
                   ) {
@@ -59690,20 +59864,20 @@
                         (shader.fragmentShader =
                           shader.fragmentShader.slice(0, start2) +
                           `float agePit=0.0,ageRim=0.0;vec3 ageOffset=vec3(.5);
-      ` +
+` +
                           shader.fragmentShader.slice(end));
                     };
                   }
                   return (
                     (material.customProgramCacheKey = () =>
-                      "voyage-ageing-v12-" +
+                      "voyage-ageing-v14-" +
                       index +
                       "-" +
                       detail +
                       "-" +
                       finishKind +
                       "-" +
-                      plateFinish),
+                      plateFinish + "-" + shieldSurface),
                     treated++,
                     material
                   );
@@ -60011,33 +60185,30 @@
               smooth6((end - seconds) / (currentShot === "ring-rear" ? 1.5 : 4));
           applyCameraVibration(seconds, camera, 0.7 * envelope);
         }
-        if (
-          (phase === "arrival" &&
-            seconds >= 82 &&
-            placeArrivalFleet(fleet, camera, seconds, environment.surfaceHeightAt),
-          habitat)
-        ) {
-          let elapsed = seconds - segment.start;
-          if (
-            (installation.update(elapsed, habitat.model),
-            habitat.update(installation.physicsTime(elapsed, basinOrigin)),
-            installation.update(elapsed, habitat.model),
-            (state.installation = installation.save()),
-            arrivalDrone.frame(camera, elapsed, !!state.placeInherited),
-            elapsed >= droneEnd(!!state.placeInherited) && habitat.frame(camera),
-            installation.frame(camera),
-            title.textContent !== installation.caption &&
-              (title.textContent = installation.caption),
-            title.style.color !== "rgb(24, 38, 43)" && (title.style.color = "#18262b"),
-            title.style.textShadow !== "none" && (title.style.textShadow = "none"),
-            title.style.opacity !== (installation.caption ? "0.65" : "0") &&
-              (title.style.opacity = installation.caption ? "0.65" : "0"),
-            elapsed >= 64)
-          )
-            fleet.forEach((ship) => {
-              ship.visible = !1;
-            });
-          else for (let i of [1, 5]) fleet[i].visible = !1;
+        if (phase === "arrival" && seconds >= 82)
+          placeArrivalFleet(fleet, camera, seconds, environment.surfaceHeightAt);
+        if (habitat) {
+          const elapsed = seconds - segment.start;
+          const inherited = !!state.placeInherited;
+          installation.update(elapsed, habitat.model);
+          habitat.update(installation.physicsTime(elapsed, basinOrigin));
+          // The second update picks up habitat state reached in this frame.
+          installation.update(elapsed, habitat.model);
+          state.installation = installation.save();
+          arrivalDrone.frame(camera, elapsed, inherited);
+          if (elapsed >= droneEnd(inherited)) habitat.frame(camera);
+          installation.frame(camera);
+          const caption = installation.caption;
+          if (title.textContent !== caption) title.textContent = caption;
+          if (title.style.color !== "rgb(24, 38, 43)") title.style.color = "#18262b";
+          if (title.style.textShadow !== "none") title.style.textShadow = "none";
+          const captionOpacity = caption ? "0.65" : "0";
+          if (title.style.opacity !== captionOpacity) title.style.opacity = captionOpacity;
+          if (elapsed >= 64) {
+            for (const ship of fleet) ship.visible = !1;
+          } else {
+            for (const i of [1, 5]) fleet[i].visible = !1;
+          }
         }
         let shadowSubject = fleet[migrationShot?.subject ?? 0];
         if ((phase === "migration" && fitVoyageShadow(shadowSubject), phase === "arrival"))

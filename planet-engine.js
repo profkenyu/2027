@@ -58919,20 +58919,32 @@ body.tx-active #fh-keys {
         this.label && (this.label.textContent = message || this._defaultStatusText()),
         this.root?.classList.toggle("complete", this.complete));
     }
-    _syncGauges(values = this.gaugeValues, completionCharge = !1) {
-      this.gaugeElements.forEach((element3, index) => {
-        let value = clamp012(values[index] ?? 0);
+    _syncGauges(values = this.gaugeValues, completionCharge = false) {
+      this.gaugeElements.forEach((element, index) => {
+        const value = clamp012(values[index] ?? 0);
         this.gaugeDisplayValues[index] = value;
-        let percent = Math.round(value * 100);
-        (element3.style.setProperty("--raw-material-level", value.toFixed(3)),
-          element3.classList.toggle("on", value >= 0.999),
-          element3.classList.toggle(
-            "active",
-            completionCharge || (this.event?.item?.kind === "raw" && this.event.item.raw === index),
-          ));
-        let output3 = element3.querySelector("small");
-        (output3 && (output3.textContent = `${String(percent).padStart(3, "0")}%`),
-          element3.querySelector('[role="meter"]')?.setAttribute("aria-valuenow", String(percent)));
+
+        const level = value.toFixed(3);
+        const percent = String(Math.round(value * 100));
+        const active = completionCharge ||
+          (this.event?.item?.kind === "raw" && this.event.item.raw === index);
+
+        if (element.style.getPropertyValue("--raw-material-level") !== level ||
+            element.style.getPropertyPriority("--raw-material-level")) {
+          element.style.setProperty("--raw-material-level", level);
+        }
+        element.classList.toggle("on", value >= 0.999);
+        element.classList.toggle("active", active);
+
+        const output = element.querySelector("small");
+        const formattedPercent = `${percent.padStart(3, "0")}%`;
+        if (output && output.textContent !== formattedPercent) {
+          output.textContent = formattedPercent;
+        }
+        const meter = element.querySelector('[role="meter"]');
+        if (meter && meter.getAttribute("aria-valuenow") !== percent) {
+          meter.setAttribute("aria-valuenow", percent);
+        }
       });
     }
     _buildRegistrationCells() {
@@ -68241,6 +68253,11 @@ body.ti-voyage #ti-transfer-trigger {
         });
       }
     };
+  function setRitualProperty(style, property, value) {
+    if (style.getPropertyValue(property) !== value || style.getPropertyPriority(property)) {
+      style.setProperty(property, value);
+    }
+  }
   var clamp019 = (value) => Math.max(0, Math.min(1, value)),
     smooth6 = (value) => {
       let p = clamp019(value);
@@ -68379,44 +68396,40 @@ body.ti-voyage #ti-transfer-trigger {
             this.completionTimeline.resume());
       }
       _renderTitle() {
-        this.root &&
-          this.root.style.setProperty("--ti-title-heading", smooth6(this.title.heading).toFixed(3));
+        if (!this.root) return;
+        setRitualProperty(this.root.style, "--ti-title-heading", smooth6(this.title.heading).toFixed(3));
       }
       _renderReceiver() {
-        for (let [selector, key3] of this.receiverTargets) {
-          let value = smooth6(this.receiver[key3]),
-            target = document.querySelector(selector);
-          target &&
-            (target.style.setProperty("--ti-receiver-opacity", (0.22 + value * 0.78).toFixed(3)),
-            target.style.setProperty(
-              "--ti-receiver-shift",
-              `${((1 - value) * (key3 === "monitor" ? 7 : 4)).toFixed(2)}px`,
-            ));
+        for (const [selector, key] of this.receiverTargets) {
+          const value = smooth6(this.receiver[key]);
+          const target = document.querySelector(selector);
+          if (!target) continue;
+          const opacity = (0.22 + value * 0.78).toFixed(3);
+          const shift = ((1 - value) * (key === "monitor" ? 7 : 4)).toFixed(2);
+          setRitualProperty(target.style, "--ti-receiver-opacity", opacity);
+          setRitualProperty(target.style, "--ti-receiver-shift", `${shift}px`);
         }
       }
       _clearReceiver() {
         document.body.classList.remove("ti-entry-receiver-sync");
-        for (let [selector] of this.receiverTargets) {
-          let target = document.querySelector(selector);
-          (target?.style.removeProperty("--ti-receiver-opacity"),
-            target?.style.removeProperty("--ti-receiver-shift"));
+        for (const [selector] of this.receiverTargets) {
+          const target = document.querySelector(selector);
+          target?.style.removeProperty("--ti-receiver-opacity");
+          target?.style.removeProperty("--ti-receiver-shift");
         }
       }
       _renderCompletion() {
-        let silence = smooth6(this.completion.silence);
-        if (
-          (this.cells.forEach((cell, index) => {
-            let cellLive = 1 - clamp019(silence * 8 - index);
-            cell.style.setProperty("--ti-cell-silence", cellLive.toFixed(3));
-          }),
-          !this.readout)
-        )
-          return;
+        const silence = smooth6(this.completion.silence);
+        this.cells.forEach((cell, index) => {
+          const cellLive = 1 - clamp019(silence * 8 - index);
+          setRitualProperty(cell.style, "--ti-cell-silence", cellLive.toFixed(3));
+        });
+        if (!this.readout) return;
         let interval = "640 ms";
-        (this.completion.cadence < 1
-          ? (interval = "120 ms")
-          : this.completion.cadence < 2 && (interval = "280 ms"),
-          (this.readout.textContent = `원격 측정 장치 정상 · 다음 측정까지 ${interval}`));
+        if (this.completion.cadence < 1) interval = "120 ms";
+        else if (this.completion.cadence < 2) interval = "280 ms";
+        const label = `원격 측정 장치 정상 · 다음 측정까지 ${interval}`;
+        if (this.readout.textContent !== label) this.readout.textContent = label;
       }
       _finishCompletion() {
         this.readout && (this.readout.textContent = "원격 측정 장치 정상 · 통신 대기");

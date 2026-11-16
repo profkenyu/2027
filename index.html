@@ -17541,6 +17541,11 @@
         },
         createTimeline = (parameters) =>
           globals.editor ? globals.editor.addTimeline(parameters) : new Timeline(parameters).init();
+      function setRitualProperty(style, property, value) {
+        if (style.getPropertyValue(property) !== value || style.getPropertyPriority(property)) {
+          style.setProperty(property, value);
+        }
+      }
       var ritualCadenceStep = (t) => Math.floor(Math.max(0, Math.min(1, t))),
         clamp012 = (value) => Math.max(0, Math.min(1, value)),
         smooth2 = (value) => {
@@ -17681,50 +17686,40 @@
                 this.completionTimeline.resume());
           }
           _renderTitle() {
-            this.root &&
-              this.root.style.setProperty(
-                "--ti-title-heading",
-                smooth2(this.title.heading).toFixed(3),
-              );
+            if (!this.root) return;
+            setRitualProperty(this.root.style, "--ti-title-heading", smooth2(this.title.heading).toFixed(3));
           }
           _renderReceiver() {
-            for (let [selector, key2] of this.receiverTargets) {
-              let value = smooth2(this.receiver[key2]),
-                target = document.querySelector(selector);
-              target &&
-                (target.style.setProperty(
-                  "--ti-receiver-opacity",
-                  (0.22 + value * 0.78).toFixed(3),
-                ),
-                target.style.setProperty(
-                  "--ti-receiver-shift",
-                  `${((1 - value) * (key2 === "monitor" ? 7 : 4)).toFixed(2)}px`,
-                ));
+            for (const [selector, key] of this.receiverTargets) {
+              const value = smooth2(this.receiver[key]);
+              const target = document.querySelector(selector);
+              if (!target) continue;
+              const opacity = (0.22 + value * 0.78).toFixed(3);
+              const shift = ((1 - value) * (key === "monitor" ? 7 : 4)).toFixed(2);
+              setRitualProperty(target.style, "--ti-receiver-opacity", opacity);
+              setRitualProperty(target.style, "--ti-receiver-shift", `${shift}px`);
             }
           }
           _clearReceiver() {
             document.body.classList.remove("ti-entry-receiver-sync");
-            for (let [selector] of this.receiverTargets) {
-              let target = document.querySelector(selector);
-              (target?.style.removeProperty("--ti-receiver-opacity"),
-                target?.style.removeProperty("--ti-receiver-shift"));
+            for (const [selector] of this.receiverTargets) {
+              const target = document.querySelector(selector);
+              target?.style.removeProperty("--ti-receiver-opacity");
+              target?.style.removeProperty("--ti-receiver-shift");
             }
           }
           _renderCompletion() {
-            let silence = smooth2(this.completion.silence);
-            if (
-              (this.cells.forEach((cell, index) => {
-                let cellLive = 1 - clamp012(silence * 8 - index);
-                cell.style.setProperty("--ti-cell-silence", cellLive.toFixed(3));
-              }),
-              !this.readout)
-            )
-              return;
+            const silence = smooth2(this.completion.silence);
+            this.cells.forEach((cell, index) => {
+              const cellLive = 1 - clamp012(silence * 8 - index);
+              setRitualProperty(cell.style, "--ti-cell-silence", cellLive.toFixed(3));
+            });
+            if (!this.readout) return;
             let interval = "640 ms";
-            (this.completion.cadence < 1
-              ? (interval = "120 ms")
-              : this.completion.cadence < 2 && (interval = "280 ms"),
-              (this.readout.textContent = `원격 측정 장치 정상 · 다음 측정까지 ${interval}`));
+            if (this.completion.cadence < 1) interval = "120 ms";
+            else if (this.completion.cadence < 2) interval = "280 ms";
+            const label = `원격 측정 장치 정상 · 다음 측정까지 ${interval}`;
+            if (this.readout.textContent !== label) this.readout.textContent = label;
           }
           _finishCompletion() {
             this.readout && (this.readout.textContent = "원격 측정 장치 정상 · 통신 대기");

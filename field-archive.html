@@ -2918,6 +2918,7 @@
           const vehicles = readVehicleArchive(storage);
           const vehicleSection = document.createElement("section");
           vehicleSection.className = "vehicle-archive";
+          vehicleSection.id = "vehicle-history";
           vehicleSection.setAttribute("aria-label", "기체 운용 기록");
           const names2 = {
             rover: "ROVER · 로버",
@@ -3342,6 +3343,29 @@
     </script>
     <script id="visitor-navigation">
       (function enhanceVisitorNavigation() {
+        function trackCurrentLink(links, selectActiveLink) {
+          let pending = false;
+          function update() {
+            pending = false;
+            const active = selectActiveLink();
+            for (const link of links) {
+              if (link === active) {
+                if (link.getAttribute("aria-current") !== "location") {
+                  link.setAttribute("aria-current", "location");
+                }
+              } else if (link.hasAttribute("aria-current")) {
+                link.removeAttribute("aria-current");
+              }
+            }
+          }
+          addEventListener("scroll", () => {
+            if (pending) return;
+            pending = true;
+            requestAnimationFrame(update);
+          }, { passive: true });
+          update();
+        }
+
         const run = () => {
           if (document.documentElement.dataset.visitorNavigation) return;
           document.documentElement.dataset.visitorNavigation = "1";
@@ -3399,32 +3423,21 @@ body .visitor-vehicle-index a{flex:none;white-space:nowrap}
             }
             document.querySelector(".archive").prepend(overview);
             const links = [...archive.querySelectorAll("a")];
-            let pending = false;
-            const update = () => {
-              pending = false;
+            trackCurrentLink(links, () => {
               let active = links[0];
+              let closestTop = -Infinity;
               const edge = header.getBoundingClientRect().height + archive.offsetHeight + 24;
-              for (const a of links) {
-                const s = document.querySelector(a.hash);
-                const h = s?.querySelector("h2") || s;
-                if (h && h.getBoundingClientRect().top <= edge) active = a;
-              }
-              for (const a of links) {
-                if (a === active) a.setAttribute("aria-current", "location");
-                else a.removeAttribute("aria-current");
-              }
-            };
-            addEventListener(
-              "scroll",
-              () => {
-                if (!pending) {
-                  pending = true;
-                  requestAnimationFrame(update);
+              for (const link of links) {
+                const section = document.getElementById(link.hash.slice(1));
+                if (!section) continue;
+                const top = section.getBoundingClientRect().top;
+                if (top <= edge && top > closestTop) {
+                  closestTop = top;
+                  active = link;
                 }
-              },
-              { passive: true },
-            );
-            update();
+              }
+              return active;
+            });
           }
           const returnLink = document.querySelector(".site-header [data-return]");
           if (returnLink) {
@@ -3495,9 +3508,7 @@ body .visitor-vehicle-index a{flex:none;white-space:nowrap}
             new ResizeObserver(size).observe(topbar);
             new ResizeObserver(size).observe(index);
             const links = [...index.querySelectorAll("a")];
-            let pending = false;
-            const update = () => {
-              pending = false;
+            trackCurrentLink(links, () => {
               let active = links[0];
               const edge = topbar.offsetHeight + index.offsetHeight + 40;
               for (const a of links) {
@@ -3505,22 +3516,8 @@ body .visitor-vehicle-index a{flex:none;white-space:nowrap}
               }
               if (scrollY + innerHeight >= document.documentElement.scrollHeight - 2)
                 active = links.at(-1);
-              for (const a of links) {
-                if (a === active) a.setAttribute("aria-current", "location");
-                else a.removeAttribute("aria-current");
-              }
-            };
-            addEventListener(
-              "scroll",
-              () => {
-                if (!pending) {
-                  pending = true;
-                  requestAnimationFrame(update);
-                }
-              },
-              { passive: true },
-            );
-            update();
+              return active;
+            });
           }
         };
         if (document.readyState === "loading")

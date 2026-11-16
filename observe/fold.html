@@ -25501,11 +25501,27 @@ void main() {
             const hullScale = 0.54;
             const hullOffsetY = -1.313;
             const outline = [
-              [0, -3.65], [1.95, -3.28], [3.35, -2.3], [3.65, 0.55],
-              [2.85, 2.9], [1.55, 3.35], [0, 3.42], [-1.55, 3.35],
-              [-2.85, 2.9], [-3.65, 0.55], [-3.35, -2.3], [-1.95, -3.28],
+              [0, -3.65],
+              [1.95, -3.28],
+              [3.35, -2.3],
+              [3.65, 0.55],
+              [2.85, 2.9],
+              [1.55, 3.35],
+              [0, 3.42],
+              [-1.55, 3.35],
+              [-2.85, 2.9],
+              [-3.65, 0.55],
+              [-3.35, -2.3],
+              [-1.95, -3.28],
             ];
-            const sections = [[2.55, 0.82], [3.05, 0.72], [3.58, 1], [4.38, 1], [5.08, 0.76], [5.45, 0.46]];
+            const sections = [
+              [2.55, 0.82],
+              [3.05, 0.72],
+              [3.58, 1],
+              [4.38, 1],
+              [5.08, 0.76],
+              [5.45, 0.46],
+            ];
             const rings = sections.map(([y, radius]) =>
               outline.map(([x, z]) => [x * radius, y, z * radius]),
             );
@@ -25513,8 +25529,10 @@ void main() {
             for (let i = 0; i < outline.length; i++) {
               const j = (i + 1) % outline.length;
               for (let r = 1; r < rings.length; r++) {
-                const a = rings[r - 1][i], b = rings[r - 1][j];
-                const c = rings[r][i], d = rings[r][j];
+                const a = rings[r - 1][i],
+                  b = rings[r - 1][j];
+                const c = rings[r][i],
+                  d = rings[r][j];
                 shell.push(...a, ...c, ...b, ...b, ...c, ...d);
               }
               shell.push(0, sections[0][0], 0, ...rings[0][i], ...rings[0][j]);
@@ -25533,8 +25551,25 @@ void main() {
             add(new BoxGeometry(3.14, 2.74, 0.16), dark, 0, 3.41, -3.69);
             for (const side of [-1, 1]) {
               add(new BoxGeometry(0.15, 2.68, 0.21), metal, side * 1.43, 3.41, -3.71);
-              add(new BoxGeometry(1.15, 0.38, 0.11), glass, side * 1.03, 4.92, -2.5, 0, side * 0.28);
-              add(new BoxGeometry(0.11, 1.54, 1.3), dark, side * 3.69, 4.01, 0.34, 0, 0, side * 0.14);
+              add(
+                new BoxGeometry(1.15, 0.38, 0.11),
+                glass,
+                side * 1.03,
+                4.92,
+                -2.5,
+                0,
+                side * 0.28,
+              );
+              add(
+                new BoxGeometry(0.11, 1.54, 1.3),
+                dark,
+                side * 3.69,
+                4.01,
+                0.34,
+                0,
+                0,
+                side * 0.14,
+              );
               add(new BoxGeometry(0.16, 0.72, 0.64), foil, side * 3.08, 1.94, 0.41);
             }
             add(new BoxGeometry(3.06, 0.15, 0.2), metal, 0, 2.04, -3.78);
@@ -25542,15 +25577,25 @@ void main() {
 
             for (let i = 0; i < 6; i++) {
               const angle = (i * Math.PI) / 3;
-              const c = Math.cos(angle), s = Math.sin(angle);
+              const c = Math.cos(angle),
+                s = Math.sin(angle);
               const at = (radius, y) => [c * radius, y, s * radius];
               rod(at(3.05, 2.24), at(4.18, 2.73), 0.18, white);
               rod(at(4.18, 2.73), at(4.5, 3.78), 0.13);
-              add(new BoxGeometry(0.84, 1.22, 0.24), metal, ...at(4.5, 3.78), 0, Math.PI / 2 - angle);
+              add(
+                new BoxGeometry(0.84, 1.22, 0.24),
+                metal,
+                ...at(4.5, 3.78),
+                0,
+                Math.PI / 2 - angle,
+              );
             }
             for (const [x, z, radius] of [
-              [0, 0, 0.94], [-1.45, -1.25, 0.31], [1.45, -1.25, 0.31],
-              [-1.45, 1.25, 0.31], [1.45, 1.25, 0.31],
+              [0, 0, 0.94],
+              [-1.45, -1.25, 0.31],
+              [1.45, -1.25, 0.31],
+              [-1.45, 1.25, 0.31],
+              [1.45, 1.25, 0.31],
             ]) {
               add(new CylinderGeometry(radius * 0.48, radius, 0.63, 8, 1, true), metal, x, 0.77, z);
               add(new CylinderGeometry(radius * 0.48, radius * 0.48, 0.05, 8), dark, x, 1.07, z);
@@ -25851,7 +25896,8 @@ void main() {
             const interacting = pointers.size > 0 || keys.size > 0 || state.time - lastInput < 1;
             orbitMotion = clamp(orbitMotion + dt * (interacting ? -1 / 0.8 : 1 / 1.8));
             const driftTime = dt * smooth(0, 1, orbitMotion) * (reducedMotion.matches ? 0.25 : 1);
-            observerAngle += driftTime * (Math.PI / 120) * (1 - smooth(0.66, 0.96, state.compression));
+            observerAngle +=
+              driftTime * (Math.PI / 120) * (1 - smooth(0.66, 0.96, state.compression));
             fieldClock += driftTime * (1 - smooth(0.72, 0.96, state.compression));
             const follow = 1 - Math.exp(-dt * 9);
             state.compression += (state.targetCompression - state.compression) * follow;

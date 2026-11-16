@@ -41352,6 +41352,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
         }[vi],
         $u = document.getElementById("line"),
         Nr = document.getElementById("archive"),
+        endingCut = document.getElementById("cut"),
         Pf = document.getElementById("sound"),
         sb = (i) =>
           location.pathname.includes("/works/first_dawn/") ? "../terra_incognita/" + i : i,
@@ -41428,22 +41429,25 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
               (t.near = 0.5),
               t.updateProjectionMatrix());
           },
-          l = function (u) {
-            ((si = Math.max(0, u)), rs.update(Of + si), c(), n.update(Of + si, !0, t, 108));
-            let p = nb((si - 1) / 5) * (1 - nb((si - 14) / 8));
-            (($u.style.opacity = String(p)),
-              si >= 14 &&
-                Nr.parentElement === $u &&
-                (document
-                  .querySelector("footer nav")
-                  .insertBefore(Nr, document.getElementById("return")),
-                Nr.removeAttribute("style")),
-              (Nr.hidden = si < 4.1),
-              (document.getElementById("cut").style.opacity = "0"),
-              ka.setEnvironment(rs.model.state),
-              ka.update(si),
-              nl.update(),
-              fn.render(i, t));
+          renderEnding = function (time) {
+            si = Math.max(0, time);
+            const habitatTime = Of + si;
+            rs.update(habitatTime);
+            c();
+            n.update(habitatTime, !0, t, 108);
+            const captionOpacity = String(nb((si - 1) / 5) * (1 - nb((si - 14) / 8)));
+            if ($u.style.opacity !== captionOpacity) $u.style.opacity = captionOpacity;
+            if (si >= 14 && Nr.parentElement === $u) {
+              document.querySelector("footer nav").insertBefore(Nr, document.getElementById("return"));
+              Nr.removeAttribute("style");
+            }
+            const archiveHidden = si < 4.1;
+            if (Nr.hidden !== archiveHidden) Nr.hidden = archiveHidden;
+            if (endingCut.style.opacity !== "0") endingCut.style.opacity = "0";
+            ka.setEnvironment(rs.model.state);
+            ka.update(si);
+            nl.update();
+            fn.render(i, t);
           },
           h = function (u) {
             if ((requestAnimationFrame(h), Ju || document.hidden || Df?.lost || Zu.has("test"))) {
@@ -41451,7 +41455,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
               return;
             }
             let p = ju.step(u);
-            p !== null && (l(si + p), si - eb >= 10 && (Ff(), (eb = si)));
+            p !== null && (renderEnding(si + p), si - eb >= 10 && (Ff(), (eb = si)));
           };
         ((fn = new Jh({
           antialias: !0,
@@ -41551,7 +41555,7 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
           ((t.aspect = u / p),
             fn.setSize(u, p),
             Object.assign(fn.domElement.style, { left: `${d}px`, top: `${f}px` }),
-            l(si));
+            renderEnding(si));
         }),
           (Df = tb(fn, If)),
           (document.getElementById("loading").hidden = !0),
@@ -41584,10 +41588,10 @@ reflectedLight.indirectDiffuse*=basinAO;reflectedLight.indirectSpecular*=basinAO
               pixelRatio: Ku,
             }),
             ...(Zu.has("test")
-              ? { seek: l, persist: Ff, audio: ka.snapshot, flushArchive: () => nl.flush() }
+              ? { seek: renderEnding, persist: Ff, audio: ka.snapshot, flushArchive: () => nl.flush() }
               : {}),
           }),
-          l(si),
+          renderEnding(si),
           requestAnimationFrame(h));
       } catch (i) {
         document.getElementById("loading").hidden = !0;
