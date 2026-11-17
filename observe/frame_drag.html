@@ -25972,9 +25972,13 @@ q1ObservedPosition=(q1ObservedFrame*modelMatrix*observedLocal).xyz;`,
           queue();
         }
         const shipPoint = new T.Vector3(),
-          shipAhead = new T.Vector3(),
+          shipRadial = new T.Vector3(),
+          shipNormal = new T.Vector3(),
           shipHeading = new T.Vector3(),
-          shipForward = new T.Vector3(0, 0, 1);
+          shipForward = new T.Vector3(),
+          shipRight = new T.Vector3(),
+          shipCross = new T.Vector3(),
+          shipBasis = new T.Matrix4();
         const rayPoint = new T.Vector3(),
           rayDirection = new T.Vector3();
         function bodyPoint(r, theta, layer, part, out) {
@@ -26002,8 +26006,84 @@ q1ObservedPosition=(q1ObservedFrame*modelMatrix*observedLocal).xyz;`,
           );
           return out;
         }
-        const shipAttitude = new T.Quaternion();
+        // Derivative of the shader's logarithmically interpolated radial field.
+        function fieldSlope(values, r) {
+          const p =
+            clamp(Math.log(clamp(r, RMIN, RMAX) / RMIN) / Math.log(RMAX / RMIN)) * (SAMPLES - 1),
+            i = Math.min(SAMPLES - 2, Math.floor(p));
+          return ((values[i + 1] - values[i]) * (SAMPLES - 1)) / (r * Math.log(RMAX / RMIN));
+        }
+        // Differentiate the same top surface as bodyPoint; retain its min(strain,5)
+        // branch instead of averaging across the strain cap. The resulting local
+        // tangent frame is a numerical surface attachment, not a geodesic model.
+        function surfaceFrame(radius, theta, layer, part) {
+          bodyPoint(radius, theta, layer, part, shipPoint);
+          const old = S.faultLayer === layer && part === 0,
+            phaseField = old ? model.memory : model.phase,
+            center = (BANDS[layer][0] + BANDS[layer][1]) * 0.5,
+            phase = sample(phaseField, radius),
+            centerPhase = sample(phaseField, center),
+            relative = phase - centerPhase,
+            turn = theta + centerPhase + (0.32 * relative) / (1 + Math.abs(relative)),
+            turnR = (0.32 * fieldSlope(phaseField, radius)) / (1 + Math.abs(relative)) ** 2,
+            lifted = S.faultLayer === layer && part === 1 ? 1 : 0,
+            peel = smooth(0, 7, S.time - S.eventAt) * (S.eventAt >= 0 ? 1 : 0),
+            radial = radius + 0.1 * Math.sin(theta * 3 + layer * 0.7) + lifted * peel * 0.5,
+            radialTheta = 0.3 * Math.cos(theta * 3 + layer * 0.7),
+            contactAngle = S.eventAt < 0 ? S.inputAngle : S.faultAngle,
+            contact = theta - contactAngle,
+            strain = sample(model.strain, radius),
+            heightR = strain < 5 ? fieldSlope(model.strain, radius) * 0.045 * Math.sin(contact) : 0,
+            heightTheta =
+              0.26 * Math.cos(theta * 2 + layer * 0.62) -
+              0.225 * Math.sin(theta * 3 - layer * 0.4) +
+              Math.min(strain, 5) * 0.045 * Math.cos(contact) +
+              lifted * peel * 0.96 * Math.sin(contact) * Math.cos(contact),
+            cosine = Math.cos(turn),
+            sine = Math.sin(turn);
+          shipRadial.set(
+            cosine - sine * radial * turnR,
+            heightR,
+            sine + cosine * radial * turnR,
+          );
+          shipHeading
+            .set(
+              cosine * radialTheta - sine * radial,
+              heightTheta,
+              sine * radialTheta + cosine * radial,
+            )
+            .normalize();
+          shipNormal.crossVectors(shipHeading, shipRadial).normalize();
+          if (shipNormal.y < 0) shipNormal.negate();
+          shipHeading.addScaledVector(shipNormal, -shipHeading.dot(shipNormal)).normalize();
+        }
         let shipPoseTime = null;
+        function alignVessel(omega) {
+          if (omega < 0) shipHeading.negate();
+          const dt = shipPoseTime === null ? 0 : Math.max(0, S.time - shipPoseTime);
+          if (shipPoseTime === null || S.time < shipPoseTime) {
+            shipForward.copy(shipHeading);
+          } else {
+            // Keep the established turn speed, but turn within the tangent plane:
+            // a reversal must never bank the craft through its supporting sheet.
+            shipForward.set(0, 0, 1).applyQuaternion(vessel.quaternion);
+            shipForward.addScaledVector(shipNormal, -shipForward.dot(shipNormal));
+            if (shipForward.lengthSq() < 1e-12) shipForward.copy(shipHeading);
+            else shipForward.normalize();
+            if (Math.abs(omega) > 0.003) {
+              const sine = shipCross.crossVectors(shipForward, shipHeading).dot(shipNormal),
+                cosine = clamp(shipForward.dot(shipHeading), -1, 1),
+                turn = cosine < 0 && Math.abs(sine) < 1e-10 ? Math.PI : Math.atan2(sine, cosine),
+                limit = (Math.PI / 2.5) * dt;
+              shipForward.applyAxisAngle(shipNormal, clamp(turn, -limit, limit));
+            }
+          }
+          shipRight.crossVectors(shipNormal, shipForward).normalize();
+          shipForward.crossVectors(shipRight, shipNormal).normalize();
+          shipBasis.makeBasis(shipRight, shipNormal, shipForward);
+          vessel.quaternion.setFromRotationMatrix(shipBasis);
+          shipPoseTime = S.time;
+        }
         function pose() {
           const z = state.zoom,
             portrait = innerWidth < innerHeight;
@@ -26018,21 +26098,12 @@ q1ObservedPosition=(q1ObservedFrame*modelMatrix*observedLocal).xyz;`,
           if (vessel) {
             const radius = 7.62,
               theta = 0.94;
-            bodyPoint(radius, theta, 3, 1, shipPoint);
-            bodyPoint(radius, theta + 0.003, 3, 1, shipAhead);
-            shipHeading.subVectors(shipAhead, shipPoint).normalize();
+            surfaceFrame(radius, theta, 3, 1);
             const omega = sample(model.omega, radius);
-            if (omega < 0) shipHeading.negate();
             vessel.position.copy(shipPoint);
             vessel.position.y += 0.24;
-            const dt = shipPoseTime === null ? 0 : Math.max(0, S.time - shipPoseTime);
-            shipAttitude.setFromUnitVectors(shipForward, shipHeading);
-            if (shipPoseTime === null || S.time < shipPoseTime)
-              vessel.quaternion.copy(shipAttitude);
-            else if (Math.abs(omega) > 0.003)
-              vessel.quaternion.rotateTowards(shipAttitude, (Math.PI / 2.5) * dt);
-            shipPoseTime = S.time;
-            ship.rotation.set(0.22, 0.12, 0.07);
+            alignVessel(omega);
+            ship.rotation.set(0, 0, 0);
             vessel.scale.setScalar(portrait ? 0.05 : 0.065);
             vessel.visible = S.time > 5.5;
           }
@@ -26736,6 +26807,9 @@ q1ObservedPosition=(q1ObservedFrame*modelMatrix*observedLocal).xyz;`,
             triangles: renderer?.info.render.triangles || 0,
             vesselVisible: !!vessel?.visible,
             vesselPosition: vessel?.position.toArray() || [],
+            vesselAttitude: vessel?.quaternion.toArray() || [],
+            vesselNormal: shipNormal.toArray(),
+            vesselTangent: shipHeading.toArray(),
             vesselNDC: vessel ? vessel.position.clone().project(camera).toArray() : [],
             vesselDesign: ship ? { ...ship.userData.design } : null,
             angularVelocity: Array.from(model.omega),

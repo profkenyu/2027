@@ -2602,30 +2602,39 @@
         });
         var POST_KEY = "beyond-known:post-mission:v1";
         var POST_PHASES = Object.freeze({
-          migration: {
-            file: "migration.html",
-            start: 0,
-            duration: MIGRATION_DURATION,
-            next: "arrival",
-          },
-          arrival: {
-            file: "arrival.html",
-            start: 68,
-            duration: 180,
-            openEnded: true,
-            next: "ending",
-          },
-          ending: {
-            file: "ending.html",
-            start: 0,
-            duration: 18,
-            openEnded: true,
-            next: null,
-          },
-        });
+  "migration": {
+    "file": "migration.html",
+    "start": 0,
+    "duration": 125,
+    "next": "arrival"
+  },
+  "arrival": {
+    "file": "arrival.html",
+    "start": 68,
+    "duration": 142,
+    "next": "terraform"
+  },
+  "terraform": {
+    "file": "terraform.html",
+    "start": 210,
+    "duration": 180,
+    "openEnded": true,
+    "next": "ending"
+  },
+  "ending": {
+    "file": "end.html",
+    "start": 0,
+    "duration": 78,
+    "openEnded": true,
+    "next": null
+  }
+});
         function readPostMission() {
           try {
             const s = JSON.parse(sessionStorage.getItem(POST_KEY) || "null");
+       if (s?.phase === 'arrival' && Number.isFinite(s.elapsed) && s.elapsed >= POST_PHASES.arrival.duration) {
+         s.phase = 'terraform'; s.elapsed -= POST_PHASES.arrival.duration;
+       }
             if (
               s?.version !== 1 ||
               !Object.hasOwn(POST_PHASES, s.phase) ||

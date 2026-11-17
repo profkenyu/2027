@@ -20057,12 +20057,10 @@ ${builder.flow.code}`;
     normalMap = nodeProxy(NormalMapNode).setParameterLength(1, 2),
     dHdxy_fwd = Fn(({ textureNode, bumpScale }) => {
       let sampleTexture = (callback) =>
-          textureNode
-            .isolate()
-            .context({
-              getUV: (texNode) => callback(texNode.uvNode || uv$1()),
-              forceUVContext: !0,
-            }),
+          textureNode.isolate().context({
+            getUV: (texNode) => callback(texNode.uvNode || uv$1()),
+            forceUVContext: !0,
+          }),
         Hll = float(sampleTexture((uvNode) => uvNode));
       return vec2(
         float(sampleTexture((uvNode) => uvNode.add(uvNode.dFdx()))).sub(Hll),
@@ -23339,20 +23337,18 @@ ${builder.flow.code}`;
             lightColor.mul(fresnel).mul(LTC_Evaluate({ N: N2, V, P, mInv, p0, p1, p2, p3 })),
           ),
           reflectedLight.directDiffuse.addAssign(
-            lightColor
-              .mul(diffuseContribution)
-              .mul(
-                LTC_Evaluate({
-                  N: N2,
-                  V,
-                  P,
-                  mInv: mat3(1, 0, 0, 0, 1, 0, 0, 0, 1),
-                  p0,
-                  p1,
-                  p2,
-                  p3,
-                }),
-              ),
+            lightColor.mul(diffuseContribution).mul(
+              LTC_Evaluate({
+                N: N2,
+                V,
+                P,
+                mInv: mat3(1, 0, 0, 0, 1, 0, 0, 0, 1),
+                p0,
+                p1,
+                p2,
+                p3,
+              }),
+            ),
           ),
           this.clearcoat === !0)
         ) {
@@ -23753,11 +23749,28 @@ ${builder.flow.code}`;
         let gl_FragColor = vec3().toVar();
         return (
           gl_FragColor.addAssign(
-            weights
-              .element(0)
-              .mul(
+            weights.element(0).mul(
+              getSample({
+                theta: 0,
+                axis: axis2,
+                outputDirection,
+                mipInt,
+                envMap,
+                CUBEUV_TEXEL_WIDTH,
+                CUBEUV_TEXEL_HEIGHT,
+                CUBEUV_MAX_MIP,
+              }),
+            ),
+          ),
+          Loop({ start: int(1), end: n }, ({ i }) => {
+            If(i.greaterThanEqual(samples), () => {
+              Break();
+            });
+            let theta = float(dTheta.mul(float(i))).toVar();
+            (gl_FragColor.addAssign(
+              weights.element(i).mul(
                 getSample({
-                  theta: 0,
+                  theta: theta.mul(-1),
                   axis: axis2,
                   outputDirection,
                   mipInt,
@@ -23767,18 +23780,11 @@ ${builder.flow.code}`;
                   CUBEUV_MAX_MIP,
                 }),
               ),
-          ),
-          Loop({ start: int(1), end: n }, ({ i }) => {
-            If(i.greaterThanEqual(samples), () => {
-              Break();
-            });
-            let theta = float(dTheta.mul(float(i))).toVar();
-            (gl_FragColor.addAssign(
-              weights
-                .element(i)
-                .mul(
+            ),
+              gl_FragColor.addAssign(
+                weights.element(i).mul(
                   getSample({
-                    theta: theta.mul(-1),
+                    theta,
                     axis: axis2,
                     outputDirection,
                     mipInt,
@@ -23788,22 +23794,6 @@ ${builder.flow.code}`;
                     CUBEUV_MAX_MIP,
                   }),
                 ),
-            ),
-              gl_FragColor.addAssign(
-                weights
-                  .element(i)
-                  .mul(
-                    getSample({
-                      theta,
-                      axis: axis2,
-                      outputDirection,
-                      mipInt,
-                      envMap,
-                      CUBEUV_TEXEL_WIDTH,
-                      CUBEUV_TEXEL_HEIGHT,
-                      CUBEUV_MAX_MIP,
-                    }),
-                  ),
               ));
           }),
           vec4(gl_FragColor, 1)
@@ -58786,15 +58776,13 @@ body.tx-active #fh-keys {
       return count;
     }
     get rawMaterials() {
-      return this.items
-        .slice(STRUCTURAL_MATERIAL_COUNT)
-        .map((item, index) => ({
-          code: item.gauge,
-          label: item.module,
-          sample: item.sample,
-          value: Number(this.gaugeValues[index] ?? 0),
-          acquired: !!this.acquiredItems[STRUCTURAL_MATERIAL_COUNT + index],
-        }));
+      return this.items.slice(STRUCTURAL_MATERIAL_COUNT).map((item, index) => ({
+        code: item.gauge,
+        label: item.module,
+        sample: item.sample,
+        value: Number(this.gaugeValues[index] ?? 0),
+        acquired: !!this.acquiredItems[STRUCTURAL_MATERIAL_COUNT + index],
+      }));
     }
     get acquiredSites() {
       return this.items
@@ -58926,11 +58914,13 @@ body.tx-active #fh-keys {
 
         const level = value.toFixed(3);
         const percent = String(Math.round(value * 100));
-        const active = completionCharge ||
-          (this.event?.item?.kind === "raw" && this.event.item.raw === index);
+        const active =
+          completionCharge || (this.event?.item?.kind === "raw" && this.event.item.raw === index);
 
-        if (element.style.getPropertyValue("--raw-material-level") !== level ||
-            element.style.getPropertyPriority("--raw-material-level")) {
+        if (
+          element.style.getPropertyValue("--raw-material-level") !== level ||
+          element.style.getPropertyPriority("--raw-material-level")
+        ) {
           element.style.setProperty("--raw-material-level", level);
         }
         element.classList.toggle("on", value >= 0.999);
@@ -59823,6 +59813,129 @@ body.ti-voyage #ti-transfer-trigger {
     );
     return ((points.frustumCulled = !1), { group: points, points });
   }
+  function wheelDistance(distance3, yawDelta, lateralOffset) {
+    return distance3 + yawDelta * lateralOffset;
+  }
+  var LANDING_UP = new Vector3(0, 1, 0);
+  var LANDING_MECHANICS = Object.freeze({
+    sleeveLength: 1.3,
+    minimumLength: 1.65,
+    reachMargin: 0.015,
+    actuatorLength: 0.85,
+    forkOffset: 0.16,
+  });
+  function poseLandingLeg(leg, foot, compression = 0, fold = 0) {
+    let angle = Math.atan2(leg.shoulder[2], leg.shoulder[0]),
+      cx = Math.cos(angle),
+      cz = Math.sin(angle),
+      r0 = Math.hypot(leg.shoulder[0], leg.shoulder[2]),
+      dx = Math.hypot(foot[0], foot[2]) - r0,
+      dy = foot[1] - leg.shoulder[1],
+      distance3 = Math.max(1e-6, Math.hypot(dx, dy)),
+      upper = leg.upperLength,
+      lower = Math.max(
+        LANDING_MECHANICS.minimumLength,
+        leg.lowerRest - compression,
+        Math.abs(distance3 - upper) + LANDING_MECHANICS.reachMargin,
+      );
+    leg.lowerExtension = lower;
+    let along = (upper * upper - lower * lower + distance3 * distance3) / (2 * distance3),
+      height = Math.sqrt(Math.max(0, upper * upper - along * along)),
+      radius = r0 + (dx / distance3) * along - (dy / distance3) * height,
+      y = leg.shoulder[1] + (dy / distance3) * along + (dx / distance3) * height;
+    (leg.a.set(...leg.shoulder),
+      leg.b.set(cx * radius, y, cz * radius),
+      leg.c.set(...foot),
+      renderLandingLeg(leg, fold));
+  }
+  function renderLandingLeg(leg, fold = 0) {
+    let angle = Math.atan2(leg.shoulder[2], leg.shoulder[0]),
+      cx = Math.cos(angle),
+      cz = Math.sin(angle),
+      lower = leg.lowerExtension;
+    (fitLink(leg.upper, leg.a, leg.b),
+      fitLink(leg.lowerCore, leg.b, leg.c),
+      leg.braceA
+        .copy(leg.b)
+        .sub(leg.c)
+        .normalize()
+        .multiplyScalar(LANDING_MECHANICS.sleeveLength)
+        .add(leg.c),
+      fitLink(leg.lower, leg.braceA, leg.c),
+      leg.sleeveEnd
+        .copy(leg.c)
+        .sub(leg.b)
+        .normalize()
+        .multiplyScalar(LANDING_MECHANICS.sleeveLength)
+        .add(leg.b),
+      fitLink(leg.sleeve, leg.b, leg.sleeveEnd),
+      leg.braceA.copy(leg.c).sub(leg.b).normalize(),
+      leg.braceB
+        .copy(leg.b)
+        .addScaledVector(leg.braceA, (lower - LANDING_MECHANICS.sleeveLength) * 0.5),
+      leg.sleeveEnd.copy(leg.braceB).addScaledVector(leg.braceA, LANDING_MECHANICS.sleeveLength),
+      fitLink(leg.middle, leg.braceB, leg.sleeveEnd),
+      leg.braceA.copy(leg.a),
+      leg.braceB.copy(leg.b),
+      (leg.braceA.x -= cz * LANDING_MECHANICS.forkOffset),
+      (leg.braceA.z += cx * LANDING_MECHANICS.forkOffset),
+      (leg.braceB.x -= cz * LANDING_MECHANICS.forkOffset),
+      (leg.braceB.z += cx * LANDING_MECHANICS.forkOffset),
+      fitLink(leg.brace, leg.braceA, leg.braceB),
+      leg.elbowJoint.position.copy(leg.b),
+      leg.pad.quaternion.copy(leg.padRotation).slerp(leg.stowPadRotation, fold),
+      leg.padCore.quaternion.copy(leg.pad.quaternion),
+      leg.braceA.copy(LANDING_UP).applyQuaternion(leg.pad.quaternion),
+      leg.pad.position.copy(leg.c).addScaledVector(leg.braceA, -0.08),
+      leg.padCore.position.copy(leg.c).addScaledVector(leg.braceA, 0.02),
+      leg.ankleJoint.position.copy(leg.c),
+      leg.kneeDrive.position.copy(leg.b),
+      (leg.kneeDrive.position.x -= cz * 0.31 * leg.tangentSide),
+      (leg.kneeDrive.position.z += cx * 0.31 * leg.tangentSide),
+      leg.actuatorTip.copy(leg.a).lerp(leg.b, 0.7),
+      (leg.actuatorTip.x -= cz * 0.28 * leg.tangentSide),
+      (leg.actuatorTip.z += cx * 0.28 * leg.tangentSide),
+      leg.braceA.subVectors(leg.actuatorTip, leg.actuatorAnchor).normalize(),
+      leg.actuatorEnd
+        .copy(leg.actuatorAnchor)
+        .addScaledVector(leg.braceA, LANDING_MECHANICS.actuatorLength),
+      leg.actuatorStart
+        .copy(leg.actuatorTip)
+        .addScaledVector(leg.braceA, -LANDING_MECHANICS.actuatorLength),
+      fitLink(leg.actuatorBarrel, leg.actuatorAnchor, leg.actuatorEnd),
+      fitLink(leg.actuatorRod, leg.actuatorStart, leg.actuatorTip),
+      (leg.actuatorExtension = leg.actuatorAnchor.distanceTo(leg.actuatorTip)));
+  }
+  function poseLandingContact(legs, altitude = 0, settleMilliseconds = null, stroke = 0.11) {
+    let ease2 = (x) => MathUtils.smoothstep(x, 0, 1),
+      highest = -1 / 0;
+    for (let leg of legs) highest = Math.max(highest, leg.deployedFoot[1]);
+    let drop = 0,
+      settling = settleMilliseconds !== null;
+    for (let leg of legs) {
+      let delay = Math.min(90, (highest - leg.deployedFoot[1]) * 180),
+        t = settling ? Math.max(0, settleMilliseconds - delay) : 0,
+        q = settling ? (t < 160 ? ease2(t / 160) : 1 - ease2((t - 160) / (940 - delay))) : 0;
+      ((leg.contactCompression = q), (drop += (q * stroke) / legs.length));
+    }
+    for (let leg of legs) {
+      let foot = leg.poseFoot;
+      if (((foot[0] = leg.deployedFoot[0]), (foot[2] = leg.deployedFoot[2]), settling))
+        ((foot[1] = leg.deployedFoot[1] + drop), (leg.terrainContact = !0));
+      else {
+        let free = MathUtils.lerp(
+            leg.foot[1],
+            Math.min(leg.foot[1], leg.deployedFoot[1]),
+            ease2(1 - Math.max(0, altitude) / 0.65),
+          ),
+          constrained = leg.deployedFoot[1] - Math.max(0, altitude);
+        ((foot[1] = Math.max(free, constrained)),
+          (leg.terrainContact = constrained >= free - 1e-5));
+      }
+      poseLandingLeg(leg, foot, stroke * leg.contactCompression);
+    }
+    return drop;
+  }
   var VoyageSequence = class {
     constructor({
       lander,
@@ -60060,6 +60173,7 @@ body.ti-voyage #ti-transfer-trigger {
             this.baseY,
           ),
           this.lander.setLegFold(1 - smooth4((p - 0.42) / 0.5)),
+          this.lander.setLandingContact?.(altitude),
           !this.landingRegolith &&
             altitude <= 2.7 &&
             ((this.landingRegolith = !0),
@@ -60082,9 +60196,10 @@ body.ti-voyage #ti-transfer-trigger {
         this.lander.setLandingContactLight?.(1 - smooth4(elapsed / 1100), 0, this.baseY);
         let attack = smooth4(elapsed / 160),
           release = 1 - smooth4((elapsed - 160) / 940),
-          compression = elapsed < 160 ? attack : release;
-        ((this.lander.group.position.y = this.baseY - compression * 0.11),
-          this.lander.setLegCompression(compression, 0.11),
+          compression = elapsed < 160 ? attack : release,
+          drop = this.lander.setLandingContact?.(0, elapsed) ?? compression * 0.11;
+        ((this.lander.group.position.y = this.baseY - drop),
+          this.lander.setLandingContact || this.lander.setLegCompression(compression, 0.11),
           elapsed >= 1100 &&
             ((this.lander.group.position.y = this.baseY),
             this.lander.setLegCompression(0),
@@ -61752,16 +61867,14 @@ body.ti-voyage #ti-transfer-trigger {
             (this.model?.sites ?? []).slice(0, this.current).flatMap((site) => site.elements ?? []),
           ),
         ],
-        observations: (this.model?.sites ?? [])
-          .slice(0, this.current)
-          .map((site) => ({
-            id: site.id,
-            elements: site.elements ?? [],
-            resourceUse: site.resourceUse,
-            coherence: site.coherence,
-            density: site.density,
-            reflectance: site.reflectance,
-          })),
+        observations: (this.model?.sites ?? []).slice(0, this.current).map((site) => ({
+          id: site.id,
+          elements: site.elements ?? [],
+          resourceUse: site.resourceUse,
+          coherence: site.coherence,
+          density: site.density,
+          reflectance: site.reflectance,
+        })),
         target: this.target
           ? {
               id: this.target.id,
@@ -62183,7 +62296,11 @@ body.ti-voyage #ti-transfer-trigger {
           axial = MathUtils.lerp(3.8, separation * 0.06, landerWeight),
           x = midX + sideX * (breadth + breath) - dx * axial,
           z = midZ + sideZ * (breadth + breath) - dz * axial,
-          subjectY = MathUtils.lerp(this.rover.deckY + 8.4, l.y + 9 + separation * 0.22, landerWeight),
+          subjectY = MathUtils.lerp(
+            this.rover.deckY + 8.4,
+            l.y + 9 + separation * 0.22,
+            landerWeight,
+          ),
           y = Math.max(this.heightAt(x, z) + 4.5, subjectY);
         (this._camera.set(x, y, z),
           this._aim.set(midX, Math.max(l.y + 3.1, this.rover.deckY + 0.28), midZ),
@@ -63679,8 +63796,9 @@ body.ti-voyage #ti-transfer-trigger {
         Math.max(0.004, this.lapse);
       ((this.speed += (target - this.speed) * Math.min(1, dt * 3.2)),
         Math.abs(this.speed) < 1e-4 && (this.speed = 0));
-      let authority = 0.3 + 0.7 * Math.min(1, Math.abs(this.speed) / Math.max(V.cruise, 0.001));
-      this.heading += steer * D.turnRate * authority * dt;
+      let authority = 0.3 + 0.7 * Math.min(1, Math.abs(this.speed) / Math.max(V.cruise, 0.001)),
+        yawDelta = steer * D.turnRate * authority * dt;
+      this.heading += yawDelta;
       let fx = -Math.sin(this.heading),
         fz = -Math.cos(this.heading);
       ((this.pos.x += fx * this.speed * dt),
@@ -63692,7 +63810,7 @@ body.ti-voyage #ti-transfer-trigger {
         (this.wheelSpin -= (this.speed * dt) / D.wheelR));
       for (let i = 0; i < this.wheels.length; i++) {
         let w = this.wheels[i];
-        ((w.rotation.x = this.wheelSpin),
+        ((w.rotation.x -= wheelDistance(this.speed * dt, yawDelta, w.position.x) / D.wheelR),
           (w.position.y = w.userData.restY + this.sus[i]),
           solveSuspension(w.userData.suspension, w.position.y));
       }
@@ -66349,75 +66467,10 @@ body.ti-voyage #ti-transfer-trigger {
       this.exhaust.setPower(intensity, altitude, groundY);
     }
     _poseLeg(leg, foot, compression = 0, fold = 0) {
-      let angle = Math.atan2(leg.shoulder[2], leg.shoulder[0]),
-        cx = Math.cos(angle),
-        cz = Math.sin(angle),
-        r0 = Math.hypot(leg.shoulder[0], leg.shoulder[2]),
-        dx = Math.hypot(foot[0], foot[2]) - r0,
-        dy = foot[1] - leg.shoulder[1],
-        distance3 = Math.max(1e-6, Math.hypot(dx, dy)),
-        upper = leg.upperLength,
-        lower = Math.max(
-          LEG.minimumLength,
-          leg.lowerRest - compression,
-          Math.abs(distance3 - upper) + LEG.reachMargin,
-        );
-      leg.lowerExtension = lower;
-      let along = (upper * upper - lower * lower + distance3 * distance3) / (2 * distance3),
-        height = Math.sqrt(Math.max(0, upper * upper - along * along)),
-        radius = r0 + (dx / distance3) * along - (dy / distance3) * height,
-        y = leg.shoulder[1] + (dy / distance3) * along + (dx / distance3) * height;
-      (leg.a.set(...leg.shoulder),
-        leg.b.set(cx * radius, y, cz * radius),
-        leg.c.set(...foot),
-        this._renderLeg(leg, fold));
+      poseLandingLeg(leg, foot, compression, fold);
     }
     _renderLeg(leg, fold = 0) {
-      let angle = Math.atan2(leg.shoulder[2], leg.shoulder[0]),
-        cx = Math.cos(angle),
-        cz = Math.sin(angle),
-        lower = leg.lowerExtension;
-      (fitLink(leg.upper, leg.a, leg.b),
-        fitLink(leg.lowerCore, leg.b, leg.c),
-        leg.braceA.copy(leg.b).sub(leg.c).normalize().multiplyScalar(LEG.sleeveLength).add(leg.c),
-        fitLink(leg.lower, leg.braceA, leg.c),
-        leg.sleeveEnd
-          .copy(leg.c)
-          .sub(leg.b)
-          .normalize()
-          .multiplyScalar(LEG.sleeveLength)
-          .add(leg.b),
-        fitLink(leg.sleeve, leg.b, leg.sleeveEnd),
-        leg.braceA.copy(leg.c).sub(leg.b).normalize(),
-        leg.braceB.copy(leg.b).addScaledVector(leg.braceA, (lower - LEG.sleeveLength) * 0.5),
-        leg.sleeveEnd.copy(leg.braceB).addScaledVector(leg.braceA, LEG.sleeveLength),
-        fitLink(leg.middle, leg.braceB, leg.sleeveEnd),
-        leg.braceA.copy(leg.a),
-        leg.braceB.copy(leg.b),
-        (leg.braceA.x -= cz * LEG.forkOffset),
-        (leg.braceA.z += cx * LEG.forkOffset),
-        (leg.braceB.x -= cz * LEG.forkOffset),
-        (leg.braceB.z += cx * LEG.forkOffset),
-        fitLink(leg.brace, leg.braceA, leg.braceB),
-        leg.elbowJoint.position.copy(leg.b),
-        leg.pad.quaternion.copy(leg.padRotation).slerp(leg.stowPadRotation, fold),
-        leg.padCore.quaternion.copy(leg.pad.quaternion),
-        leg.braceA.copy(Y).applyQuaternion(leg.pad.quaternion),
-        leg.pad.position.copy(leg.c).addScaledVector(leg.braceA, -0.08),
-        leg.padCore.position.copy(leg.c).addScaledVector(leg.braceA, 0.02),
-        leg.ankleJoint.position.copy(leg.c),
-        leg.kneeDrive.position.copy(leg.b),
-        (leg.kneeDrive.position.x -= cz * 0.31 * leg.tangentSide),
-        (leg.kneeDrive.position.z += cx * 0.31 * leg.tangentSide),
-        leg.actuatorTip.copy(leg.a).lerp(leg.b, 0.7),
-        (leg.actuatorTip.x -= cz * 0.28 * leg.tangentSide),
-        (leg.actuatorTip.z += cx * 0.28 * leg.tangentSide),
-        leg.braceA.subVectors(leg.actuatorTip, leg.actuatorAnchor).normalize(),
-        leg.actuatorEnd.copy(leg.actuatorAnchor).addScaledVector(leg.braceA, LEG.actuatorLength),
-        leg.actuatorStart.copy(leg.actuatorTip).addScaledVector(leg.braceA, -LEG.actuatorLength),
-        fitLink(leg.actuatorBarrel, leg.actuatorAnchor, leg.actuatorEnd),
-        fitLink(leg.actuatorRod, leg.actuatorStart, leg.actuatorTip),
-        (leg.actuatorExtension = leg.actuatorAnchor.distanceTo(leg.actuatorTip)));
+      renderLandingLeg(leg, fold);
     }
     setLegFold(progress = 0) {
       let p = Math.max(0, Math.min(1, progress));
@@ -66477,6 +66530,11 @@ body.ti-voyage #ti-transfer-trigger {
         }
         this.legCompression = q;
       }
+    }
+    setLandingContact(altitude = 0, settleMilliseconds = null, stroke = 0.11) {
+      if (this.legFold > 0.001) return 0;
+      let drop = poseLandingContact(this.legs, altitude, settleMilliseconds, stroke);
+      return ((this.legCompression = drop / stroke), drop);
     }
     setHoldDown(progress = 0, localZ = -0.58) {
       this.holdProgress = Math.max(0, Math.min(1, progress));
@@ -67328,14 +67386,12 @@ body.ti-voyage #ti-transfer-trigger {
             : {}),
           (this.id = options.id ?? "PLANET 01"),
           (this.label = options.label ?? "LOCAL FRAME"),
-          (this.archives = (options.archives ?? [])
-            .slice(-2)
-            .map((a) => ({
-              ...a,
-              cells: (a.cells ?? []).map((p) => ({ ...p })),
-              trail: (a.trail ?? []).map((p) => ({ ...p })),
-              bounds: a.bounds ? { ...a.bounds } : null,
-            }))),
+          (this.archives = (options.archives ?? []).slice(-2).map((a) => ({
+            ...a,
+            cells: (a.cells ?? []).map((p) => ({ ...p })),
+            trail: (a.trail ?? []).map((p) => ({ ...p })),
+            bounds: a.bounds ? { ...a.bounds } : null,
+          }))),
           (this.start = { x: start[0], z: start[1] }),
           (this.trail = [{ ...this.start }]),
           (this.cells = new Map()),
@@ -68397,7 +68453,11 @@ body.ti-voyage #ti-transfer-trigger {
       }
       _renderTitle() {
         if (!this.root) return;
-        setRitualProperty(this.root.style, "--ti-title-heading", smooth6(this.title.heading).toFixed(3));
+        setRitualProperty(
+          this.root.style,
+          "--ti-title-heading",
+          smooth6(this.title.heading).toFixed(3),
+        );
       }
       _renderReceiver() {
         for (const [selector, key] of this.receiverTargets) {
@@ -68942,11 +69002,29 @@ body.ti-voyage #ti-transfer-trigger {
       migration: {
         file: "migration.html",
         start: 0,
-        duration: MIGRATION_DURATION,
+        duration: 125,
         next: "arrival",
       },
-      arrival: { file: "arrival.html", start: 68, duration: 180, openEnded: !0, next: "ending" },
-      ending: { file: "ending.html", start: 0, duration: 18, openEnded: !0, next: null },
+      arrival: {
+        file: "arrival.html",
+        start: 68,
+        duration: 142,
+        next: "terraform",
+      },
+      terraform: {
+        file: "terraform.html",
+        start: 210,
+        duration: 180,
+        openEnded: true,
+        next: "ending",
+      },
+      ending: {
+        file: "end.html",
+        start: 0,
+        duration: 78,
+        openEnded: true,
+        next: null,
+      },
     });
   function clearPostMission() {
     try {
@@ -70206,12 +70284,10 @@ body.ti-voyage #ti-transfer-trigger {
       (window.TI_AUDIO = () => ambient.snapshot()),
       TEST &&
         (window.TI_DUST = () => ({
-          wheels: rover
-            .contacts()
-            .map((p) => ({
-              ...p,
-              supported: dust?.supportAt(p.x, p.z, heightCPU(p.x, p.z)) != null,
-            })),
+          wheels: rover.contacts().map((p) => ({
+            ...p,
+            supported: dust?.supportAt(p.x, p.z, heightCPU(p.x, p.z)) != null,
+          })),
           particles: dust
             ? Array.from(dust.life, (life, i) => {
                 if (life <= 0) return null;
