@@ -870,1033 +870,1494 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
         );
       }
       function Bf(
-        i,
+        T,
         {
-          scene: t,
-          habitat: e,
-          surveyor: n,
-          heightAt: s,
-          tier: r,
-          saved: o = null,
-          inherited: a = !1,
-          elapsed: c = 0,
+          scene,
+          habitat,
+          surveyor,
+          heightAt,
+          tier,
+          saved = null,
+          inherited = false,
+          elapsed = 0,
         },
       ) {
-        let l = (D) => Math.max(0, Math.min(1, D)),
-          h = (D) => {
-            let G = l(D);
-            return G * G * G * (G * (G * 6 - 15) + 10);
-          },
-          u = (D, G, st) => h((D - G) / (st - G)),
-          p = ir(o) ? o.existing : a,
-          d = ir(o) ? o.clockOffset + (a && c === 0 ? o.elapsed - o.clockOffset : 0) : 0,
-          f = ir(o) ? o.elapsed : 0,
-          x = !1,
-          g = null,
-          m = p,
-          M = "",
-          w = "survey",
-          b = e.installationParts,
-          v = new i.Group();
-        ((v.name = "uncrewed-installation-mission"), t.add(v));
-        let S = new i.MeshStandardMaterial({ color: 8095114, metalness: 0.48, roughness: 0.67 }),
-          T = new i.MeshStandardMaterial({ color: 2107952, metalness: 0.3, roughness: 0.82 }),
-          _ = new i.MeshStandardMaterial({ color: 1978429, metalness: 0.12, roughness: 0.54 }),
-          y = new i.MeshStandardMaterial({ color: 11050360, metalness: 0.25, roughness: 0.8 }),
-          I = { high: 16, mid: 10, low: 6 }[r],
-          N = new i.Matrix4();
-        function O(D, G, st, gt, Ot, St, Mt, Xt = S) {
-          let pe = new i.Mesh(new i.BoxGeometry(G, st, gt), Xt);
-          return (
-            pe.position.set(Ot, St, Mt),
-            (pe.castShadow = r !== "low" || G * gt >= 80),
-            (pe.receiveShadow = !0),
-            D.add(pe),
-            pe
+        const LEGACY_INSTALL_READY = 284;
+        const CARGO_TOUCHDOWN = 190;
+        const CARRIER_RELEASE = 194;
+        const CARRY_HEIGHT = 3.2;
+        const COMMISSIONING_START = 64;
+        const clamp = (x) => Math.max(0, Math.min(1, x));
+        const ease = (x) => {
+          const p = clamp(x);
+          return p * p * p * (p * (p * 6 - 15) + 10);
+        };
+        const phase = (t, a, b) => ease((t - a) / (b - a));
+        const existing = ir(saved) ? saved.existing : inherited;
+        let clockOffset = ir(saved)
+          ? saved.clockOffset +
+            (inherited && elapsed === 0 ? saved.elapsed - saved.clockOffset : 0)
+          : 0;
+        let clock = ir(saved) ? saved.elapsed : 0,
+          ready = false,
+          crewAt = null,
+          crewLanded = existing,
+          caption = "",
+          stage = "survey";
+        const parts = habitat.installationParts;
+        const root = new T.Group();
+        root.name = "uncrewed-installation-mission";
+        scene.add(root);
+        const metal = new T.MeshStandardMaterial({
+          color: 0x7b858a,
+          metalness: 0.48,
+          roughness: 0.67,
+        });
+        const dark = new T.MeshStandardMaterial({
+          color: 0x202a30,
+          metalness: 0.3,
+          roughness: 0.82,
+        });
+        const panels = new T.MeshStandardMaterial({
+          color: 0x1e303d,
+          metalness: 0.12,
+          roughness: 0.54,
+        });
+        const mark = new T.MeshStandardMaterial({
+          color: 0xa89d78,
+          metalness: 0.25,
+          roughness: 0.8,
+        });
+        const segments = { high: 16, mid: 10, low: 6 }[tier];
+        const matrix = new T.Matrix4();
+        function box(parent, w, h, d, x, y, z, mat = metal) {
+          const m = new T.Mesh(new T.BoxGeometry(w, h, d), mat);
+          m.position.set(x, y, z);
+          m.castShadow = tier !== "low" || w * d >= 80;
+          m.receiveShadow = true;
+          parent.add(m);
+          return m;
+        }
+        function repeated(parent, geometry, positions, material = metal) {
+          const m = new T.InstancedMesh(geometry, material, positions.length);
+          for (let i = 0; i < positions.length; i++) {
+            matrix.makeTranslation(...positions[i]);
+            m.setMatrixAt(i, matrix);
+          }
+          m.castShadow = tier !== "low";
+          m.receiveShadow = true;
+          parent.add(m);
+          return m;
+        }
+        function label(parent, text, x, y, z, w = 1.8) {
+          const canvas = document.createElement("canvas");
+          canvas.width = 512;
+          canvas.height = 96;
+          const ctx = canvas.getContext("2d");
+          ctx.fillStyle = "#c4c7c1";
+          ctx.font = "32px monospace";
+          ctx.fillText(text, 12, 58);
+          const mat = new T.MeshBasicMaterial({
+            map: new T.CanvasTexture(canvas),
+            transparent: true,
+            depthWrite: false,
+          });
+          const m = new T.Mesh(new T.PlaneGeometry(w, (w * 96) / 512), mat);
+          m.position.set(x, y, z);
+          parent.add(m);
+        }
+        // Shared geometry/materials with A. Only the deployment frame and tools differ.
+        function probe(name, x, z) {
+          const g = surveyor.group.clone(true);
+          g.position.set(x, heightAt(x, z), z);
+          g.rotation.set(0, 0, 0);
+          g.name = name;
+          root.add(g);
+          const ramp = g.children.find(
+            (o) =>
+              o.isGroup &&
+              Math.abs(o.position.y - surveyor.site.dock.floorY) < 0.01 &&
+              Math.abs(o.position.z - surveyor.site.dock.hatchZ) < 0.01,
           );
+          label(g, name, 0, 4.3, -3.62, 2.2);
+          return { group: g, x, z, ground: heightAt(x, z), ramp };
         }
-        function k(D, G, st, gt = S) {
-          let Ot = new i.InstancedMesh(G, gt, st.length);
-          for (let St = 0; St < st.length; St++)
-            (N.makeTranslation(...st[St]), Ot.setMatrixAt(St, N));
-          return ((Ot.castShadow = r !== "low"), (Ot.receiveShadow = !0), D.add(Ot), Ot);
-        }
-        function z(D, G, st, gt, Ot, St = 1.8) {
-          let Mt = document.createElement("canvas");
-          ((Mt.width = 512), (Mt.height = 96));
-          let Xt = Mt.getContext("2d");
-          ((Xt.fillStyle = "#c4c7c1"), (Xt.font = "32px monospace"), Xt.fillText(G, 12, 58));
-          let pe = new i.MeshBasicMaterial({
-              map: new i.CanvasTexture(Mt),
-              transparent: !0,
-              depthWrite: !1,
-            }),
-            kt = new i.Mesh(new i.PlaneGeometry(St, (St * 96) / 512), pe);
-          (kt.position.set(st, gt, Ot), D.add(kt));
-        }
-        function P(D, G, st) {
-          let gt = n.group.clone(!0);
-          (gt.position.set(G, s(G, st), st), gt.rotation.set(0, 0, 0), (gt.name = D), v.add(gt));
-          let Ot = gt.children.find(
-            (St) =>
-              St.isGroup &&
-              Math.abs(St.position.y - n.site.dock.floorY) < 0.01 &&
-              Math.abs(St.position.z - n.site.dock.hatchZ) < 0.01,
+        const b = probe("TR-Q1 B / POWER", -1422, 3160),
+          c = probe("TR-Q1 C / ASSEMBLY", -1360, 3170);
+        const crew = probe("CREW TRANSFER / H-01", -1360, 3442);
+        const cargo = new T.Group();
+        cargo.name = "X04-X05-cargo-descent-platform";
+        root.add(cargo);
+        const cx = -1448,
+          cz = 3420,
+          cy = Math.max(
+            ...[-11, 0, 11].flatMap((x) =>
+              [-19, 0, 19].map((z) => heightAt(cx + x, cz + z)),
+            ),
           );
-          return (
-            z(gt, D, 0, 4.3, -3.62, 2.2),
-            { group: gt, x: G, z: st, ground: s(G, st), ramp: Ot }
+        box(cargo, 27, 2.6, 42, 0, 5.1, 0, dark);
+        box(cargo, 26.5, 0.35, 41, 0, 6.6, 0);
+        repeated(
+          cargo,
+          new T.BoxGeometry(0.7, 2.4, 38),
+          [-12.5, 12.5].map((x) => [x, 7.9, 0]),
+        );
+        repeated(
+          cargo,
+          new T.BoxGeometry(22, 0.8, 0.8),
+          [-20, 20].map((z) => [0, 8, z]),
+        );
+        const feet = [];
+        for (const x of [-23.5, 23.5])
+          for (const z of [-18, 18])
+            feet.push([x, heightAt(cx + x, cz + z) - cy + 0.2, z]);
+        repeated(cargo, new T.CylinderGeometry(2, 2, 0.45, segments), feet, dark);
+        for (const p of feet) {
+          const leg = new T.Mesh(
+            new T.CylinderGeometry(0.4, 0.55, 1, segments),
+            metal,
           );
+          leg.position.set(p[0], (6.5 + p[1]) / 2, p[2]);
+          leg.scale.y = 6.5 - p[1];
+          cargo.add(leg);
         }
-        let E = P("TR-Q1 B / POWER", -1422, 3160),
-          C = P("TR-Q1 C / ASSEMBLY", -1360, 3170),
-          L = P("CREW TRANSFER / H-01", -1360, 3442),
-          F = new i.Group();
-        ((F.name = "X04-X05-cargo-descent-platform"), v.add(F));
-        let V = -1448,
-          B = 3420,
-          it = Math.max(...[-11, 0, 11].flatMap((D) => [-19, 0, 19].map((G) => s(V + D, B + G))));
-        (O(F, 27, 2.6, 42, 0, 5.1, 0, T),
-          O(F, 26.5, 0.35, 41, 0, 6.6, 0),
-          k(
-            F,
-            new i.BoxGeometry(0.7, 2.4, 38),
-            [-12.5, 12.5].map((D) => [D, 7.9, 0]),
-          ),
-          k(
-            F,
-            new i.BoxGeometry(22, 0.8, 0.8),
-            [-20, 20].map((D) => [0, 8, D]),
-          ));
-        let xt = [];
-        for (let D of [-23.5, 23.5])
-          for (let G of [-18, 18]) xt.push([D, s(V + D, B + G) - it + 0.2, G]);
-        k(F, new i.CylinderGeometry(2, 2, 0.45, I), xt, T);
-        for (let D of xt) {
-          let G = new i.Mesh(new i.CylinderGeometry(0.4, 0.55, 1, I), S);
-          (G.position.set(D[0], (6.5 + D[1]) / 2, D[2]), (G.scale.y = 6.5 - D[1]), F.add(G));
-        }
-        (k(
-          F,
-          new i.BoxGeometry(48, 0.5, 0.7),
-          [-18, 18].map((D) => [0, 6.4, D]),
-        ),
-          k(
-            F,
-            new i.CylinderGeometry(0.8, 1.4, 4, I, 1, !0),
-            [
-              [-18, 2.8, -23],
-              [18, 2.8, -23],
-              [-18, 2.8, 23],
-              [18, 2.8, 23],
-            ],
-            T,
-          ));
-        let Pt = [-18, 18].flatMap((D) => [-23, 23].map((G) => [D, G]));
-        (k(
-          F,
-          new i.CylinderGeometry(1.5, 1.2, 3, I),
-          Pt.map(([D, G]) => [D, 6.2, G]),
-          S,
-        ),
-          k(
-            F,
-            new i.CylinderGeometry(0.65, 0.9, 1.4, I),
-            Pt.map(([D, G]) => [D, 8.3, G]),
-            T,
-          ));
-        let _t = 0.78,
-          Y = `
-    varying vec2 vUv;
-    varying vec3 vViewNormal;
-    varying vec3 vViewDirection;
-    uniform float uTime;
-    uniform float uPhase;
-    #include <common>
-    #include <fog_pars_vertex>
-    void main() {
-      vUv = uv;
-      float along = 1.0 - uv.y;
-      vec3 p = position;
-      p.xz *= 1.0 + 0.025 * along * sin(uTime * 9.0 - along * 11.0 + uPhase);
-      vec4 mvPosition = modelViewMatrix * vec4(p, 1.0);
-      vViewNormal = normalize(normalMatrix * normal);
-      vViewDirection = -mvPosition.xyz;
-      gl_Position = projectionMatrix * mvPosition;
-      #include <fog_vertex>
-    }
-  `,
-          at = `
-    varying vec2 vUv;
-    varying vec3 vViewNormal;
-    varying vec3 vViewDirection;
-    uniform vec3 uColor;
-    uniform float uTime;
-    uniform float uPhase;
-    uniform float uStrength;
-    #include <common>
-    #include <fog_pars_fragment>
-    void main() {
-      float along = 1.0 - vUv.y;
-      float endFade = 1.0 - smoothstep(0.32, 1.0, along);
-      float facing = abs(dot(normalize(vViewNormal), normalize(vViewDirection)));
-      float sideFade = smoothstep(0.03, 0.65, facing);
-      float flow = 0.96 + 0.04 * sin(along * 19.0 - uTime * 15.0 + uPhase);
-      float alpha = 0.44 * uStrength * endFade * sideFade * flow;
-      gl_FragColor = vec4(uColor * (1.0 - 0.12 * along), alpha);
-      #include <tonemapping_fragment>
-      #include <colorspace_fragment>
-      #include <fog_fragment>
-    }
-  `;
-        function $(D) {
-          return new i.ShaderMaterial({
+        repeated(
+          cargo,
+          new T.BoxGeometry(48, 0.5, 0.7),
+          [-18, 18].map((z) => [0, 6.4, z]),
+        );
+        repeated(
+          cargo,
+          new T.CylinderGeometry(0.8, 1.4, 4, segments, 1, true),
+          [
+            [-18, 2.8, -23],
+            [18, 2.8, -23],
+            [-18, 2.8, 23],
+            [18, 2.8, 23],
+          ],
+          dark,
+        );
+        // Four powered descent pods are integrated into the load-bearing frame.
+        // The exhaust follows the authored descent interval; it is not a fluid solver.
+        const descentPods = [-18, 18].flatMap((x) => [-23, 23].map((z) => [x, z]));
+        repeated(
+          cargo,
+          new T.CylinderGeometry(1.5, 1.2, 3, segments),
+          descentPods.map(([x, z]) => [x, 6.2, z]),
+          metal,
+        );
+        repeated(
+          cargo,
+          new T.CylinderGeometry(0.65, 0.9, 1.4, segments),
+          descentPods.map(([x, z]) => [x, 8.3, z]),
+          dark,
+        );
+        // Scene-scale approximation: a narrow exhaust sheet carries turbulent
+        // density downward. Suspended dust is a separate response to ground contact.
+        const nozzleExitY = 0.78;
+        const fogUniforms = () => ({
+          fogColor: { value: new T.Color(0xffffff) },
+          fogDensity: { value: 0.00025 },
+          fogNear: { value: 1 },
+          fogFar: { value: 2000 },
+        });
+        const noiseGLSL = `
+          float hash(vec2 p) {
+            vec3 q = fract(vec3(p.xyx) * 0.1031);
+            q += dot(q, q.yzx + 33.33);
+            return fract((q.x + q.y) * q.z);
+          }
+          float noise(vec2 p) {
+            vec2 i = floor(p), f = fract(p);
+            f = f * f * (3.0 - 2.0 * f);
+            return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
+              mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+          }
+        `;
+        const plumeVertex = `
+          varying vec2 vUv;
+          uniform float uLength;
+          #include <common>
+          #include <fog_pars_vertex>
+          void main() {
+            vUv = uv;
+            float along = 1.0 - uv.y;
+            // Keep the sheet vertical and its upper edge fixed to the nozzle.
+            vec2 horizontal = vec2(modelViewMatrix[0].x, modelViewMatrix[2].x);
+            horizontal /= max(0.001, length(horizontal));
+            vec3 p = vec3(horizontal.x * position.x, -along * uLength, horizontal.y * position.x);
+            vec4 mvPosition = modelViewMatrix * vec4(p, 1.0);
+            gl_Position = projectionMatrix * mvPosition;
+            #include <fog_vertex>
+          }
+        `;
+        const plumeFragment = `
+          varying vec2 vUv;
+          uniform vec3 uColor;
+          uniform vec3 uCore;
+          uniform float uClock;
+          uniform float uLength;
+          uniform float uSeed;
+          uniform float uStrength;
+          #include <common>
+          #include <fog_pars_fragment>
+          ${noiseGLSL}
+          void main() {
+            float along = 1.0 - vUv.y;
+            float depth = along * uLength;
+            float scroll = depth * 0.52 - uClock;
+            float eddy = noise(vec2(scroll * 0.43, uSeed + 1.7));
+            float spread = smoothstep(0.0, 7.5, depth);
+            float centre = (eddy - 0.5) * 0.34 * spread;
+            float x = (vUv.x * 2.0 - 1.0) - centre;
+            float width = mix(0.23, 0.81, spread) * mix(1.0, 0.78 + 0.42 * eddy, spread);
+            float edge = abs(x) / width;
+            float profile = 1.0 - smoothstep(0.12, 1.0, edge);
+            float cloud = noise(vec2(x * 5.0 + uSeed * 2.1, scroll));
+            #ifdef FINE_FLOW
+              cloud = mix(cloud, noise(vec2(x * 11.0 - uSeed, scroll * 1.84)), 0.25);
+            #endif
+            float core = (1.0 - smoothstep(0.0, 0.48, edge)) * (1.0 - smoothstep(0.0, 5.0, depth));
+            float mixFlow = mix(0.95, 0.35 + 0.8 * cloud, smoothstep(0.45, 6.0, depth));
+            float fade = 1.0 - smoothstep(0.18, 1.0, along);
+            float alpha = uStrength * fade * (0.64 * profile * mixFlow + 0.22 * core);
+            gl_FragColor = vec4(mix(uColor, uCore, core), alpha);
+            #include <tonemapping_fragment>
+            #include <colorspace_fragment>
+            #include <fog_fragment>
+          }
+        `;
+        const exhaustShape = new T.PlaneGeometry(8, 1);
+        const exhaust = descentPods.map(([x, z], i) => {
+          const material = new T.ShaderMaterial({
             name: "cargo-descent-exhaust",
+            defines: tier === "low" ? {} : { FINE_FLOW: 1 },
             uniforms: {
-              fogColor: { value: new i.Color(16777215) },
-              fogDensity: { value: 25e-5 },
-              fogNear: { value: 1 },
-              fogFar: { value: 2e3 },
-              uColor: { value: new i.Color(9336935) },
-              uTime: { value: 0 },
-              uPhase: { value: D },
+              ...fogUniforms(),
+              uColor: { value: new T.Color(0x817873) },
+              uCore: { value: new T.Color(0xc3b9aa) },
+              uClock: { value: 0 },
+              uLength: { value: 0 },
+              uSeed: { value: i * 2.83 },
               uStrength: { value: 0 },
             },
-            vertexShader: Y,
-            fragmentShader: at,
-            transparent: !0,
-            depthWrite: !1,
-            side: i.DoubleSide,
-            forceSinglePass: !0,
-            fog: !0,
+            vertexShader: plumeVertex,
+            fragmentShader: plumeFragment,
+            transparent: true,
+            depthWrite: false,
+            side: T.DoubleSide,
+            forceSinglePass: true,
+            fog: true,
+          });
+          const plume = new T.Mesh(exhaustShape, material);
+          plume.name = `cargo-descent-plume-${i}`;
+          plume.position.set(x, nozzleExitY, z);
+          plume.frustumCulled = false;
+          plume.visible = false;
+          cargo.add(plume);
+          return plume;
+        });
+        const dustPerPod = { high: 15, mid: 10, low: 6 }[tier];
+        const dustMaterial = new T.ShaderMaterial({
+          name: "cargo-descent-surface-wash",
+          uniforms: { ...fogUniforms(), uColor: { value: new T.Color(0x71665c) } },
+          vertexShader: `
+            varying vec2 vUv;
+            varying float vOpacity;
+            varying float vSeed;
+            #include <common>
+            #include <fog_pars_vertex>
+            void main() {
+              vUv = uv;
+              vOpacity = instanceColor.r;
+              vSeed = instanceColor.g;
+              vec4 mvPosition = modelViewMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+              mvPosition.xy += position.xy * vec2(instanceMatrix[0].x, instanceMatrix[1].y);
+              gl_Position = projectionMatrix * mvPosition;
+              #include <fog_vertex>
+            }
+          `,
+          fragmentShader: `
+            varying vec2 vUv;
+            varying float vOpacity;
+            varying float vSeed;
+            uniform vec3 uColor;
+            #include <common>
+            #include <fog_pars_fragment>
+            ${noiseGLSL}
+            void main() {
+              vec2 p = vUv * 2.0 - 1.0;
+              float shape = length(p) + (noise(p * 2.4 + vSeed * 7.0) - 0.5) * 0.32;
+              float coverage = 1.0 - smoothstep(0.13, 0.96, shape);
+              gl_FragColor = vec4(uColor, coverage * coverage * vOpacity);
+              #include <tonemapping_fragment>
+              #include <colorspace_fragment>
+              #include <fog_fragment>
+            }
+          `,
+          transparent: true,
+          depthWrite: false,
+          forceSinglePass: true,
+          fog: true,
+        });
+        const dust = new T.InstancedMesh(
+          new T.PlaneGeometry(2, 2),
+          dustMaterial,
+          descentPods.length * dustPerPod,
+        );
+        dust.name = "cargo-descent-ground-dust";
+        dust.frustumCulled = false;
+        dust.visible = false;
+        root.add(dust);
+        const dustColor = new T.Color();
+        const dustParticles = descentPods.flatMap(([x, z], pod) =>
+          Array.from({ length: dustPerPod }, (_, i) => {
+            const seed = ((i * 37 + pod * 53 + 17) % 137) / 137;
+            const direction = Math.atan2(z, x) + (seed - 0.5) * 3.4;
+            return {
+              x: Math.cos(direction),
+              z: Math.sin(direction),
+              seed,
+              offset: i / dustPerPod,
+              speed: 0.75 + 0.5 * seed,
+            };
+          }),
+        );
+        const dustOpacity = { high: 0.54, mid: 0.64, low: 0.8 }[tier];
+        function updateDust(pod, state, time) {
+          const start = pod * dustPerPod;
+          for (let i = start; i < start + dustPerPod; i++) {
+            const p = dustParticles[i];
+            const progress = time * 0.75 + p.offset;
+            const age = progress - Math.floor(progress);
+            const distance = age * state.washRadius * p.speed;
+            const x = state.worldX + p.x * distance;
+            const z = state.worldZ + p.z * distance;
+            const width = 1.25 + 4.9 * age;
+            const height = 0.65 + 1.45 * age;
+            const y = heightAt(x, z) + height * (0.65 + 0.3 * age);
+            const opacity =
+              dustOpacity *
+              state.washStrength *
+              phase(age, 0, 0.14) *
+              (1 - phase(age, 0.35, 1));
+            matrix.makeScale(width, height, 1);
+            matrix.setPosition(x, y, z);
+            dust.setMatrixAt(i, matrix);
+            dustColor.setRGB(opacity, p.seed, 0);
+            dust.setColorAt(i, dustColor);
+          }
+        }
+        const propulsion = {
+          clock: 0,
+          verticalAcceleration: 0,
+          throttle: 0,
+          pods: descentPods.map(([x, z], index) => ({
+            index,
+            x,
+            z,
+            worldX: 0,
+            worldZ: 0,
+            groundHeight: 0,
+            clearance: 0,
+            strength: 0,
+            length: 0,
+            washStrength: 0,
+            washRadius: 0,
+          })),
+        };
+        let propulsionGroundFall = NaN;
+        function updatePropulsion(t, fall) {
+          // d²[240 * (1 - smootherstep(u))]/dt², in authored scene units.
+          // The dimensionless support budget is an artistic throttle approximation;
+          // it does not infer vehicle mass, fuel flow, or an atmospheric solution.
+          const descentTime = CARGO_TOUCHDOWN - 162;
+          const u = clamp((t - 162) / descentTime);
+          const acceleration =
+            (-240 / (descentTime * descentTime)) * 60 * u * (1 - u) * (1 - 2 * u);
+          const support = clamp(0.64 + 0.17 * acceleration);
+          const ignition = phase(t, 162, 163.4);
+          const shutdown = 1 - phase(t, CARGO_TOUCHDOWN, CARGO_TOUCHDOWN + 1.4);
+          const aftermath = 1 - phase(t, CARGO_TOUCHDOWN, CARGO_TOUCHDOWN + 3);
+          const throttle = support * ignition * shutdown;
+          propulsion.clock = t;
+          propulsion.verticalAcceleration = acceleration;
+          propulsion.throttle = throttle;
+          if (fall !== propulsionGroundFall) {
+            for (let i = 0; i < propulsion.pods.length; i++) {
+              const state = propulsion.pods[i];
+              state.worldX = cargo.position.x + state.x;
+              state.worldZ = cargo.position.z + state.z;
+              state.groundHeight = heightAt(state.worldX, state.worldZ);
+              state.clearance = Math.max(
+                0,
+                cargo.position.y + nozzleExitY - state.groundHeight,
+              );
+            }
+            propulsionGroundFall = fall;
+          }
+          dust.visible = false;
+          for (let i = 0; i < exhaust.length; i++) {
+            const state = propulsion.pods[i];
+            const plume = exhaust[i];
+            const nominalLength = 4 + 17 * support;
+            const length = Math.min(
+              nominalLength,
+              Math.max(0, state.clearance - 0.18),
+            );
+            state.strength = throttle;
+            state.length = length * phase(throttle, 0, 0.12);
+            plume.visible = throttle > 0.001 && state.length > 0.025;
+            if (plume.visible) {
+              const uniforms = plume.material.uniforms;
+              uniforms.uClock.value = (t - 162) * (4.1 + 0.16 * i);
+              uniforms.uLength.value = state.length;
+              uniforms.uStrength.value = throttle;
+            }
+      
+            // Dust only lifts where the jet approaches the ground. It outlasts
+            // the nozzle briefly and keeps dispersing after the platform stops.
+            const contact =
+              1 - phase(state.clearance, 0.54 * nominalLength, nominalLength + 2);
+            state.washStrength = support * ignition * aftermath * contact;
+            state.washRadius =
+              3 + 12 * contact + 3 * phase(t, CARGO_TOUCHDOWN, CARGO_TOUCHDOWN + 3);
+            if (state.washStrength > 0.001) dust.visible = true;
+          }
+          if (dust.visible) {
+            for (let i = 0; i < propulsion.pods.length; i++)
+              updateDust(i, propulsion.pods[i], t - 162);
+            dust.instanceMatrix.needsUpdate = true;
+            dust.instanceColor.needsUpdate = true;
+          }
+        }
+        label(cargo, "X04 / X05 · SURFACE CARGO", 0, 7, -21.08, 15);
+        // End-mounted portals leave the entire lateral unloading corridor open.
+        // No upright lies in the swept volume of a 24 m habitat module.
+        for (const x of [-18, 18])
+          for (const z of [-23, 23]) {
+            const arm = box(cargo, 1.2, 1.2, 1, 0, 5.8, 0);
+            const a = new T.Vector3(Math.sign(x) * 10, 5.8, Math.sign(z) * 18),
+              b = new T.Vector3(x, 5.8, z);
+            arm.position.copy(a).add(b).multiplyScalar(0.5);
+            arm.scale.z = a.distanceTo(b);
+            arm.quaternion.setFromUnitVectors(
+              new T.Vector3(0, 0, 1),
+              b.sub(a).normalize(),
+            );
+          }
+        repeated(
+          cargo,
+          new T.BoxGeometry(0.8, 23, 0.8),
+          [-10, 10].flatMap((x) => [-26, 26].map((z) => [x, 18.5, z])),
+        );
+        repeated(
+          cargo,
+          new T.BoxGeometry(84, 1.5, 1.4),
+          [-26, 26].map((z) => [0, 30, z]),
+        );
+        const gantry = new T.Group();
+        cargo.add(gantry);
+        box(gantry, 1.2, 1.2, 53, 0, 31, 0);
+        const hoist = box(gantry, 0.16, 1, 0.16, 0, 25, 0, dark);
+        const hook = box(gantry, 0.7, 0.36, 0.7, 0, 25, 0, mark);
+        function setHoist(bottom, z) {
+          hoist.position.set(0, (30.2 + bottom) / 2, z);
+          hoist.scale.y = Math.max(0.05, 30.2 - bottom);
+          hook.position.set(0, bottom - 0.18, z);
+        }
+        const stowLines = [];
+        for (const x of [-5.5, 5.5])
+          for (const z of [-19.8, 5.8])
+            stowLines.push(box(cargo, 0.07, 1, 0.07, x, 3, z, dark));
+        const locks = [];
+        for (const x of [-7, 7])
+          for (const z of [-12, 12])
+            locks.push(box(cargo, 0.4, 1.2, 1, x, 7.5, z, mark));
+        const carrier = new T.Group();
+        carrier.name = "heavy-module-transporter";
+        root.add(carrier);
+        for (const x of [-5.5, 5.5]) box(carrier, 0.7, 1, 28, x, 1.8, 0, dark);
+        const portal = new T.Group();
+        carrier.add(portal);
+        repeated(
+          portal,
+          new T.BoxGeometry(0.45, 14, 0.45),
+          [-5.5, 5.5].flatMap((x) => [-12.8, 12.8].map((z) => [x, 9, z])),
+        );
+        repeated(
+          portal,
+          new T.BoxGeometry(11.5, 0.5, 0.6),
+          [-12.8, 12.8].map((z) => [0, 16, z]),
+        );
+        repeated(
+          portal,
+          new T.BoxGeometry(0.45, 0.45, 26),
+          [-5.5, 5.5].map((x) => [x, 16, 0]),
+        );
+        const slings = [];
+        for (const x of [-3, 3])
+          for (const z of [-8, 8])
+            slings.push(box(carrier, 0.07, 1, 0.07, x, 10, z, dark));
+        const wheelGeo = new T.CylinderGeometry(1.2, 1.2, 0.8, segments);
+        wheelGeo.rotateZ(Math.PI / 2);
+        const wheels = [];
+        for (const x of [-5.8, 5.8])
+          for (const z of [-10, -3.3, 3.3, 10]) {
+            const w = new T.Mesh(wheelGeo, dark);
+            w.position.set(x, 1.2, z);
+            carrier.add(w);
+            wheels.push(w);
+          }
+        const wheelLinks = wheels.map((w) =>
+          box(carrier, 0.18, 1, 0.18, w.position.x, 1.5, w.position.z, dark),
+        );
+        // Individual electric drive housings mounted alongside the eight wheel hubs.
+        const driveMotors = repeated(
+          carrier,
+          new T.CylinderGeometry(0.68, 0.68, 1.05, segments).rotateZ(Math.PI / 2),
+          wheels.map((w) => [
+            w.position.x + Math.sign(w.position.x) * 0.82,
+            w.position.y,
+            w.position.z,
+          ]),
+          metal,
+        );
+        driveMotors.name = "independent-wheel-drive-motors";
+        const motorPivot = new T.Group();
+        // B's folded package fits the existing rover bay. Deployed arrays stay attached.
+        const power = new T.Group();
+        power.name = "deployable-power-and-relay";
+        root.add(power);
+        box(power, 1.2, 0.7, 2, 0, 0.5, 0, dark);
+        box(power, 1, 0.15, 1.8, 0, 0.94, 0);
+        const wings = [];
+        for (const side of [-1, 1]) {
+          const hinge = new T.Group();
+          hinge.position.set(side * 0.58, 0.97, 0);
+          power.add(hinge);
+          box(hinge, 2.2, 0.045, 1.8, side * 1.1, 0, 0, panels);
+          wings.push({ hinge, side });
+        }
+        box(power, 0.025, 2.5, 0.025, 0, 1.65, 0.65);
+        box(power, 0.5, 0.04, 0.5, 0, 2.9, 0.65);
+        repeated(
+          power,
+          new T.CylinderGeometry(0.24, 0.24, 0.16, segments).rotateZ(Math.PI / 2),
+          [-0.65, 0.65].flatMap((x) => [-0.7, 0.7].map((z) => [x, 0.24, z])),
+          dark,
+        );
+        // C carries a connector cart, not a habitat-sized payload.
+        const tool = new T.Group();
+        tool.name = "connector-and-winch-cart";
+        root.add(tool);
+        box(tool, 1.25, 0.5, 2.2, 0, 0.65, 0, dark);
+        box(tool, 0.4, 0.65, 0.5, 0, 1.2, -0.5);
+        box(tool, 0.12, 0.15, 1.1, 0, 1.65, -0.8);
+        repeated(
+          tool,
+          new T.CylinderGeometry(0.28, 0.28, 0.2, segments).rotateZ(Math.PI / 2),
+          [
+            [-0.65, 0.3, -0.7],
+            [0.65, 0.3, -0.7],
+            [-0.65, 0.3, 0.7],
+            [0.65, 0.3, 0.7],
+          ],
+          dark,
+        );
+        const cableSegments = [];
+        const cablePoints = [
+          [-1422, 3154],
+          [-1466, 3154],
+          [-1466, 3294],
+          [-1430, 3294],
+        ];
+        const cableLegs = [];
+        let cableLength = 0;
+        for (let i = 1; i < cablePoints.length; i++) {
+          const from = cablePoints[i - 1],
+            to = cablePoints[i],
+            count = Math.ceil(Math.hypot(to[0] - from[0], to[1] - from[1]) / 6);
+          const offset = cableLength;
+          for (let k = 0; k < count; k++) {
+            const x = from[0] + ((to[0] - from[0]) * k) / count,
+              z = from[1] + ((to[1] - from[1]) * k) / count,
+              nx = from[0] + ((to[0] - from[0]) * (k + 1)) / count,
+              nz = from[1] + ((to[1] - from[1]) * (k + 1)) / count;
+            const a = new T.Vector3(x, heightAt(x, z) + 0.23, z),
+              v = new T.Vector3(nx, heightAt(nx, nz) + 0.23, nz),
+              length = a.distanceTo(v);
+            const m = new T.Mesh(
+              new T.CylinderGeometry(0.11, 0.11, length, segments),
+              dark,
+            );
+            m.quaternion.setFromUnitVectors(
+              new T.Vector3(0, 1, 0),
+              v.clone().sub(a).normalize(),
+            );
+            root.add(m);
+            cableSegments.push({ mesh: m, a, b: v, length, offset: cableLength });
+            cableLength += length;
+          }
+          cableLegs.push({
+            offset,
+            length: cableLength - offset,
+            yaw: Math.atan2(from[0] - to[0], from[1] - to[1]),
           });
         }
-        let wt = new i.CylinderGeometry(0.72, 2.25, 1, I, 1, !0),
-          ot = Pt.map(([D, G], st) => {
-            let gt = new i.Mesh(wt, $(st * 2.1));
-            return (
-              (gt.name = `cargo-descent-plume-${st}`),
-              gt.position.set(D, _t, G),
-              (gt.visible = !1),
-              F.add(gt),
-              gt
-            );
-          }),
-          dt = `
-    varying vec2 vUv;
-    #include <common>
-    #include <fog_pars_vertex>
-    void main() {
-      vUv = uv;
-      vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-      gl_Position = projectionMatrix * mvPosition;
-      #include <fog_vertex>
-    }
-  `,
-          ht = `
-    varying vec2 vUv;
-    uniform vec3 uColor;
-    uniform float uStrength;
-    #include <common>
-    #include <fog_pars_fragment>
-    void main() {
-      float radius = length(vUv * 2.0 - 1.0);
-      float edge = 1.0 - smoothstep(0.22, 1.0, radius);
-      float centre = 0.65 + 0.35 * smoothstep(0.0, 0.2, radius);
-      gl_FragColor = vec4(uColor, 0.19 * uStrength * edge * edge * centre);
-      #include <tonemapping_fragment>
-      #include <colorspace_fragment>
-      #include <fog_fragment>
-    }
-  `,
-          Ut = new i.PlaneGeometry(2, 2);
-        Ut.rotateX(-Math.PI / 2);
-        let Wt = Pt.map((D, G) => {
-            let st = new i.ShaderMaterial({
-                name: "cargo-descent-surface-wash",
-                uniforms: {
-                  fogColor: { value: new i.Color(16777215) },
-                  fogDensity: { value: 25e-5 },
-                  fogNear: { value: 1 },
-                  fogFar: { value: 2e3 },
-                  uColor: { value: new i.Color(7958118) },
-                  uStrength: { value: 0 },
-                },
-                vertexShader: dt,
-                fragmentShader: ht,
-                transparent: !0,
-                depthWrite: !1,
-                side: i.DoubleSide,
-                forceSinglePass: !0,
-                fog: !0,
-              }),
-              gt = new i.Mesh(Ut, st);
-            return ((gt.name = `cargo-descent-wash-${G}`), (gt.visible = !1), v.add(gt), gt);
-          }),
-          et = {
-            clock: 0,
-            verticalAcceleration: 0,
-            throttle: 0,
-            pods: Pt.map(([D, G], st) => ({
-              index: st,
-              x: D,
-              z: G,
-              worldX: 0,
-              worldZ: 0,
-              groundHeight: 0,
-              clearance: 0,
-              strength: 0,
-              length: 0,
-              washStrength: 0,
-              washRadius: 0,
-            })),
-          },
-          mt = NaN;
-        function jt(D, G) {
-          let st = l((D - 162) / 28),
-            gt = (-240 / 784) * 60 * st * (1 - st) * (1 - 2 * st),
-            Ot = l(0.64 + 0.17 * gt),
-            St = u(D, 162, 163.4),
-            Mt = 1 - u(D, 190, 191.4),
-            Xt = 1 - u(D, 190, 193),
-            pe = Ot * St * Mt;
-          if (((et.clock = D), (et.verticalAcceleration = gt), (et.throttle = pe), G !== mt)) {
-            for (let kt = 0; kt < et.pods.length; kt++) {
-              let we = et.pods[kt];
-              ((we.worldX = F.position.x + we.x),
-                (we.worldZ = F.position.z + we.z),
-                (we.groundHeight = s(we.worldX, we.worldZ)),
-                (we.clearance = Math.max(0, F.position.y + _t - we.groundHeight)));
-            }
-            mt = G;
-          }
-          for (let kt = 0; kt < ot.length; kt++) {
-            let we = et.pods[kt],
-              R = ot[kt],
-              X = Wt[kt],
-              tt = 1 + 0.035 * Math.sin(D * 17.5 + kt * 2.1) + 0.015 * Math.sin(D * 6.7 - kt * 1.4),
-              J = l(pe * tt),
-              K = (2.4 + 5.6 * J) * u(J, 0, 0.08),
-              Rt = Math.min(K, Math.max(0, we.clearance - 0.12));
-            ((we.strength = J),
-              (we.length = Rt),
-              (R.visible = J > 0.001 && Rt > 0.025),
-              (R.scale.y = Math.max(0.001, Rt)),
-              (R.position.y = _t - Rt / 2),
-              (R.material.uniforms.uTime.value = D),
-              (R.material.uniforms.uStrength.value = J));
-            let Gt = 1 - u(we.clearance, 8, 45),
-              It = l(Ot * St * Xt * tt) * Gt,
-              qt = (4 + 7 * Ot * Gt) * (1 + 0.45 * u(D, 190, 193));
-            ((we.washStrength = It),
-              (we.washRadius = qt),
-              X.position.set(we.worldX, we.groundHeight + 0.25, we.worldZ),
-              X.scale.set(qt, 1, qt),
-              (X.material.uniforms.uStrength.value = It),
-              (X.visible = It > 0.001));
-          }
+        const cargoSlots = [
+          [-6.2, 10.9, -7],
+          [6.2, 10.9, -7],
+          [-6.2, 6.9, 10],
+          [6.2, 6.9, 10],
+        ];
+        const placements = parts.payloads.map((p, i) => ({
+          ...p,
+          index: i,
+          slot: new T.Vector3(
+            cx + cargoSlots[i][0],
+            cy + cargoSlots[i][1],
+            cz + cargoSlots[i][2],
+          ),
+          home: p.target.clone(),
+        }));
+        for (let i = 0; i < parts.foundations.length; i++) {
+          const f = parts.foundations[i],
+            p = placements[i];
+          for (const child of f.children) child.position.sub(p.home);
+          f.position.copy(p.home);
+          habitat.group.updateMatrixWorld(true);
+          p.group.attach(f);
+          f.scale.y = 0.12;
         }
-        z(F, "X04 / X05 \xB7 SURFACE CARGO", 0, 7, -21.08, 15);
-        for (let D of [-18, 18])
-          for (let G of [-23, 23]) {
-            let st = O(F, 1.2, 1.2, 1, 0, 5.8, 0),
-              gt = new i.Vector3(Math.sign(D) * 10, 5.8, Math.sign(G) * 18),
-              Ot = new i.Vector3(D, 5.8, G);
-            (st.position.copy(gt).add(Ot).multiplyScalar(0.5),
-              (st.scale.z = gt.distanceTo(Ot)),
-              st.quaternion.setFromUnitVectors(new i.Vector3(0, 0, 1), Ot.sub(gt).normalize()));
-          }
-        (k(
-          F,
-          new i.BoxGeometry(0.8, 23, 0.8),
-          [-10, 10].flatMap((D) => [-26, 26].map((G) => [D, 18.5, G])),
-        ),
-          k(
-            F,
-            new i.BoxGeometry(84, 1.5, 1.4),
-            [-26, 26].map((D) => [0, 30, D]),
-          ));
-        let zt = new i.Group();
-        (F.add(zt), O(zt, 1.2, 1.2, 53, 0, 31, 0));
-        let Dt = O(zt, 0.12, 1, 0.12, 0, 25, 0, T),
-          ee = [];
-        for (let D of [-5.5, 5.5])
-          for (let G of [-19.8, 5.8]) ee.push(O(F, 0.07, 1, 0.07, D, 3, G, T));
-        let ie = [];
-        for (let D of [-7, 7]) for (let G of [-12, 12]) ie.push(O(F, 0.4, 1.2, 1, D, 7.5, G, y));
-        let ce = new i.Group();
-        ((ce.name = "heavy-module-transporter"), v.add(ce));
-        for (let D of [-5.5, 5.5]) O(ce, 0.7, 1, 28, D, 1.8, 0, T);
-        let W = new i.Group();
-        (ce.add(W),
-          k(
-            W,
-            new i.BoxGeometry(0.45, 14, 0.45),
-            [-5.5, 5.5].flatMap((D) => [-12.8, 12.8].map((G) => [D, 9, G])),
-          ),
-          k(
-            W,
-            new i.BoxGeometry(11.5, 0.5, 0.6),
-            [-12.8, 12.8].map((D) => [0, 16, D]),
-          ),
-          k(
-            W,
-            new i.BoxGeometry(0.45, 0.45, 26),
-            [-5.5, 5.5].map((D) => [D, 16, 0]),
-          ));
-        let Le = [];
-        for (let D of [-3, 3]) for (let G of [-8, 8]) Le.push(O(ce, 0.07, 1, 0.07, D, 10, G, T));
-        let _e = new i.CylinderGeometry(1.2, 1.2, 0.8, I);
-        _e.rotateZ(Math.PI / 2);
-        let U = [];
-        for (let D of [-5.8, 5.8])
-          for (let G of [-10, -3.3, 3.3, 10]) {
-            let st = new i.Mesh(_e, T);
-            (st.position.set(D, 1.2, G), ce.add(st), U.push(st));
-          }
-        let A = U.map((D) => O(ce, 0.18, 1, 0.18, D.position.x, 1.5, D.position.z, T)),
-          j = k(
-            ce,
-            new i.CylinderGeometry(0.68, 0.68, 1.05, I).rotateZ(Math.PI / 2),
-            U.map((D) => [
-              D.position.x + Math.sign(D.position.x) * 0.82,
-              D.position.y,
-              D.position.z,
-            ]),
-            S,
+        habitat.group.updateMatrixWorld(true);
+        for (const p of placements) {
+          const bounds = new T.Box3().setFromObject(p.group);
+          bounds.min.sub(p.home);
+          bounds.max.sub(p.home);
+          p.bounds = bounds;
+          p.unloadX = cx - 38;
+          p.lane = -1500;
+          p.roof = p.bounds.max.y;
+          p.base = p.bounds.min.y;
+          p.carryY = groundSupport(p.unloadX, p.slot.z) + CARRY_HEIGHT - p.base;
+          p.liftY = Math.max(
+            p.slot.y + Math.max(5, 11.5 - (p.slot.y - cy + p.base)),
+            groundSupport(p.unloadX, p.slot.z) + 6.2 - p.base,
           );
-        j.name = "independent-wheel-drive-motors";
-        let Q = new i.Group(),
-          nt = new i.Group();
-        ((nt.name = "deployable-power-and-relay"),
-          v.add(nt),
-          O(nt, 1.2, 0.7, 2, 0, 0.5, 0, T),
-          O(nt, 1, 0.15, 1.8, 0, 0.94, 0));
-        let yt = [];
-        for (let D of [-1, 1]) {
-          let G = new i.Group();
-          (G.position.set(D * 0.58, 0.97, 0),
-            nt.add(G),
-            O(G, 2.2, 0.045, 1.8, D * 1.1, 0, 0, _),
-            yt.push({ hinge: G, side: D }));
         }
-        (O(nt, 0.025, 2.5, 0.025, 0, 1.65, 0.65),
-          O(nt, 0.5, 0.04, 0.5, 0, 2.9, 0.65),
-          k(
-            nt,
-            new i.CylinderGeometry(0.24, 0.24, 0.16, I).rotateZ(Math.PI / 2),
-            [-0.65, 0.65].flatMap((D) => [-0.7, 0.7].map((G) => [D, 0.24, G])),
-            T,
-          ));
-        let vt = new i.Group();
-        ((vt.name = "connector-and-winch-cart"),
-          v.add(vt),
-          O(vt, 1.25, 0.5, 2.2, 0, 0.65, 0, T),
-          O(vt, 0.4, 0.65, 0.5, 0, 1.2, -0.5),
-          O(vt, 0.12, 0.15, 1.1, 0, 1.65, -0.8),
-          k(
-            vt,
-            new i.CylinderGeometry(0.28, 0.28, 0.2, I).rotateZ(Math.PI / 2),
-            [
-              [-0.65, 0.3, -0.7],
-              [0.65, 0.3, -0.7],
-              [-0.65, 0.3, 0.7],
-              [0.65, 0.3, 0.7],
-            ],
-            T,
-          ));
-        let rt = [],
-          lt = [
-            [-1422, 3154],
-            [-1466, 3154],
-            [-1466, 3294],
-            [-1430, 3294],
-          ],
-          Et = 0;
-        for (let D = 1; D < lt.length; D++) {
-          let G = lt[D - 1],
-            st = lt[D],
-            gt = Math.ceil(Math.hypot(st[0] - G[0], st[1] - G[1]) / 6);
-          for (let Ot = 0; Ot < gt; Ot++) {
-            let St = G[0] + ((st[0] - G[0]) * Ot) / gt,
-              Mt = G[1] + ((st[1] - G[1]) * Ot) / gt,
-              Xt = G[0] + ((st[0] - G[0]) * (Ot + 1)) / gt,
-              pe = G[1] + ((st[1] - G[1]) * (Ot + 1)) / gt,
-              kt = new i.Vector3(St, s(St, Mt) + 0.12, Mt),
-              we = new i.Vector3(Xt, s(Xt, pe) + 0.12, pe),
-              R = kt.distanceTo(we),
-              X = new i.Mesh(new i.CylinderGeometry(0.065, 0.065, R, I), T);
-            (X.quaternion.setFromUnitVectors(
-              new i.Vector3(0, 1, 0),
-              we.clone().sub(kt).normalize(),
-            ),
-              v.add(X),
-              rt.push({ mesh: X, a: kt, b: we, length: R, offset: Et }),
-              (Et += R));
-          }
-        }
-        let Zt = [
-            [-6.2, 10.9, -7],
-            [6.2, 10.9, -7],
-            [-6.2, 6.9, 10],
-            [6.2, 6.9, 10],
-          ],
-          pt = b.payloads.map((D, G) => ({
-            ...D,
-            index: G,
-            slot: new i.Vector3(V + Zt[G][0], it + Zt[G][1], B + Zt[G][2]),
-            home: D.target.clone(),
-          }));
-        for (let D = 0; D < b.foundations.length; D++) {
-          let G = b.foundations[D],
-            st = pt[D];
-          for (let gt of G.children) gt.position.sub(st.home);
-          (G.position.copy(st.home),
-            e.group.updateMatrixWorld(!0),
-            st.group.attach(G),
-            (G.scale.y = 0.12));
-        }
-        e.group.updateMatrixWorld(!0);
-        for (let D of pt) {
-          let G = new i.Box3().setFromObject(D.group);
-          (G.min.sub(D.home),
-            G.max.sub(D.home),
-            (D.bounds = G),
-            (D.unloadX = V - 38),
-            (D.lane = -1500),
-            (D.roof = D.bounds.max.y),
-            (D.base = D.bounds.min.y),
-            (D.liftY = Math.max(
-              D.slot.y + Math.max(5, 11.5 - (D.slot.y - it + D.base)),
-              bt(D.unloadX, D.slot.z) + 6.2 - D.base,
-            )));
-        }
-        for (let D of pt) {
-          let G = -1 / 0;
-          for (let gt = 0; gt <= 4; gt++)
-            for (let Ot = 0; Ot <= 8; Ot++)
-              G = Math.max(
-                G,
-                s(
-                  D.home.x + D.bounds.min.x + ((D.bounds.max.x - D.bounds.min.x) * gt) / 4,
-                  D.home.z + D.bounds.min.z + ((D.bounds.max.z - D.bounds.min.z) * Ot) / 8,
+        // Level the equipment against its whole footprint, not only its centre point.
+        for (const p of placements) {
+          let highest = -Infinity;
+          for (let i = 0; i <= 4; i++)
+            for (let j = 0; j <= 8; j++)
+              highest = Math.max(
+                highest,
+                heightAt(
+                  p.home.x +
+                    p.bounds.min.x +
+                    ((p.bounds.max.x - p.bounds.min.x) * i) / 4,
+                  p.home.z +
+                    p.bounds.min.z +
+                    ((p.bounds.max.z - p.bounds.min.z) * j) / 8,
                 ),
               );
-          if (
-            ((D.raise = Math.max(0, G + 0.45 - D.base - D.home.y)),
-            (D.home.y += D.raise),
-            D.target.copy(D.home),
-            D.group.position.copy(D.home),
-            (D.levelFeet = []),
-            D.index >= 2)
-          ) {
-            let gt = (D.bounds.max.x - D.bounds.min.x) * 0.32,
-              Ot = (D.bounds.max.z - D.bounds.min.z) * 0.32;
-            for (let St of [-gt, gt])
-              for (let Mt of [-Ot, Ot]) {
-                let Xt = D.base + 0.1,
-                  pe = s(D.home.x + St, D.home.z + Mt) - D.home.y - 0.12,
-                  kt = O(D.group, 0.5, 1, 0.5, St, (Xt + pe) / 2, Mt, T);
-                ((kt.scale.y = Xt - pe), D.levelFeet.push({ mesh: kt, top: Xt, length: Xt - pe }));
+          p.raise = Math.max(0, highest + 0.45 - p.base - p.home.y);
+          p.home.y += p.raise;
+          p.target.copy(p.home);
+          p.group.position.copy(p.home);
+          p.levelFeet = [];
+          if (p.index >= 2) {
+            const wx = (p.bounds.max.x - p.bounds.min.x) * 0.32,
+              wz = (p.bounds.max.z - p.bounds.min.z) * 0.32;
+            for (const x of [-wx, wx])
+              for (const z of [-wz, wz]) {
+                const top = p.base + 0.1,
+                  bottom = heightAt(p.home.x + x, p.home.z + z) - p.home.y - 0.12;
+                const foot = box(
+                  p.group,
+                  0.5,
+                  1,
+                  0.5,
+                  x,
+                  (top + bottom) / 2,
+                  z,
+                  dark,
+                );
+                foot.scale.y = top - bottom;
+                p.levelFeet.push({ mesh: foot, top, length: top - bottom });
               }
           }
-          let st = b.foundations[D.index];
-          if (st)
-            for (let gt of st.children) {
-              if (gt.geometry.parameters.width > 1) continue;
-              let Ot = -2.3,
-                St = s(D.home.x + gt.position.x, D.home.z + gt.position.z) - D.home.y - 0.25;
-              ((gt.position.y = (Ot + St) / 2),
-                (gt.scale.y = (Ot - St) / gt.geometry.parameters.height));
+          const footing = parts.foundations[p.index];
+          if (footing)
+            for (const leg of footing.children) {
+              if (leg.geometry.parameters.width > 1) continue;
+              const top = -2.3,
+                bottom =
+                  heightAt(p.home.x + leg.position.x, p.home.z + leg.position.z) -
+                  p.home.y -
+                  0.25;
+              leg.position.y = (top + bottom) / 2;
+              leg.scale.y = (top - bottom) / leg.geometry.parameters.height;
             }
         }
-        for (let D of b.connections) {
-          for (let gt of [D.a, D.b]) {
-            let Ot = pt.find(
-              (St) => Math.abs(gt.x - St.home.x) < 0.01 && Math.abs(gt.z - St.home.z) < 0.01,
+        for (const segment of parts.connections) {
+          for (const point of [segment.a, segment.b]) {
+            const p = placements.find(
+              (p) =>
+                Math.abs(point.x - p.home.x) < 0.01 &&
+                Math.abs(point.z - p.home.z) < 0.01,
             );
-            Ot && (gt.y += Ot.raise);
+            if (p) point.y += p.raise;
           }
-          let G = D.mesh.geometry,
-            st = G.parameters;
-          ((D.length = D.a.distanceTo(D.b)),
-            (D.mesh.geometry = new i.CylinderGeometry(
-              st.radiusTop,
-              st.radiusBottom,
-              D.length,
-              st.radialSegments,
-            )),
-            G.dispose(),
-            D.mesh.quaternion.setFromUnitVectors(
-              new i.Vector3(0, 1, 0),
-              D.b.clone().sub(D.a).normalize(),
-            ));
+          const old = segment.mesh.geometry,
+            shape = old.parameters;
+          segment.length = segment.a.distanceTo(segment.b);
+          segment.mesh.geometry = new T.CylinderGeometry(
+            shape.radiusTop,
+            shape.radiusBottom,
+            segment.length,
+            shape.radialSegments,
+          );
+          old.dispose();
+          segment.mesh.quaternion.setFromUnitVectors(
+            new T.Vector3(0, 1, 0),
+            segment.b.clone().sub(segment.a).normalize(),
+          );
         }
-        function Ct(D, G, st) {
-          let gt = [],
-            Ot = G,
-            St = 0,
-            Mt = 0;
-          for (let Xt = 1; Xt < D.length; Xt++) {
-            let pe = D[Xt - 1],
-              kt = D[Xt],
-              we = Math.hypot(kt[0] - pe[0], kt[1] - pe[1]);
-            if (we < 0.001) continue;
-            let R = Math.atan2(pe[0] - kt[0], pe[1] - kt[1]),
-              X = Math.max(1.8, (1.875 * we) / st),
-              tt = 0.8;
-            (gt.push({
-              a: pe,
-              b: kt,
-              length: we,
-              yaw: R,
-              previousYaw: Mt,
-              steerAt: Ot,
-              start: Ot + tt,
-              end: Ot + tt + X,
-              total: St,
-            }),
-              (Ot += tt + X),
-              (St += we),
-              (Mt = R));
+        function path(points, start, speed) {
+          const legs = [];
+          let at = start,
+            total = 0;
+          for (let i = 1; i < points.length; i++) {
+            const a = points[i - 1],
+              b = points[i];
+            const length = Math.hypot(b[0] - a[0], b[1] - a[1]);
+            if (length < 0.001) continue;
+            const dx = (b[0] - a[0]) / length,
+              dz = (b[1] - a[1]) / length;
+            // Preserve the checkpoint clock while using the old steering time
+            // to roll through intermediate corners at low speed.
+            const end = at + (0.8 + Math.max(1.8, (1.875 * length) / speed));
+            legs.push({
+              a,
+              b,
+              dx,
+              dz,
+              length,
+              yaw: Math.atan2(-dx, -dz),
+              steerAt: at,
+              start: legs.length ? at : at + 0.8,
+              end,
+              total,
+              previousYaw: 0,
+              enter: 0,
+              exit: 0,
+              inSpeed: 0,
+              outSpeed: 0,
+            });
+            at = end;
+            total += length;
           }
-          return { points: D, legs: gt, start: G, end: Ot, total: St };
-        }
-        let Yt = new i.Vector3(),
-          Jt = 0,
-          ue = 0;
-        function q(D, G) {
-          let st = D.legs[D.legs.length - 1];
-          for (let St of D.legs)
-            if (G <= St.end) {
-              st = St;
-              break;
-            }
-          let gt = u(G, st.start, st.end);
-          Yt.set(st.a[0] + (st.b[0] - st.a[0]) * gt, 0, st.a[1] + (st.b[1] - st.a[1]) * gt);
-          let Ot = Math.atan2(Math.sin(st.yaw - st.previousYaw), Math.cos(st.yaw - st.previousYaw));
-          ((Jt = st.previousYaw + Ot * u(G, st.steerAt, st.start)),
-            (ue = (D.offset || 0) + st.total + st.length * gt));
-        }
-        function bt(D, G) {
-          let st = -1 / 0;
-          for (let gt of U) st = Math.max(st, s(D + gt.position.x, G + gt.position.z));
-          return st;
-        }
-        function ct(D, G, st = bt(D, G), gt = !0) {
-          (ce.position.set(D, st, G), (ce.rotation.y = 0));
-          for (let Ot = 0; Ot < U.length; Ot++) {
-            let St = U[Ot];
-            ((St.position.y = gt ? s(D + St.position.x, G + St.position.z) - st + 1.2 : 1.2),
-              St.rotation.set(0, Jt, 0),
-              St.rotateX(-ue / 1.2));
-            let Mt = A[Ot];
-            ((Mt.position.y = (2 + St.position.y) / 2),
-              (Mt.scale.y = Math.max(0.1, 2 - St.position.y)));
-            let Xt = Math.sign(St.position.x) * 0.82;
-            (Q.position.set(
-              St.position.x + Math.cos(Jt) * Xt,
-              St.position.y,
-              St.position.z - Math.sin(Jt) * Xt,
-            ),
-              Q.rotation.set(0, Jt, 0),
-              Q.updateMatrix(),
-              j.setMatrixAt(Ot, Q.matrix));
+          for (let i = 1; i < legs.length; i++) {
+            const prev = legs[i - 1],
+              next = legs[i];
+            prev.exit = next.enter = Math.min(
+              3,
+              prev.length * 0.2,
+              next.length * 0.2,
+            );
+            prev.outSpeed = next.inSpeed =
+              0.65 *
+              Math.min(
+                prev.length / (prev.end - prev.start),
+                next.length / (next.end - next.start),
+              );
           }
-          j.instanceMatrix.needsUpdate = !0;
+          return { legs, total, end: at };
         }
-        function At(D, G) {
-          (q(D, G), ct(Yt.x, Yt.z));
+        const route = new T.Vector3();
+        let routeYaw = 0,
+          routeDistance = 0;
+        function samplePath(p, time) {
+          let index = 0;
+          while (index < p.legs.length - 1 && time > p.legs[index].end) index++;
+          const leg = p.legs[index];
+          const duration = leg.end - leg.start;
+          const u = clamp((time - leg.start) / duration),
+            u2 = u * u;
+          const distance =
+            clamp(
+              u2 * (3 - 2 * u) +
+                (u *
+                  (1 - u) *
+                  duration *
+                  ((1 - u) * leg.inSpeed - u * leg.outSpeed)) /
+                  leg.length,
+            ) * leg.length;
+          route.set(leg.a[0] + leg.dx * distance, 0, leg.a[1] + leg.dz * distance);
+          routeYaw = leg.yaw;
+          if (time < leg.start) {
+            const delta = leg.yaw - leg.previousYaw;
+            routeYaw =
+              leg.previousYaw +
+              Math.atan2(Math.sin(delta), Math.cos(delta)) *
+                phase(time, leg.steerAt, leg.start);
+          }
+          const atEntry = distance < leg.enter;
+          const atExit = distance > leg.length - leg.exit;
+          if (atEntry || atExit) {
+            const before = atEntry ? p.legs[index - 1] : leg;
+            const after = atEntry ? leg : p.legs[index + 1];
+            const radius = before.exit;
+            const local = atEntry ? distance : distance - leg.length;
+            const blend = (local + radius) / (2 * radius);
+            // A quadratic rounds the corner inside the surveyed lane.
+            const left = radius * (1 - blend) ** 2,
+              right = radius * blend ** 2;
+            route.set(
+              after.a[0] - before.dx * left + after.dx * right,
+              0,
+              after.a[1] - before.dz * left + after.dz * right,
+            );
+            routeYaw = Math.atan2(
+              -before.dx * (1 - blend) - after.dx * blend,
+              -before.dz * (1 - blend) - after.dz * blend,
+            );
+          }
+          // The wheel pose uses nominal lane distance as a kinematic approximation.
+          routeDistance = (p.offset || 0) + leg.total + distance;
         }
-        let Ft = 3480,
-          ut = Ct(
-            [
-              [V, B - 7],
-              [V, Ft],
-              [-1500, Ft],
-              [-1500, B - 7],
-              [pt[0].unloadX, B - 7],
-            ],
-            194,
-            14,
-          ),
-          $t = ut.end + 5;
-        for (let D = 0; D < pt.length; D++) {
-          let G = pt[D],
-            st = pt[D + 1];
-          ((G.start = $t),
-            (G.liftAt = G.start + 2),
-            (G.slideAt = G.start + 8),
-            (G.lowerAt = G.start + 16),
-            (G.haulAt = G.start + 25));
-          let gt =
-            D === 1 || D === 3
+        function groundSupport(x, z) {
+          let h = -Infinity;
+          for (const w of wheels)
+            h = Math.max(h, heightAt(x + w.position.x, z + w.position.z));
+          return h;
+        }
+        function poseCarrier(x, z, y = groundSupport(x, z), contact = true) {
+          carrier.position.set(x, y, z);
+          carrier.rotation.y = 0;
+          for (let i = 0; i < wheels.length; i++) {
+            const w = wheels[i];
+            w.position.y = contact
+              ? heightAt(x + w.position.x, z + w.position.z) - y + 1.2
+              : 1.2;
+            w.rotation.set(0, routeYaw, 0);
+            w.rotateX(-routeDistance / 1.2);
+            const link = wheelLinks[i];
+            link.position.y = (2 + w.position.y) / 2;
+            link.scale.y = Math.max(0.1, 2 - w.position.y);
+            // Motor housing and wheel share the steering axis; the housing does not spin.
+            const offset = Math.sign(w.position.x) * 0.82;
+            motorPivot.position.set(
+              w.position.x + Math.cos(routeYaw) * offset,
+              w.position.y,
+              w.position.z - Math.sin(routeYaw) * offset,
+            );
+            motorPivot.rotation.set(0, routeYaw, 0);
+            motorPivot.updateMatrix();
+            driveMotors.setMatrixAt(i, motorPivot.matrix);
+          }
+          driveMotors.instanceMatrix.needsUpdate = true;
+        }
+        function driveCarrier(p, t) {
+          samplePath(p, t);
+          poseCarrier(route.x, route.z);
+        }
+        const backZ = 3480;
+        const deploy = path(
+          [
+            [cx, cz - 7],
+            [cx, backZ],
+            [-1500, backZ],
+            [-1500, cz - 7],
+            [placements[0].unloadX, cz - 7],
+          ],
+          CARRIER_RELEASE,
+          14,
+        );
+        let nextStart = deploy.end + 5;
+        for (let i = 0; i < placements.length; i++) {
+          const p = placements[i],
+            next = placements[i + 1];
+          p.start = nextStart;
+          p.hookAt = p.start + 1.4;
+          p.liftAt = p.start + 2.5;
+          p.slideAt = p.start + 8;
+          p.lowerAt = p.start + 16;
+          p.haulAt = p.start + 25;
+          p.handoffAt = p.haulAt - 5;
+          p.unhookAt = p.haulAt - 3;
+          const delivery =
+            i === 1 || i === 3
               ? [
-                  [G.unloadX, G.slot.z],
-                  [G.lane, G.slot.z],
-                  [G.lane, D === 1 ? 3338 : 3362],
-                  [G.home.x, D === 1 ? 3338 : 3362],
-                  [G.home.x, G.home.z],
+                  [p.unloadX, p.slot.z],
+                  [p.lane, p.slot.z],
+                  [p.lane, i === 1 ? 3338 : 3362],
+                  [p.home.x, i === 1 ? 3338 : 3362],
+                  [p.home.x, p.home.z],
                 ]
               : [
-                  [G.unloadX, G.slot.z],
-                  [G.lane, G.slot.z],
-                  [G.lane, G.home.z],
-                  [G.home.x, G.home.z],
+                  [p.unloadX, p.slot.z],
+                  [p.lane, p.slot.z],
+                  [p.lane, p.home.z],
+                  [p.home.x, p.home.z],
                 ];
-          ((G.delivery = Ct(gt, G.haulAt, 9)),
-            (G.delivery.offset = D
-              ? pt[D - 1].returnPath.offset + pt[D - 1].returnPath.total
-              : ut.total),
-            (G.delivery.legs[0].previousYaw = (D ? pt[D - 1].returnPath : ut).legs.at(-1).yaw),
-            (G.settleAt = G.delivery.end),
-            (G.releaseAt = G.settleAt + 7));
-          let Ot = G.home.z + 36;
-          ((G.returnPath = Ct(
+          p.delivery = path(delivery, p.haulAt, 9);
+          p.delivery.offset = i
+            ? placements[i - 1].returnPath.offset + placements[i - 1].returnPath.total
+            : deploy.total;
+          p.delivery.legs[0].previousYaw = (
+            i ? placements[i - 1].returnPath : deploy
+          ).legs.at(-1).yaw;
+          p.settleAt = p.delivery.end;
+          p.groundAt = p.settleAt + 5;
+          p.releaseAt = p.settleAt + 7;
+          const exitZ = p.home.z + 36;
+          p.returnPath = path(
             [
-              [G.home.x, G.home.z],
-              [G.home.x, Ot],
-              [G.lane, Ot],
-              [G.lane, st ? st.slot.z : 3456],
-              ...(st ? [[st.unloadX, st.slot.z]] : []),
+              [p.home.x, p.home.z],
+              [p.home.x, exitZ],
+              [p.lane, exitZ],
+              [p.lane, next ? next.slot.z : 3456],
+              ...(next ? [[next.unloadX, next.slot.z]] : []),
             ],
-            G.releaseAt + 3,
+            p.releaseAt + 3,
             14,
-          )),
-            (G.returnPath.offset = G.delivery.offset + G.delivery.total),
-            (G.returnPath.legs[0].previousYaw = G.delivery.legs.at(-1).yaw),
-            (G.end = G.returnPath.end),
-            ($t = G.end + 3));
+          );
+          p.returnPath.offset = p.delivery.offset + p.delivery.total;
+          p.returnPath.legs[0].previousYaw = p.delivery.legs.at(-1).yaw;
+          p.end = p.returnPath.end;
+          nextStart = p.end + 3;
         }
-        let Bt = pt[3].end,
-          Ae = Bt + 25;
-        if (ir(o) && o.version === 1 && !p) {
-          let D = o.elapsed;
-          if (D >= 284) D = Ae + D - 284;
-          else if (D >= 270) D = Bt + ((D - 270) / 14) * 25;
-          else if (D >= 190) {
-            let G = Math.min(3, Math.floor((D - 190) / 20)),
-              st = pt[G];
-            D = st.start + ((D - 190 - G * 20) / 20) * (st.end - st.start);
+        const connectionAt = placements[3].end,
+          readyAt = connectionAt + 25;
+        const serviceLamp = new T.MeshStandardMaterial({
+          color: 0x8f9484,
+          emissive: 0x928255,
+          emissiveIntensity: 0,
+          roughness: 0.62,
+        });
+        const statusLamp = box(
+          placements[2].group,
+          0.08,
+          0.28,
+          1.15,
+          -4.53,
+          4.4,
+          1.8,
+          serviceLamp,
+        );
+        statusLamp.castShadow = false;
+        const cableEnd = connectionAt + 1;
+        const cableStart = cableEnd - 56;
+        const cartWait = cableStart - 42;
+        const socketLead = 7;
+        let cableTime = cableStart;
+        for (const leg of cableLegs) {
+          leg.start = cableTime;
+          leg.end = cableTime + 53 * (leg.length / cableLength);
+          cableTime = leg.end + 1.5;
+        }
+        const cartToPower = path(
+          [[-1492, 3270], [-1492, 3154], cablePoints[0]],
+          cartWait,
+          10,
+        );
+        cartToPower.legs[0].previousYaw = Math.atan2(c.x + 1492, c.z - 7 - 3270);
+        const cartPark = path(
+          [
+            [-1430 - socketLead, 3294],
+            [-1430 - socketLead, 3286],
+            [-1448, 3286],
+          ],
+          connectionAt + 16,
+          6,
+        );
+        cartPark.legs[0].previousYaw = cableLegs.at(-1).yaw;
+        const socketX = cartPark.legs[0].a[0];
+        const socketDistance =
+          cableLength -
+          cableSegments
+            .slice(-2)
+            .reduce(
+              (sum, segment) =>
+                sum +
+                segment.length *
+                  clamp(
+                    (segment.b.x - Math.max(socketX, segment.a.x)) /
+                      (segment.b.x - segment.a.x),
+                  ),
+              0,
+            );
+        function placeTool(x, z, yaw) {
+          tool.position.set(x, heightAt(x, z) + 0.2, z);
+          tool.rotation.y = yaw;
+        }
+        function cablePayout(t) {
+          const index = cableLegs.findIndex((leg) => t <= leg.end + 1.5);
+          const leg = cableLegs[index === -1 ? cableLegs.length - 1 : index];
+          return leg.offset + leg.length * phase(t, leg.start, leg.end);
+        }
+        function positionTool(t, paidOut) {
+          if (t < cartWait) {
+            const travel = phase(t, 174, 200);
+            placeTool(
+              c.x + (-1492 - c.x) * travel,
+              c.z - 7 * phase(t, 167, 174) + (3270 - (c.z - 7)) * travel,
+              cartToPower.legs[0].previousYaw * phase(t, 173, 175),
+            );
+          } else if (t < cableStart) {
+            samplePath(cartToPower, t);
+            const turn = phase(t, cartToPower.end, cableStart);
+            placeTool(route.x, route.z, routeYaw + Math.PI * turn);
+          } else if (t < connectionAt + 16) {
+            // The cart stops beside the recovery module. The final lead reaches
+            // the socket without moving the cart through the equipment.
+            const distance = Math.min(paidOut, socketDistance);
+            const section =
+              cableSegments.find(
+                (segment) => distance <= segment.offset + segment.length,
+              ) ?? cableSegments.at(-1);
+            const p = clamp((distance - section.offset) / section.length);
+            const index = cableLegs.findIndex((leg) => t <= leg.end + 1.5);
+            const leg = cableLegs.at(index);
+            const next = index >= 0 ? cableLegs[index + 1] : null;
+            const turn = next ? phase(t, leg.end, next.start) : 0;
+            const yaw = leg.yaw + (Math.PI * turn) / 2;
+            const x = section.a.x + (section.b.x - section.a.x) * p;
+            const z = section.a.z + (section.b.z - section.a.z) * p;
+            placeTool(x, z, yaw);
+          } else {
+            samplePath(cartPark, t);
+            placeTool(route.x, route.z, routeYaw);
           }
-          ((d += D - o.elapsed), (f = D));
         }
-        let Fe = (D) => pt.find((G) => D >= G.start && D < G.end);
-        function bi(D, G) {
-          if (G < D.start) {
-            D.group.position.copy(D.slot);
+        // Upgrade old checkpoints without replaying finished work or rolling the resource model back.
+        if (ir(saved) && saved.version === 1 && !existing) {
+          let mapped = saved.elapsed;
+          if (mapped >= LEGACY_INSTALL_READY)
+            mapped = readyAt + mapped - LEGACY_INSTALL_READY;
+          else if (mapped >= 270) mapped = connectionAt + ((mapped - 270) / 14) * 25;
+          else if (mapped >= 190) {
+            const i = Math.min(3, Math.floor((mapped - 190) / 20)),
+              p = placements[i];
+            mapped = p.start + ((mapped - 190 - i * 20) / 20) * (p.end - p.start);
+          }
+          clockOffset += mapped - saved.elapsed;
+          clock = mapped;
+        }
+        const activeAt = (t) => placements.find((p) => t >= p.start && t < p.end);
+        function movePayload(p, t) {
+          if (t < p.start) {
+            p.group.position.copy(p.slot);
             return;
           }
-          if (G >= D.releaseAt) {
-            D.group.position.copy(D.home);
+          if (t >= p.releaseAt) {
+            p.group.position.copy(p.home);
             return;
           }
-          let st = bt(D.unloadX, D.slot.z) + 3.2 - D.base;
-          if (G < D.haulAt) {
-            let gt = u(G, D.liftAt, D.slideAt),
-              Ot = u(G, D.slideAt, D.lowerAt),
-              St = u(G, D.lowerAt, D.haulAt - 2);
-            D.group.position.set(
-              D.slot.x + (D.unloadX - D.slot.x) * Ot,
-              (D.slot.y + (D.liftY - D.slot.y) * gt) * (1 - St) + st * St,
-              D.slot.z,
+          const carryY = p.carryY;
+          if (t < p.haulAt) {
+            const lift = phase(t, p.liftAt, p.slideAt),
+              slide = phase(t, p.slideAt, p.lowerAt),
+              lower = phase(t, p.lowerAt, p.handoffAt);
+            p.group.position.set(
+              p.slot.x + (p.unloadX - p.slot.x) * slide,
+              (p.slot.y + (p.liftY - p.slot.y) * lift) * (1 - lower) + carryY * lower,
+              p.slot.z,
             );
           } else {
-            q(D.delivery, G);
-            let gt = bt(Yt.x, Yt.z) + 3.2 - D.base;
-            D.group.position.set(Yt.x, gt + (D.home.y - gt) * u(G, D.settleAt, D.releaseAt), Yt.z);
+            samplePath(p.delivery, t);
+            const y = groundSupport(route.x, route.z) + CARRY_HEIGHT - p.base;
+            p.group.position.set(
+              route.x,
+              y + (p.home.y - y) * phase(t, p.settleAt + 0.8, p.groundAt),
+              route.z,
+            );
           }
         }
-        function Si(D) {
-          let G = Fe(D),
-            st = D < 190,
-            gt = 1 - u(D, 162, 190);
-          ((F.visible = D >= 162), F.position.set(V, it + 240 * gt, B + 30 * gt), jt(D, gt));
-          for (let Mt of pt)
-            st
-              ? Mt.group.position.set(Mt.slot.x, Mt.slot.y + 240 * gt, Mt.slot.z + 30 * gt)
-              : bi(Mt, D);
-          for (let Mt = 0; Mt < b.foundations.length; Mt++) {
-            let Xt = pt[Mt];
-            ((b.foundations[Mt].visible = D >= 162),
-              (b.foundations[Mt].scale.y = 0.12 + 0.88 * u(D, Xt.settleAt, Xt.releaseAt)));
+        function assembly(t) {
+          const active = activeAt(t),
+            descending = t < CARGO_TOUCHDOWN,
+            fall = 1 - phase(t, 162, CARGO_TOUCHDOWN);
+          cargo.visible = t >= 162;
+          cargo.position.set(cx, cy + 240 * fall, cz + 30 * fall);
+          updatePropulsion(t, fall);
+          for (const p of placements) {
+            if (descending)
+              p.group.position.set(
+                p.slot.x,
+                p.slot.y + 240 * fall,
+                p.slot.z + 30 * fall,
+              );
+            else movePayload(p, t);
           }
-          for (let Mt of pt)
-            for (let Xt of Mt.levelFeet) {
-              let pe = 0.08 + 0.92 * u(D, Mt.settleAt, Mt.releaseAt);
-              ((Xt.mesh.scale.y = Xt.length * pe),
-                (Xt.mesh.position.y = Xt.top - (Xt.length * pe) / 2));
+          for (let i = 0; i < parts.foundations.length; i++) {
+            const p = placements[i];
+            parts.foundations[i].visible = t >= 162;
+            parts.foundations[i].scale.y =
+              0.12 + 0.88 * phase(t, p.settleAt, p.groundAt);
+          }
+          for (const p of placements)
+            for (const f of p.levelFeet) {
+              const extension = 0.08 + 0.92 * phase(t, p.settleAt, p.groundAt);
+              f.mesh.scale.y = f.length * extension;
+              f.mesh.position.y = f.top - (f.length * extension) / 2;
             }
-          if (((ce.visible = D >= 162), D < 194)) {
-            let Mt = u(D, 190, 194),
-              Xt = bt(V, B - 7);
-            ct(V, B - 7 + 30 * gt, it + 240 * gt + (Xt - it) * Mt, D >= 194);
-          } else if (D < pt[0].start) At(ut, D);
-          else if (G)
-            if (D < G.haulAt) {
-              let Mt = G.index ? pt[G.index - 1].returnPath : ut;
-              ((Jt = Mt.legs.at(-1).yaw),
-                (ue = (Mt.offset || 0) + Mt.total),
-                ct(G.unloadX, G.slot.z));
-            } else D < G.releaseAt + 3 ? At(G.delivery, D) : At(G.returnPath, D);
-          else {
-            let Mt = [...pt].reverse().find((Xt) => D >= Xt.end);
-            Mt && At(Mt.returnPath, D);
-          }
-          let Ot = pt.filter((Mt) => D >= Mt.end).at(-1);
-          W.scale.y = G
-            ? 0.14 + 0.86 * u(D, G.haulAt - 6, G.haulAt - 2)
-            : Ot
-              ? 1 - 0.86 * u(D, Ot.end, Ot.end + 3)
-              : 0.14;
-          for (let Mt of ee) {
-            Mt.visible = D < 194;
-            let Xt = ce.position.y - F.position.y + 2.3;
-            ((Mt.position.y = (6.4 + Xt) / 2), (Mt.scale.y = Math.max(0.02, 6.4 - Xt)));
-          }
-          let St = G || pt.find((Mt) => D < Mt.start) || pt[3];
-          if (D < St.start) {
-            let Mt = pt[St.index - 1],
-              Xt = Mt ? Mt.unloadX : V,
-              pe = Mt ? Mt.slot.z : B,
-              kt = u(D, Mt ? Mt.haulAt : 194, St.start);
-            ((zt.position.x = Xt - V + (St.slot.x - Xt) * kt),
-              (Dt.position.z = pe - B + (St.slot.z - pe) * kt),
-              (Dt.visible = !0),
-              (Dt.position.y = 29.8),
-              (Dt.scale.y = 0.8));
-          } else if (D < St.haulAt - 2) {
-            ((zt.position.x = St.group.position.x - V), (Dt.position.z = St.slot.z - B));
-            let Xt =
-              30.2 +
-              (St.group.position.y - F.position.y + St.roof + 0.2 - 30.2) *
-                u(D, St.start, St.liftAt);
-            ((Dt.position.y = (30.2 + Xt) / 2),
-              (Dt.scale.y = Math.max(0.05, 30.2 - Xt)),
-              (Dt.visible = !0));
+          carrier.visible = t >= 162;
+          if (t < CARRIER_RELEASE) {
+            const q = phase(t, CARGO_TOUCHDOWN + 1.6, CARRIER_RELEASE),
+              base = groundSupport(cx, cz - 7);
+            poseCarrier(
+              cx,
+              cz - 7 + 30 * fall,
+              cy + 240 * fall + (base - cy) * q,
+              false,
+            );
+          } else if (t < placements[0].start) driveCarrier(deploy, t);
+          else if (active) {
+            if (t < active.haulAt) {
+              const approach = active.index
+                ? placements[active.index - 1].returnPath
+                : deploy;
+              routeYaw = approach.legs.at(-1).yaw;
+              routeDistance = (approach.offset || 0) + approach.total;
+              poseCarrier(active.unloadX, active.slot.z);
+            } else if (t < active.releaseAt + 3) driveCarrier(active.delivery, t);
+            else driveCarrier(active.returnPath, t);
           } else {
-            let Mt = pt[St.index + 1],
-              Xt = u(D, St.haulAt - 2, St.haulAt),
-              pe = u(D, St.haulAt + 1, St.end),
-              kt = bt(St.unloadX, St.slot.z) + 3.2 - St.base - it + St.roof + 0.2;
-            ((zt.position.x = St.unloadX - V + (Mt ? Mt.slot.x - St.unloadX : V - St.unloadX) * pe),
-              (Dt.position.z = St.slot.z - B + (Mt ? Mt.slot.z - St.slot.z : 0) * pe));
-            let we = Math.max(0.2, (30.2 - kt) * (1 - Xt));
-            ((Dt.position.y = 30.2 - we / 2), (Dt.scale.y = we), (Dt.visible = !0));
+            const previous = placements.findLast((p) => t >= p.end);
+            if (previous) driveCarrier(previous.returnPath, t);
           }
-          for (let Mt = 0; Mt < Le.length; Mt++) {
-            let Xt = Le[Mt],
-              pe = G && D >= G.haulAt - 2 && D < G.releaseAt + 3;
-            if (((Xt.visible = !!pe), !pe)) continue;
-            let kt = G.group.position.y - ce.position.y + G.roof + 0.1,
-              we = u(D, G.releaseAt, G.releaseAt + 3),
-              R = kt + (15.7 - kt) * we;
-            (Xt.position.set(
-              (Mt < 2 ? -1 : 1) * (G.index < 2 ? 3 : 2),
-              (15.7 + R) / 2,
-              (Mt % 2 ? -1 : 1) * (G.index < 2 ? 8 : 2),
-            ),
-              (Xt.scale.y = Math.max(0.03, 15.7 - R)));
+          // Raise the receiving frame after the crane moves laterally, then
+          // keep it up until the slings are clear of the seated module.
+          portal.scale.y = active
+            ? 0.14 +
+              0.86 *
+                phase(t, active.lowerAt, active.handoffAt) *
+                (1 -
+                  phase(
+                    t,
+                    active.returnPath.legs[0].end - 1,
+                    active.returnPath.legs[0].end + 2,
+                  ))
+            : 0.14;
+          for (const line of stowLines) {
+            line.visible = t < CARRIER_RELEASE;
+            const bottom = carrier.position.y - cargo.position.y + 2.3;
+            line.position.y = (6.4 + bottom) / 2;
+            line.scale.y = Math.max(0.02, 6.4 - bottom);
           }
-          for (let Mt of ie) Mt.visible = D < 190;
-          return G;
+          const p =
+            active || placements.find((item) => t < item.start) || placements.at(-1);
+          const next = placements[p.index + 1];
+          if (t < p.start) {
+            const initial = !p.index;
+            const x = initial
+              ? cx + (p.slot.x - cx) * phase(t, CARRIER_RELEASE, p.start)
+              : p.slot.x;
+            const z = initial
+              ? (p.slot.z - cz) * phase(t, CARRIER_RELEASE, p.start)
+              : p.slot.z - cz;
+            gantry.position.x = x - cx;
+            setHoist(30, z);
+          } else if (t < p.unhookAt) {
+            gantry.position.x = p.group.position.x - cx;
+            const roof = p.group.position.y - cargo.position.y + p.roof;
+            setHoist(
+              30 + (roof + 0.36 - 30) * phase(t, p.start, p.hookAt),
+              p.slot.z - cz,
+            );
+          } else {
+            // Pay the load onto the carrier before the empty hook returns.
+            const roof = p.carryY - cy + p.roof;
+            const retract = phase(t, p.unhookAt, p.haulAt);
+            const u = phase(t, p.haulAt + 1, p.end);
+            gantry.position.x =
+              p.unloadX - cx + ((next?.slot.x ?? cx) - p.unloadX) * u;
+            setHoist(
+              roof + 0.36 + (30 - roof - 0.36) * retract,
+              p.slot.z - cz + ((next?.slot.z ?? p.slot.z) - p.slot.z) * u,
+            );
+          }
+          for (let i = 0; i < slings.length; i++) {
+            const sling = slings[i],
+              carrying = active && t >= active.handoffAt && t < active.releaseAt + 3;
+            sling.visible = !!carrying;
+            if (!carrying) continue;
+            const top =
+              active.group.position.y - carrier.position.y + active.roof + 0.1;
+            const engaged =
+              phase(t, active.handoffAt, active.unhookAt) *
+              (1 - phase(t, active.releaseAt, active.releaseAt + 3));
+            const bottom = 15.7 + (top - 15.7) * engaged;
+            sling.position.set(
+              (i < 2 ? -1 : 1) * (active.index < 2 ? 3 : 2),
+              (15.7 + bottom) / 2,
+              (i % 2 ? -1 : 1) * (active.index < 2 ? 8 : 2),
+            );
+            sling.scale.y = Math.max(0.03, 15.7 - bottom);
+          }
+          for (const m of locks) m.visible = t < CARGO_TOUCHDOWN;
+          return active;
         }
-        function Ba(D, G) {
-          ((D.mesh.visible = G > 0),
-            (D.mesh.scale.y = Math.max(1e-5, G)),
-            D.mesh.position.copy(D.a).lerp(D.b, G * 0.5));
+        function extend(segment, p) {
+          segment.mesh.visible = p > 0;
+          segment.mesh.scale.y = Math.max(0.00001, p);
+          segment.mesh.position.copy(segment.a).lerp(segment.b, p * 0.5);
         }
-        function Va(D, G, st) {
-          let gt = u(G, st, st + 16);
-          if (
-            (D.group.position.set(D.x, D.ground + 110 * (1 - gt), D.z + 20 * (1 - gt)),
-            (D.group.visible = G >= st),
-            D.ramp)
-          ) {
-            let Ot = u(G, st + 16, st + 20);
-            ((D.ramp.rotation.x = Math.PI / 2 + (n.site.dock.openAngle - Math.PI / 2) * Ot),
-              (D.ramp.scale.z = 1 + (n.site.dock.extension - 1) * Ot));
+        function landProbe(p, time, start) {
+          const f = phase(time, start, start + 16);
+          p.group.position.set(p.x, p.ground + 110 * (1 - f), p.z + 20 * (1 - f));
+          p.group.visible = time >= start;
+          if (p.ramp) {
+            const open = phase(time, start + 17.5, start + 20);
+            p.ramp.rotation.x =
+              Math.PI / 2 + (surveyor.site.dock.openAngle - Math.PI / 2) * open;
+            p.ramp.scale.z = 1 + (surveyor.site.dock.extension - 1) * open;
           }
         }
-        function il(D, G) {
-          if (((f = Math.max(f, D + d)), p)) {
-            for (let kt of pt) kt.group.position.copy(kt.home);
-            for (let kt of b.foundations) ((kt.visible = !0), (kt.scale.y = 1));
-            for (let kt of b.connections) Ba(kt, 1);
-            ((x = !0),
-              (v.visible = !1),
-              (e.group.visible = !0),
-              (m = !0),
-              (w = "existing"),
-              G.state.eventAt !== null && g === null && (g = f));
+        function update(elapsed, model) {
+          clock = Math.max(clock, elapsed + clockOffset);
+          if (existing) {
+            for (const p of placements) p.group.position.copy(p.home);
+            for (const f of parts.foundations) {
+              f.visible = true;
+              f.scale.y = 1;
+            }
+            for (const c of parts.connections) extend(c, 1);
+            ready = true;
+            serviceLamp.emissiveIntensity =
+              0.32 *
+              phase(model.state.time, COMMISSIONING_START, COMMISSIONING_START + 2);
+            root.visible = false;
+            habitat.group.visible = true;
+            crewLanded = true;
+            stage = "existing";
+            if (model.state.eventAt !== null && crewAt === null) crewAt = clock;
             return;
           }
-          let st = f;
-          ((v.visible = st >= 142), (e.group.visible = st >= 162), Va(E, st, 142), Va(C, st, 147));
-          let gt = Si(st),
-            Ot = E.z - 6 * u(st, 161, 168);
-          (nt.position.set(E.x, s(E.x, Ot) + 0.2, Ot), (nt.visible = st >= 161));
-          for (let kt of yt) kt.hinge.rotation.z = kt.side * (Math.PI / 2) * (1 - u(st, 168, 176));
-          let St = C.x + (-1492 - C.x) * u(st, 174, 200),
-            Mt =
-              st < 174 ? C.z - 7 * u(st, 166, 174) : C.z - 7 + (3270 - (C.z - 7)) * u(st, 174, 200);
-          (vt.position.set(St, s(St, Mt) + 0.2, Mt), (vt.visible = st >= 166));
-          let Xt = pt.every((kt) => kt.group.position.distanceTo(kt.home) < 0.001);
-          for (let kt = 0; kt < b.connections.length; kt++)
-            Ba(b.connections[kt], Xt ? u(st, Bt + kt, Bt + 6 + kt) : 0);
-          let pe = u(st, Bt + 15, Ae - 1) * Et;
-          for (let kt of rt) Ba(kt, st >= Ae - 1 ? 1 : l((pe - kt.offset) / kt.length));
-          ((x =
-            Xt &&
-            st >= Ae &&
-            b.connections.every((kt) => kt.mesh.scale.y === 1) &&
-            rt.every((kt) => kt.mesh.scale.y === 1)),
-            x &&
-              G.state.eventAt !== null &&
-              g === null &&
-              (g = Math.max(Ae, Ae + G.state.eventAt - 64)),
-            (L.group.visible = g !== null && st >= g),
-            (m = !1),
-            g !== null && (Va(L, st, g), (m = st >= g + 20)),
-            st < 142
-              ? ((w = "survey"), (M = ""))
-              : st < 170
-                ? ((w = "support-landing"),
-                  (M = "\uC9C0\uC6D0 \uD0D0\uC0AC\uC120 B \xB7 C \uCC29\uB959"))
-                : st < 190
-                  ? ((w = "cargo-landing"), (M = "X04 \xB7 X05 \uD654\uBB3C \uD558\uAC15"))
-                  : st < pt[0].start
-                    ? ((w = "carrier-deployment"), (M = "운반 장비 펼치기"))
-                    : st < Bt
-                      ? ((w = "placement"),
-                        (M = [
-                          "\uAC70\uC8FC \uBAA8\uB4C8 01 \uC6B4\uBC18",
-                          "\uAC70\uC8FC \uBAA8\uB4C8 02 \uC6B4\uBC18",
-                          "\uC790\uC6D0 \uD68C\uC218 \uC124\uBE44 \uBC30\uCE58",
-                          "\uC800\uC218\uC870 \uBC30\uCE58",
-                        ][gt ? gt.index : Math.min(3, pt.filter((kt) => st >= kt.end).length)]))
-                      : x
-                        ? g === null
-                          ? ((w = "commissioning"),
-                            (M =
-                              "\uBB34\uC778 \uC2DC\uD5D8 \uAC00\uB3D9 \xB7 \uC790\uC6D0 \uD68C\uC218 \uC0C1\uD0DC \uD655\uC778"))
-                          : m
-                            ? ((w = "operating"), (M = ""))
-                            : ((w = "crew-landing"),
-                              (M =
-                                "\uCD08\uAE30 \uAC00\uB3D9 \uC548\uC815 \uD655\uC778 \xB7 \uC720\uC778 \uCC29\uB959\uC120 \uC9C4\uC785"))
-                        : ((w = "connection"),
-                          (M = "\uBC30\uAD00 \xB7 \uC804\uB825\uC120 \uC5F0\uACB0")));
-        }
-        let Qs = new i.PerspectiveCamera(),
-          Pr = new i.Vector3(),
-          ri = new i.Vector3(),
-          Mi = new i.Vector3(),
-          wi = new i.Vector3();
-        function za(D) {
-          if (p || f < 142) return;
-          let G = u(f, 170, 178),
-            st = u(f, Bt + 15, Ae),
-            gt = G * (1 - st),
-            Ot = D.aspect < 1,
-            St = s(-1415, 3335);
-          (ri.set(-1580 + 30 * gt, St + 110 - 30 * gt, 3565 - 25 * gt),
-            Pr.set(-1415 - 15 * gt, St + 34 + 40 * (1 - u(f, 178, 190)) * gt, 3320 + 45 * gt));
-          let Mt = u(f, 163, 169) * (1 - u(f, 186, 194));
-          Mt > 0 &&
-            (Mi.copy(F.position),
-            (Mi.y += 8),
-            wi.set(F.position.x - 105, F.position.y + 55, F.position.z + 116),
-            Pr.lerp(Mi, Mt),
-            ri.lerp(wi, Mt));
-          let Xt = Fe(f);
-          if (Xt) {
-            let kt = u(f, Xt.start + 1, Xt.start + 6) * (1 - u(f, Xt.releaseAt, Xt.releaseAt + 5));
-            kt > 0 &&
-              (Mi.copy(Xt.group.position),
-              (Mi.y += 5),
-              wi.set(Mi.x - 90, Mi.y + 42, Mi.z + 100),
-              Pr.lerp(Mi, kt),
-              ri.lerp(wi, kt));
+          const t = clock;
+          root.visible = t >= 142;
+          habitat.group.visible = t >= 162;
+          landProbe(b, t, 142);
+          landProbe(c, t, 147);
+          const active = assembly(t);
+          const pz = b.z - 6 * phase(t, 162, 169);
+          power.position.set(b.x, heightAt(b.x, pz) + 0.2, pz);
+          power.visible = t >= 162;
+          for (const w of wings)
+            w.hinge.rotation.z = w.side * (Math.PI / 2) * (1 - phase(t, 169, 177));
+          tool.visible = t >= 167;
+          const allPlaced = placements.every(
+            (p) => p.group.position.distanceTo(p.home) < 0.001,
+          );
+          for (let i = 0; i < parts.connections.length; i++) {
+            const segment = parts.connections[i];
+            extend(
+              segment,
+              allPlaced ? phase(t, connectionAt + i, connectionAt + 6 + i) : 0,
+            );
           }
-          (Ot && ri.lerpVectors(Pr, ri, 1.9),
-            (ri.y = Math.max(ri.y, s(ri.x, ri.z) + 12)),
-            Qs.position.copy(ri),
-            Qs.up.set(0, 1, 0),
-            Qs.lookAt(Pr));
-          let pe = u(f, 142, 150);
-          (D.position.lerp(ri, pe),
-            D.quaternion.slerp(Qs.quaternion, pe),
-            (D.fov = D.fov * (1 - pe) + (Ot ? 50 : 48) * pe),
-            (D.near = 0.5),
-            D.updateProjectionMatrix());
+          const paidOut = cablePayout(t);
+          for (const segment of cableSegments)
+            extend(
+              segment,
+              t >= cableEnd ? 1 : clamp((paidOut - segment.offset) / segment.length),
+            );
+          positionTool(t, paidOut);
+          ready =
+            allPlaced &&
+            t >= readyAt &&
+            parts.connections.every((c) => c.mesh.scale.y === 1) &&
+            cableSegments.every((c) => c.mesh.scale.y === 1);
+          // Existing rotor and water gauge follow the resource model after switch-on.
+          serviceLamp.emissiveIntensity = ready
+            ? 0.32 *
+              phase(model.state.time, COMMISSIONING_START, COMMISSIONING_START + 2)
+            : 0;
+          if (ready && model.state.eventAt !== null && crewAt === null)
+            crewAt = Math.max(
+              readyAt,
+              readyAt + model.state.eventAt - COMMISSIONING_START,
+            );
+          crew.group.visible = crewAt !== null && t >= crewAt;
+          crewLanded = false;
+          if (crewAt !== null) {
+            landProbe(crew, t, crewAt);
+            crewLanded = t >= crewAt + 20;
+          }
+          if (t < 142) {
+            stage = "survey";
+            caption = "";
+          } else if (t < 168) {
+            stage = "support-landing";
+            caption = "지원 탐사선 B · C 착륙";
+          } else if (t < CARGO_TOUCHDOWN) {
+            stage = "cargo-landing";
+            caption = "X04 · X05 화물 하강";
+          } else if (t < placements[0].start) {
+            stage = "carrier-deployment";
+            caption = t < CARRIER_RELEASE ? "" : "운반차 전개";
+          } else if (t < connectionAt) {
+            stage = "placement";
+            caption = [
+              "거주 모듈 01 운반",
+              "거주 모듈 02 운반",
+              "자원 회수 설비 배치",
+              "저수조 배치",
+            ][
+              active
+                ? active.index
+                : Math.min(3, placements.filter((p) => t >= p.end).length)
+            ];
+          } else if (!ready) {
+            stage = "connection";
+            caption = t < connectionAt + 15 ? "배관 · 전력선 연결" : "";
+          } else if (crewAt === null) {
+            stage = "commissioning";
+            caption =
+              model.state.stored > 0
+                ? "무인 시험 가동 · 물 회수 중"
+                : "무인 시험 가동";
+          } else if (!crewLanded) {
+            stage = "crew-landing";
+            caption = "유인 착륙선 진입";
+          } else {
+            stage = "operating";
+            caption = "";
+          }
+        }
+        const observer = new T.PerspectiveCamera(),
+          aim = new T.Vector3(),
+          pos = new T.Vector3(),
+          detailAim = new T.Vector3(),
+          detailPos = new T.Vector3();
+        function frame(camera) {
+          if (existing || clock < 142) return;
+          // An overview keeps A/B/C and the installation site in a single terrain frame.
+          // Move closer only to make the load-to-ground relationship legible.
+          const close = phase(clock, 170, 178),
+            wide = phase(clock, connectionAt + 15, readyAt);
+          const q = close * (1 - wide),
+            portrait = camera.aspect < 1;
+          const base = heightAt(-1415, 3335);
+          pos.set(-1580 + 30 * q, base + 110 - 30 * q, 3565 - 25 * q);
+          aim.set(
+            -1415 - 15 * q + 32 * wide,
+            base + 34 + 40 * (1 - phase(clock, 178, CARGO_TOUCHDOWN)) * q + 14 * wide,
+            3320 + 45 * q + 68 * wide,
+          );
+          // One fixed oblique view establishes where contact happens.
+          const landingView = phase(clock, 163, 169) * (1 - phase(clock, 190, 196));
+          detailAim.set(cx, cy + 15, cz);
+          detailPos.set(cx - 115, cy + 64, cz + 108);
+          aim.lerp(detailAim, landingView);
+          pos.lerp(detailPos, landingView);
+      
+          // Teach the unloading motion once from a stationary viewpoint.
+          const first = placements[0];
+          const loadView =
+            phase(clock, first.start - 6, first.start + 2) *
+            (1 - phase(clock, first.unhookAt, first.haulAt + 8));
+          detailAim.set((cx + first.unloadX) / 2, cy + 17, first.slot.z);
+          detailPos.set(cx - 81, cy + 43, cz + 79);
+          aim.lerp(detailAim, loadView);
+          pos.lerp(detailPos, loadView);
+      
+          const connectView =
+            phase(clock, cableEnd - 7, cableEnd) *
+            (1 - phase(clock, connectionAt + 19, readyAt));
+          detailAim.set(-1425, heightAt(-1425, 3306) + 4, 3306);
+          detailPos.set(-1505, detailAim.y + 39, 3369);
+          aim.lerp(detailAim, connectView);
+          pos.lerp(detailPos, connectView);
+          if (portrait) pos.lerpVectors(aim, pos, 1.9);
+          pos.y = Math.max(pos.y, heightAt(pos.x, pos.z) + 12);
+          observer.position.copy(pos);
+          observer.up.set(0, 1, 0);
+          observer.lookAt(aim);
+          const blend = phase(clock, 142, 150);
+          camera.position.lerp(pos, blend);
+          camera.quaternion.slerp(observer.quaternion, blend);
+          camera.fov = camera.fov * (1 - blend) + (portrait ? 50 : 48) * blend;
+          camera.near = 0.5;
+          camera.updateProjectionMatrix();
         }
         return {
-          root: v,
-          b: E,
-          c: C,
-          cargo: F,
-          carrier: ce,
-          power: nt,
-          tool: vt,
-          crew: L,
-          placements: pt,
-          update: il,
-          frame: za,
+          root,
+          b,
+          c,
+          cargo,
+          carrier,
+          power,
+          tool,
+          crew,
+          placements,
+          update,
+          frame,
           get ready() {
-            return x;
+            return ready;
           },
           get crewLanded() {
-            return m;
+            return crewLanded;
           },
           get caption() {
-            return M;
+            return caption;
           },
-          physicsTime(D, G = 0) {
-            return p ? G + D : f >= Ae && x ? 64 + f - Ae : 0;
+          physicsTime(elapsed, origin = 0) {
+            if (existing) return origin + elapsed;
+            return clock >= readyAt && ready
+              ? COMMISSIONING_START + clock - readyAt
+              : 0;
           },
           departureAt() {
-            return g === null ? 1 / 0 : Math.max(g + 28, d) - d;
+            return crewAt === null
+              ? Infinity
+              : Math.max(crewAt + 28, clockOffset) - clockOffset;
           },
           save() {
-            return { version: 2, existing: p, elapsed: f, clockOffset: d };
+            return { version: 2, existing, elapsed: clock, clockOffset };
           },
           snapshot() {
             return {
               ...this.save(),
-              readyAt: Ae,
-              connectionAt: Bt,
-              plan: pt.map((D) => ({
-                start: D.start,
-                haulAt: D.haulAt,
-                settleAt: D.settleAt,
-                releaseAt: D.releaseAt,
-                end: D.end,
+              readyAt,
+              connectionAt,
+              plan: placements.map((p) => ({
+                start: p.start,
+                haulAt: p.haulAt,
+                settleAt: p.settleAt,
+                releaseAt: p.releaseAt,
+                end: p.end,
               })),
-              stage: w,
-              ready: x,
-              crewAt: g,
-              crewLanded: m,
-              commissioned: x,
-              carrier: ce.position.toArray(),
-              cargo: F.position.toArray(),
+              stage,
+              ready,
+              crewAt,
+              crewLanded,
+              commissioned: ready,
+              carrier: carrier.position.toArray(),
+              cargo: cargo.position.toArray(),
               propulsion: {
-                clock: et.clock,
-                verticalAcceleration: et.verticalAcceleration,
-                throttle: et.throttle,
-                pods: et.pods.map((D) => ({ ...D })),
+                clock: propulsion.clock,
+                verticalAcceleration: propulsion.verticalAcceleration,
+                throttle: propulsion.throttle,
+                pods: propulsion.pods.map((p) => ({ ...p })),
               },
-              crewVisible: L.group.visible,
-              modules: pt.map((D) => ({
-                name: D.name,
-                atTarget: D.group.position.distanceTo(D.home) < 0.001,
-                position: D.group.position.toArray(),
-                target: D.home.toArray(),
+              crewVisible: crew.group.visible,
+              modules: placements.map((p) => ({
+                name: p.name,
+                atTarget: p.group.position.distanceTo(p.home) < 0.001,
+                position: p.group.position.toArray(),
+                target: p.home.toArray(),
               })),
               supportCount: 2,
               totalSurveyors: 3,
-              largeCargoSeparate: !0,
-              installed: pt.filter((D) => D.group.position.distanceTo(D.home) < 0.001).length,
+              largeCargoSeparate: true,
+              installed: placements.filter(
+                (p) => p.group.position.distanceTo(p.home) < 0.001,
+              ).length,
             };
           },
         };
