@@ -55958,6 +55958,16 @@ var<${access}> ${name} : ${structName};`;
     let t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0)));
     return t * t * (3 - 2 * t);
   }
+  function recoveryNavigation() {
+    return `<nav aria-label="관람 복구" style="display:flex;flex-wrap:wrap;gap:12px;margin-top:10px">
+      <button id="ti-retry" type="button" style="min-height:44px;padding:10px 16px;background:transparent;border:1px solid #8a9099;color:#d9dde2;font:inherit;cursor:pointer">다시 시도</button>
+      <a href="index.html?intro=skip" style="display:inline-flex;align-items:center;min-height:44px;color:#d9dde2">처음으로</a>
+      <a href="field-archive.html" style="display:inline-flex;align-items:center;min-height:44px;color:#d9dde2">작품 목록</a>
+    </nav>`;
+  }
+  function bindRecovery() {
+    document.getElementById("ti-retry")?.addEventListener("click", () => location.reload());
+  }
   function unsupported(reason = "api", title = "") {
     window.TI_READY = !0;
     let reasons = {
@@ -55993,7 +56003,9 @@ var<${access}> ${name} : ${structName};`;
       <div style="width:56px;height:1px;background:#c0152a"></div>
       <p style="font-size:11px;line-height:1.9;max-width:48ch">${why[1]}</p>
       <p style="font-size:11px;line-height:1.9;max-width:48ch">${why[2]}</p>
+      ${recoveryNavigation()}
     </div>`;
+    bindRecovery();
   }
   function fatal(err, where = "") {
     window.TI_READY = !0;
@@ -56019,16 +56031,16 @@ var<${access}> ${name} : ${structName};`;
       <div id="fh-fatal" style="font-family:'Space Mono',monospace;font-size:13px;letter-spacing:.24em;color:#c0152a">
         RUNTIME FAULT${where ? " · " + esc(where.toUpperCase()) : ""}</div>
       <div style="width:56px;height:1px;background:#c0152a"></div>
-      <p style="font-size:12px;line-height:1.8;color:#d9dde2;max-width:80ch">${esc(msg)}</p>
-      <pre style="font-size:10px;line-height:1.7;color:#5a6068;white-space:pre-wrap;max-width:100ch">${esc(stack3)}</pre>
-      <p style="font-size:11px;line-height:1.9;max-width:60ch">
-        Reload with <span style="color:#d9dde2">?safe</span> to disable the lens and the wake —
-        if it runs then, the fault is in one of those.</p>
-      <p style="font-size:11px;line-height:1.9;max-width:60ch">
-        주소 끝에 <span style="color:#d9dde2">?safe</span> 를 붙여 다시 열면 렌즈와 파문을 끈다.
-        그 상태로 구동되면 원인은 둘 중 하나다.</p>
+      <p style="font-size:13px;line-height:1.9;max-width:60ch">현재 환경에서 작품을 시작하지 못했습니다. 다시 시도하거나 작품 목록으로 이동해 주세요.</p>
+      <p style="font-size:11px;line-height:1.9;max-width:60ch">안전 모드는 일부 시각 효과를 줄이는 옵션이며, WebGPU 미지원 문제를 해결하지는 않습니다.</p>
+      ${recoveryNavigation()}
+      <details style="font-size:11px;line-height:1.8;max-width:80ch"><summary style="cursor:pointer;min-height:44px">기술 정보</summary>
+        <p>${esc(msg)}</p><pre style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(stack3)}</pre>
+      </details>
     </div>`;
+    bindRecovery();
   }
+
   function createRenderer(canvas) {
     let C = cfg(),
       viewportSize3 = () => {
@@ -69620,6 +69632,14 @@ body.ti-voyage #ti-transfer-trigger {
       navigator.gpu ||
         (unsupported("api", "BEYOND THE KNOWN - A Terraforming Project"), await HALT()),
       window.TI_BOOT?.beat("device"));
+    try {
+      const adapter = await navigator.gpu.requestAdapter({ powerPreference: "high-performance" });
+      if (!adapter) { unsupported("adapter"); await HALT(); }
+    } catch (error) {
+      console.error("WebGPU adapter unavailable", error);
+      unsupported("adapter");
+      await HALT();
+    }
     let canvas = document.getElementById("gl"),
       renderer,
       camera;
