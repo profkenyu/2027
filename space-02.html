@@ -262,10 +262,6 @@
                   ((elapsed - 8 + valve) / valve - btkTurnIntegral((elapsed - 8 + valve) / valve));
         return -0.24 + rate * turn;
       }
-      function btkTransitJet(t, index) {
-        const u = (t - (index === 0 ? 40 : 47.6)) / 0.4;
-        return u > 0 && u < 1 ? 16 * u * u * (1 - u) * (1 - u) : 0;
-      }
 
       var __create = Object.create;
       var __defProp = Object.defineProperty;
@@ -1072,16 +1068,16 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
       var SCENE_MODEL_ASSETS = Object.freeze({
         opening: {
           high: {
-            file: "high-144b1b740d496921.json",
-            bytes: 1971971,
+            file: "high-ae576180044b4a70.json",
+            bytes: 1974051,
           },
           mid: {
-            file: "mid-3b3c31a80205c071.json",
-            bytes: 1971970,
+            file: "mid-9f083e2024e75bb7.json",
+            bytes: 1974050,
           },
           low: {
-            file: "low-b8e1205532bc2ca4.json",
-            bytes: 1327015,
+            file: "low-8599028612d9e719.json",
+            bytes: 1328454,
           },
         },
         transit: {
@@ -1100,16 +1096,16 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
         },
         arrival: {
           high: {
-            file: "high-42ecd1a9ba16cd20.json",
-            bytes: 1345811,
+            file: "high-a88769b2ea4fd64a.json",
+            bytes: 1389595,
           },
           mid: {
-            file: "mid-8a4ff84d95afb74c.json",
-            bytes: 1216895,
+            file: "mid-82d7fe49c2141933.json",
+            bytes: 1258533,
           },
           low: {
-            file: "low-cbf5dd61f2ebb744.json",
-            bytes: 653855,
+            file: "low-da447e3466450bbb.json",
+            bytes: 697671,
           },
         },
       });
@@ -29182,7 +29178,123 @@ vHullPosition=position;`,
       }
       var exposureAt = (t2, passage2 = 1) =>
         Math.min(1, Math.max(0, ((passage2 - 1) * 64 + t2) / 128));
-      function createSurveyor(tier2, passage2 = 1, batches) {
+      function transitValveAge(t, index) { return t - (index === 0 ? 40 : 47.6); }
+function createTransitExhaust(group, tier) {
+  const collar = new CylinderGeometry(0.096, 0.061, 0.30, tier === "low" ? 8 : 14, 1, true);
+  collar.translate(0, -0.15, 0);
+  const metal = new MeshStandardMaterial({
+    color: 0x5b6064, roughness: 0.62, metalness: 0.64, side: DoubleSide,
+  });
+  const volume = new BoxGeometry(0.72, 0.98, 0.72);
+  volume.translate(0, 0.49, 0);
+  const jets = [-1, 1].map(side => {
+    const port = new Mesh(collar, metal);
+    port.name = "survey-attitude-outlet";
+    port.position.set(side * 2.87, 4.8, 1.8);
+    port.rotation.z = -side * Math.PI / 2;
+    group.add(port);
+    const gas = new ShaderMaterial({
+      uniforms: { valveAge: { value: -1 } },
+      transparent: true, depthTest: true, depthWrite: false,
+      vertexShader: `
+        varying vec3 localEntry;
+        varying vec3 localEye;
+        void main() {
+          localEntry = position;
+          localEye = inverse(modelViewMatrix)[3].xyz;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform float valveAge;
+        varying vec3 localEntry;
+        varying vec3 localEye;
+        void main() {
+          vec3 ray = normalize(localEntry - localEye);
+          vec3 face = mix(vec3(-.36,0.,-.36), vec3(.36,.98,.36), step(vec3(0.), ray));
+          vec3 signRay = step(vec3(0.), ray)*2.-1.;
+          vec3 exitT = (face-localEntry)/(signRay*max(abs(ray),vec3(.00001)));
+          float stepLength = max(min(exitT.x, min(exitT.y,exitT.z)),0.) / 6.;
+          float depth = 0.;
+          float core = 0.;
+          for (int i=0; i<6; i++) {
+            vec3 p = localEntry + (float(i)+.5)*stepLength*ray;
+            float u = clamp((valveAge - p.y*.086)/.4,0.,1.);
+            float pulse = 16.*u*u*(1.-u)*(1.-u);
+            float width = .076 + .20*p.y;
+            float r2 = dot(p.xz,p.xz)/(width*width);
+            float column = exp(-2.1*r2) * pow(.076/width,2.) *
+              (1.-smoothstep(.45,.97,p.y)) * pulse * stepLength;
+            depth += column;
+            core += column*exp(-6.*p.y-r2);
+          }
+          float alpha = 1.-exp(-7.5*depth);
+          if (alpha < .001) discard;
+          gl_FragColor = vec4(mix(vec3(.47,.55,.61),vec3(.89,.91,.88),core/max(depth,.00001)), alpha);
+          #include <tonemapping_fragment>
+          #include <colorspace_fragment>
+        }
+      `,
+    });
+    const jet = new Mesh(volume, gas);
+    jet.name = "survey-attitude-exhaust";
+    jet.visible = false;
+    port.add(jet);
+    return jet;
+  });
+  return t => {
+    jets.forEach((jet, i) => {
+      const age = transitValveAge(t, i);
+      jet.material.uniforms.valveAge.value = age;
+      jet.visible = age > 0 && age < 0.485;
+    });
+  };
+}
+const inspectionEye = new Vector3();
+const inspectionFocus = new Vector3();
+const recordedEye = new Vector3();
+const recordedView = new Quaternion();
+const finalDirection = new Vector3();
+
+function framePassageTrace(camera, ship, seconds, passage) {
+  const ease = MathUtils.smootherstep;
+  const first = passage === 1;
+  const weight = first
+    ? ease(seconds, 3, 13) * (1 - ease(seconds, 17, 32))
+    : ease(seconds, 2, 13) * (1 - ease(seconds, 26, 43));
+  if (weight === 0) return;
+  recordedEye.copy(camera.position);
+  recordedView.copy(camera.quaternion);
+  const previousDistance = camera.position.distanceTo(camera.userData.focus);
+  if (first) {
+    // Look along one sill as the already-folded ramp passes. Local coordinates
+    // keep the actual hinge and both rover lanes in frame on desktop and mobile.
+    const progress = ease(seconds, 4, 26);
+    inspectionEye.set(3.8 + 2.6*progress, 3.45 - 1.9*progress, -13.5 + .9*progress)
+      .applyQuaternion(ship.quaternion).add(ship.position);
+    inspectionFocus.set(.1, 2.45, -2.85).applyQuaternion(ship.quaternion).add(ship.position);
+  } else {
+    // Retain the original sweep around the keel; reduce viewing distance over
+    // its central span so the panel shadows can be compared with the fixed rim.
+    inspectionEye.copy(camera.position).sub(ship.position);
+    const progress = ease(seconds, 2, 32);
+    inspectionEye.setLength(18.5 + 4*progress);
+    inspectionEye.y = -.85 - 1.5*(1-progress);
+    inspectionEye.add(ship.position);
+    inspectionFocus.copy(ship.position);
+    inspectionFocus.y += 1.60;
+  }
+  const inspectDistance = inspectionEye.distanceTo(inspectionFocus);
+  camera.position.copy(inspectionEye);
+  camera.lookAt(inspectionFocus);
+  camera.quaternion.slerp(recordedView, 1 - weight);
+  camera.position.lerpVectors(recordedEye, inspectionEye, weight);
+  camera.getWorldDirection(finalDirection);
+  camera.userData.focus.copy(camera.position).addScaledVector(
+    finalDirection, MathUtils.lerp(previousDistance, inspectDistance, weight));
+  camera.updateMatrixWorld();
+}
+function createSurveyor(tier2, passage2 = 1, batches) {
         let group = new Group();
         group.name = "survey-lander-flight";
         for (let batch of batches) {
@@ -29224,22 +29336,8 @@ vHullPosition=position;`,
           }),
           radiators = hardware.radiators;
         group.add(hardware.group);
-        let jets = [],
-          jetMaterial = new MeshBasicMaterial({
-            color: 10926017,
-            transparent: !0,
-            opacity: 0.16,
-            depthWrite: !1,
-          });
-        for (let side of [-1, 1]) {
-          let jet = new Mesh(new ConeGeometry(0.035, 0.32, 8), jetMaterial);
-          (jet.position.set(side * 3.6, 4.8, 1.8),
-            (jet.rotation.z = (side * Math.PI) / 2),
-            (jet.visible = !1),
-            group.add(jet),
-            jets.push(jet));
-        }
-        let exposureUniforms = new Set();
+        const updateJets = createTransitExhaust(group, tier2);
+let exposureUniforms = new Set();
         return (
           group.traverse((o) => {
             for (let m of Array.isArray(o.material) ? o.material : [o.material])
@@ -29258,13 +29356,7 @@ vHullPosition=position;`,
                 (1 - MathUtils.smoothstep(t2, 52, 62)) *
                 response2.radiator;
               hardware.setDeployment(deployment);
-              let jetPower = 0;
-              jets.forEach((jet, index) => {
-                const strength = btkTransitJet(t2, index);
-                jet.visible = strength > 0.001;
-                jetPower = Math.max(jetPower, strength);
-              });
-              jetMaterial.opacity = 0.16 * jetPower;
+              updateJets(t2);
             },
             radiators,
           }
@@ -29379,7 +29471,45 @@ vHullPosition=position;`,
           exposure: 1.05 - 0.12 * brightHull,
         };
       }
-      function createVoid(scene2, tier2, passage2 = 1) {
+      // Departure and destination remain fixed on opposite sides of the flight.
+// The existing moving observer brings the last rim of YARDANG FIELD past the
+// carrier's shaded underside. No screen-space mask or illuminated halo.
+function addRecedingYardang(scene, tier, sun) {
+  const segments = { low: 48, mid: 72, high: 96 }[tier];
+  const material = new ShaderMaterial({
+    uniforms: { sunDirection: { value: sun.clone().normalize() } },
+    vertexShader: `
+      varying vec3 surface;
+      void main(){
+        surface = normal;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.);
+      }`,
+    fragmentShader: `
+      uniform vec3 sunDirection;
+      varying vec3 surface;
+      void main(){
+        vec3 n = normalize(surface);
+        float day = max(dot(n,sunDirection),0.);
+        float beds = .5 + .5*sin(21.*n.y+6.2*n.z+1.3*sin(7.*n.x));
+        vec3 fines = mix(vec3(.115,.082,.051),vec3(.145,.111,.076),beds);
+        gl_FragColor = vec4(fines*(.016+.34*day),1.);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }`
+  });
+  const body = new Mesh(new SphereGeometry(9610, segments, segments / 2), material);
+  body.name = "departing-yardang";
+  body.position.set(4800,-9850,640);
+  scene.add(body);
+}
+
+// Small bank through coasting: genuine panel shadows change relative to both
+// fixed horizons. Restore the recorded attitude by terminal approach.
+function coastBank(seconds) {
+  const drift = MathUtils.smootherstep(seconds, 2, 38);
+  return .078 * drift * (1-MathUtils.smootherstep(seconds, 43, 60));
+}
+function createVoid(scene2, tier2, passage2 = 1) {
         let stars = new Group(),
           count = { high: 1800, mid: 1200, low: 700 }[tier2],
           seed = 4917,
@@ -46820,7 +46950,21 @@ vHullPosition=position;`,
         };
       }
       // Authored onboard sound: engine and machinery vibration.
-      function createVesselAudio({ phase, duration, onState = () => {}, inspect = false }) {
+      // A listening envelope for the second transfer, timed to its 64-second flight.
+// Sound remains opt-in; this only mixes signals already inside the cabin.
+function inertialCoast(seconds) {
+  const attack = Math.max(0, Math.min(1, (seconds - 3) / 6));
+  const release = Math.max(0, Math.min(1, (seconds - 46) / 8));
+  return attack*attack*(3-2*attack) * (1-release*release*(3-2*release));
+}
+
+// Both installed sound systems already accept a listening gain. Keep their
+// separate voice graphs, reverberation and gesture-driven mute controls.
+function cabinCoastGain(seconds) {
+  return 1 - .94 * inertialCoast(seconds);
+}
+
+function createVesselAudio({ phase, duration, onState = () => {}, inspect = false }) {
         let context = null,
           graph = null,
           enabled = false,
@@ -47278,6 +47422,8 @@ vHullPosition=position;`,
       function render(seconds) {
         ((t = MathUtils.clamp(seconds, 0, DURATION)),
           pose(camera, surveyor.group, t, passage),
+          passage === 2 && (surveyor.group.rotation.z += coastBank(t)),
+          framePassageTrace(camera, surveyor.group, t, passage),
           surveyor.update(t, response),
           voidScene.stars.position.copy(camera.position),
           keyLight.target.position.copy(surveyor.group.position),
@@ -47290,7 +47436,7 @@ vHullPosition=position;`,
         let blackout = passageEdit(t, cuts).veil;
         (blackout !== veilOpacity &&
           ((veilOpacity = blackout), (veil.style.opacity = String(blackout))),
-          audio.update(t),
+          audio.update(t, undefined, cabinCoastGain(t)),
           shadowBudget.update(t, shotAt(t, passage)),
           renderer.render(scene, camera));
       }
@@ -47372,6 +47518,7 @@ vHullPosition=position;`,
           (modelAsset.data = null),
           scene.add(surveyor.group),
           (voidScene = createVoid(scene, tier, passage)),
+          passage === 2 && addRecedingYardang(scene,tier,lightOffset),
           render(t),
           (document.getElementById("loading").hidden = !0),
           pacer.reset(),

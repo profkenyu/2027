@@ -1113,23 +1113,25 @@ function createInstallation(T, {
     void main() {
       float along = 1.0 - vUv.y;
       float depth = along * uLength;
-      float scroll = depth * 0.52 - uClock;
+      float scroll = depth * 0.54 - uClock;
       float eddy = noise(vec2(scroll * 0.43, uSeed + 1.7));
-      float spread = smoothstep(0.0, 7.5, depth);
-      float centre = (eddy - 0.5) * 0.34 * spread;
-      float x = (vUv.x * 2.0 - 1.0) - centre;
-      float width = mix(0.23, 0.81, spread) * mix(1.0, 0.78 + 0.42 * eddy, spread);
-      float edge = abs(x) / width;
-      float profile = 1.0 - smoothstep(0.12, 1.0, edge);
-      float cloud = noise(vec2(x * 5.0 + uSeed * 2.1, scroll));
+      float spread = smoothstep(0.1, 8.0, depth);
+      float centre = (eddy - 0.5) * 0.28 * spread;
+      float x = vUv.x * 2.0 - 1.0 - centre;
+      // The projected chord thins as the jet expands. Only mixed outer gas
+      // develops shear. The luminous stream remains connected to the bell.
+      float width = mix(0.30, 0.79, spread) * (1.0 + (eddy - 0.5) * 0.34 * spread);
+      float radius = abs(x) / width;
+      float chord = max(0.0, 1.0 - radius * radius);
+      float cloud = noise(vec2(x * 6.0 + uSeed * 2.1, scroll));
       #ifdef FINE_FLOW
-        cloud = mix(cloud, noise(vec2(x * 11.0 - uSeed, scroll * 1.84)), 0.25);
+        cloud = mix(cloud, noise(vec2(x * 13.0 - uSeed, scroll * 1.91)), 0.26);
       #endif
-      float core = (1.0 - smoothstep(0.0, 0.48, edge)) * (1.0 - smoothstep(0.0, 5.0, depth));
-      float mixFlow = mix(0.95, 0.35 + 0.8 * cloud, smoothstep(0.45, 6.0, depth));
-      float fade = 1.0 - smoothstep(0.18, 1.0, along);
-      float alpha = uStrength * fade * (0.64 * profile * mixFlow + 0.22 * core);
-      gl_FragColor = vec4(mix(uColor, uCore, core), alpha);
+      float hot = exp(-radius * radius * 5.0 - depth / (1.05 + 2.6 * uStrength));
+      float mixing = mix(1.0, 0.4 + cloud, spread * (1.0 - hot));
+      float fade = 1.0 - smoothstep(0.30, 1.0, along);
+      float alpha = uStrength * fade * chord * (0.36 * mixing * 0.30 / width + 0.68 * hot);
+      gl_FragColor = vec4(mix(uColor, uCore, hot), alpha);
       #include <tonemapping_fragment>
       #include <colorspace_fragment>
       #include <fog_fragment>
@@ -1142,8 +1144,8 @@ function createInstallation(T, {
       defines: tier2 === "low" ? {} : { FINE_FLOW: 1 },
       uniforms: {
         ...fogUniforms(),
-        uColor: { value: new T.Color(8484979) },
-        uCore: { value: new T.Color(12827050) },
+        uColor: { value: new T.Color(0x849197) },
+        uCore: { value: new T.Color(0xf0e5cf) },
         uClock: { value: 0 },
         uLength: { value: 0 },
         uSeed: { value: i * 2.83 },
@@ -1165,6 +1167,51 @@ function createInstallation(T, {
     cargo.add(plume);
     return plume;
   });
+  // One draw for all four recessed emitters. Above the cargo deck only the
+  // gas can be seen. Looking up, the bell occludes the warm chamber edge.
+  const lipFace = new T.PlaneGeometry(2.67, 2.67);
+  lipFace.rotateX(Math.PI / 2);
+  const lipMaterial = new T.ShaderMaterial({
+    name: "cargo-chamber-light",
+    uniforms: { ...fogUniforms(), uStrength: { value: 0 } },
+    vertexShader: `
+      varying vec2 vUv;
+      #include <common>
+      #include <fog_pars_vertex>
+      void main() {
+        vUv = uv;
+        vec4 mvPosition = modelViewMatrix * instanceMatrix * vec4(position, 1.0);
+        gl_Position = projectionMatrix * mvPosition;
+        #include <fog_vertex>
+      }
+    `,
+    fragmentShader: `
+      varying vec2 vUv;
+      uniform float uStrength;
+      #include <common>
+      #include <fog_pars_fragment>
+      void main() {
+        vec2 q = vUv * 2.0 - 1.0;
+        float r2 = dot(q, q);
+        float hot = exp(-3.9 * r2);
+        float alpha = uStrength * (1.0 - smoothstep(0.56, 0.98, r2));
+        gl_FragColor = vec4(mix(vec3(.34,.22,.13), vec3(.98,.88,.73), hot), alpha);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+        #include <fog_fragment>
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+    fog: true,
+  });
+  const chamberLight = new T.InstancedMesh(lipFace, lipMaterial, descentPods.length);
+  chamberLight.name = "cargo-descent-chambers";
+  descentPods.forEach(([x, z], i) => {
+    chamberLight.setMatrixAt(i, matrix.makeTranslation(x, nozzleExitY + 0.17, z));
+  });
+  chamberLight.visible = false;
+  cargo.add(chamberLight);
   const dustPerPod = { high: 15, mid: 10, low: 6 }[tier2];
   const dustMaterial = new T.ShaderMaterial({
     name: "cargo-descent-surface-wash",
@@ -1283,6 +1330,8 @@ function createInstallation(T, {
     propulsion.clock = t;
     propulsion.verticalAcceleration = acceleration;
     propulsion.throttle = throttle;
+    chamberLight.visible = throttle > 0.001;
+    lipMaterial.uniforms.uStrength.value = throttle;
     if (fall !== propulsionGroundFall) {
       for (let i = 0; i < propulsion.pods.length; i++) {
         const state2 = propulsion.pods[i];
@@ -36929,6 +36978,20 @@ function regions(model) {
   });
 }
 function createPlaceRecorder(renderer2, scene2, surface, habitat2, tier2, state2) {
+  const { camera: camera2 } = createBasinObservation();
+  // A continuing installation keeps the lens of its original, irreplaceable photograph.
+  const lensReady = readBaselineCamera().then((saved) => {
+    if (saved?.aspect !== camera2.aspect || !(saved.fov > 0 && saved.fov < 179) ||
+        !Array.isArray(saved.position) || saved.position.length !== 3 ||
+        !Array.isArray(saved.quaternion) || saved.quaternion.length !== 4 ||
+        ![...saved.position, ...saved.quaternion].every(Number.isFinite) ||
+        Math.abs(Math.hypot(...saved.quaternion) - 1) > 0.00001) return;
+    camera2.position.fromArray(saved.position);
+    camera2.quaternion.fromArray(saved.quaternion);
+    camera2.fov = saved.fov;
+    camera2.updateProjectionMatrix();
+  }).catch(() => {});
+
   const completed = /* @__PURE__ */ new Set();
   let busy = false, retryAt = 0, pending = Promise.resolve(), available = true;
   const snapshot = () => ({ available, completed: [...completed], busy });
@@ -36941,6 +37004,7 @@ function createPlaceRecorder(renderer2, scene2, surface, habitat2, tier2, state2
     }
   }
   async function capture(stage, id) {
+    await lensReady;
     const width = tier2 === "low" ? 384 : 640, height = width * 5 / 8;
     const s = habitat2.snapshot(), capturedRegions = regions(habitat2.model);
     const target2 = new WebGLRenderTarget(width, height);
@@ -36977,9 +37041,7 @@ function createPlaceRecorder(renderer2, scene2, surface, habitat2, tier2, state2
     const fill = new DirectionalLight(10337247, 0.22);
     fill.position.set(1800, -600, -2200);
     frame.add(light, light.target, fill);
-    const camera2 = new PerspectiveCamera(42, 1.6, 0.5, 8e4);
-    camera2.position.set(-1420, groundHeight(-1420, 2780) + 175, 2780);
-    camera2.lookAt(-1400, groundHeight(-1400, 3300) + 125, 3300);
+    
     const previous = renderer2.getRenderTarget(), auto = renderer2.shadowMap.autoUpdate;
     const buffer = new Uint8Array(width * height * 4);
     try {
@@ -37025,8 +37087,7 @@ function createPlaceRecorder(renderer2, scene2, surface, habitat2, tier2, state2
         camera: {
           position: camera2.position.toArray(),
           quaternion: camera2.quaternion.toArray(),
-          fov: 42,
-          aspect: 1.6
+          fov: camera2.fov, aspect: camera2.aspect
         },
         status: stage === "before" ? "\uAC1C\uC785 \uC774\uC804" : !s.heatPower && !s.pumpPower ? "\uC124\uBE44 \uB300\uAE30" : s.eventAt === null ? "\uCD08\uAE30 \uAC00\uB3D9" : "\uC548\uC815 \uC6B4\uC804",
         resources: {
@@ -62648,6 +62709,22 @@ var smooth5 = (x) => {
   x = MathUtils.clamp(x, 0, 1);
   return x * x * x * (10 + x * (-15 + x * 6));
 };
+function createBasinObservation() {
+  const camera = new PerspectiveCamera(42, 1.6, 0.5, 80000);
+  const target = new Vector3(-1370, groundHeight(-1370, 3292) + 16, 3292);
+  camera.position.set(-1376, groundHeight(-1376, 3580) + 134, 3580);
+  camera.lookAt(target);
+  return { camera, target };
+}
+
+async function readBaselineCamera() {
+  const db = await openExhibition();
+  return new Promise((resolve, reject) => {
+    const request = db.transaction("frames").objectStore("frames").get("before");
+    request.onsuccess = () => resolve(request.result?.camera);
+    request.onerror = () => reject(request.error);
+  });
+}
 function createHabitatWorld(scene2, surface, tier2, checkpoint, options = {}) {
   const model = createBasinModel(groundHeight, checkpoint, options);
   const arrays = [
@@ -62878,8 +62955,22 @@ function createHabitatWorld(scene2, surface, tier2, checkpoint, options = {}) {
   label.position.set(-1408, surface.heightAt(-1408, 3278) + 5, 3265.7);
   group.updateMatrixWorld(true);
   payloads[0].group.attach(label);
-  const target2 = new Vector3(), startPosition = new Vector3(), startRotation = new Quaternion(), finalRotation = new Quaternion();
-  const helper = new PerspectiveCamera();
+    // Survey stakes belong to the ground in all three views, including the archive.
+  const posts = new InstancedMesh(
+    new CylinderGeometry(0.28, 1.25, 3.4, 4),
+    new MeshStandardMaterial({color: 0x565d5d, metalness: 0.14, roughness: 0.8}),
+    4,
+  );
+  posts.name = "preservation-survey-stakes";
+  for (const [index, z] of [3220, 3260, 3300, 3340].entries()) {
+    posts.setMatrixAt(index, new Matrix4().makeTranslation(
+      PRESERVE_X, surface.heightAt(PRESERVE_X, z) + 1.7, z,
+    ));
+  }
+  surface.group.add(posts);
+  const observation = createBasinObservation();
+  const look = new Vector3();
+
   let tick3 = -1, slot = 0, clock = model.state.time;
   function upload() {
     slot = 1 - slot;
@@ -62908,32 +62999,24 @@ function createHabitatWorld(scene2, surface, tier2, checkpoint, options = {}) {
     light.emissiveIntensity = time < 64 ? 0 : 0.14 * Math.min(1, (time - 64) / 18);
     gauge.scale.y = 0.08 + Math.min(1, model.state.stored / 65) * 0.92;
   }
-  function frame(camera2, blend = 1) {
+    function frame(camera, blend = 1, liveTarget = null) {
     const p = smooth5(blend);
     if (p <= 0) return;
-    startPosition.copy(camera2.position);
-    startRotation.copy(camera2.quaternion);
-    helper.position.set(-1420, surface.heightAt(-1420, 2780) + 175, 2780);
-    target2.set(-1400, surface.heightAt(-1400, 3300) + 125, 3300);
-    helper.up.set(0, 1, 0);
-    helper.lookAt(target2);
-    finalRotation.copy(helper.quaternion);
-    camera2.position.lerpVectors(startPosition, helper.position, p);
-    if (p < 1)
-      camera2.position.y = Math.max(
-        camera2.position.y,
-        surface.heightAt(camera2.position.x, camera2.position.z) + 6 + 180 * Math.sin(Math.PI * p)
-      );
-    camera2.quaternion.slerpQuaternions(startRotation, finalRotation, p);
-    camera2.fov = MathUtils.lerp(
-      camera2.fov,
-      camera2.aspect < 1 ? 50 : 42,
-      p
-    );
-    camera2.near = 0.5;
-    camera2.updateProjectionMatrix();
+    const reference = observation.camera;
+    if (liveTarget) look.copy(liveTarget);
+    else camera.getWorldDirection(look)
+      .multiplyScalar(camera.position.distanceTo(observation.target)).add(camera.position);
+    camera.position.lerp(reference.position, p);
+    camera.position.y = Math.max(camera.position.y,
+      surface.heightAt(camera.position.x, camera.position.z) + 6);
+    camera.lookAt(look.lerp(observation.target, p));
+    // Preserve the horizontal survey extent on narrow displays.
+    const vertical = Math.tan(MathUtils.degToRad(reference.fov * 0.5));
+    const fov = 2 * MathUtils.radToDeg(Math.atan(vertical * Math.max(1, reference.aspect / camera.aspect)));
+    camera.fov = MathUtils.lerp(camera.fov, fov, p);
+    camera.updateProjectionMatrix();
   }
-  return {
+return {
     model,
     update,
     frame,
@@ -63196,11 +63279,44 @@ function voyageAge(phase2, seconds2, state2 = {}) {
 }
 
 // works/first_dawn/mobile-plume.js
+
+
+// The display integrates light along an approximate optical chord. A dense
+// central jet fades into a wider, thinner envelope as its area increases.
+const plumeFlow = `
+  uniform float engineDrive;
+  uniform float wakeDrive;
+  uniform float engineClock;
+  vec2 gasState(float t, float seed, float density) {
+    float drive = mix(engineDrive, wakeDrive, smoothstep(0.0, 0.65, t));
+    float heat = exp(-3.8 * t / (0.86 + 0.72 * drive));
+    float wake = smoothstep(0.01, 0.32, t);
+    float flow = 1.0 + wake * (0.052 * sin(8.0*t - 1.4*engineClock + seed)
+                           + 0.024 * sin(15.0*t - 2.3*engineClock + seed*1.7));
+    return vec2(heat, density * flow * (0.70 + 0.76*drive));
+  }
+`;
+const plumeRadiance = `
+  vec4 jetColumn(float chord, vec2 gas) {
+    float axis = chord * chord;
+    float core = axis * axis * gas.x;
+    vec3 colour = mix(vec3(0.23,0.36,0.43), vec3(0.84,0.92,0.95), core);
+    return vec4(colour, gas.y * (0.58*chord + 0.80*core));
+  }
+`;
+
+// One view-facing ribbon approximates the integrated emission of each plume.
+// The physical outlet, authored length, colour and axial decay remain shared.
 function mobilePlumeGeometry(seed, falloff, axial = 12) {
-  const positions = [], uvs = [], densities = [], seeds = [], indices = [];
+  const positions = [],
+    uvs = [],
+    densities = [],
+    seeds = [],
+    indices = [];
   for (let k = 0; k <= axial; k++) {
-    const t = (k / axial) ** 2, radius = 0.78 + 0.82 * t ** 0.65;
-    const density = (1 - t) ** 1.7 * Math.exp(-falloff * t);
+    const t = (k / axial) ** 2,
+      radius = 0.78 + 0.82 * t ** 0.65;
+    const density = (1 - t) ** 1.35 * Math.exp(-falloff * t) / (1 + 1.7 * t);
     for (const side of [-1, 1]) {
       positions.push(side * radius, 0, 0.5 - t);
       uvs.push((side + 1) / 2, 1 - t);
@@ -63215,46 +63331,48 @@ function mobilePlumeGeometry(seed, falloff, axial = 12) {
   const geometry = new BufferGeometry();
   geometry.setAttribute(
     "position",
-    new Float32BufferAttribute(positions, 3)
+    new Float32BufferAttribute(positions, 3),
   );
   geometry.setAttribute("uv", new Float32BufferAttribute(uvs, 2));
   geometry.setAttribute(
     "plumeDensity",
-    new Float32BufferAttribute(densities, 1)
+    new Float32BufferAttribute(densities, 1),
   );
   geometry.setAttribute(
     "engineSeed",
-    new Float32BufferAttribute(seeds, 1)
+    new Float32BufferAttribute(seeds, 1),
   );
   geometry.setIndex(indices);
+  // The view-facing width can rotate in the XY plane.
   geometry.boundingSphere = new Sphere(new Vector3(), 1.7);
   return geometry;
 }
-function mobilePlumeMaterial(clock, brightness, colorGradient) {
+function mobilePlumeMaterial(clock, brightness, colorGradient, engineDrive = { value: 0.24 }, wakeDrive = engineDrive) {
   const material = new MeshBasicMaterial({
     transparent: true,
     opacity: 0.18,
     depthWrite: false,
+    forceSinglePass: true,
     side: DoubleSide,
     blending: AdditiveBlending,
-    toneMapped: false
+    toneMapped: false,
   });
   material.onBeforeCompile = (shader) => {
-    shader.uniforms.engineClock = clock;
-    shader.vertexShader = `attribute float plumeDensity; attribute float engineSeed;
-      uniform float engineClock; varying vec2 vEngineUV; varying float vDensity; varying vec3 vCentre;
-` + shader.vertexShader;
-    shader.vertexShader = shader.vertexShader.replace(
-      "#include <begin_vertex>",
-      `#include <begin_vertex>
+    Object.assign(shader.uniforms, { engineClock: clock, engineDrive, wakeDrive });
+    shader.vertexShader =
+      plumeFlow + `\nattribute float plumeDensity; attribute float engineSeed;
+      varying vec2 vEngineUV; varying vec2 vGasState;\n` +
+      shader.vertexShader;
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        "#include <begin_vertex>",
+        `#include <begin_vertex>
         vEngineUV=uv;
-        float t=1.-uv.y;
-        vCentre=mix(vec3(.83,.92,1.),vec3(.35,.54,.65),smoothstep(0.,.72,t));
-        vDensity=plumeDensity*(1.+smoothstep(.02,.18,t)*(.024*sin(t*7.-engineClock*1.3+engineSeed)
-          +.013*sin(t*13.-engineClock*2.1+engineSeed*.7)));`
-    ).replace(
-      "#include <project_vertex>",
-      `
+        vGasState=gasState(1.-uv.y, engineSeed, plumeDensity);`,
+      )
+      .replace(
+        "#include <project_vertex>",
+        `
         vec4 axisPosition=modelViewMatrix*vec4(0.,0.,transformed.z,1.);
         vec3 axisDirection=modelViewMatrix[2].xyz;
         vec3 across=cross(axisDirection,-axisPosition.xyz);
@@ -63263,39 +63381,53 @@ function mobilePlumeMaterial(clock, brightness, colorGradient) {
         float halfWidth=length(vec2(dot(modelViewMatrix[0].xyz,across),dot(modelViewMatrix[1].xyz,across)));
         vec4 mvPosition=axisPosition;
         mvPosition.xyz+=across*transformed.x*halfWidth;
-        gl_Position=projectionMatrix*mvPosition;`
-    );
-    shader.fragmentShader = "varying vec2 vEngineUV; varying float vDensity; varying vec3 vCentre;\n" + shader.fragmentShader;
+        gl_Position=projectionMatrix*mvPosition;`,
+      );
+    shader.fragmentShader =
+      plumeRadiance + "\nvarying vec2 vEngineUV; varying vec2 vGasState;\n" +
+      shader.fragmentShader;
     shader.fragmentShader = shader.fragmentShader.replace(
       "#include <color_fragment>",
       `#include <color_fragment>
       float q=vEngineUV.x*2.-1.;
-      float column=max(0.,1.-q*q);column*=column;
-      diffuseColor.rgb=${colorGradient ? "mix(vec3(.16,.30,.40),vCentre,column)" : "vec3(.48,.61,.69)"}*${brightness.toFixed(3)};
-      diffuseColor.a*=column*vDensity;`
+      vec4 light=jetColumn(max(0.,1.-q*q), vGasState);
+      diffuseColor.rgb=${colorGradient ? "light.rgb" : "vec3(.48,.61,.69)"}*${brightness.toFixed(3)};
+      diffuseColor.a*=light.a;`,
     );
   };
-  material.customProgramCacheKey = () => `mobile-plume-v1-${brightness}-${colorGradient}`;
+  material.customProgramCacheKey = () =>
+    `mobile-plume-v2-${brightness}-${colorGradient}`;
   return material;
 }
 
-// works/first_dawn/engine-glow.js
+
+// Emission-envelope approximation, not a plasma/combustion simulation. A smooth
+// shell stands in for the integrated glow of rarefied gas; no smoke or shock rings.
 function plumeGeometry(segments, axial, rectangular, seed) {
-  const positions = [], normals = [], uvs = [], seeds = [], indices = [];
+  const positions = [],
+    normals = [],
+    uvs = [],
+    seeds = [],
+    indices = [];
   for (let k = 0; k <= axial; k++) {
     const t = (k / axial) ** 2;
     const radius = 0.78 + 0.82 * t ** 0.65;
     const exponent = rectangular ? MathUtils.lerp(8, 2, Math.sqrt(t)) : 2;
     for (let j = 0; j <= segments; j++) {
-      const a = j / segments * Math.PI * 2, x = Math.cos(a), y = Math.sin(a);
-      const contour = (Math.abs(x) ** exponent + Math.abs(y) ** exponent) ** (-1 / exponent);
+      const a = (j / segments) * Math.PI * 2,
+        x = Math.cos(a),
+        y = Math.sin(a);
+      const contour =
+        (Math.abs(x) ** exponent + Math.abs(y) ** exponent) ** (-1 / exponent);
       positions.push(x * contour * radius, y * contour * radius, 0.5 - t);
+      // Optical column-density proxy, smoothly interpolated across the shell.
       normals.push(x, y, 0);
       uvs.push(j / segments, 1 - t);
       seeds.push(seed);
       if (k < axial && j < segments) {
-        const v = k * (segments + 1) + j, next2 = v + segments + 1;
-        indices.push(v, next2, v + 1, v + 1, next2, next2 + 1);
+        const v = k * (segments + 1) + j,
+          next = v + segments + 1;
+        indices.push(v, next, v + 1, v + 1, next, next + 1);
       }
     }
   }
@@ -63307,16 +63439,25 @@ function plumeGeometry(segments, axial, rectangular, seed) {
   g.setIndex(indices);
   return g;
 }
-function installVoyageEngineGlow(fleet2, tier2, {
-  lengthScale = 5,
-  tailFalloff = 0,
-  brightness = 1,
-  plumeBrightness = brightness,
-  colorGradient = true
-} = {}) {
-  const segments = { low: 20, mid: 28, high: 40 }[tier2];
-  const axial = { low: 5, mid: 8, high: 10 }[tier2];
-  const clock = { value: 0 };
+
+function installVoyageEngineGlow(
+  fleet,
+  tier,
+  {
+    lengthScale = 5,
+    tailFalloff = 0,
+    brightness = 1,
+    plumeBrightness = brightness,
+    colorGradient = true,
+  } = {},
+) {
+  const segments = { low: 20, mid: 28, high: 40 }[tier];
+  const axial = { low: 5, mid: 8, high: 10 }[tier];
+  const flowUniforms = {
+    engineClock: { value: 0 },
+    engineDrive: { value: propulsionLoad(0) },
+    wakeDrive: { value: propulsionLoad(0) },
+  };
   function coreMaterial(rectangular) {
     const material = new MeshBasicMaterial({
       transparent: true,
@@ -63325,81 +63466,89 @@ function installVoyageEngineGlow(fleet2, tier2, {
       toneMapped: false,
       polygonOffset: true,
       polygonOffsetFactor: -1,
-      polygonOffsetUnits: -2
+      polygonOffsetUnits: -2,
     });
     material.onBeforeCompile = (shader) => {
+      shader.uniforms.engineDrive = flowUniforms.engineDrive;
       shader.vertexShader = "varying vec2 vEngineUV;\n" + shader.vertexShader;
       shader.vertexShader = shader.vertexShader.replace(
         "#include <begin_vertex>",
-        "#include <begin_vertex>\nvEngineUV=uv;"
+        "#include <begin_vertex>\nvEngineUV=uv;",
       );
-      shader.fragmentShader = "varying vec2 vEngineUV;\n" + shader.fragmentShader;
+      shader.fragmentShader =
+        "uniform float engineDrive; varying vec2 vEngineUV;\n" + shader.fragmentShader;
       shader.fragmentShader = shader.fragmentShader.replace(
         "#include <color_fragment>",
         `
         #include <color_fragment>
         vec2 q=abs((vEngineUV-.5)*2.0);
         float radius=${rectangular ? "pow(pow(q.x,6.0)+pow(q.y,6.0),1.0/6.0)" : "length(q)"};
-        float hot=exp(-4.2*radius*radius);
+        float hot=exp(-5.5*radius*radius / (.87+.58*engineDrive));
         diffuseColor.rgb=mix(vec3(.19,.34,.43),vec3(.84,.93,1.0),hot)*${brightness.toFixed(3)};
-        diffuseColor.a*=1.0-smoothstep(.38,1.0,radius);
-      `
+        diffuseColor.a*=(.72+.30*engineDrive)*(1.0-smoothstep(.42,1.0,radius));
+      `,
       );
     };
-    material.customProgramCacheKey = () => `recessed-engine-core-v3-${rectangular}-${brightness}`;
+    material.customProgramCacheKey = () =>
+      `recessed-engine-core-v4-${rectangular}-${brightness}`;
     return material;
   }
-  const core = coreMaterial(false), rectCore = coreMaterial(true);
+  const core = coreMaterial(false),
+    rectCore = coreMaterial(true);
   const plume = new MeshBasicMaterial({
     transparent: true,
     opacity: 0.18,
     depthWrite: false,
     side: FrontSide,
     blending: AdditiveBlending,
-    toneMapped: false
+    toneMapped: false,
   });
   plume.onBeforeCompile = (shader) => {
-    shader.uniforms.engineClock = clock;
-    shader.vertexShader = `attribute float engineSeed;
+    Object.assign(shader.uniforms, flowUniforms);
+    shader.vertexShader =
+      `attribute float engineSeed;
       varying vec2 vEngineUV; varying vec3 vPlumeNormal; varying vec3 vPlumeView;
-      varying float vEngineSeed;
-` + shader.vertexShader;
+      varying float vEngineSeed;\n` + shader.vertexShader;
     shader.vertexShader = shader.vertexShader.replace(
       "#include <begin_vertex>",
-      "#include <begin_vertex>\nvEngineUV=uv;vEngineSeed=engineSeed;"
+      "#include <begin_vertex>\nvEngineUV=uv;vEngineSeed=engineSeed;",
     );
     shader.vertexShader = shader.vertexShader.replace(
       "#include <project_vertex>",
-      "#include <project_vertex>\nvPlumeNormal=normalize(normalMatrix*normal);vPlumeView=-mvPosition.xyz;"
+      "#include <project_vertex>\nvPlumeNormal=normalize(normalMatrix*normal);vPlumeView=-mvPosition.xyz;",
     );
-    shader.fragmentShader = `uniform float engineClock; varying vec2 vEngineUV;
-      varying vec3 vPlumeNormal; varying vec3 vPlumeView; varying float vEngineSeed;
-` + shader.fragmentShader;
+    shader.fragmentShader =
+      plumeFlow + plumeRadiance + `\nvarying vec2 vEngineUV;
+      varying vec3 vPlumeNormal; varying vec3 vPlumeView; varying float vEngineSeed;\n` +
+      shader.fragmentShader;
     shader.fragmentShader = shader.fragmentShader.replace(
       "#include <color_fragment>",
       `
       #include <color_fragment>
       float t=clamp(1.0-vEngineUV.y,0.0,1.0);
       float facing=abs(dot(normalize(vPlumeNormal),normalize(vPlumeView)));
-      float column=pow(smoothstep(.0,.94,facing),1.85);
-      vec3 centre=mix(vec3(.83,.92,1.0),vec3(.35,.54,.65),smoothstep(.0,.72,t));
-      vec3 colour=${colorGradient ? "mix(vec3(.16,.30,.40),centre,column)" : "vec3(.48,.61,.69)"};
-      diffuseColor.rgb=colour*${plumeBrightness.toFixed(3)};
-      float density=pow(1.0-t,1.7)*exp(-${tailFalloff.toFixed(3)}*t);
-      // Restrained, advected variation; the throat stays steady and there are no
-      // periodic bright bands. The same clock freezes with the scene on pause.
-      float flow=1.0+smoothstep(.02,.18,t)*(.024*sin(t*7.0-engineClock*1.3+vEngineSeed)
-        +.013*sin(t*13.0-engineClock*2.1+vEngineSeed*.7));
-      diffuseColor.a*=density*column*flow;
-    `
+      float density=pow(1.-t,1.35)*exp(-${tailFalloff.toFixed(3)}*t)/(1.+1.7*t);
+      vec4 light=jetColumn(facing*facing, gasState(t, vEngineSeed, density));
+      diffuseColor.rgb=${colorGradient ? "light.rgb" : "vec3(.48,.61,.69)"}*${plumeBrightness.toFixed(3)};
+      diffuseColor.a*=light.a;
+    `,
     );
   };
-  plume.customProgramCacheKey = () => `soft-engine-envelope-v1-${tailFalloff}-${plumeBrightness}-${colorGradient}`;
-  const emissionMaterial = tier2 === "low" ? mobilePlumeMaterial(clock, plumeBrightness, colorGradient) : plume;
+  plume.customProgramCacheKey = () =>
+    `soft-engine-envelope-v2-${tailFalloff}-${plumeBrightness}-${colorGradient}`;
+  const emissionMaterial =
+    tier === "low"
+      ? mobilePlumeMaterial(flowUniforms.engineClock, plumeBrightness, colorGradient,
+          flowUniforms.engineDrive, flowUniforms.wakeDrive)
+      : plume;
   let nozzles = 0;
-  fleet2.forEach((ship, shipIndex) => {
+  fleet.forEach((ship, shipIndex) => {
     ship.traverse((part) => {
-      if (part.isMesh && part.geometry?.type === "CircleGeometry" && part.position.z < -500)
+      if (
+        part.isMesh &&
+        part.geometry?.type === "CircleGeometry" &&
+        part.position.z < -500
+      )
         part.visible = false;
     });
     for (const [index, outlet] of ship.userData.engineOutlets.entries()) {
@@ -63411,21 +63560,22 @@ function installVoyageEngineGlow(fleet2, tier2, {
         flush,
         width = radius,
         height = radius,
-        sides
+        sides,
       } = outlet;
       const rectangular = sides === 4;
       const coreWidth = outlet.coreWidth ?? width;
       const coreHeight = outlet.coreHeight ?? height;
       const opening = new ShapeGeometry(
         outletShape(coreWidth, coreHeight, rectangular ? 4 : segments),
-        segments / 4
+        segments / 4,
       );
-      const p = opening.attributes.position, uv = opening.attributes.uv;
+      const p = opening.attributes.position,
+        uv = opening.attributes.uv;
       for (let i = 0; i < p.count; i++)
         uv.setXY(
           i,
           0.5 + p.getX(i) / (2 * coreWidth),
-          0.5 + p.getY(i) / (2 * coreHeight)
+          0.5 + p.getY(i) / (2 * coreHeight),
         );
       const disc = new Mesh(opening, rectangular ? rectCore : core);
       disc.name = "voyage-engine-core";
@@ -63435,13 +63585,15 @@ function installVoyageEngineGlow(fleet2, tier2, {
       ship.add(disc);
       const length = radius * lengthScale;
       const exhaust = new Mesh(
-        tier2 === "low" ? mobilePlumeGeometry(shipIndex * 1.37 + index * 0.61, tailFalloff) : plumeGeometry(
-          segments,
-          axial,
-          rectangular,
-          shipIndex * 1.37 + index * 0.61
-        ),
-        emissionMaterial
+        tier === "low"
+          ? mobilePlumeGeometry(shipIndex * 1.37 + index * 0.61, tailFalloff)
+          : plumeGeometry(
+              segments,
+              axial,
+              rectangular,
+              shipIndex * 1.37 + index * 0.61,
+            ),
+        emissionMaterial,
       );
       exhaust.name = "voyage-engine-plume";
       exhaust.position.set(x, y, exit - length * 0.5);
@@ -63456,19 +63608,20 @@ function installVoyageEngineGlow(fleet2, tier2, {
     coreDepthRatio: 0.62,
     coreRadiusRatio: 0.48,
     segments,
-    profile: tier2 === "low" ? "mobile-ribbon" : "emission-shell",
+    profile: tier === "low" ? "mobile-ribbon" : "emission-shell",
     lengthScale,
     tailFalloff,
     brightness,
     plumeBrightness,
     colorGradient,
-    update(seconds2) {
-      clock.value = seconds2;
-    }
+    update(seconds) {
+      flowUniforms.engineClock.value = seconds;
+      flowUniforms.engineDrive.value = propulsionLoad(seconds);
+      flowUniforms.wakeDrive.value = propulsionLoad(seconds - 0.70);
+    },
   };
 }
 
-// works/first_dawn/voyage-materials.js
 function installVoyageAgeing(fleet2, tier2) {
   const detail = tier2 === "high" ? 2 : tier2 === "mid" ? 1 : 0;
   let treated = 0, paintMaterials = 0;
@@ -64121,8 +64274,13 @@ function render2(t) {
     installation.update(installationTime, habitat.model);
     state.installation = installation.save();
     arrivalDrone.frame(camera, elapsed, !!state.placeInherited);
-    if (phase === "terraform") installation.frame(camera);
-    else installation.root.visible = false;
+    if (phase === "terraform") {
+      installation.frame(camera);
+      if (installation.crewLanded) {
+        const departure = arrivalInstallationDeparture(!!state.placeInherited, installation.departureAt());
+        habitat.frame(camera, MathUtils.clamp((elapsed - departure + 8) / 5, 0, 1));
+      }
+    } else installation.root.visible = false;
     const caption = phase === "terraform" ? installation.caption : "";
     if (title.textContent !== caption)
       title.textContent = caption;

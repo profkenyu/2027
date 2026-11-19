@@ -58524,12 +58524,20 @@ body.tx-active #fh-keys {
       (material.userData.baseColor = base),
       (material.colorNode = Fn2(() => {
         let view = normalize3(cameraPosition2.sub(positionWorld2)),
-          facing = abs2(dot2(normalize3(normalWorld2), view)),
-          faceGlint = pow5(facing, float2(18 + roughness3 * 20)).mul(0.72 - roughness3 * 0.34),
-          edge = pow5(float2(1).sub(facing), float2(1.8 + roughness3 * 2.4)).mul(0.34),
+          n = normalize3(normalWorld2),
+          sun = normalize3(vec32(...cfg().sun)),
+          facing = abs2(dot2(n, view)),
+          incident = dot2(n, sun).max(0),
+          half = normalize3(sun.add(view)),
+          faceGlint = pow5(dot2(n, half).max(0), float2(32 + (1 - roughness3) * 44)),
+          edge = pow5(float2(1).sub(facing), 2.4).mul(incident),
           colour = base
-            .mul(facing.mul(0.46).add(0.1))
-            .add(vec32(0.76, 0.86, 0.94).mul(edge.add(faceGlint)));
+            .mul(incident.mul(0.5).add(0.13))
+            .add(
+              vec32(0.76, 0.86, 0.94).mul(
+                edge.mul(0.4).add(faceGlint.mul(0.72 - roughness3 * 0.34)),
+              ),
+            );
         return vec42(colour, 1);
       })()),
       material
@@ -60377,6 +60385,7 @@ body.ti-voyage #ti-transfer-trigger {
           (this.event = null),
           (this.confirmedAt = 0),
           (this.observations = 0),
+          (this.integration = 0),
           (this.lastDistance = 1 / 0),
           (this.group = new Group()),
           (this.group.visible = !1),
@@ -60473,6 +60482,7 @@ body.ti-voyage #ti-transfer-trigger {
       }
       activate(now2 = performance.now()) {
         ((this.observations = 0),
+          (this.integration = 0),
           (this.state = "searching"),
           (this.event = null),
           (this.confirmedAt = 0),
@@ -60486,6 +60496,7 @@ body.ti-voyage #ti-transfer-trigger {
       }
       reset() {
         ((this.observations = 0),
+          (this.integration = 0),
           (this.state = "inactive"),
           (this.event = null),
           (this.confirmedAt = 0),
@@ -60506,6 +60517,7 @@ body.ti-voyage #ti-transfer-trigger {
         this.complete ||
           ((this.state = "confirmed"),
           (this.observations = OBSERVATION_COUNT),
+          (this.integration = 1),
           (this.confirmedAt = now2),
           (this.event = null),
           this.rings.forEach((ring, i) => {
@@ -60529,22 +60541,28 @@ body.ti-voyage #ti-transfer-trigger {
           passProgress = this.event
             ? clamp015((elapsed - pass3 * (passMs + OBSERVATION_GAP_MS)) / passMs)
             : 0;
-        this.complete
-          ? (this.observations = OBSERVATION_COUNT)
-          : this.event
-            ? (this.observations = pass3 + (passProgress >= 1 ? 1 : 0))
-            : (this.observations = 0);
-        let integration = this.complete ? 1 : (pass3 + passProgress) / OBSERVATION_COUNT;
-        if ((this._updateVisuals(now2 * 0.001, integration, pass3, passProgress), !this.complete)) {
+        if (
+          (this.complete
+            ? (this.observations = OBSERVATION_COUNT)
+            : this.event
+              ? (this.observations = pass3 + (passProgress >= 1 ? 1 : 0))
+              : (this.observations = 0),
+          (this.integration = this.complete ? 1 : (pass3 + passProgress) / OBSERVATION_COUNT),
+          this._updateVisuals(now2 * 0.001, this.integration, pass3, passProgress),
+          !this.complete)
+        ) {
           if (this.event) {
             let totalScanMs = this.site.scanHoldMs + OBSERVATION_GAP_MS * (OBSERVATION_COUNT - 1);
-            this.lastDistance > this.site.scanRadius
-              ? ((this.event = null), (this.state = "searching"))
+            this.lastDistance > this.site.scanRadius || Math.abs(probe.speed) > 0.12
+              ? ((this.integration = 0),
+                (this.observations = 0),
+                (this.event = null),
+                (this.state = "searching"))
               : elapsed >= totalScanMs && this._confirm(now2);
             return;
           }
           this.lastDistance <= this.site.acquireRadius &&
-            probe.speed <= 0.12 &&
+            Math.abs(probe.speed) <= 0.12 &&
             ((this.event = { t0: now2 }), (this.state = "scanning"));
         }
       }
@@ -61428,15 +61446,20 @@ body.ti-voyage #ti-transfer-trigger {
       material
     );
   }
-  function memoryStrata(data, model, heightAt) {
-    let bearingX = 0,
-      bearingZ = 0;
-    for (let harmonic of model.materialField)
-      ((bearingX += Math.cos(harmonic.angle) * harmonic.weight),
-        (bearingZ += Math.sin(harmonic.angle) * harmonic.weight));
-    let bearing = Math.atan2(bearingZ, bearingX) + data.phaseDelta * 0.18,
-      cosine = Math.cos(bearing),
-      sine = Math.sin(bearing),
+  function fractureTrace(sites) {
+    if (sites.length < 2) return null;
+    let points = sites.map(({ x, z }) => new Vector3(x, 0, z)),
+      last = points.length - 1,
+      before = points[0].clone().lerp(points[1], -1),
+      after = points[last].clone().lerp(points[last - 1], -1),
+      trace = new CatmullRomCurve3([before, ...points, after]);
+    return ((trace.arcLengthDivisions = (sites.length + 1) * 64), trace);
+  }
+  function memoryStrata(data, model, heightAt, trace, index) {
+    let stationDistance = trace?.getLengths()[(index + 1) * 64] ?? 0,
+      totalLength = trace?.getLength() || 1,
+      centre = new Vector3(),
+      direction2 = new Vector3(),
       crossing = Math.PI * 0.31 + data.phaseDelta * 0.16,
       crossCosine = Math.cos(crossing),
       crossSine = Math.sin(crossing),
@@ -61455,9 +61478,17 @@ body.ti-voyage #ti-transfer-trigger {
         previous = null;
       for (let sample3 = 0; sample3 <= crossSections; sample3++) {
         let fraction = sample3 / crossSections,
-          along = (fraction * 2 - 1) * halfLength,
-          centreX = along * cosine - across * sine,
-          centreZ = along * sine + across * cosine,
+          along = (fraction * 2 - 1) * halfLength;
+        if (trace) {
+          let t = trace.getUtoTmapping(clamp017((stationDistance + along) / totalLength));
+          (trace.getPoint(t, centre), trace.getTangent(t, direction2));
+        } else (centre.set(data.x + along, 0, data.z), direction2.set(1, 0, 0));
+        let cosine = direction2.x,
+          sine = direction2.z,
+          localX = centre.x - data.x,
+          localZ = centre.z - data.z,
+          centreX = localX - across * sine,
+          centreZ = localZ + across * cosine,
           fields = evaluateMemoryFields(model, data.x + centreX, data.z + centreZ),
           bend = fields.material * 0.42 + Math.sin(fields.materialPhase - harmonic.phase) * 0.18,
           taper = Math.sin(fraction * Math.PI) ** 0.45,
@@ -61475,16 +61506,16 @@ body.ti-voyage #ti-transfer-trigger {
           };
         for (let edge of [-1, 1]) {
           let v = across + bend + edge * materialWidth * 0.5,
-            x = along * cosine - v * sine,
-            z = along * sine + v * cosine;
+            x = localX - v * sine,
+            z = localZ + v * cosine;
           if (
             (section.material.push([x, heightAt(data.x + x, data.z + z) - ground + 0.065, z]),
             !carriesWater)
           )
             continue;
           let waterV = across + bend + edge * waterWidth * 0.5,
-            alignedX = along * cosine - waterV * sine,
-            alignedZ = along * sine + waterV * cosine,
+            alignedX = localX - waterV * sine,
+            alignedZ = localZ + waterV * cosine,
             initialX = alignedX * crossCosine - alignedZ * crossSine,
             initialZ = alignedX * crossSine + alignedZ * crossCosine,
             initialY = heightAt(data.x + initialX, data.z + initialZ) - ground + 0.095,
@@ -61615,11 +61646,11 @@ body.ti-voyage #ti-transfer-trigger {
           this.group.remove(root));
       ((this.sites.length = 0), (this.compute = null), (this.particleCount = 0));
     }
-    _buildSite(data, index) {
+    _buildSite(data, index, trace) {
       let root = new Group();
       (root.position.set(data.x, this.heightAt(data.x, data.z), data.z),
         (root.userData.site = data));
-      let strata = memoryStrata(data, this.model, this.heightAt);
+      let strata = memoryStrata(data, this.model, this.heightAt, trace, index);
       root.add(strata.material, strata.water);
       let mineralRoot = new Group();
       ((mineralRoot.position.y = 0.035), (mineralRoot.rotation.y = data.phaseDelta * 0.18));
@@ -61754,22 +61785,23 @@ body.ti-voyage #ti-transfer-trigger {
         this.group.add(this.points));
     }
     activate(model, now2 = performance.now()) {
-      return model?.sites?.length
-        ? (this._clearVisuals(),
-          (this.model = model),
-          (this.sites = model.sites.map((site, index) => this._buildSite(site, index))),
-          this._buildParticleCompute(),
-          (this.current = 0),
-          (this.event = null),
-          (this.records = []),
-          (this.completedAt = 0),
-          (this.finale = 0),
-          (this.computeDispatches = 0),
-          (this.state = "searching"),
-          (this.startedAt = now2),
-          (this.group.visible = !0),
-          !0)
-        : !1;
+      if (!model?.sites?.length) return !1;
+      (this._clearVisuals(), (this.model = model));
+      let trace = fractureTrace(model.sites);
+      return (
+        (this.sites = model.sites.map((site, index) => this._buildSite(site, index, trace))),
+        this._buildParticleCompute(),
+        (this.current = 0),
+        (this.event = null),
+        (this.records = []),
+        (this.completedAt = 0),
+        (this.finale = 0),
+        (this.computeDispatches = 0),
+        (this.state = "searching"),
+        (this.startedAt = now2),
+        (this.group.visible = !0),
+        !0
+      );
     }
     restoreProgress(count, now2 = performance.now()) {
       if (!this.model || !Number.isInteger(count) || count < 0 || count >= this.model.sites.length)
@@ -61879,14 +61911,16 @@ body.ti-voyage #ti-transfer-trigger {
             (this.model?.sites ?? []).slice(0, this.current).flatMap((site) => site.elements ?? []),
           ),
         ],
-        observations: (this.model?.sites ?? []).slice(0, this.current).map((site) => ({
-          id: site.id,
-          elements: site.elements ?? [],
-          resourceUse: site.resourceUse,
-          coherence: site.coherence,
-          density: site.density,
-          reflectance: site.reflectance,
-        })),
+        observations: (this.model?.sites ?? [])
+          .slice(0, this.current)
+          .map((site) => ({
+            id: site.id,
+            elements: site.elements ?? [],
+            resourceUse: site.resourceUse,
+            coherence: site.coherence,
+            density: site.density,
+            reflectance: site.reflectance,
+          })),
         target: this.target
           ? {
               id: this.target.id,
@@ -63532,7 +63566,7 @@ body.ti-voyage #ti-transfer-trigger {
     return clamp10(pitch - bestA, 0, maxLid);
   }
   var Rover = class {
-    constructor(camera, dom, heightAt) {
+    constructor(camera, dom, heightAt, wheelSoil = null) {
       ((D = { ...cfg().vehicle.chassis, ...B2 }),
         (this.camera = camera),
         (this.h = heightAt),
@@ -63584,7 +63618,7 @@ body.ti-voyage #ti-transfer-trigger {
         (this.beaconLevel = 0),
         (this.keys = new Set()),
         (this.settled = !1));
-      let built = buildRover();
+      let built = buildRover(wheelSoil);
       ((this.group = built.group),
         (this.chassis = built.chassis),
         (this.head = built.head),
@@ -64176,7 +64210,11 @@ body.ti-voyage #ti-transfer-trigger {
       mesh
     );
   }
-  function buildRover() {
+  function wheelSedimentColor() {
+    let fines = mix2(vec32(0.073, 0.079, 0.09), vec32(0.19, 0.14, 0.09), uWorldMix);
+    return mix2(fines, vec32(0.155, 0.148, 0.135), uWorldGranite);
+  }
+  function buildRover(wheelSoil) {
     let C = cfg(),
       group = new Group(),
       chassis = new Group();
@@ -64190,6 +64228,7 @@ body.ti-voyage #ti-transfer-trigger {
         grain2 = 0.02,
         dust = 0.02,
         profile = null,
+        frontWheel = null,
       ) => {
         let mat = new MeshBasicNodeMaterial(),
           finish = profile ? aerospaceNode(profile, C.tier, profile === "foil" ? 3 : 2) : null;
@@ -64218,7 +64257,20 @@ body.ti-voyage #ti-transfer-trigger {
                       )
                       .mul(roverExposure.add(dust * 1.8))
                   : pow5(max2(n.y, float2(0)), float2(4)).mul(roverExposure.mul(0.35).add(dust)),
-              coated = mix2(surface, vec32(...C.color.dust), dustMask),
+              crown2 = frontWheel
+                ? smoothstep3(D.wheelR * 0.92, D.wheelR * 0.995, positionLocal2.yz.length())
+                : null,
+              coverage =
+                frontWheel === "tread"
+                  ? float2(1).sub(crown2).mul(roverExposure.mul(0.65).add(0.22)).clamp(0, 0.68)
+                  : frontWheel === "rim"
+                    ? dustMask.mul(0.24)
+                    : dustMask,
+              soil = frontWheel && wheelSoil ? wheelSoil : vec32(...C.color.dust),
+              coated = mix2(surface, soil, coverage),
+              wheelFinish = frontWheel
+                ? { ...finish, roughness: mix2(finish.roughness.add(0.1), float2(0.38), crown2) }
+                : finish,
               specular = pow5(
                 max2(dot2(n, halfVector), float2(0)),
                 finish ? finish.roughness.mul(-gloss * 0.5).add(gloss) : float2(gloss),
@@ -64229,7 +64281,7 @@ body.ti-voyage #ti-transfer-trigger {
               rim = pow5(float2(1).sub(abs2(dot2(n, v))), float2(3)).mul(sheen3 * 0.16),
               lit = (
                 finish
-                  ? aerospaceLighting(coated, n, v, L, finish, dustMask)
+                  ? aerospaceLighting(coated, n, v, L, wheelFinish, coverage)
                   : coated
                       .mul(ndl.mul(1.35).add(0.085))
                       .add(vec32(1, 0.97, 0.91).mul(specular))
@@ -64247,6 +64299,8 @@ body.ti-voyage #ti-transfer-trigger {
       armour = paint2([0.54, 0.55, 0.525], 0, 0.12, 36, 0.008, 0.025, "white"),
       wheelTread = paint2([0.205, 0.225, 0.25], 0, 0.26, 48, 0.028, 0.075, "aluminum"),
       wheelMetal = paint2([0.3, 0.325, 0.35], 0, 0.35, 62, 0.012, 0.045, "aluminum"),
+      frontTread = paint2([0.205, 0.225, 0.25], 0, 0.26, 48, 0.028, 0.075, "aluminum", "tread"),
+      frontRim = paint2([0.3, 0.325, 0.35], 0, 0.35, 62, 0.012, 0.045, "aluminum", "rim"),
       foil = paint2([0.48, 0.3, 0.085], 0, 0.32, 48, 0.01, 0.012, "foil"),
       mark = paint2(C.color.crimson, 0.85, 0.12, 34, 0.025, 0.015),
       beaconPulse = uniform2(0),
@@ -64469,8 +64523,16 @@ body.ti-voyage #ti-transfer-trigger {
       for (let dx of [-D.track, D.track]) {
         let lz = -dz,
           w = transferTag(new Group(), "wheel", null, !0),
-          tyre = transferTag(new Mesh(wheelGeo.tyre, wheelTread), "wheel", 2368809),
-          rim = transferTag(new Mesh(wheelGeo.rim, wheelMetal), "wheel", 9410206);
+          tyre = transferTag(
+            new Mesh(wheelGeo.tyre, dz === D.axles[0] ? frontTread : wheelTread),
+            "wheel",
+            2368809,
+          ),
+          rim = transferTag(
+            new Mesh(wheelGeo.rim, dz === D.axles[0] ? frontRim : wheelMetal),
+            "wheel",
+            9410206,
+          );
         w.add(tyre, rim);
         let restY = deck - D.clearance;
         (w.position.set(dx, restY, lz), chassis.add(w));
@@ -64948,83 +65010,84 @@ body.ti-voyage #ti-transfer-trigger {
       [1.45, 1.25, 0.65],
     ]),
     LanderExhaust = class {
-      constructor() {
-        let { tier } = cfg(),
-          slices = { high: 48, mid: 40, low: 32 }[tier] ?? 40,
-          count = slices * LANDER_NOZZLES.length,
-          origins = new Float32Array(count * 3),
-          seeds = new Float32Array(count * 3),
-          widths = new Float32Array(count);
-        for (let nozzle = 0; nozzle < LANDER_NOZZLES.length; nozzle++)
-          for (let slice = 0; slice < slices; slice++) {
-            let i = (nozzle * slices + slice) * 3;
-            ((widths[i / 3] = LANDER_NOZZLES[nozzle][2]),
-              origins.set([LANDER_NOZZLES[nozzle][0], 0.45, LANDER_NOZZLES[nozzle][1]], i),
-              seeds.set(
-                [slice / slices, slice * 2.399963 + nozzle * 2.1, 0.2 + ((slice * 17) % 31) / 38],
-                i,
-              ));
-          }
-        ((this.clock = uniform2(0)),
-          (this.power = uniform2(0)),
-          (this.length = uniform2(7)),
-          (this.groundY = uniform2(0)),
-          (this.intensity = 0));
-        let origin = instancedBufferAttribute2(new InstancedBufferAttribute(origins, 3)),
-          seed = instancedBufferAttribute2(new InstancedBufferAttribute(seeds, 3)),
-          width = instancedBufferAttribute2(new InstancedBufferAttribute(widths, 1)),
-          age = fract2(seed.x.add(this.clock.mul(1.15))),
-          spread = age.mul(age).mul(1.2).add(age.mul(0.22)).mul(seed.z).mul(width),
-          theta = seed.y.add(age.mul(0.45)),
-          flow = vec32(
-            cos2(theta).mul(spread),
-            age.mul(this.length).negate(),
-            sin2(theta).mul(spread),
-          ),
-          material = new SpriteNodeMaterial({ transparent: !0, depthWrite: !1, depthTest: !0 });
-        ((material.positionNode = origin.add(flow)),
-          (material.scaleNode = age.mul(2.15).add(0.48).mul(width)),
-          (material.rotationNode = seed.y),
-          (material.colorNode = vec32(0.64, 0.68, 0.69)));
-        let radius = uv2().sub(0.5).mul(2).length(),
-          soft = exp3(radius.mul(radius).mul(-3.6)).mul(
-            float2(1).sub(smoothstep3(0.72, 1, radius)),
-          ),
-          life = varying2(smoothstep3(0, 0.055, age).mul(float2(1).sub(smoothstep3(0.55, 1, age)))),
-          aboveGround = smoothstep3(
-            this.groundY.add(0.015),
-            this.groundY.add(0.22),
-            positionWorld2.y,
-          );
-        material.opacityNode = soft
-          .mul(life)
-          .mul(aboveGround)
-          .mul(this.power)
-          .mul((0.16 * 48) / slices);
-        let plane = new PlaneGeometry(1, 1),
-          geometry = new InstancedBufferGeometry().copy(plane);
-        (plane.dispose(),
-          (geometry.instanceCount = count),
-          (this.mesh = new Mesh(geometry, material)),
-          (this.mesh.name = "lander-engine-exhaust"),
-          (this.mesh.userData.matterPassage = !1),
-          (this.mesh.frustumCulled = !1),
-          (this.mesh.visible = !1));
+  constructor() {
+    let { tier } = cfg(),
+      slices = { high: 48, mid: 40, low: 32 }[tier] ?? 40,
+      count = slices * LANDER_NOZZLES.length,
+      origins = new Float32Array(count * 3),
+      phases = new Float32Array(count),
+      widths = new Float32Array(count);
+    for (let nozzle = 0; nozzle < LANDER_NOZZLES.length; nozzle++)
+      for (let slice = 0; slice < slices; slice++) {
+        let i = (nozzle * slices + slice) * 3;
+        ((widths[i / 3] = LANDER_NOZZLES[nozzle][2]),
+          origins.set([LANDER_NOZZLES[nozzle][0], 0.45, LANDER_NOZZLES[nozzle][1]], i),
+          (phases[i / 3] = (slice + nozzle * 0.17) / slices));
       }
-      setPower(intensity, altitude = 0, groundY = 0) {
-        ((this.intensity = Math.max(0, Math.min(1, intensity))),
-          (this.power.value = this.intensity),
-          (this.length.value = Math.min(8, Math.max(1.1, altitude + 0.7))),
-          (this.groundY.value = groundY),
-          (this.mesh.visible = this.intensity > 0.001));
-      }
-      update(now2) {
-        this.clock.value = now2 / 1e3;
-      }
-      dispose() {
-        (this.mesh.geometry.dispose(), this.mesh.material.dispose());
-      }
-    };
+    ((this.clock = uniform2(0)),
+      (this.power = uniform2(0)),
+      (this.length = uniform2(7)),
+      (this.groundY = uniform2(0)),
+      (this.intensity = 0));
+    let origin = instancedBufferAttribute2(new InstancedBufferAttribute(origins, 3)),
+      phase = instancedBufferAttribute2(new InstancedBufferAttribute(phases, 1)),
+      width = instancedBufferAttribute2(new InstancedBufferAttribute(widths, 1)),
+      age = fract2(phase.add(this.clock.mul(1.04))),
+      travel = age.mul(this.length),
+      span = width.mul(0.38).add(travel.mul(0.2)),
+      spread = span.mul(0.17).mul(smoothstep3(0.06, 0.85, age)),
+      angle = age.mul(6.1).add(this.clock.mul(1.7)).add(origin.x).add(origin.z),
+      centre = origin.add(vec32(cos2(angle).mul(spread), travel.negate(), sin2(angle).mul(spread))),
+      size = span.mul(1.65).add(this.length.mul(2.2 / slices)),
+      material = new SpriteNodeMaterial({ transparent: !0, depthWrite: !1, depthTest: !0 });
+    ((material.positionNode = centre), (material.scaleNode = size));
+    let r2 = uv2().sub(0.5).mul(2).dot(uv2().sub(0.5).mul(2)),
+      distanceInMouths = varying2(travel.div(width)),
+      inner = exp3(distanceInMouths.mul(-2.4)).mul(exp3(r2.mul(-3.5))),
+      diffuse = vec32(0.3, 0.33, 0.34);
+    material.colorNode = mix2(diffuse, vec32(0.98, 0.86, 0.69), inner.mul(this.power));
+    let profile = exp3(r2.mul(-3.1)).mul(float2(1).sub(smoothstep3(0.68, 1, r2))),
+      life = varying2(float2(1).sub(smoothstep3(0.38, 1, age))),
+      centreY = modelWorldMatrix2.mul(centre).y,
+      rightY = cameraWorldMatrix2.element(0).y,
+      upY = cameraWorldMatrix2.element(1).y,
+      fragmentY = varying2(
+        centreY.add(positionGeometry2.x.mul(rightY).add(positionGeometry2.y.mul(upY)).mul(size)),
+      ),
+      groundFade = smoothstep3(this.groundY.add(0.015), this.groundY.add(0.17), fragmentY),
+      expansion = distanceInMouths.mul(0.76).add(1),
+      dilution = float2(1).div(expansion.mul(expansion));
+    material.opacityNode = profile
+      .mul(life)
+      .mul(groundFade)
+      .mul(dilution)
+      .mul(this.power)
+      .mul(inner.mul(1.32).add(0.24))
+      .mul(48 / slices);
+    let plane = new PlaneGeometry(1, 1),
+      geometry = new InstancedBufferGeometry().copy(plane);
+    (plane.dispose(),
+      (geometry.instanceCount = count),
+      (this.mesh = new Mesh(geometry, material)),
+      (this.mesh.name = "lander-engine-exhaust"),
+      (this.mesh.userData.matterPassage = !1),
+      (this.mesh.frustumCulled = !1),
+      (this.mesh.visible = !1));
+  }
+  setPower(intensity, altitude = 0, groundY = 0) {
+    ((this.intensity = Math.max(0, Math.min(1, intensity))),
+      (this.power.value = this.intensity),
+      (this.length.value = Math.min(2.1 + 6.2 * this.intensity, Math.max(0.48, altitude + 0.6))),
+      (this.groundY.value = groundY),
+      (this.mesh.visible = this.intensity > 0.001));
+  }
+  update(now2) {
+    this.clock.value = now2 / 1e3;
+  }
+  dispose() {
+    (this.mesh.geometry.dispose(), this.mesh.material.dispose());
+  }
+};
   function createFlightHardware(tier, materials = {}) {
     let group = new Group(),
       radiators = [],
@@ -66940,7 +67003,8 @@ body.ti-voyage #ti-transfer-trigger {
     graniteMix;
   var uWorldMix = uniform2(0),
     uWorldGranite = uniform2(0),
-    uFirstDawn = uniform2(0);
+    uFirstDawn = uniform2(0),
+    uHydrationReading = uniform2(0);
   function setWorldMode(mode) {
     ((uWorldMix.value = mode === "desert" ? 1 : 0),
       (uWorldGranite.value = mode === "granite" ? 1 : 0),
@@ -67157,17 +67221,17 @@ body.ti-voyage #ti-transfer-trigger {
             vec32(0.078, 0.085, 0.094),
             saturate2(slope.mul(1.45).add(sediment.mul(0.24))),
           ),
-          tidalBand = pow5(
-            abs2(
-              sin2(length2(p).mul(T2.shearRadial).add(p.x.mul(T2.shearX)).add(p.y.mul(T2.shearZ))),
-            ),
-            T2.shearExp,
-          ),
-          coldVein = mix2(
-            mineral,
-            vec32(0.025, 0.105, 0.112),
-            tidalBand.mul(0.16).mul(float2(1).sub(loose.mul(0.65))),
-          ),
+          fault = smoothstep3(0.455, 0.49, sediment),
+          bedding = length2(p)
+            .mul(T2.shearRadial)
+            .add(p.x.mul(T2.shearX))
+            .add(p.y.mul(T2.shearZ))
+            .add(worldPos2.y.mul(0.13))
+            .add(fault.mul(0.84)),
+          tidalBand = pow5(abs2(sin2(bedding)), T2.shearExp),
+          sunward = smoothstep3(0.025, 0.38, dot2(normal2, sun)),
+          seam = tidalBand.mul(float2(1).sub(loose.mul(0.55))),
+          coldVein = mix2(mineral, vec32(0.057, 0.12, 0.13), seam.mul(sunward.mul(0.46).add(0.08))),
           frost = loose.mul(high).mul(sheltered.mul(0.65).add(0.35)).mul(0.18),
           terra = mix2(coldVein, vec32(0.085, 0.112, 0.128), frost).mul(
             float2(0.72)
@@ -67198,7 +67262,14 @@ body.ti-voyage #ti-transfer-trigger {
             vec32(0.25, 0.21, 0.16),
             geologyNoise2(p.mul(0.023).add(57.8), 3),
           ),
-          desertBase = mix2(mix2(sandTone, rockTone, exposure), paleBed, dryBed),
+          finesAtFoot = smoothstep3(0.025, 0.28, dot2(normal2.xz, vec22(D2.windCos, D2.windSin)))
+            .mul(float2(1).sub(exposure))
+            .mul(float2(1).sub(high)),
+          desertBase = mix2(
+            mix2(sandTone, rockTone, exposure),
+            paleBed,
+            max2(dryBed, finesAtFoot.mul(0.65)),
+          ),
           glassPatch = smoothstep3(float2(0.78), float2(0.92), sediment.add(strata.mul(0.1))).mul(
             float2(1).sub(smoothstep3(float2(0.08), float2(0.26), slope)),
           ),
@@ -67223,9 +67294,13 @@ body.ti-voyage #ti-transfer-trigger {
           hydrated = mix2(
             fused,
             vec32(...BODY02_WATER_SITE.visual.thermalTint),
-            waterCore.mul(0.78),
+            waterCore.mul(uHydrationReading.mul(0.64).add(0.14)),
           ),
-          desert = mix2(hydrated, vec32(...BODY02_WATER_SITE.visual.saltTint), waterHalo.mul(0.48))
+          desert = mix2(
+            hydrated,
+            vec32(...BODY02_WATER_SITE.visual.saltTint),
+            waterHalo.mul(uHydrationReading.mul(0.37).add(0.11)),
+          )
             .mul(float2(0.975).add(mix2(float2(0.5), windBand, detail).mul(0.025).mul(loose)))
             .mul(float2(0.94).add(mix2(float2(0.5), grain(p.mul(0.72)), detail).mul(0.06))),
           granitePattern = geologyNoise2(p.mul(0.033).add(122.6), 3),
@@ -69634,7 +69709,10 @@ body.ti-voyage #ti-transfer-trigger {
       window.TI_BOOT?.beat("device"));
     try {
       const adapter = await navigator.gpu.requestAdapter({ powerPreference: "high-performance" });
-      if (!adapter) { unsupported("adapter"); await HALT(); }
+      if (!adapter) {
+        unsupported("adapter");
+        await HALT();
+      }
     } catch (error) {
       console.error("WebGPU adapter unavailable", error);
       unsupported("adapter");
@@ -69811,7 +69889,7 @@ body.ti-voyage #ti-transfer-trigger {
         )),
         landmark.rotation.set(0.1, 0.42, -0.035),
         (landmark.visible = !1),
-        (rover = new Rover(camera, canvas, heightCPU)),
+        (rover = new Rover(camera, canvas, heightCPU, wheelSedimentColor())),
         (rover.cameraControl = !1),
         (roverReticle = new RoverReticle()),
         (rover.externalDriveMode = !0),
@@ -70960,6 +71038,7 @@ body.ti-voyage #ti-transfer-trigger {
             1600,
           )),
         waterMission.update(v, now2, world === "desert"),
+        (uHydrationReading.value = waterMission.integration),
         await geologicalMemory.update(v, now2, world === "granite"),
         missionCompletionRequested &&
           released &&

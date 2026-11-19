@@ -262,10 +262,6 @@
                   ((elapsed - 8 + valve) / valve - btkTurnIntegral((elapsed - 8 + valve) / valve));
         return -0.24 + rate * turn;
       }
-      function btkTransitJet(t, index) {
-        const u = (t - (index === 0 ? 40 : 47.6)) / 0.4;
-        return u > 0 && u < 1 ? 16 * u * u * (1 - u) * (1 - u) : 0;
-      }
 
       var __create = Object.create;
       var __defProp = Object.defineProperty;
@@ -1072,16 +1068,16 @@
       var SCENE_MODEL_ASSETS = Object.freeze({
         opening: {
           high: {
-            file: "high-144b1b740d496921.json",
-            bytes: 1971971,
+            file: "high-ae576180044b4a70.json",
+            bytes: 1974051,
           },
           mid: {
-            file: "mid-3b3c31a80205c071.json",
-            bytes: 1971970,
+            file: "mid-9f083e2024e75bb7.json",
+            bytes: 1974050,
           },
           low: {
-            file: "low-b8e1205532bc2ca4.json",
-            bytes: 1327015,
+            file: "low-8599028612d9e719.json",
+            bytes: 1328454,
           },
         },
         transit: {
@@ -1100,16 +1096,16 @@
         },
         arrival: {
           high: {
-            file: "high-42ecd1a9ba16cd20.json",
-            bytes: 1345811,
+            file: "high-a88769b2ea4fd64a.json",
+            bytes: 1389595,
           },
           mid: {
-            file: "mid-8a4ff84d95afb74c.json",
-            bytes: 1216895,
+            file: "mid-82d7fe49c2141933.json",
+            bytes: 1258533,
           },
           low: {
-            file: "low-cbf5dd61f2ebb744.json",
-            bytes: 653855,
+            file: "low-da447e3466450bbb.json",
+            bytes: 697671,
           },
         },
       });
@@ -29182,7 +29178,79 @@
       }
       var exposureAt = (t2, passage2 = 1) =>
         Math.min(1, Math.max(0, ((passage2 - 1) * 64 + t2) / 128));
-      function createSurveyor(tier2, passage2 = 1, batches) {
+      function transitValveAge(t, index) { return t - (index === 0 ? 40 : 47.6); }
+function createTransitExhaust(group, tier) {
+  const collar = new CylinderGeometry(0.096, 0.061, 0.30, tier === "low" ? 8 : 14, 1, true);
+  collar.translate(0, -0.15, 0);
+  const metal = new MeshStandardMaterial({
+    color: 0x5b6064, roughness: 0.62, metalness: 0.64, side: DoubleSide,
+  });
+  const volume = new BoxGeometry(0.72, 0.98, 0.72);
+  volume.translate(0, 0.49, 0);
+  const jets = [-1, 1].map(side => {
+    const port = new Mesh(collar, metal);
+    port.name = "survey-attitude-outlet";
+    port.position.set(side * 2.87, 4.8, 1.8);
+    port.rotation.z = -side * Math.PI / 2;
+    group.add(port);
+    const gas = new ShaderMaterial({
+      uniforms: { valveAge: { value: -1 } },
+      transparent: true, depthTest: true, depthWrite: false,
+      vertexShader: `
+        varying vec3 localEntry;
+        varying vec3 localEye;
+        void main() {
+          localEntry = position;
+          localEye = inverse(modelViewMatrix)[3].xyz;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform float valveAge;
+        varying vec3 localEntry;
+        varying vec3 localEye;
+        void main() {
+          vec3 ray = normalize(localEntry - localEye);
+          vec3 face = mix(vec3(-.36,0.,-.36), vec3(.36,.98,.36), step(vec3(0.), ray));
+          vec3 signRay = step(vec3(0.), ray)*2.-1.;
+          vec3 exitT = (face-localEntry)/(signRay*max(abs(ray),vec3(.00001)));
+          float stepLength = max(min(exitT.x, min(exitT.y,exitT.z)),0.) / 6.;
+          float depth = 0.;
+          float core = 0.;
+          for (int i=0; i<6; i++) {
+            vec3 p = localEntry + (float(i)+.5)*stepLength*ray;
+            float u = clamp((valveAge - p.y*.086)/.4,0.,1.);
+            float pulse = 16.*u*u*(1.-u)*(1.-u);
+            float width = .076 + .20*p.y;
+            float r2 = dot(p.xz,p.xz)/(width*width);
+            float column = exp(-2.1*r2) * pow(.076/width,2.) *
+              (1.-smoothstep(.45,.97,p.y)) * pulse * stepLength;
+            depth += column;
+            core += column*exp(-6.*p.y-r2);
+          }
+          float alpha = 1.-exp(-7.5*depth);
+          if (alpha < .001) discard;
+          gl_FragColor = vec4(mix(vec3(.47,.55,.61),vec3(.89,.91,.88),core/max(depth,.00001)), alpha);
+          #include <tonemapping_fragment>
+          #include <colorspace_fragment>
+        }
+      `,
+    });
+    const jet = new Mesh(volume, gas);
+    jet.name = "survey-attitude-exhaust";
+    jet.visible = false;
+    port.add(jet);
+    return jet;
+  });
+  return t => {
+    jets.forEach((jet, i) => {
+      const age = transitValveAge(t, i);
+      jet.material.uniforms.valveAge.value = age;
+      jet.visible = age > 0 && age < 0.485;
+    });
+  };
+}
+function createSurveyor(tier2, passage2 = 1, batches) {
         let group = new Group();
         group.name = "survey-lander-flight";
         for (let batch of batches) {
@@ -29224,22 +29292,8 @@
           }),
           radiators = hardware.radiators;
         group.add(hardware.group);
-        let jets = [],
-          jetMaterial = new MeshBasicMaterial({
-            color: 10926017,
-            transparent: !0,
-            opacity: 0.16,
-            depthWrite: !1,
-          });
-        for (let side of [-1, 1]) {
-          let jet = new Mesh(new ConeGeometry(0.035, 0.32, 8), jetMaterial);
-          (jet.position.set(side * 3.6, 4.8, 1.8),
-            (jet.rotation.z = (side * Math.PI) / 2),
-            (jet.visible = !1),
-            group.add(jet),
-            jets.push(jet));
-        }
-        let exposureUniforms = new Set();
+        const updateJets = createTransitExhaust(group, tier2);
+let exposureUniforms = new Set();
         return (
           group.traverse((o) => {
             for (let m of Array.isArray(o.material) ? o.material : [o.material])
@@ -29258,13 +29312,7 @@
                 (1 - MathUtils.smoothstep(t2, 52, 62)) *
                 response2.radiator;
               hardware.setDeployment(deployment);
-              let jetPower = 0;
-              jets.forEach((jet, index) => {
-                const strength = btkTransitJet(t2, index);
-                jet.visible = strength > 0.001;
-                jetPower = Math.max(jetPower, strength);
-              });
-              jetMaterial.opacity = 0.16 * jetPower;
+              updateJets(t2);
             },
             radiators,
           }
@@ -47344,13 +47392,52 @@
           transfer &&
             ((transfer.stage = "arrival"), (transfer.elapsed = DURATION), saveTransfer(transfer)));
         let url = new URL(targetPath(destination), location.href);
+        if (passage === 3) url.searchParams.set("entry", "limb");
         for (let key of ["quality", "full", "terminal"])
           params.has(key) && url.searchParams.set(key, params.get(key));
         location.assign(url.href);
       }
-      function render(seconds) {
+      const screenHeight = 0.44;
+const eyePitch = (fov) => Math.atan((0.5 - screenHeight) * 2 * Math.tan(fov * Math.PI / 360));
+
+function createLimbFrame() {
+  const centre = new Vector3(), right = new Vector3(), top = new Vector3();
+  const normal = new Vector3(), ray = new Vector3(), aim = new Vector3();
+  const original = new Quaternion();
+  return function frameLimb(camera, planet, seconds) {
+    const weight = MathUtils.smootherstep(seconds, 33, 50);
+    if (!weight) return;
+    original.copy(camera.quaternion);
+    centre.subVectors(planet.position, camera.position);
+    const sine = planet.geometry.parameters.radius / centre.length();
+    centre.normalize();
+    right.crossVectors(centre, camera.up).normalize();
+    top.crossVectors(right, centre);
+    // The upper-left lit limb rises to the right, like the basin's east wall.
+    // The narrow field isolates the steeper central section of the ridge.
+    const lean = MathUtils.lerp(1.14, 0.64, MathUtils.smoothstep(camera.aspect, 0.65, 1.5));
+    normal.copy(top).addScaledVector(right, -lean).normalize();
+    ray.copy(centre).multiplyScalar(Math.sqrt(1 - sine * sine)).addScaledVector(normal, sine);
+    const fov = camera.aspect < 1 ? 38 : 26;
+    right.crossVectors(ray, camera.up).normalize();
+    ray.applyAxisAngle(right, -eyePitch(fov));
+    aim.copy(camera.position).addScaledVector(ray, 5000);
+    camera.lookAt(aim);
+    camera.quaternion.slerp(original, 1 - weight);
+    camera.fov = MathUtils.lerp(camera.fov, fov, weight);
+    camera.updateProjectionMatrix();
+    camera.updateMatrixWorld();
+    camera.getWorldDirection(aim).multiplyScalar(5000).add(camera.position);
+    camera.userData.focus.copy(aim);
+  };
+}
+
+
+const frameLimb = createLimbFrame();
+function render(seconds) {
         ((t = MathUtils.clamp(seconds, 0, DURATION)),
           pose(camera, surveyor.group, t, passage),
+          frameLimb(camera, voidScene.planet, t),
           surveyor.update(t, response),
           voidScene.stars.position.copy(camera.position),
           keyLight.target.position.copy(surveyor.group.position),
@@ -47360,7 +47447,7 @@
         const lensResponse = spaceLensResponse(camera, surveyor.group, t);
         voidScene.stars.children[0].material.opacity = lensResponse.stars;
         renderer.toneMappingExposure = lensResponse.exposure;
-        let blackout = passageEdit(t, cuts).veil;
+        let blackout = t >= 50 ? 0 : passageEdit(t, cuts).veil;
         (blackout !== veilOpacity &&
           ((veilOpacity = blackout), (veil.style.opacity = String(blackout))),
           audio.update(t),
@@ -47382,6 +47469,7 @@
       function resume() {
         if (leaving) {
           let url = new URL(targetPath(destination), location.href);
+          if (passage === 3) url.searchParams.set("entry", "limb");
           for (let key of ["quality", "full", "terminal"])
             params.has(key) && url.searchParams.set(key, params.get(key));
           location.replace(url.href);

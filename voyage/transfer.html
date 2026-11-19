@@ -27580,35 +27580,91 @@ void main() {
           root.add(label);
           return root;
         }
+        // A small optically thin volume attached to a real nozzle mouth in hull space.
+        // Density falls as the jet opens. Its colour and emissivity are visual choices.
+        let plumeBounds;
+        function createSurveyorPlume(x, lipY, z, radius, length) {
+          plumeBounds ??= new BoxGeometry(2, 1, 2);
+          const material = new ShaderMaterial({
+            uniforms: {
+              uPower: { value: 0 }, uGain: { value: 1 },
+              uRed: { value: 0 }, uSteps: { value: 6 },
+            },
+            transparent: true,
+            blending: AdditiveBlending,
+            depthWrite: false,
+            vertexShader: `
+              varying vec3 vSurface, vEye;
+              void main() {
+                vSurface = position;
+                vec3 eye = -modelViewMatrix[3].xyz;
+                vec3 x = modelViewMatrix[0].xyz, y = modelViewMatrix[1].xyz, z = modelViewMatrix[2].xyz;
+                vEye = vec3(dot(eye,x)/dot(x,x), dot(eye,y)/dot(y,y), dot(eye,z)/dot(z,z));
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.);
+              }`,
+            fragmentShader: `
+              varying vec3 vSurface, vEye;
+              uniform float uPower, uGain, uRed;
+              uniform int uSteps;
+              void main() {
+                vec3 ray = normalize(vSurface - vEye);
+                vec3 extent = vec3(1., .5, 1.);
+                vec3 face = mix(-extent, extent, step(vec3(0.), ray));
+                vec3 travel = abs(face - vSurface) / max(abs(ray), vec3(.00001));
+                travel = mix(vec3(10000.), travel, step(vec3(.00001), abs(ray)));
+                float stride = min(travel.x, min(travel.y, travel.z)) / float(uSteps);
+                float reach = .34 + .66 * sqrt(uPower);
+                vec3 light = vec3(0.);
+                for (int i = 0; i < 8; ++i) {
+                  if (i >= uSteps) break;
+                  vec3 p = vSurface + ray * ((float(i) + .5) * stride);
+                  float t = clamp((.5 - p.y) / reach, 0., 1.);
+                  float width = .34 + .56 * t;
+                  float radius2 = dot(p.xz, p.xz);
+                  float density = exp(-2.8 * radius2 / (width * width));
+                  density *= (.34 * .34) / (width * width);
+                  density *= (1. - smoothstep(.45, 1., t)) * (1. - smoothstep(.70, .97, radius2));
+                  vec3 colour = mix(vec3(.19,.24,.27), vec3(.73,.77,.76), exp(-7. * t));
+                  colour *= mix(vec3(1.), vec3(.82,.22,.075), uRed);
+                  light += colour * density;
+                }
+                float alpha = min(.82, stride * uPower * uGain * 1.7 * max(light.r, max(light.g,light.b)));
+                gl_FragColor = vec4(light / max(.00001, max(light.r, max(light.g,light.b))), alpha);
+                #include <tonemapping_fragment>
+                #include <colorspace_fragment>
+              }`,
+          });
+          const mesh = new Mesh(plumeBounds, material);
+          mesh.name = "TR-Q1 exhaust";
+          mesh.position.set(x, lipY - length * .5, z);
+          mesh.scale.set(radius * 2.4, length, radius * 2.4);
+          mesh.visible = false;
+          return mesh;
+        }
+
+        function setSurveyorPlume(mesh, power, gain, redness, tier) {
+          const uniforms = mesh.material.uniforms;
+          uniforms.uPower.value = power;
+          uniforms.uGain.value = gain;
+          uniforms.uRed.value = redness;
+          uniforms.uSteps.value = 4 + tier * 2;
+          mesh.visible = power * gain > .002;
+        }
         function createVessel() {
           const root = createSurveyorVessel();
           servicePanel = root.servicePanelMaterial;
-          const pmat = new ShaderMaterial({
-            transparent: true,
-            depthWrite: false,
-            side: DoubleSide,
-            uniforms: { uPower: { value: 0 } },
-            vertexShader:
-              "varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}",
-            fragmentShader:
-              "uniform float uPower;varying vec2 vUv;void main(){float t=1.-vUv.y;float w=.36*(1.-t*.65);float a=exp(-pow((vUv.x-.5)/w,2.)*2.)*pow(1.-t,2.)*uPower;gl_FragColor=vec4(mix(vec3(.43,.46,.47),vec3(.78,.79,.78),pow(1.-t,3.)),a*.55);}",
-          });
-          plume = new Mesh(new PlaneGeometry(1.4, 12), pmat);
-          plume.position.y = -7.05;
+          plume = createSurveyorPlume(0, -1.0673, 0, .5076, 10);
           root.add(plume);
-          const crossedPlume = new Mesh(plume.geometry, pmat);
-          crossedPlume.rotation.y = Math.PI / 2;
-          crossedPlume.position.copy(plume.position);
-          root.add(crossedPlume);
           glow = new Mesh(
-            new CylinderGeometry(0.46, 0.55, 0.04, 12),
+            new CylinderGeometry(.5076 * .73, .5076 * .76, .028, 12),
             new MeshBasicMaterial({
               color: 12041661,
               transparent: true,
               opacity: 0,
             }),
           );
-          glow.position.y = -1.07;
+          glow.position.y = -1.0673 + .07;
+          glow.material.depthWrite = false;
           root.add(glow);
           return root;
         }
@@ -27945,8 +28001,7 @@ void main() {
           const scale = width < height ? 5 : 4.8;
           vessel.scale.setScalar(scale);
           vessel.visible = sim.status !== "collision";
-          plume.material.uniforms.uPower.value = 0.5 + 0.5 * sim.throttle;
-          plume.visible = sim.status !== "collision";
+          setSurveyorPlume(plume, sim.throttle, 1, 0, level);
           glow.material.opacity = sim.throttle * 0.75;
           const thermal = clamp3((operations.s.temperature - 290) / 8, 0, 1);
           servicePanel.emissive.setRGB(0.32 + thermal * 0.1, 0.37, 0.35 - thermal * 0.08);

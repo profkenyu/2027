@@ -194,6 +194,7 @@
           font-size: 13px;
         }
       }
+      body[data-limb-entry] #intro { opacity: 0; transition: none; }
     </style>
     <style>
       #vehicle-preview-link {
@@ -29664,24 +29665,31 @@ var vertexShader = (
   varying float vAlpha;
   varying float vKind;
   varying float vSeed;
+  varying float vPath;
+  varying float vAbove;
   void main() {
     vUv = uv;
     vKind = aKind;
     vSeed = aSeed.y;
     if (aKind < 0.5) {
-      float age = fract(aSeed.x + uClock * (1.3 + aSeed.z * 0.24));
-      float spread = (0.045 + age * age * 0.66) * aSeed.w;
-      float angle = aSeed.y + age * 0.3;
-      vec3 center = (uLander * vec4(aOrigin, 1.0)).xyz;
-      center += vec3(cos(angle) * spread, -age * uLength, sin(angle) * spread);
+      float age = fract(aSeed.x + uClock * (1.18 + aSeed.z * 0.16));
+      float travel = age * min(uLength, 2.5 + 9.0 * uGasPower);
+      vPath = travel / aSeed.w;
+      float radius = 0.38 * aSeed.w + travel * 0.20;
+      float spread = (0.18 + 0.64 * aSeed.z) * radius;
+      float angle = aSeed.y + age * 0.38;
+      vec3 local = aOrigin + vec3(cos(angle) * spread, -travel, sin(angle) * spread);
+      vec3 center = (uLander * vec4(local, 1.0)).xyz;
       vec4 viewCenter = viewMatrix * vec4(center, 1.0);
-      float width = (0.22 + age * 1.02) * aSeed.w * 1.2;
-      viewCenter.xy += position.xy * vec2(width, width * 1.45);
+      vec2 billboard = position.xy * (1.18 * radius + travel * 0.11);
+      viewCenter.xy += billboard;
       gl_Position = projectionMatrix * viewCenter;
-      float life = smoothstep(0.0, 0.075, age) * (1.0 - smoothstep(0.64, 1.0, age));
-      float groundClip = smoothstep(aGround.x + 0.015, aGround.x + 0.16, center.y);
-      vAlpha = life * groundClip * uGasPower * uGasWeight;
+      vAbove = center.y + dot(viewMatrix[1].xy, billboard) - aGround.x;
+      float life = 1.0 - smoothstep(0.60, 1.0, age);
+      vAlpha = life * uGasPower * uGasWeight / (1.0 + vPath * 0.72);
     } else {
+      vPath = 0.0;
+      vAbove = 1.0;
       float age = fract(aSeed.x + uClock * 0.23);
       // Fast initial entrainment eases into a wider, slower dust front.
       float travel = (1.0 - exp(-age * 2.0)) / (1.0 - exp(-2.0));
@@ -29721,14 +29729,22 @@ var fragmentShader = (
   varying float vAlpha;
   varying float vKind;
   varying float vSeed;
+  varying float vPath;
+  varying float vAbove;
   void main() {
     vec2 p = (vUv - 0.5) * 2.0;
     float r2 = dot(p, p);
     float soft = exp(-3.9 * r2) * (1.0 - smoothstep(0.6, 1.0, r2));
     float density = 0.86 + 0.14 * sin(p.x * 6.0 + p.y * 4.2 + vSeed);
+    float inner = exp(-2.4 * vPath - 3.5 * r2);
+    vec3 color = mix(uGasColor, uDustColor, vKind);
     float alpha = soft * density * vAlpha;
+    if (vKind < 0.5) {
+      color = mix(uGasColor, vec3(0.98, 0.86, 0.69), inner);
+      alpha *= (0.9 + inner * 1.4) * smoothstep(0.015, 0.17, vAbove);
+    }
     if (alpha < 0.001) discard;
-    gl_FragColor = vec4(mix(uGasColor, uDustColor, vKind), alpha);
+    gl_FragColor = vec4(color, alpha);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }
@@ -31214,6 +31230,22 @@ var smooth2 = (x) => {
   x = MathUtils.clamp(x, 0, 1);
   return x * x * x * (10 + x * (-15 + x * 6));
 };
+function createBasinObservation() {
+  const camera = new PerspectiveCamera(42, 1.6, 0.5, 80000);
+  const target = new Vector3(-1370, groundHeight(-1370, 3292) + 16, 3292);
+  camera.position.set(-1376, groundHeight(-1376, 3580) + 134, 3580);
+  camera.lookAt(target);
+  return { camera, target };
+}
+
+async function readBaselineCamera() {
+  const db = await openExhibition();
+  return new Promise((resolve, reject) => {
+    const request = db.transaction("frames").objectStore("frames").get("before");
+    request.onsuccess = () => resolve(request.result?.camera);
+    request.onerror = () => reject(request.error);
+  });
+}
 function createHabitatWorld(scene2, surface2, tier2, checkpoint, options = {}) {
   const model = createBasinModel(groundHeight, checkpoint, options);
   const arrays = [
@@ -31444,8 +31476,22 @@ function createHabitatWorld(scene2, surface2, tier2, checkpoint, options = {}) {
   label.position.set(-1408, surface2.heightAt(-1408, 3278) + 5, 3265.7);
   group.updateMatrixWorld(true);
   payloads[0].group.attach(label);
-  const target2 = new Vector3(), startPosition = new Vector3(), startRotation = new Quaternion(), finalRotation = new Quaternion();
-  const helper = new PerspectiveCamera();
+    // Survey stakes belong to the ground in all three views, including the archive.
+  const posts = new InstancedMesh(
+    new CylinderGeometry(0.28, 1.25, 3.4, 4),
+    new MeshStandardMaterial({color: 0x565d5d, metalness: 0.14, roughness: 0.8}),
+    4,
+  );
+  posts.name = "preservation-survey-stakes";
+  for (const [index, z] of [3220, 3260, 3300, 3340].entries()) {
+    posts.setMatrixAt(index, new Matrix4().makeTranslation(
+      PRESERVE_X, surface2.heightAt(PRESERVE_X, z) + 1.7, z,
+    ));
+  }
+  surface2.group.add(posts);
+  const observation = createBasinObservation();
+  const look = new Vector3();
+
   let tick = -1, slot = 0, clock = model.state.time;
   function upload() {
     slot = 1 - slot;
@@ -31474,32 +31520,24 @@ function createHabitatWorld(scene2, surface2, tier2, checkpoint, options = {}) {
     light.emissiveIntensity = time < 64 ? 0 : 0.14 * Math.min(1, (time - 64) / 18);
     gauge.scale.y = 0.08 + Math.min(1, model.state.stored / 65) * 0.92;
   }
-  function frame(camera2, blend = 1) {
+    function frame(camera, blend = 1, liveTarget = null) {
     const p = smooth2(blend);
     if (p <= 0) return;
-    startPosition.copy(camera2.position);
-    startRotation.copy(camera2.quaternion);
-    helper.position.set(-1420, surface2.heightAt(-1420, 2780) + 175, 2780);
-    target2.set(-1400, surface2.heightAt(-1400, 3300) + 125, 3300);
-    helper.up.set(0, 1, 0);
-    helper.lookAt(target2);
-    finalRotation.copy(helper.quaternion);
-    camera2.position.lerpVectors(startPosition, helper.position, p);
-    if (p < 1)
-      camera2.position.y = Math.max(
-        camera2.position.y,
-        surface2.heightAt(camera2.position.x, camera2.position.z) + 6 + 180 * Math.sin(Math.PI * p)
-      );
-    camera2.quaternion.slerpQuaternions(startRotation, finalRotation, p);
-    camera2.fov = MathUtils.lerp(
-      camera2.fov,
-      camera2.aspect < 1 ? 50 : 42,
-      p
-    );
-    camera2.near = 0.5;
-    camera2.updateProjectionMatrix();
+    const reference = observation.camera;
+    if (liveTarget) look.copy(liveTarget);
+    else camera.getWorldDirection(look)
+      .multiplyScalar(camera.position.distanceTo(observation.target)).add(camera.position);
+    camera.position.lerp(reference.position, p);
+    camera.position.y = Math.max(camera.position.y,
+      surface2.heightAt(camera.position.x, camera.position.z) + 6);
+    camera.lookAt(look.lerp(observation.target, p));
+    // Preserve the horizontal survey extent on narrow displays.
+    const vertical = Math.tan(MathUtils.degToRad(reference.fov * 0.5));
+    const fov = 2 * MathUtils.radToDeg(Math.atan(vertical * Math.max(1, reference.aspect / camera.aspect)));
+    camera.fov = MathUtils.lerp(camera.fov, fov, p);
+    camera.updateProjectionMatrix();
   }
-  return {
+return {
     model,
     update: update2,
     frame,
@@ -31614,6 +31652,20 @@ function regions(model) {
   });
 }
 function createPlaceRecorder(renderer2, scene2, surface2, habitat2, tier2, state2) {
+  const { camera: camera2 } = createBasinObservation();
+  // A continuing installation keeps the lens of its original, irreplaceable photograph.
+  const lensReady = readBaselineCamera().then((saved) => {
+    if (saved?.aspect !== camera2.aspect || !(saved.fov > 0 && saved.fov < 179) ||
+        !Array.isArray(saved.position) || saved.position.length !== 3 ||
+        !Array.isArray(saved.quaternion) || saved.quaternion.length !== 4 ||
+        ![...saved.position, ...saved.quaternion].every(Number.isFinite) ||
+        Math.abs(Math.hypot(...saved.quaternion) - 1) > 0.00001) return;
+    camera2.position.fromArray(saved.position);
+    camera2.quaternion.fromArray(saved.quaternion);
+    camera2.fov = saved.fov;
+    camera2.updateProjectionMatrix();
+  }).catch(() => {});
+
   const completed = /* @__PURE__ */ new Set();
   let busy = false, retryAt = 0, pending = Promise.resolve(), available = true;
   const snapshot = () => ({ available, completed: [...completed], busy });
@@ -31626,6 +31678,7 @@ function createPlaceRecorder(renderer2, scene2, surface2, habitat2, tier2, state
     }
   }
   async function capture(stage, id) {
+    await lensReady;
     const width = tier2 === "low" ? 384 : 640, height = width * 5 / 8;
     const s = habitat2.snapshot(), capturedRegions = regions(habitat2.model);
     const target2 = new WebGLRenderTarget(width, height);
@@ -31662,9 +31715,7 @@ function createPlaceRecorder(renderer2, scene2, surface2, habitat2, tier2, state
     const fill = new DirectionalLight(10337247, 0.22);
     fill.position.set(1800, -600, -2200);
     frame.add(light, light.target, fill);
-    const camera2 = new PerspectiveCamera(42, 1.6, 0.5, 8e4);
-    camera2.position.set(-1420, groundHeight(-1420, 2780) + 175, 2780);
-    camera2.lookAt(-1400, groundHeight(-1400, 3300) + 125, 3300);
+    
     const previous = renderer2.getRenderTarget(), auto = renderer2.shadowMap.autoUpdate;
     const buffer = new Uint8Array(width * height * 4);
     try {
@@ -31710,8 +31761,7 @@ function createPlaceRecorder(renderer2, scene2, surface2, habitat2, tier2, state
         camera: {
           position: camera2.position.toArray(),
           quaternion: camera2.quaternion.toArray(),
-          fov: 42,
-          aspect: 1.6
+          fov: camera2.fov, aspect: camera2.aspect
         },
         status: stage === "before" ? "\uAC1C\uC785 \uC774\uC804" : !s.heatPower && !s.pumpPower ? "\uC124\uBE44 \uB300\uAE30" : s.eventAt === null ? "\uCD08\uAE30 \uAC00\uB3D9" : "\uC548\uC815 \uC6B4\uC804",
         resources: {
@@ -32515,6 +32565,23 @@ function markRover(chassis, targets, tier2, width, length) {
 }
 
 // works/candidate/model-decoder.js
+function coatBasinFrontWheel(mesh, wheelRadius) {
+  const positions = mesh.geometry.getAttribute("position");
+  const pigment = new Float32Array(positions.count * 3);
+  for (let i = 0; i < positions.count; i++) {
+    const radius = Math.hypot(positions.getY(i), positions.getZ(i)) / wheelRadius;
+    const onDrum = MathUtils.smoothstep(radius, 0.80, 0.87);
+    const crown = MathUtils.smoothstep(radius, 0.92, 0.995);
+    const dust = onDrum * (1 - crown);
+    pigment[i * 3] = 1 - dust * 0.12;
+    pigment[i * 3 + 1] = 1 - dust * 0.22;
+    pigment[i * 3 + 2] = 1 - dust * 0.31;
+  }
+  mesh.geometry.setAttribute("color", new Float32BufferAttribute(pigment, 3));
+  mesh.material.vertexColors = true;
+  mesh.material.roughness = Math.max(0.38, mesh.material.roughness * 0.9);
+}
+
 function decodeVehicle(models, kind, tier2) {
   const site = models[tier2].site;
   const rollAxis = new Vector3(0, 0, 1), rollRotation = new Quaternion();
@@ -32551,6 +32618,9 @@ function decodeVehicle(models, kind, tier2) {
         tier2
       )
     );
+    if (kind === "rover" && (b.part === 0 || b.part === 1) && b.profile === "aluminum") {
+      coatBasinFrontWheel(m, wheelRadius);
+    }
     m.castShadow = m.receiveShadow = true;
     if (b.part >= 200 && b.jointMatrix) {
       if (!jointParts.has(b.part)) {
@@ -51463,6 +51533,8 @@ var eligible = previousSurveyReady(state.previous);
 var vehicleRecorder = createVehicleRecorder();
 var archive = new FieldArchive();
 var captureJobs = /* @__PURE__ */ new Set();
+const limbEntry = params.get("entry") === "limb" && state.phase === "landing" && state.seconds === 0;
+if (limbEntry) document.body.dataset.limbEntry = "";
 archive.registerStations(CANDIDATE_STATIONS);
 archive.data.records = archive.data.records.filter(
   (r) => r.body !== "candidate" || Array.isArray(r.data?.elements)
@@ -51509,6 +51581,37 @@ var roverMotion = createRoverMotion();
 var offset = new Vector3();
 var target = new Vector3();
 var forward = new Vector3();
+const screenHeight = 0.44;
+const eyePitch = (fov) => Math.atan((0.5 - screenHeight) * 2 * Math.tan(fov * Math.PI / 360));
+
+function createRidgeFrame(heightAt) {
+  const heading = Math.PI / 6, dx = Math.sin(heading), dz = -Math.cos(heading);
+  const aim = new Vector3(), original = new Quaternion();
+  let angle;
+  return function frameRidge(camera, seconds) {
+    if (seconds >= 5.7) return;
+    if (angle === undefined) {
+      // Sample this quality tier's actual ridge at the fixed basin viewpoint.
+      let slope = -Infinity;
+      for (let d = 20; d <= 8400; d += 32) {
+        const h = heightAt(camera.position.x + d * dx, camera.position.z + d * dz);
+        slope = Math.max(slope, (h - camera.position.y) / d);
+      }
+      angle = Math.atan(slope);
+    }
+    const weight = 1 - MathUtils.smootherstep(seconds, 2.4, 5.7);
+    const fov = camera.aspect < 1 ? 55 : 42;
+    const pitch = angle - eyePitch(fov);
+    aim.set(dx * Math.cos(pitch), Math.sin(pitch), dz * Math.cos(pitch)).add(camera.position);
+    original.copy(camera.quaternion);
+    camera.lookAt(aim);
+    camera.quaternion.slerp(original, 1 - weight);
+    camera.fov = MathUtils.lerp(camera.fov, fov, weight);
+    camera.updateProjectionMatrix();
+  };
+}
+
+let frameRidge;
 var cameraTarget = new Vector3();
 var lightOffset = new Vector3(-1400, 2600, 1700).normalize().multiplyScalar(220);
 var departureCamera = new Vector3();
@@ -51945,6 +52048,16 @@ function render(dt = 0, vehicleStateReady = false) {
     surface.heightAt(camera.position.x, camera.position.z) + 3
   );
   camera.lookAt(cameraTarget);
+  const surveyLens = innerWidth < 700 ? 54 : 46;
+  if (camera.fov !== surveyLens) {
+    camera.fov = surveyLens;
+    camera.updateProjectionMatrix();
+  }
+  if (state.phase === "landing" && state.phaseTime < 12) {
+    habitat.frame(camera, 1 - MathUtils.smoothstep(state.phaseTime, limbEntry ? 7.3 : 4.5, 12), cameraTarget);
+    if (limbEntry) frameRidge(camera, state.phaseTime);
+  }
+
   sun.target.position.copy(rover.group.position);
   sun.position.copy(sun.target.position).add(lightOffset);
   shadowBudget.update(state.seconds, state.phase, {
@@ -51970,7 +52083,7 @@ function render(dt = 0, vehicleStateReady = false) {
     controls.hidden = !surveyPhases.has(state.phase);
     readout.hidden = finalPhases.has(state.phase);
   }
-  const opacity = 1 - MathUtils.smoothstep(state.seconds, 4, 9);
+  const opacity = limbEntry ? MathUtils.smoothstep(state.seconds, 1.9, 3.5) * (1 - MathUtils.smoothstep(state.seconds, 6, 9)) : 1 - MathUtils.smoothstep(state.seconds, 4, 9);
   if (opacity !== introOpacity) {
     introOpacity = opacity;
     intro.style.opacity = String(opacity);
@@ -52045,6 +52158,7 @@ try {
   surface = createSurface(scene, tier);
   initialCamera.set(-1420, surface.heightAt(-1420, 2780) + 175, 2780);
   initialTarget.set(-1400, surface.heightAt(-1400, 3300) + 125, 3300);
+  frameRidge = createRidgeFrame(surface.heightAt);
   habitat = createHabitatWorld(scene, surface, tier, null, {
     equipment: false
   });
@@ -52085,19 +52199,7 @@ try {
   forward.set(0, 0, 1);
   applyVehicleState();
   placeRover(0, true);
-  const markerMaterial = new MeshStandardMaterial({
-    color: 10132884,
-    metalness: 0.3,
-    roughness: 0.7
-  });
-  for (const z of [3220, 3260, 3300, 3340]) {
-    const stake = new Mesh(
-      new CylinderGeometry(0.08, 0.08, 1.6, 6),
-      markerMaterial
-    );
-    stake.position.set(PRESERVE_X, surface.heightAt(PRESERVE_X, z) + 0.8, z);
-    scene.add(stake);
-  }
+  
   recorder = createPlaceRecorder(renderer, scene, surface, habitat, tier, {
     seed: state.seed
   });

@@ -31068,16 +31068,16 @@ void main() {
       var SCENE_MODEL_ASSETS = Object.freeze({
         opening: {
           high: {
-            file: "high-144b1b740d496921.json",
-            bytes: 1971971,
+            file: "high-ae576180044b4a70.json",
+            bytes: 1974051,
           },
           mid: {
-            file: "mid-3b3c31a80205c071.json",
-            bytes: 1971970,
+            file: "mid-9f083e2024e75bb7.json",
+            bytes: 1974050,
           },
           low: {
-            file: "low-b8e1205532bc2ca4.json",
-            bytes: 1327015,
+            file: "low-8599028612d9e719.json",
+            bytes: 1328454,
           },
         },
         transit: {
@@ -31096,16 +31096,16 @@ void main() {
         },
         arrival: {
           high: {
-            file: "high-42ecd1a9ba16cd20.json",
-            bytes: 1345811,
+            file: "high-a88769b2ea4fd64a.json",
+            bytes: 1389595,
           },
           mid: {
-            file: "mid-8a4ff84d95afb74c.json",
-            bytes: 1216895,
+            file: "mid-82d7fe49c2141933.json",
+            bytes: 1258533,
           },
           low: {
-            file: "low-cbf5dd61f2ebb744.json",
-            bytes: 653855,
+            file: "low-da447e3466450bbb.json",
+            bytes: 697671,
           },
         },
       });
@@ -34577,6 +34577,7 @@ function shipMaterial(kind, tier2, options = {}) {
   orientation = new Quaternion(),
   tier = "high",
   readableAccess = false,
+  recessedSill = false,
 ) {
   const put = (material, x, y, z, w, h, d) => {
     const p = new Vector3(x, y, z).applyQuaternion(orientation).add(origin);
@@ -34584,7 +34585,7 @@ function shipMaterial(kind, tier2, options = {}) {
   };
   put("dark", 0, 0, 0.28, 7.6, 11.6, 0.55);
   put(
-    "paint",
+    recessedSill ? "titanium" : "paint",
     0,
     0,
     0.62,
@@ -34601,6 +34602,11 @@ function shipMaterial(kind, tier2, options = {}) {
     put(contactFinish, 4.8, y, 1.05, ACCESS_SCALE.gripThickness, 2.4, 0.55);
     if (tier !== "low")
       for (const dy of [-1, 1]) put("steel", 4.8, y + dy, 0.55, 0.6, 0.45, 1.1);
+  }
+  if (recessedSill) {
+    // A dark backing meets the underside of the existing tread. The bright
+    // coated nosing retains its dimensions and catches light on its upper edge.
+    put("dark", 0, -7.95, 0.43, 8.4, 1.1, 0.86);
   }
   put(contactFinish, 0, -7.1, 1.1, 9, 0.6, 2.2);
   put("dark", 0, 3.5, 0.92, 2.3, 0.9, 0.18);
@@ -34959,10 +34965,11 @@ function shipMaterial(kind, tier2, options = {}) {
                   if ((face === 2 || face === 6) && s === 2 && col === 0 && row === 0) {
                     const q = new Quaternion().setFromUnitVectors(new Vector3(0, 0, 1), n);
                     serviceHatch(
-                      (kind, ...args) => add({ steel: 0, dark: 1, paint: 2 }[kind], ...args),
+                      (kind, ...args) => add({ steel: 0, dark: 1, paint: 2, titanium: 7 }[kind], ...args),
                       centre.clone().addScaledVector(n, 1.12),
                       q,
                       tier, readableAccess && index === 0 && face === 2,
+                      readableAccess && index === 0,
                     );
                     accessHatches++;
                   }
@@ -36637,6 +36644,21 @@ function shipMaterial(kind, tier2, options = {}) {
     sizes.push(size);
   }
         let stars = new BufferGeometry();
+  const fieldStarCount = sizes.length;
+  if (quietSpace) {
+    // Fixed celestial bearings crossed successively by the lead hull.
+    // Opaque geometry supplies the occultation through the normal depth test.
+    for (const [x, y, z, size] of [
+      [-0.313832, 0.237077, 0.919404, 2.45],
+      [0.062109, 0.131611, 0.989354, 2.05],
+      [0.051544, 0.220043, 0.974127, 2.20],
+    ]) {
+      points.push(x * 60000, y * 60000, z * 60000);
+      colours.push(0.65, 0.69, 0.71);
+      sizes.push(size);
+    }
+  }
+
         (stars.setAttribute("position", new Float32BufferAttribute(points, 3)),
           stars.setAttribute("color", new Float32BufferAttribute(colours, 3)),
           stars.setAttribute("starSize", new Float32BufferAttribute(sizes, 1)));
@@ -36648,11 +36670,12 @@ function shipMaterial(kind, tier2, options = {}) {
             vertexColors: !0,
             uniforms: {
               pixelScale: { value: Math.min(devicePixelRatio, 1.5) },
+              fieldStarCount: { value: fieldStarCount },
               visibility: { value: 1 },
             },
             vertexShader:
-              "attribute float starSize;uniform float pixelScale;varying vec3 tint;void main(){tint=color;gl_PointSize=starSize*pixelScale;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}",
-            fragmentShader: `uniform float visibility;varying vec3 tint;void main(){float r=length(gl_PointCoord-.5)*2.;float alpha=1.-smoothstep(.2,1.,r);if(alpha<.01)discard;gl_FragColor=vec4(tint,alpha*visibility);
+              "attribute float starSize;uniform float pixelScale;uniform float visibility;uniform int fieldStarCount;varying float skyGain;varying vec3 tint;void main(){tint=color;skyGain=gl_VertexID<fieldStarCount?visibility:mix(.48,1.,visibility);gl_PointSize=starSize*pixelScale;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}",
+            fragmentShader: `varying float skyGain;varying vec3 tint;void main(){float r=length(gl_PointCoord-.5)*2.;float alpha=1.-smoothstep(.2,1.,r);if(alpha<.01)discard;gl_FragColor=vec4(tint,alpha*skyGain);
 #include <colorspace_fragment>
 }`,
           }),
@@ -57591,66 +57614,100 @@ return createVesselAudio;
           state2
         );
       }
-      function mobilePlumeGeometry(seed, falloff, axial = 12) {
-        let positions = [],
-          uvs = [],
-          densities = [],
-          seeds = [],
-          indices = [];
-        for (let k = 0; k <= axial; k++) {
-          let t = (k / axial) ** 2,
-            radius = 0.78 + 0.82 * t ** 0.65,
-            density = (1 - t) ** 1.7 * Math.exp(-falloff * t);
-          for (let side of [-1, 1])
-            (positions.push(side * radius, 0, 0.5 - t),
-              uvs.push((side + 1) / 2, 1 - t),
-              densities.push(density),
-              seeds.push(seed));
-          if (k < axial) {
-            let a = k * 2;
-            indices.push(a, a + 2, a + 1, a + 1, a + 2, a + 3);
-          }
-        }
-        let geometry = new BufferGeometry();
-        return (
-          geometry.setAttribute("position", new Float32BufferAttribute(positions, 3)),
-          geometry.setAttribute("uv", new Float32BufferAttribute(uvs, 2)),
-          geometry.setAttribute("plumeDensity", new Float32BufferAttribute(densities, 1)),
-          geometry.setAttribute("engineSeed", new Float32BufferAttribute(seeds, 1)),
-          geometry.setIndex(indices),
-          (geometry.boundingSphere = new Sphere(new Vector3(), 1.7)),
-          geometry
-        );
-      }
-      function mobilePlumeMaterial(clock, brightness, colorGradient) {
-        let material = new MeshBasicMaterial({
-          transparent: !0,
-          opacity: 0.18,
-          depthWrite: !1,
-          side: DoubleSide,
-          blending: AdditiveBlending,
-          toneMapped: !1,
-        });
-        return (
-          (material.onBeforeCompile = (shader) => {
-            ((shader.uniforms.engineClock = clock),
-              (shader.vertexShader =
-                `attribute float plumeDensity; attribute float engineSeed;
-      uniform float engineClock; varying vec2 vEngineUV; varying float vDensity; varying vec3 vCentre;
-` + shader.vertexShader),
-              (shader.vertexShader = shader.vertexShader
-                .replace(
-                  "#include <begin_vertex>",
-                  `#include <begin_vertex>
+      
+
+// The display integrates light along an approximate optical chord. A dense
+// central jet fades into a wider, thinner envelope as its area increases.
+const plumeFlow = `
+  uniform float engineDrive;
+  uniform float wakeDrive;
+  uniform float engineClock;
+  vec2 gasState(float t, float seed, float density) {
+    float drive = mix(engineDrive, wakeDrive, smoothstep(0.0, 0.65, t));
+    float heat = exp(-3.8 * t / (0.86 + 0.72 * drive));
+    float wake = smoothstep(0.01, 0.32, t);
+    float flow = 1.0 + wake * (0.052 * sin(8.0*t - 1.4*engineClock + seed)
+                           + 0.024 * sin(15.0*t - 2.3*engineClock + seed*1.7));
+    return vec2(heat, density * flow * (0.70 + 0.76*drive));
+  }
+`;
+const plumeRadiance = `
+  vec4 jetColumn(float chord, vec2 gas) {
+    float axis = chord * chord;
+    float core = axis * axis * gas.x;
+    vec3 colour = mix(vec3(0.23,0.36,0.43), vec3(0.84,0.92,0.95), core);
+    return vec4(colour, gas.y * (0.58*chord + 0.80*core));
+  }
+`;
+
+// One view-facing ribbon approximates the integrated emission of each plume.
+// The physical outlet, authored length, colour and axial decay remain shared.
+function mobilePlumeGeometry(seed, falloff, axial = 12) {
+  const positions = [],
+    uvs = [],
+    densities = [],
+    seeds = [],
+    indices = [];
+  for (let k = 0; k <= axial; k++) {
+    const t = (k / axial) ** 2,
+      radius = 0.78 + 0.82 * t ** 0.65;
+    const density = (1 - t) ** 1.35 * Math.exp(-falloff * t) / (1 + 1.7 * t);
+    for (const side of [-1, 1]) {
+      positions.push(side * radius, 0, 0.5 - t);
+      uvs.push((side + 1) / 2, 1 - t);
+      densities.push(density);
+      seeds.push(seed);
+    }
+    if (k < axial) {
+      const a = k * 2;
+      indices.push(a, a + 2, a + 1, a + 1, a + 2, a + 3);
+    }
+  }
+  const geometry = new BufferGeometry();
+  geometry.setAttribute(
+    "position",
+    new Float32BufferAttribute(positions, 3),
+  );
+  geometry.setAttribute("uv", new Float32BufferAttribute(uvs, 2));
+  geometry.setAttribute(
+    "plumeDensity",
+    new Float32BufferAttribute(densities, 1),
+  );
+  geometry.setAttribute(
+    "engineSeed",
+    new Float32BufferAttribute(seeds, 1),
+  );
+  geometry.setIndex(indices);
+  // The view-facing width can rotate in the XY plane.
+  geometry.boundingSphere = new Sphere(new Vector3(), 1.7);
+  return geometry;
+}
+function mobilePlumeMaterial(clock, brightness, colorGradient, engineDrive = { value: 0.24 }, wakeDrive = engineDrive) {
+  const material = new MeshBasicMaterial({
+    transparent: true,
+    opacity: 0.18,
+    depthWrite: false,
+    forceSinglePass: true,
+    side: DoubleSide,
+    blending: AdditiveBlending,
+    toneMapped: false,
+  });
+  material.onBeforeCompile = (shader) => {
+    Object.assign(shader.uniforms, { engineClock: clock, engineDrive, wakeDrive });
+    shader.vertexShader =
+      plumeFlow + `\nattribute float plumeDensity; attribute float engineSeed;
+      varying vec2 vEngineUV; varying vec2 vGasState;\n` +
+      shader.vertexShader;
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        "#include <begin_vertex>",
+        `#include <begin_vertex>
         vEngineUV=uv;
-        float t=1.-uv.y;
-        vCentre=mix(vec3(.83,.92,1.),vec3(.35,.54,.65),smoothstep(0.,.72,t));
-        vDensity=plumeDensity*(1.+smoothstep(.02,.18,t)*(.024*sin(t*7.-engineClock*1.3+engineSeed)
-          +.013*sin(t*13.-engineClock*2.1+engineSeed*.7)));`,
-                )
-                .replace(
-                  "#include <project_vertex>",
-                  `
+        vGasState=gasState(1.-uv.y, engineSeed, plumeDensity);`,
+      )
+      .replace(
+        "#include <project_vertex>",
+        `
         vec4 axisPosition=modelViewMatrix*vec4(0.,0.,transformed.z,1.);
         vec3 axisDirection=modelViewMatrix[2].xyz;
         vec3 across=cross(axisDirection,-axisPosition.xyz);
@@ -57660,230 +57717,247 @@ return createVesselAudio;
         vec4 mvPosition=axisPosition;
         mvPosition.xyz+=across*transformed.x*halfWidth;
         gl_Position=projectionMatrix*mvPosition;`,
-                )),
-              (shader.fragmentShader =
-                `varying vec2 vEngineUV; varying float vDensity; varying vec3 vCentre;
-` + shader.fragmentShader),
-              (shader.fragmentShader = shader.fragmentShader.replace(
-                "#include <color_fragment>",
-                `#include <color_fragment>
+      );
+    shader.fragmentShader =
+      plumeRadiance + "\nvarying vec2 vEngineUV; varying vec2 vGasState;\n" +
+      shader.fragmentShader;
+    shader.fragmentShader = shader.fragmentShader.replace(
+      "#include <color_fragment>",
+      `#include <color_fragment>
       float q=vEngineUV.x*2.-1.;
-      float column=max(0.,1.-q*q);column*=column;
-      diffuseColor.rgb=${colorGradient ? "mix(vec3(.16,.30,.40),vCentre,column)" : "vec3(.48,.61,.69)"}*${brightness.toFixed(3)};
-      diffuseColor.a*=column*vDensity;`,
-              )));
-          }),
-          (material.customProgramCacheKey = () => `mobile-plume-v1-${brightness}-${colorGradient}`),
-          material
-        );
+      vec4 light=jetColumn(max(0.,1.-q*q), vGasState);
+      diffuseColor.rgb=${colorGradient ? "light.rgb" : "vec3(.48,.61,.69)"}*${brightness.toFixed(3)};
+      diffuseColor.a*=light.a;`,
+    );
+  };
+  material.customProgramCacheKey = () =>
+    `mobile-plume-v2-${brightness}-${colorGradient}`;
+  return material;
+}
+
+
+// Emission-envelope approximation, not a plasma/combustion simulation. A smooth
+// shell stands in for the integrated glow of rarefied gas; no smoke or shock rings.
+function plumeGeometry(segments, axial, rectangular, seed) {
+  const positions = [],
+    normals = [],
+    uvs = [],
+    seeds = [],
+    indices = [];
+  for (let k = 0; k <= axial; k++) {
+    const t = (k / axial) ** 2;
+    const radius = 0.78 + 0.82 * t ** 0.65;
+    const exponent = rectangular ? MathUtils.lerp(8, 2, Math.sqrt(t)) : 2;
+    for (let j = 0; j <= segments; j++) {
+      const a = (j / segments) * Math.PI * 2,
+        x = Math.cos(a),
+        y = Math.sin(a);
+      const contour =
+        (Math.abs(x) ** exponent + Math.abs(y) ** exponent) ** (-1 / exponent);
+      positions.push(x * contour * radius, y * contour * radius, 0.5 - t);
+      // Optical column-density proxy, smoothly interpolated across the shell.
+      normals.push(x, y, 0);
+      uvs.push(j / segments, 1 - t);
+      seeds.push(seed);
+      if (k < axial && j < segments) {
+        const v = k * (segments + 1) + j,
+          next = v + segments + 1;
+        indices.push(v, next, v + 1, v + 1, next, next + 1);
       }
-      function plumeGeometry(segments, axial, rectangular, seed) {
-        let positions = [],
-          normals = [],
-          uvs = [],
-          seeds = [],
-          indices = [];
-        for (let k = 0; k <= axial; k++) {
-          let t = (k / axial) ** 2,
-            radius = 0.78 + 0.82 * t ** 0.65,
-            exponent = rectangular ? MathUtils.lerp(8, 2, Math.sqrt(t)) : 2;
-          for (let j = 0; j <= segments; j++) {
-            let a = (j / segments) * Math.PI * 2,
-              x = Math.cos(a),
-              y = Math.sin(a),
-              contour = (Math.abs(x) ** exponent + Math.abs(y) ** exponent) ** (-1 / exponent);
-            if (
-              (positions.push(x * contour * radius, y * contour * radius, 0.5 - t),
-              normals.push(x, y, 0),
-              uvs.push(j / segments, 1 - t),
-              seeds.push(seed),
-              k < axial && j < segments)
-            ) {
-              let v = k * (segments + 1) + j,
-                next2 = v + segments + 1;
-              indices.push(v, next2, v + 1, v + 1, next2, next2 + 1);
-            }
-          }
-        }
-        let g = new BufferGeometry();
-        return (
-          g.setAttribute("position", new Float32BufferAttribute(positions, 3)),
-          g.setAttribute("normal", new Float32BufferAttribute(normals, 3)),
-          g.setAttribute("uv", new Float32BufferAttribute(uvs, 2)),
-          g.setAttribute("engineSeed", new Float32BufferAttribute(seeds, 1)),
-          g.setIndex(indices),
-          g
-        );
-      }
-      function installVoyageEngineGlow(
-        fleet2,
-        tier2,
-        {
-          lengthScale = 5,
-          tailFalloff = 0,
-          brightness = 1,
-          plumeBrightness = brightness,
-          colorGradient = !0,
-        } = {},
-      ) {
-        let segments = { low: 20, mid: 28, high: 40 }[tier2],
-          axial = { low: 5, mid: 8, high: 10 }[tier2],
-          clock = { value: 0 };
-        function coreMaterial(rectangular) {
-          let material = new MeshBasicMaterial({
-            transparent: !0,
-            opacity: 0.88,
-            depthWrite: !1,
-            toneMapped: !1,
-            polygonOffset: !0,
-            polygonOffsetFactor: -1,
-            polygonOffsetUnits: -2,
-          });
-          return (
-            (material.onBeforeCompile = (shader) => {
-              ((shader.vertexShader =
-                `varying vec2 vEngineUV;
-` + shader.vertexShader),
-                (shader.vertexShader = shader.vertexShader.replace(
-                  "#include <begin_vertex>",
-                  `#include <begin_vertex>
-vEngineUV=uv;`,
-                )),
-                (shader.fragmentShader =
-                  `varying vec2 vEngineUV;
-` + shader.fragmentShader),
-                (shader.fragmentShader = shader.fragmentShader.replace(
-                  "#include <color_fragment>",
-                  `
+    }
+  }
+  const g = new BufferGeometry();
+  g.setAttribute("position", new Float32BufferAttribute(positions, 3));
+  g.setAttribute("normal", new Float32BufferAttribute(normals, 3));
+  g.setAttribute("uv", new Float32BufferAttribute(uvs, 2));
+  g.setAttribute("engineSeed", new Float32BufferAttribute(seeds, 1));
+  g.setIndex(indices);
+  return g;
+}
+
+function installVoyageEngineGlow(
+  fleet,
+  tier,
+  {
+    lengthScale = 5,
+    tailFalloff = 0,
+    brightness = 1,
+    plumeBrightness = brightness,
+    colorGradient = true,
+  } = {},
+) {
+  const segments = { low: 20, mid: 28, high: 40 }[tier];
+  const axial = { low: 5, mid: 8, high: 10 }[tier];
+  const flowUniforms = {
+    engineClock: { value: 0 },
+    engineDrive: { value: propulsionLoad(0) },
+    wakeDrive: { value: propulsionLoad(0) },
+  };
+  function coreMaterial(rectangular) {
+    const material = new MeshBasicMaterial({
+      transparent: true,
+      opacity: 0.88,
+      depthWrite: false,
+      toneMapped: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -2,
+    });
+    material.onBeforeCompile = (shader) => {
+      shader.uniforms.engineDrive = flowUniforms.engineDrive;
+      shader.vertexShader = "varying vec2 vEngineUV;\n" + shader.vertexShader;
+      shader.vertexShader = shader.vertexShader.replace(
+        "#include <begin_vertex>",
+        "#include <begin_vertex>\nvEngineUV=uv;",
+      );
+      shader.fragmentShader =
+        "uniform float engineDrive; varying vec2 vEngineUV;\n" + shader.fragmentShader;
+      shader.fragmentShader = shader.fragmentShader.replace(
+        "#include <color_fragment>",
+        `
         #include <color_fragment>
         vec2 q=abs((vEngineUV-.5)*2.0);
         float radius=${rectangular ? "pow(pow(q.x,6.0)+pow(q.y,6.0),1.0/6.0)" : "length(q)"};
-        float hot=exp(-4.2*radius*radius);
+        float hot=exp(-5.5*radius*radius / (.87+.58*engineDrive));
         diffuseColor.rgb=mix(vec3(.19,.34,.43),vec3(.84,.93,1.0),hot)*${brightness.toFixed(3)};
-        diffuseColor.a*=1.0-smoothstep(.38,1.0,radius);
+        diffuseColor.a*=(.72+.30*engineDrive)*(1.0-smoothstep(.42,1.0,radius));
       `,
-                )));
-            }),
-            (material.customProgramCacheKey = () =>
-              `recessed-engine-core-v3-${rectangular}-${brightness}`),
-            material
-          );
-        }
-        let core = coreMaterial(!1),
-          rectCore = coreMaterial(!0),
-          plume = new MeshBasicMaterial({
-            transparent: !0,
-            opacity: 0.18,
-            depthWrite: !1,
-            side: FrontSide,
-            blending: AdditiveBlending,
-            toneMapped: !1,
-          });
-        ((plume.onBeforeCompile = (shader) => {
-          ((shader.uniforms.engineClock = clock),
-            (shader.vertexShader =
-              `attribute float engineSeed;
+      );
+    };
+    material.customProgramCacheKey = () =>
+      `recessed-engine-core-v4-${rectangular}-${brightness}`;
+    return material;
+  }
+  const core = coreMaterial(false),
+    rectCore = coreMaterial(true);
+  const plume = new MeshBasicMaterial({
+    transparent: true,
+    opacity: 0.18,
+    depthWrite: false,
+    side: FrontSide,
+    blending: AdditiveBlending,
+    toneMapped: false,
+  });
+  plume.onBeforeCompile = (shader) => {
+    Object.assign(shader.uniforms, flowUniforms);
+    shader.vertexShader =
+      `attribute float engineSeed;
       varying vec2 vEngineUV; varying vec3 vPlumeNormal; varying vec3 vPlumeView;
-      varying float vEngineSeed;
-` + shader.vertexShader),
-            (shader.vertexShader = shader.vertexShader.replace(
-              "#include <begin_vertex>",
-              `#include <begin_vertex>
-vEngineUV=uv;vEngineSeed=engineSeed;`,
-            )),
-            (shader.vertexShader = shader.vertexShader.replace(
-              "#include <project_vertex>",
-              `#include <project_vertex>
-vPlumeNormal=normalize(normalMatrix*normal);vPlumeView=-mvPosition.xyz;`,
-            )),
-            (shader.fragmentShader =
-              `uniform float engineClock; varying vec2 vEngineUV;
-      varying vec3 vPlumeNormal; varying vec3 vPlumeView; varying float vEngineSeed;
-` + shader.fragmentShader),
-            (shader.fragmentShader = shader.fragmentShader.replace(
-              "#include <color_fragment>",
-              `
+      varying float vEngineSeed;\n` + shader.vertexShader;
+    shader.vertexShader = shader.vertexShader.replace(
+      "#include <begin_vertex>",
+      "#include <begin_vertex>\nvEngineUV=uv;vEngineSeed=engineSeed;",
+    );
+    shader.vertexShader = shader.vertexShader.replace(
+      "#include <project_vertex>",
+      "#include <project_vertex>\nvPlumeNormal=normalize(normalMatrix*normal);vPlumeView=-mvPosition.xyz;",
+    );
+    shader.fragmentShader =
+      plumeFlow + plumeRadiance + `\nvarying vec2 vEngineUV;
+      varying vec3 vPlumeNormal; varying vec3 vPlumeView; varying float vEngineSeed;\n` +
+      shader.fragmentShader;
+    shader.fragmentShader = shader.fragmentShader.replace(
+      "#include <color_fragment>",
+      `
       #include <color_fragment>
       float t=clamp(1.0-vEngineUV.y,0.0,1.0);
       float facing=abs(dot(normalize(vPlumeNormal),normalize(vPlumeView)));
-      float column=pow(smoothstep(.0,.94,facing),1.85);
-      vec3 centre=mix(vec3(.83,.92,1.0),vec3(.35,.54,.65),smoothstep(.0,.72,t));
-      vec3 colour=${colorGradient ? "mix(vec3(.16,.30,.40),centre,column)" : "vec3(.48,.61,.69)"};
-      diffuseColor.rgb=colour*${plumeBrightness.toFixed(3)};
-      float density=pow(1.0-t,1.7)*exp(-${tailFalloff.toFixed(3)}*t);
-      // Restrained, advected variation; the throat stays steady and there are no
-      // periodic bright bands. The same clock freezes with the scene on pause.
-      float flow=1.0+smoothstep(.02,.18,t)*(.024*sin(t*7.0-engineClock*1.3+vEngineSeed)
-        +.013*sin(t*13.0-engineClock*2.1+vEngineSeed*.7));
-      diffuseColor.a*=density*column*flow;
+      float density=pow(1.-t,1.35)*exp(-${tailFalloff.toFixed(3)}*t)/(1.+1.7*t);
+      vec4 light=jetColumn(facing*facing, gasState(t, vEngineSeed, density));
+      diffuseColor.rgb=${colorGradient ? "light.rgb" : "vec3(.48,.61,.69)"}*${plumeBrightness.toFixed(3)};
+      diffuseColor.a*=light.a;
     `,
-            )));
-        }),
-          (plume.customProgramCacheKey = () =>
-            `soft-engine-envelope-v1-${tailFalloff}-${plumeBrightness}-${colorGradient}`));
-        let emissionMaterial =
-            tier2 === "low" ? mobilePlumeMaterial(clock, plumeBrightness, colorGradient) : plume,
-          nozzles = 0;
-        return (
-          fleet2.forEach((ship, shipIndex) => {
-            ship.traverse((part) => {
-              part.isMesh &&
-                part.geometry?.type === "CircleGeometry" &&
-                part.position.z < -500 &&
-                (part.visible = !1);
-            });
-            for (let [index, outlet] of ship.userData.engineOutlets.entries()) {
-              let { x, y, radius, exit, flush, width = radius, height = radius, sides } = outlet,
-                rectangular = sides === 4,
-                coreWidth = outlet.coreWidth ?? width,
-                coreHeight = outlet.coreHeight ?? height,
-                opening = new ShapeGeometry(
-                  outletShape(coreWidth, coreHeight, rectangular ? 4 : segments),
-                  segments / 4,
-                ),
-                p = opening.attributes.position,
-                uv = opening.attributes.uv;
-              for (let i = 0; i < p.count; i++)
-                uv.setXY(i, 0.5 + p.getX(i) / (2 * coreWidth), 0.5 + p.getY(i) / (2 * coreHeight));
-              let disc = new Mesh(opening, rectangular ? rectCore : core);
-              ((disc.name = "voyage-engine-core"),
-                (disc.rotation.y = Math.PI),
-                disc.position.set(x, y, outlet.coreZ ?? exit + outlet.depth * 0.62),
-                disc.scale.setScalar(flush ? 1 : 0.48),
-                ship.add(disc));
-              let length = radius * lengthScale,
-                exhaust = new Mesh(
-                  tier2 === "low"
-                    ? mobilePlumeGeometry(shipIndex * 1.37 + index * 0.61, tailFalloff)
-                    : plumeGeometry(segments, axial, rectangular, shipIndex * 1.37 + index * 0.61),
-                  emissionMaterial,
-                );
-              ((exhaust.name = "voyage-engine-plume"),
-                exhaust.position.set(x, y, exit - length * 0.5),
-                exhaust.scale.set(width, height, length),
-                ship.add(exhaust),
-                nozzles++);
-            }
-          }),
-          {
-            nozzles,
-            mode: "recessed-outlets-soft-expanding-emission",
-            coreDepthRatio: 0.62,
-            coreRadiusRatio: 0.48,
-            segments,
-            profile: tier2 === "low" ? "mobile-ribbon" : "emission-shell",
-            lengthScale,
-            tailFalloff,
-            brightness,
-            plumeBrightness,
-            colorGradient,
-            update(seconds2) {
-              clock.value = seconds2;
-            },
-          }
+    );
+  };
+  plume.customProgramCacheKey = () =>
+    `soft-engine-envelope-v2-${tailFalloff}-${plumeBrightness}-${colorGradient}`;
+  const emissionMaterial =
+    tier === "low"
+      ? mobilePlumeMaterial(flowUniforms.engineClock, plumeBrightness, colorGradient,
+          flowUniforms.engineDrive, flowUniforms.wakeDrive)
+      : plume;
+  let nozzles = 0;
+  fleet.forEach((ship, shipIndex) => {
+    ship.traverse((part) => {
+      if (
+        part.isMesh &&
+        part.geometry?.type === "CircleGeometry" &&
+        part.position.z < -500
+      )
+        part.visible = false;
+    });
+    for (const [index, outlet] of ship.userData.engineOutlets.entries()) {
+      const {
+        x,
+        y,
+        radius,
+        exit,
+        flush,
+        width = radius,
+        height = radius,
+        sides,
+      } = outlet;
+      const rectangular = sides === 4;
+      const coreWidth = outlet.coreWidth ?? width;
+      const coreHeight = outlet.coreHeight ?? height;
+      const opening = new ShapeGeometry(
+        outletShape(coreWidth, coreHeight, rectangular ? 4 : segments),
+        segments / 4,
+      );
+      const p = opening.attributes.position,
+        uv = opening.attributes.uv;
+      for (let i = 0; i < p.count; i++)
+        uv.setXY(
+          i,
+          0.5 + p.getX(i) / (2 * coreWidth),
+          0.5 + p.getY(i) / (2 * coreHeight),
         );
-      }
-      function installVoyageAgeing(fleet2, tier2) {
+      const disc = new Mesh(opening, rectangular ? rectCore : core);
+      disc.name = "voyage-engine-core";
+      disc.rotation.y = Math.PI;
+      disc.position.set(x, y, outlet.coreZ ?? exit + outlet.depth * 0.62);
+      disc.scale.setScalar(flush ? 1 : 0.48);
+      ship.add(disc);
+      const length = radius * lengthScale;
+      const exhaust = new Mesh(
+        tier === "low"
+          ? mobilePlumeGeometry(shipIndex * 1.37 + index * 0.61, tailFalloff)
+          : plumeGeometry(
+              segments,
+              axial,
+              rectangular,
+              shipIndex * 1.37 + index * 0.61,
+            ),
+        emissionMaterial,
+      );
+      exhaust.name = "voyage-engine-plume";
+      exhaust.position.set(x, y, exit - length * 0.5);
+      exhaust.scale.set(width, height, length);
+      ship.add(exhaust);
+      nozzles++;
+    }
+  });
+  return {
+    nozzles,
+    mode: "recessed-outlets-soft-expanding-emission",
+    coreDepthRatio: 0.62,
+    coreRadiusRatio: 0.48,
+    segments,
+    profile: tier === "low" ? "mobile-ribbon" : "emission-shell",
+    lengthScale,
+    tailFalloff,
+    brightness,
+    plumeBrightness,
+    colorGradient,
+    update(seconds) {
+      flowUniforms.engineClock.value = seconds;
+      flowUniforms.engineDrive.value = propulsionLoad(seconds);
+      flowUniforms.wakeDrive.value = propulsionLoad(seconds - 0.70);
+    },
+  };
+}
+
+function installVoyageAgeing(fleet2, tier2) {
 const leadShadowUniform = { value: 0 };
 
         let detail = tier2 === "high" ? 2 : tier2 === "mid" ? 1 : 0,

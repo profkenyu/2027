@@ -262,10 +262,6 @@
                   ((elapsed - 8 + valve) / valve - btkTurnIntegral((elapsed - 8 + valve) / valve));
         return -0.24 + rate * turn;
       }
-      function btkTransitJet(t, index) {
-        const u = (t - (index === 0 ? 40 : 47.6)) / 0.4;
-        return u > 0 && u < 1 ? 16 * u * u * (1 - u) * (1 - u) : 0;
-      }
 
       var __create = Object.create;
       var __defProp = Object.defineProperty;
@@ -1072,16 +1068,16 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
       var SCENE_MODEL_ASSETS = Object.freeze({
         opening: {
           high: {
-            file: "high-144b1b740d496921.json",
-            bytes: 1971971,
+            file: "high-ae576180044b4a70.json",
+            bytes: 1974051,
           },
           mid: {
-            file: "mid-3b3c31a80205c071.json",
-            bytes: 1971970,
+            file: "mid-9f083e2024e75bb7.json",
+            bytes: 1974050,
           },
           low: {
-            file: "low-b8e1205532bc2ca4.json",
-            bytes: 1327015,
+            file: "low-8599028612d9e719.json",
+            bytes: 1328454,
           },
         },
         transit: {
@@ -1100,16 +1096,16 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
         },
         arrival: {
           high: {
-            file: "high-42ecd1a9ba16cd20.json",
-            bytes: 1345811,
+            file: "high-a88769b2ea4fd64a.json",
+            bytes: 1389595,
           },
           mid: {
-            file: "mid-8a4ff84d95afb74c.json",
-            bytes: 1216895,
+            file: "mid-82d7fe49c2141933.json",
+            bytes: 1258533,
           },
           low: {
-            file: "low-cbf5dd61f2ebb744.json",
-            bytes: 653855,
+            file: "low-da447e3466450bbb.json",
+            bytes: 697671,
           },
         },
       });
@@ -28677,7 +28673,7 @@ void main() {
         }
         return (geometry.setAttribute("uv", new BufferAttribute(uv, 2)), geometry);
       }
-      var flightSun = (passage2) => new Vector3(passage2 === 2 ? -28 : 28, 24, 26);
+      var flightSun = (passage2) => new Vector3(passage2 === 2 ? -28 : 28, passage2 === 1 ? 20 : 24, passage2 === 1 ? -21 : 26);
       function flightMaterial(rgb, kind, tier2 = "mid", profile = null) {
         let properties = {
             ceramic: [0.7, 0.025],
@@ -29182,7 +29178,119 @@ vHullPosition=position;`,
       }
       var exposureAt = (t2, passage2 = 1) =>
         Math.min(1, Math.max(0, ((passage2 - 1) * 64 + t2) / 128));
-      function createSurveyor(tier2, passage2 = 1, batches) {
+      function transitValveAge(t, index) { return t - (index === 0 ? 40 : 47.6); }
+function createTransitExhaust(group, tier) {
+  const collar = new CylinderGeometry(0.096, 0.061, 0.30, tier === "low" ? 8 : 14, 1, true);
+  collar.translate(0, -0.15, 0);
+  const metal = new MeshStandardMaterial({
+    color: 0x5b6064, roughness: 0.62, metalness: 0.64, side: DoubleSide,
+  });
+  const volume = new BoxGeometry(0.72, 0.98, 0.72);
+  volume.translate(0, 0.49, 0);
+  const jets = [-1, 1].map(side => {
+    const port = new Mesh(collar, metal);
+    port.name = "survey-attitude-outlet";
+    port.position.set(side * 2.87, 4.8, 1.8);
+    port.rotation.z = -side * Math.PI / 2;
+    group.add(port);
+    const gas = new ShaderMaterial({
+      uniforms: { valveAge: { value: -1 } },
+      transparent: true, depthTest: true, depthWrite: false,
+      vertexShader: `
+        varying vec3 localEntry;
+        varying vec3 localEye;
+        void main() {
+          localEntry = position;
+          localEye = inverse(modelViewMatrix)[3].xyz;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform float valveAge;
+        varying vec3 localEntry;
+        varying vec3 localEye;
+        void main() {
+          vec3 ray = normalize(localEntry - localEye);
+          vec3 face = mix(vec3(-.36,0.,-.36), vec3(.36,.98,.36), step(vec3(0.), ray));
+          vec3 signRay = step(vec3(0.), ray)*2.-1.;
+          vec3 exitT = (face-localEntry)/(signRay*max(abs(ray),vec3(.00001)));
+          float stepLength = max(min(exitT.x, min(exitT.y,exitT.z)),0.) / 6.;
+          float depth = 0.;
+          float core = 0.;
+          for (int i=0; i<6; i++) {
+            vec3 p = localEntry + (float(i)+.5)*stepLength*ray;
+            float u = clamp((valveAge - p.y*.086)/.4,0.,1.);
+            float pulse = 16.*u*u*(1.-u)*(1.-u);
+            float width = .076 + .20*p.y;
+            float r2 = dot(p.xz,p.xz)/(width*width);
+            float column = exp(-2.1*r2) * pow(.076/width,2.) *
+              (1.-smoothstep(.45,.97,p.y)) * pulse * stepLength;
+            depth += column;
+            core += column*exp(-6.*p.y-r2);
+          }
+          float alpha = 1.-exp(-7.5*depth);
+          if (alpha < .001) discard;
+          gl_FragColor = vec4(mix(vec3(.47,.55,.61),vec3(.89,.91,.88),core/max(depth,.00001)), alpha);
+          #include <tonemapping_fragment>
+          #include <colorspace_fragment>
+        }
+      `,
+    });
+    const jet = new Mesh(volume, gas);
+    jet.name = "survey-attitude-exhaust";
+    jet.visible = false;
+    port.add(jet);
+    return jet;
+  });
+  return t => {
+    jets.forEach((jet, i) => {
+      const age = transitValveAge(t, i);
+      jet.material.uniforms.valveAge.value = age;
+      jet.visible = age > 0 && age < 0.485;
+    });
+  };
+}
+
+// The transit export bakes every batch in lander coordinates. Its folded ramp
+// stands at z = -3.78; the two tracks are 0.62 either side of its centre.
+function retainShearSediment(material) {
+  const finish = material.onBeforeCompile;
+  const key = material.customProgramCacheKey();
+  material.onBeforeCompile = function (shader, renderer) {
+    finish.call(this, shader, renderer);
+    shader.fragmentShader = shader.fragmentShader
+      .replace("#include <alphamap_fragment>", `
+        #include <alphamap_fragment>
+        vec3 p = vHullPosition;
+        float tread = 1.0 - smoothstep(.075,.245,abs(abs(p.x)-.62));
+        float rampFace = (1.0-smoothstep(.16,.32,abs(p.z+3.82)))
+          * smoothstep(1.97,2.22,p.y) * (1.0-smoothstep(4.55,4.80,p.y));
+        float sill = (1.0-smoothstep(.14,.37,abs(p.y-2.04)))
+          * (1.0-smoothstep(.18,1.05,abs(p.z+3.55)))
+          * (1.0-smoothstep(1.32,1.6,abs(p.x)));
+        float lowerSkirt = smoothstep(.35,.8,p.y)*(1.0-smoothstep(1.58,2.08,p.y))
+          * (1.0-smoothstep(-.85,.85,p.z)) * smoothstep(.95,1.45,abs(p.x));
+        float broken = .65+.22*sin(p.y*7.9+p.z*3.7+p.x*1.3)
+                         +.13*sin(p.y*14.2-p.x*3.9);
+        // Direct contact lies inside the fold. On the outward surface only
+        // fines trapped at its ends and transferred around the lower lip remain.
+        float outer = 1.-smoothstep(-3.91,-3.82,p.z);
+        float edges = max(1.-smoothstep(.12,.72,p.y-2.04),smoothstep(4.24,4.72,p.y));
+        float laneDeposit = tread*rampFace*mix(1.,.48+.52*edges,outer);
+        float settled = clamp((laneDeposit + .74*sill + .58*lowerSkirt)*broken,0.0,1.0);
+        // The same linear reflectance as the SHEAR WORLD front-wheel fines.
+        diffuseColor.rgb = mix(diffuseColor.rgb,vec3(.073,.079,.09),settled);
+      `)
+      .replace("#include <metalnessmap_fragment>", `
+        #include <metalnessmap_fragment>
+        metalnessFactor *= 1.0-settled;
+        roughnessFactor = mix(roughnessFactor,.94,settled);
+      `);
+  };
+  material.customProgramCacheKey = () => key + "-shear-sediment";
+}
+
+function createSurveyor(tier2, passage2 = 1, batches) {
         let group = new Group();
         group.name = "survey-lander-flight";
         for (let batch of batches) {
@@ -29204,8 +29312,10 @@ vHullPosition=position;`,
               ),
             ),
             geometry.computeBoundingSphere());
-          let material = sourceMaterial(batch, tier2),
-            mesh = new Mesh(
+          let material = sourceMaterial(batch, tier2);
+    if (passage2 === 1 && (batch.profile === "steel" || (batch.profile == null && batch.rgb[0] < .1)))
+      retainShearSediment(material);
+    let mesh = new Mesh(
               aerospaceUV(
                 tier2 === "low" ? geometry : bevelHullTiles(geometry),
                 batch.profile === "foil" ? 1.6 : 0.85,
@@ -29224,22 +29334,8 @@ vHullPosition=position;`,
           }),
           radiators = hardware.radiators;
         group.add(hardware.group);
-        let jets = [],
-          jetMaterial = new MeshBasicMaterial({
-            color: 10926017,
-            transparent: !0,
-            opacity: 0.16,
-            depthWrite: !1,
-          });
-        for (let side of [-1, 1]) {
-          let jet = new Mesh(new ConeGeometry(0.035, 0.32, 8), jetMaterial);
-          (jet.position.set(side * 3.6, 4.8, 1.8),
-            (jet.rotation.z = (side * Math.PI) / 2),
-            (jet.visible = !1),
-            group.add(jet),
-            jets.push(jet));
-        }
-        let exposureUniforms = new Set();
+        const updateJets = createTransitExhaust(group, tier2);
+let exposureUniforms = new Set();
         return (
           group.traverse((o) => {
             for (let m of Array.isArray(o.material) ? o.material : [o.material])
@@ -29258,13 +29354,7 @@ vHullPosition=position;`,
                 (1 - MathUtils.smoothstep(t2, 52, 62)) *
                 response2.radiator;
               hardware.setDeployment(deployment);
-              let jetPower = 0;
-              jets.forEach((jet, index) => {
-                const strength = btkTransitJet(t2, index);
-                jet.visible = strength > 0.001;
-                jetPower = Math.max(jetPower, strength);
-              });
-              jetMaterial.opacity = 0.16 * jetPower;
+              updateJets(t2);
             },
             radiators,
           }
@@ -29320,11 +29410,48 @@ vHullPosition=position;`,
         if (u > 1 - ramp) return 1 - (ramp * integratedEase((1 - u) / ramp)) / (1 - ramp);
         return (u - ramp * 0.5) / (1 - ramp);
       }
+      // Follow the craft from its starboard bow to the established landing view.
+      // The camera gradually falls astern; the vessel keeps its own flight motion.
+      function frameFirstPassage(camera, ship, seconds, arrivalEye, arrivalFocus, fov) {
+        const u = seconds / DURATION;
+        const progress = u * .4 + u * u * (3 - 2 * u) * .6;
+        const endAngle = Math.atan2(arrivalEye.x, arrivalEye.z);
+        const angle = MathUtils.lerp(1.92, endAngle, progress);
+        const radius = MathUtils.lerp(86, Math.hypot(arrivalEye.x, arrivalEye.z), progress);
+        camera.position.set(
+          Math.sin(angle) * radius,
+          MathUtils.lerp(10, arrivalEye.y, progress),
+          Math.cos(angle) * radius,
+        ).add(ship.position);
+
+        // Turn the landing composition with the observer so the ship does not
+        // swing to the edge of a portrait frame while the planet comes into view.
+        arrivalFocus.applyAxisAngle(camera.up, angle - endAngle);
+        const focus = camera.userData.focus ??= new Vector3();
+        focus.set(0, 2.4, 0)
+          .lerp(arrivalFocus, MathUtils.smootherstep(seconds, 18, DURATION))
+          .add(ship.position);
+        // Let the hull cross a little of the frame before the camera catches up.
+        const halfWidth = radius * Math.tan(fov * Math.PI / 360) * camera.aspect;
+        const lead = -.10 * halfWidth * (1 - MathUtils.smootherstep(seconds, 0, 28));
+        focus.x += Math.cos(angle) * lead;
+        focus.z -= Math.sin(angle) * lead;
+        camera.fov = fov;
+        camera.lookAt(focus);
+        camera.updateProjectionMatrix();
+        camera.updateMatrixWorld();
+      }
       function trackingPose(camera2, ship, t2, passage2 = 1) {
         t2 = MathUtils.clamp(t2, 0, DURATION);
         ship.position.set(0, 0, -displacement(t2) - closingDistance(t2, passage2));
         ship.rotation.set(0.045, btkTransitYaw(t2), 0.06);
         const portrait = camera2.aspect < 1;
+        if (passage2 === 1) {
+          offset.set(portrait ? 2.5 : 20, 16, 96);
+          target.set(portrait ? 3 : 7, 4.5, -18);
+          frameFirstPassage(camera2, ship, t2, offset, target, cruiseFov(camera2.aspect, DURATION, 1));
+          return shotAt(t2, passage2);
+        }
         const second = passage2 === 2;
         const arc = trackingProgress(t2, second ? 52 : 50);
         const approach = smooth(0, second ? 24 : 28, t2);

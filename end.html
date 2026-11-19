@@ -1113,23 +1113,25 @@ function createInstallation(T, {
     void main() {
       float along = 1.0 - vUv.y;
       float depth = along * uLength;
-      float scroll = depth * 0.52 - uClock;
+      float scroll = depth * 0.54 - uClock;
       float eddy = noise(vec2(scroll * 0.43, uSeed + 1.7));
-      float spread = smoothstep(0.0, 7.5, depth);
-      float centre = (eddy - 0.5) * 0.34 * spread;
-      float x = (vUv.x * 2.0 - 1.0) - centre;
-      float width = mix(0.23, 0.81, spread) * mix(1.0, 0.78 + 0.42 * eddy, spread);
-      float edge = abs(x) / width;
-      float profile = 1.0 - smoothstep(0.12, 1.0, edge);
-      float cloud = noise(vec2(x * 5.0 + uSeed * 2.1, scroll));
+      float spread = smoothstep(0.1, 8.0, depth);
+      float centre = (eddy - 0.5) * 0.28 * spread;
+      float x = vUv.x * 2.0 - 1.0 - centre;
+      // The projected chord thins as the jet expands. Only mixed outer gas
+      // develops shear. The luminous stream remains connected to the bell.
+      float width = mix(0.30, 0.79, spread) * (1.0 + (eddy - 0.5) * 0.34 * spread);
+      float radius = abs(x) / width;
+      float chord = max(0.0, 1.0 - radius * radius);
+      float cloud = noise(vec2(x * 6.0 + uSeed * 2.1, scroll));
       #ifdef FINE_FLOW
-        cloud = mix(cloud, noise(vec2(x * 11.0 - uSeed, scroll * 1.84)), 0.25);
+        cloud = mix(cloud, noise(vec2(x * 13.0 - uSeed, scroll * 1.91)), 0.26);
       #endif
-      float core = (1.0 - smoothstep(0.0, 0.48, edge)) * (1.0 - smoothstep(0.0, 5.0, depth));
-      float mixFlow = mix(0.95, 0.35 + 0.8 * cloud, smoothstep(0.45, 6.0, depth));
-      float fade = 1.0 - smoothstep(0.18, 1.0, along);
-      float alpha = uStrength * fade * (0.64 * profile * mixFlow + 0.22 * core);
-      gl_FragColor = vec4(mix(uColor, uCore, core), alpha);
+      float hot = exp(-radius * radius * 5.0 - depth / (1.05 + 2.6 * uStrength));
+      float mixing = mix(1.0, 0.4 + cloud, spread * (1.0 - hot));
+      float fade = 1.0 - smoothstep(0.30, 1.0, along);
+      float alpha = uStrength * fade * chord * (0.36 * mixing * 0.30 / width + 0.68 * hot);
+      gl_FragColor = vec4(mix(uColor, uCore, hot), alpha);
       #include <tonemapping_fragment>
       #include <colorspace_fragment>
       #include <fog_fragment>
@@ -1142,8 +1144,8 @@ function createInstallation(T, {
       defines: tier2 === "low" ? {} : { FINE_FLOW: 1 },
       uniforms: {
         ...fogUniforms(),
-        uColor: { value: new T.Color(8484979) },
-        uCore: { value: new T.Color(12827050) },
+        uColor: { value: new T.Color(0x849197) },
+        uCore: { value: new T.Color(0xf0e5cf) },
         uClock: { value: 0 },
         uLength: { value: 0 },
         uSeed: { value: i * 2.83 },
@@ -1165,6 +1167,51 @@ function createInstallation(T, {
     cargo.add(plume);
     return plume;
   });
+  // One draw for all four recessed emitters. Above the cargo deck only the
+  // gas can be seen. Looking up, the bell occludes the warm chamber edge.
+  const lipFace = new T.PlaneGeometry(2.67, 2.67);
+  lipFace.rotateX(Math.PI / 2);
+  const lipMaterial = new T.ShaderMaterial({
+    name: "cargo-chamber-light",
+    uniforms: { ...fogUniforms(), uStrength: { value: 0 } },
+    vertexShader: `
+      varying vec2 vUv;
+      #include <common>
+      #include <fog_pars_vertex>
+      void main() {
+        vUv = uv;
+        vec4 mvPosition = modelViewMatrix * instanceMatrix * vec4(position, 1.0);
+        gl_Position = projectionMatrix * mvPosition;
+        #include <fog_vertex>
+      }
+    `,
+    fragmentShader: `
+      varying vec2 vUv;
+      uniform float uStrength;
+      #include <common>
+      #include <fog_pars_fragment>
+      void main() {
+        vec2 q = vUv * 2.0 - 1.0;
+        float r2 = dot(q, q);
+        float hot = exp(-3.9 * r2);
+        float alpha = uStrength * (1.0 - smoothstep(0.56, 0.98, r2));
+        gl_FragColor = vec4(mix(vec3(.34,.22,.13), vec3(.98,.88,.73), hot), alpha);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+        #include <fog_fragment>
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+    fog: true,
+  });
+  const chamberLight = new T.InstancedMesh(lipFace, lipMaterial, descentPods.length);
+  chamberLight.name = "cargo-descent-chambers";
+  descentPods.forEach(([x, z], i) => {
+    chamberLight.setMatrixAt(i, matrix.makeTranslation(x, nozzleExitY + 0.17, z));
+  });
+  chamberLight.visible = false;
+  cargo.add(chamberLight);
   const dustPerPod = { high: 15, mid: 10, low: 6 }[tier2];
   const dustMaterial = new T.ShaderMaterial({
     name: "cargo-descent-surface-wash",
@@ -1283,6 +1330,8 @@ function createInstallation(T, {
     propulsion.clock = t;
     propulsion.verticalAcceleration = acceleration;
     propulsion.throttle = throttle;
+    chamberLight.visible = throttle > 0.001;
+    lipMaterial.uniforms.uStrength.value = throttle;
     if (fall !== propulsionGroundFall) {
       for (let i = 0; i < propulsion.pods.length; i++) {
         const state2 = propulsion.pods[i];
@@ -33679,6 +33728,20 @@ function regions(model) {
   });
 }
 function createPlaceRecorder(renderer2, scene, surface, habitat2, tier2, state2) {
+  const { camera: camera } = createBasinObservation();
+  // A continuing installation keeps the lens of its original, irreplaceable photograph.
+  const lensReady = readBaselineCamera().then((saved) => {
+    if (saved?.aspect !== camera.aspect || !(saved.fov > 0 && saved.fov < 179) ||
+        !Array.isArray(saved.position) || saved.position.length !== 3 ||
+        !Array.isArray(saved.quaternion) || saved.quaternion.length !== 4 ||
+        ![...saved.position, ...saved.quaternion].every(Number.isFinite) ||
+        Math.abs(Math.hypot(...saved.quaternion) - 1) > 0.00001) return;
+    camera.position.fromArray(saved.position);
+    camera.quaternion.fromArray(saved.quaternion);
+    camera.fov = saved.fov;
+    camera.updateProjectionMatrix();
+  }).catch(() => {});
+
   const completed = /* @__PURE__ */ new Set();
   let busy = false, retryAt = 0, pending = Promise.resolve(), available = true;
   const snapshot = () => ({ available, completed: [...completed], busy });
@@ -33691,6 +33754,7 @@ function createPlaceRecorder(renderer2, scene, surface, habitat2, tier2, state2)
     }
   }
   async function capture(stage, id) {
+    await lensReady;
     const width = tier2 === "low" ? 384 : 640, height = width * 5 / 8;
     const s = habitat2.snapshot(), capturedRegions = regions(habitat2.model);
     const target = new WebGLRenderTarget(width, height);
@@ -33727,9 +33791,7 @@ function createPlaceRecorder(renderer2, scene, surface, habitat2, tier2, state2)
     const fill = new DirectionalLight(10337247, 0.22);
     fill.position.set(1800, -600, -2200);
     frame.add(light, light.target, fill);
-    const camera = new PerspectiveCamera(42, 1.6, 0.5, 8e4);
-    camera.position.set(-1420, groundHeight(-1420, 2780) + 175, 2780);
-    camera.lookAt(-1400, groundHeight(-1400, 3300) + 125, 3300);
+    
     const previous = renderer2.getRenderTarget(), auto = renderer2.shadowMap.autoUpdate;
     const buffer = new Uint8Array(width * height * 4);
     try {
@@ -33775,8 +33837,7 @@ function createPlaceRecorder(renderer2, scene, surface, habitat2, tier2, state2)
         camera: {
           position: camera.position.toArray(),
           quaternion: camera.quaternion.toArray(),
-          fov: 42,
-          aspect: 1.6
+          fov: camera.fov, aspect: camera.aspect
         },
         status: stage === "before" ? "\uAC1C\uC785 \uC774\uC804" : !s.heatPower && !s.pumpPower ? "\uC124\uBE44 \uB300\uAE30" : s.eventAt === null ? "\uCD08\uAE30 \uAC00\uB3D9" : "\uC548\uC815 \uC6B4\uC804",
         resources: {
@@ -34053,6 +34114,22 @@ var smooth2 = (x) => {
   x = MathUtils.clamp(x, 0, 1);
   return x * x * x * (10 + x * (-15 + x * 6));
 };
+function createBasinObservation() {
+  const camera = new PerspectiveCamera(42, 1.6, 0.5, 80000);
+  const target = new Vector3(-1370, groundHeight(-1370, 3292) + 16, 3292);
+  camera.position.set(-1376, groundHeight(-1376, 3580) + 134, 3580);
+  camera.lookAt(target);
+  return { camera, target };
+}
+
+async function readBaselineCamera() {
+  const db = await openExhibition();
+  return new Promise((resolve, reject) => {
+    const request = db.transaction("frames").objectStore("frames").get("before");
+    request.onsuccess = () => resolve(request.result?.camera);
+    request.onerror = () => reject(request.error);
+  });
+}
 function createHabitatWorld(scene, surface, tier2, checkpoint, options = {}) {
   const model = createBasinModel(groundHeight, checkpoint, options);
   const arrays = [
@@ -34283,8 +34360,22 @@ function createHabitatWorld(scene, surface, tier2, checkpoint, options = {}) {
   label.position.set(-1408, surface.heightAt(-1408, 3278) + 5, 3265.7);
   group.updateMatrixWorld(true);
   payloads[0].group.attach(label);
-  const target = new Vector3(), startPosition = new Vector3(), startRotation = new Quaternion(), finalRotation = new Quaternion();
-  const helper = new PerspectiveCamera();
+    // Survey stakes belong to the ground in all three views, including the archive.
+  const posts = new InstancedMesh(
+    new CylinderGeometry(0.28, 1.25, 3.4, 4),
+    new MeshStandardMaterial({color: 0x565d5d, metalness: 0.14, roughness: 0.8}),
+    4,
+  );
+  posts.name = "preservation-survey-stakes";
+  for (const [index, z] of [3220, 3260, 3300, 3340].entries()) {
+    posts.setMatrixAt(index, new Matrix4().makeTranslation(
+      PRESERVE_X, surface.heightAt(PRESERVE_X, z) + 1.7, z,
+    ));
+  }
+  surface.group.add(posts);
+  const observation = createBasinObservation();
+  const look = new Vector3();
+
   let tick = -1, slot = 0, clock = model.state.time;
   function upload() {
     slot = 1 - slot;
@@ -34313,32 +34404,24 @@ function createHabitatWorld(scene, surface, tier2, checkpoint, options = {}) {
     light.emissiveIntensity = time < 64 ? 0 : 0.14 * Math.min(1, (time - 64) / 18);
     gauge.scale.y = 0.08 + Math.min(1, model.state.stored / 65) * 0.92;
   }
-  function frame(camera, blend = 1) {
+    function frame(camera, blend = 1, liveTarget = null) {
     const p = smooth2(blend);
     if (p <= 0) return;
-    startPosition.copy(camera.position);
-    startRotation.copy(camera.quaternion);
-    helper.position.set(-1420, surface.heightAt(-1420, 2780) + 175, 2780);
-    target.set(-1400, surface.heightAt(-1400, 3300) + 125, 3300);
-    helper.up.set(0, 1, 0);
-    helper.lookAt(target);
-    finalRotation.copy(helper.quaternion);
-    camera.position.lerpVectors(startPosition, helper.position, p);
-    if (p < 1)
-      camera.position.y = Math.max(
-        camera.position.y,
-        surface.heightAt(camera.position.x, camera.position.z) + 6 + 180 * Math.sin(Math.PI * p)
-      );
-    camera.quaternion.slerpQuaternions(startRotation, finalRotation, p);
-    camera.fov = MathUtils.lerp(
-      camera.fov,
-      camera.aspect < 1 ? 50 : 42,
-      p
-    );
-    camera.near = 0.5;
+    const reference = observation.camera;
+    if (liveTarget) look.copy(liveTarget);
+    else camera.getWorldDirection(look)
+      .multiplyScalar(camera.position.distanceTo(observation.target)).add(camera.position);
+    camera.position.lerp(reference.position, p);
+    camera.position.y = Math.max(camera.position.y,
+      surface.heightAt(camera.position.x, camera.position.z) + 6);
+    camera.lookAt(look.lerp(observation.target, p));
+    // Preserve the horizontal survey extent on narrow displays.
+    const vertical = Math.tan(MathUtils.degToRad(reference.fov * 0.5));
+    const fov = 2 * MathUtils.radToDeg(Math.atan(vertical * Math.max(1, reference.aspect / camera.aspect)));
+    camera.fov = MathUtils.lerp(camera.fov, fov, p);
     camera.updateProjectionMatrix();
   }
-  return {
+return {
     model,
     update,
     frame,
