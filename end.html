@@ -30893,7 +30893,11 @@ function createEndingVista(scene, surface, tier2, savedView) {
     (value) => Number.isFinite(value) && Math.abs(value) < 6e4
   ) && Array.isArray(savedView.quaternion) && savedView.quaternion.length === 4 && savedView.quaternion.every(
     (value) => Number.isFinite(value) && Math.abs(value) <= 1
-  ) && Math.hypot(...savedView.quaternion) >= 0.5 && Math.hypot(...savedView.quaternion) <= 1.5 && Number.isFinite(savedView.fov) && savedView.fov >= 20 && savedView.fov <= 90;
+  ) && Math.hypot(...savedView.quaternion) >= 0.5 && Math.hypot(...savedView.quaternion) <= 1.5 && Number.isFinite(savedView.fov) && savedView.fov >= 20 && (savedView.fov <= 90 ||
+    // A narrow viewport widens the vertical FOV to preserve the ground survey width.
+    (savedView.fov < 180 && Number.isFinite(savedView.aspect) &&
+      savedView.aspect > 0 && savedView.aspect < 1 &&
+      Math.tan(savedView.fov * Math.PI / 360) * savedView.aspect <= 1));
   const start2 = new Vector3();
   const startAim = new Vector3();
   const end = new Vector3();

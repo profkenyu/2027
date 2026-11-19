@@ -27972,76 +27972,183 @@ function report(message){notice.textContent=message}
 // AUDIO: two brief voices mapped to the two W values. No idle oscillator or microphone request.
 const audio=(()=>{let ctx=null,master=null,enabled=false;return{snapshot:()=>({enabled,state:ctx?.state||'uninitialized'}),async toggle(){try{if(!ctx){ctx=new(window.AudioContext||window.webkitAudioContext)();master=ctx.createGain();master.gain.value=.23;master.connect(ctx.destination)}enabled=!enabled;if(enabled)await ctx.resume();else await ctx.suspend();document.querySelector('#sound').setAttribute('aria-pressed',String(enabled));document.querySelector('#sound').setAttribute('aria-label',enabled?'사운드 끄기':'사운드 켜기')}catch{enabled=false;report('이 브라우저에서는 소리를 사용할 수 없습니다.')}},gesture(){if(!enabled||!ctx||ctx.state!=='running'||gap()<.003||ctx.currentTime-lastAudio<.12)return;const cell=Math.round(state.targetCompression*70+state.twist*3);if(cell===lastAudioCell)return;lastAudioCell=cell;lastAudio=ctx.currentTime;const x=EDGE+.23*(1-state.compression)**2;for(const lower of [false,true]){const now=ctx.currentTime,o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(160+Math.abs(wAt(x,lower)+1)*72,now);g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(.06,now+.008);g.gain.exponentialRampToValueAtTime(.0001,now+.2);o.connect(g);g.connect(master);o.start(now);o.stop(now+.23);o.onended=()=>{o.disconnect();g.disconnect()}}},suspend(){ctx?.suspend().catch(()=>{})},resume(){if(enabled)ctx?.resume().catch(()=>{})}}})();
 function createVessel() {
-  const root = new Group(), batches = new Map();
+  const root = new Group(),
+    batches = new Map();
   root.name = "TR-Q1-cruise";
-  root.userData.design = { id: "TR-Q1", configuration: "cruise", legs: 6, outlets: 5, ramp: "closed" };
-  const white = new MeshStandardMaterial({ color: 0xa4adb0, roughness: .72, metalness: .25 });
-  const dark = new MeshStandardMaterial({ color: 0x131e24, roughness: .82, metalness: .18 });
-  const metal = new MeshStandardMaterial({ color: 0x6d7c83, roughness: .48, metalness: .62 });
-  const foil = new MeshStandardMaterial({ color: 0x796e56, roughness: .78, metalness: .42 });
-  const glass = new MeshStandardMaterial({ color: 0x102630, roughness: .28, metalness: .35 });
+  root.userData.design = {
+    id: "TR-Q1",
+    configuration: "cruise",
+    legs: 6,
+    outlets: 5,
+    ramp: "closed",
+    rampMechanism: "telescoping-folded",
+  };
+  const white = new MeshStandardMaterial({
+    color: 0xa4adb0,
+    roughness: 0.72,
+    metalness: 0.25,
+  });
+  const dark = new MeshStandardMaterial({
+    color: 0x131e24,
+    roughness: 0.82,
+    metalness: 0.18,
+  });
+  const metal = new MeshStandardMaterial({
+    color: 0x6d7c83,
+    roughness: 0.48,
+    metalness: 0.62,
+  });
+  const foil = new MeshStandardMaterial({
+    color: 0x796e56,
+    roughness: 0.78,
+    metalness: 0.42,
+  });
+  const glass = new MeshStandardMaterial({
+    color: 0x102630,
+    roughness: 0.28,
+    metalness: 0.35,
+  });
   root.servicePanelMaterial = glass;
   const up = new Vector3(0, 1, 0);
-  function add(g, m, x=0, y=0, z=0, rx=0, ry=0, rz=0) {
-    const o = new Object3D(); o.position.set(x,y,z); o.rotation.set(rx,ry,rz); o.updateMatrix();
-    g.applyMatrix4(o.matrix); const flat=g.index?g.toNonIndexed():g;
-    if(flat!==g)g.dispose(); if(!batches.has(m))batches.set(m,[]); batches.get(m).push(flat);
+  function add(g, m, x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0) {
+    const o = new Object3D();
+    o.position.set(x, y, z);
+    o.rotation.set(rx, ry, rz);
+    o.updateMatrix();
+    g.applyMatrix4(o.matrix);
+    const flat = g.index ? g.toNonIndexed() : g;
+    if (flat !== g) g.dispose();
+    if (!batches.has(m)) batches.set(m, []);
+    batches.get(m).push(flat);
   }
-  function rod(a,b,r=.045,m=metal) {
-    const v=new Vector3(...a),w=new Vector3(...b),d=w.clone().sub(v);
-    const g=new CylinderGeometry(r,r,d.length(),8);
-    g.applyQuaternion(new Quaternion().setFromUnitVectors(up,d.normalize()));
-    v.add(w).multiplyScalar(.5);add(g,m,v.x,v.y,v.z);
+  function rod(a, b, r = 0.045, m = metal) {
+    const v = new Vector3(...a),
+      w = new Vector3(...b),
+      d = w.clone().sub(v);
+    const g = new CylinderGeometry(r, r, d.length(), 8);
+    g.applyQuaternion(new Quaternion().setFromUnitVectors(up, d.normalize()));
+    v.add(w).multiplyScalar(0.5);
+    add(g, m, v.x, v.y, v.z);
   }
-  // Closed pressure shell, lower service skirt and ceramic roof.
-  add(new CylinderGeometry(1.96,1.96,.86,12),dark,0,-.23,0);
-  add(new CylinderGeometry(1.43,2.35,1.05,12),white,0,.72,0);
-  add(new CylinderGeometry(1.41,1.43,.15,12),dark,0,1.31,0);
-  add(new CylinderGeometry(1.98,1.98,.065,12),metal,0,-.63,0);
-  // A closed ramp occupies the same front sector as the mission lander.
-  add(new BoxGeometry(1.54,1.38,.12),metal,0,.12,-1.99);
-  add(new BoxGeometry(1.39,1.22,.13),dark,0,.12,-2.005);
-  for(const x of [-.56,.56])add(new BoxGeometry(.22,.08,.17),metal,x,-.58,-2.04);
-  for(const side of [-1,1]){
-    add(new BoxGeometry(.74,.3,.08),glass,side*1.12,.69,-1.72,0,side*.36);
-    // Folded thermal panels stay close to the shell, with visible hinge roots.
-    add(new BoxGeometry(.08,1.22,1.08),dark,side*2.26,.57,.16,0,0,side*.12);
-    rod([side*1.83,.08,.16],[side*2.26,.08,.16],.075);
-    rod([side*1.83,1.08,.16],[side*2.26,1.08,.16],.075);
-    add(new BoxGeometry(.12,.62,.54),foil,side*1.99,-.15,.64);
+  // Match the flight model's envelope at the scale used by the observation scenes.
+  const hullScale = 0.54;
+  const hullOffsetY = -1.313;
+  const outline = [
+    [0, -3.65],
+    [1.95, -3.28],
+    [3.35, -2.3],
+    [3.65, 0.55],
+    [2.85, 2.9],
+    [1.55, 3.35],
+    [0, 3.42],
+    [-1.55, 3.35],
+    [-2.85, 2.9],
+    [-3.65, 0.55],
+    [-3.35, -2.3],
+    [-1.95, -3.28],
+  ];
+  const sections = [
+    [2.55, 0.82],
+    [3.05, 0.72],
+    [3.58, 1],
+    [4.38, 1],
+    [5.08, 0.76],
+    [5.45, 0.46],
+  ];
+  const rings = sections.map(([y, radius]) =>
+    outline.map(([x, z]) => [x * radius, y, z * radius]),
+  );
+  const shell = [];
+  for (let i = 0; i < outline.length; i++) {
+    const j = (i + 1) % outline.length;
+    for (let r = 1; r < rings.length; r++) {
+      const a = rings[r - 1][i],
+        b = rings[r - 1][j];
+      const c = rings[r][i],
+        d = rings[r][j];
+      shell.push(...a, ...c, ...b, ...b, ...c, ...d);
+    }
+    shell.push(0, sections[0][0], 0, ...rings[0][i], ...rings[0][j]);
+    const top = rings.at(-1);
+    shell.push(0, sections.at(-1)[0], 0, ...top[j], ...top[i]);
   }
-  for(let i=0;i<6;i++){
-    const a=i*Math.PI/3,c=Math.cos(a),s=Math.sin(a);
-    const p=(r,y)=>[c*r,y,s*r];
-    rod(p(2.12,-.3),p(2.57,.25),.085,white);
-    rod(p(2.57,.25),p(2.5,1.14),.065);
-    rod(p(2.14,.1),p(2.5,.86),.035,dark);
-    add(new CylinderGeometry(.24,.29,.09,8),metal,c*2.5,1.16,s*2.5,Math.PI/2,0,a);
-    add(new BoxGeometry(.19,.18,.19),dark,c*2.13,-.26,s*2.13,0,-a);
+  const hull = new BufferGeometry();
+  hull.setAttribute("position", new BufferAttribute(new Float32Array(shell), 3));
+  hull.computeVertexNormals();
+  add(hull, white);
+  add(new CylinderGeometry(3.05, 3.05, 1.38, 12), dark, 0, 1.92, 0);
+  add(new CylinderGeometry(2.25, 2.85, 0.82, 8), dark, 0, 1.12, 0);
+  add(new CylinderGeometry(2.98, 2.98, 0.12, 12), metal, 0, 1.26, 0);
+
+  // The folded ramp sits at the front of the bay, with both leaves nested.
+  add(new BoxGeometry(3.14, 2.74, 0.16), dark, 0, 3.41, -3.69);
+  for (const side of [-1, 1]) {
+    add(new BoxGeometry(0.15, 2.68, 0.21), metal, side * 1.43, 3.41, -3.71);
+    add(new BoxGeometry(1.15, 0.38, 0.11), glass, side * 1.03, 4.92, -2.5, 0, side * 0.28);
+    add(new BoxGeometry(0.11, 1.54, 1.3), dark, side * 3.69, 4.01, 0.34, 0, 0, side * 0.14);
+    add(new BoxGeometry(0.16, 0.72, 0.64), foil, side * 3.08, 1.94, 0.41);
   }
-  // Actual nozzle topology is shared with the main lander.
-  const outlets=[[0,0,.55],[-.85,-.74,.18],[.85,-.74,.18],[-.85,.74,.18],[.85,.74,.18]];
-  for(const [x,z,r] of outlets){
-    add(new CylinderGeometry(r*.5,r,.38,12,1,true),metal,x,-.86,z);
-    add(new CylinderGeometry(r*.49,r*.49,.035,12),dark,x,-.69,z);
+  add(new BoxGeometry(3.06, 0.15, 0.2), metal, 0, 2.04, -3.78);
+  add(new BoxGeometry(2.99, 0.08, 0.12), metal, 0, 4.68, -3.76);
+
+  for (let i = 0; i < 6; i++) {
+    const angle = (i * Math.PI) / 3;
+    const c = Math.cos(angle),
+      s = Math.sin(angle);
+    const at = (radius, y) => [c * radius, y, s * radius];
+    rod(at(3.05, 2.24), at(4.18, 2.73), 0.18, white);
+    rod(at(4.18, 2.73), at(4.5, 3.78), 0.13);
+    add(new BoxGeometry(0.84, 1.22, 0.24), metal, ...at(4.5, 3.78), 0, Math.PI / 2 - angle);
   }
-  // One asymmetric sensor gives the craft an identity at small screen sizes.
-  add(new BoxGeometry(.98,.18,.39),white,0,1.48,0);
-  add(new BoxGeometry(.26,.22,.3),metal,.38,1.66,-.02);
-  add(new BoxGeometry(.18,.13,.035),glass,.38,1.68,-.19);
-  rod([-.47,1.44,.03],[-.47,2.08,.03],.025);
-  add(new CylinderGeometry(.06,.06,.16,8),metal,-.47,2.1,.03);
-  for(const [m,list] of batches){
-    const count=list.reduce((n,g)=>n+g.attributes.position.count,0),p=new Float32Array(count*3),n=new Float32Array(count*3);
-    let at=0;for(const g of list){p.set(g.attributes.position.array,at);n.set(g.attributes.normal.array,at);at+=g.attributes.position.array.length;g.dispose();}
-    const g=new BufferGeometry();g.setAttribute('position',new BufferAttribute(p,3));g.setAttribute('normal',new BufferAttribute(n,3));g.computeBoundingSphere();
-    root.add(new Mesh(g,m));
+  for (const [x, z, radius] of [
+    [0, 0, 0.94],
+    [-1.45, -1.25, 0.31],
+    [1.45, -1.25, 0.31],
+    [-1.45, 1.25, 0.31],
+    [1.45, 1.25, 0.31],
+  ]) {
+    add(new CylinderGeometry(radius * 0.48, radius, 0.63, 8, 1, true), metal, x, 0.77, z);
+    add(new CylinderGeometry(radius * 0.48, radius * 0.48, 0.05, 8), dark, x, 1.07, z);
   }
-  const canvas=document.createElement('canvas');canvas.width=256;canvas.height=64;
-  const ctx=canvas.getContext('2d');ctx.fillStyle='#b7c1c4';ctx.font='500 34px sans-serif';ctx.fillText('TR-Q1',12,44);
-  const texture=new Texture(canvas);texture.needsUpdate=true;texture.colorSpace=SRGBColorSpace;
-  const label=new Mesh(new PlaneGeometry(.82,.2),new MeshBasicMaterial({map:texture,transparent:true,depthWrite:false}));
-  label.position.set(0,.37,-2.08);label.rotation.y=Math.PI;root.add(label);
+  add(new CylinderGeometry(0.95, 1.13, 0.2, 8), metal, 0, 5.55, 0);
+  rod([-0.56, 5.57, 0], [-0.56, 6.52, 0], 0.055);
+  add(new BoxGeometry(0.25, 0.16, 0.24), dark, -0.56, 6.52, 0);
+  for (const [m, list] of batches) {
+    const count = list.reduce((n, g) => n + g.attributes.position.count, 0),
+      p = new Float32Array(count * 3),
+      n = new Float32Array(count * 3);
+    let at = 0;
+    for (const g of list) {
+      p.set(g.attributes.position.array, at);
+      n.set(g.attributes.normal.array, at);
+      at += g.attributes.position.array.length;
+      g.dispose();
+    }
+    const g = new BufferGeometry();
+    g.setAttribute("position", new BufferAttribute(p, 3));
+    g.setAttribute("normal", new BufferAttribute(n, 3));
+    g.scale(hullScale, hullScale, hullScale);
+    g.translate(0, hullOffsetY, 0);
+    g.computeBoundingSphere();
+    root.add(new Mesh(g, m));
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = 256;
+  canvas.height = 64;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#b7c1c4";
+  ctx.font = "500 34px sans-serif";
+  ctx.fillText("TR-Q1", 12, 44);
+  const texture = new Texture(canvas);
+  texture.needsUpdate = true;
+  texture.colorSpace = SRGBColorSpace;
+  const label = new Mesh(
+    new PlaneGeometry(0.82, 0.2),
+    new MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false }),
+  );
+  label.position.set(0, 0.68, -2.067);
+  label.rotation.y = Math.PI;
+  root.add(label);
   return root;
 }
 

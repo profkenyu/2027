@@ -3183,18 +3183,20 @@
               returnLink.setAttribute("aria-label", "엔딩으로 돌아가기");
             }
           }
+          const archiveEntryDepth = history.length;
+          let followedArchiveAnchor = false;
+          addEventListener("hashchange", () => { followedArchiveAnchor = true; });
           returnLink?.addEventListener("click", (event) => {
-            if (
-              event.button !== 0 ||
-              event.metaKey ||
-              event.ctrlKey ||
-              event.shiftKey ||
-              event.altKey ||
-              history.length <= 1
-            )
-              return;
-            event.preventDefault();
-            history.back();
+            if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+            if (new URLSearchParams(location.search).has("from")) {
+              const source = document.referrer && new URL(document.referrer);
+              const destination = new URL(returnLink.href);
+              if (!source || source.origin !== destination.origin || source.pathname !== destination.pathname) return;
+            }
+            if (!followedArchiveAnchor && history.length === archiveEntryDepth && history.length > 1) {
+              event.preventDefault();
+              history.back();
+            }
           });
           render();
           void mountPlaceArchive(document.querySelector(".archive"));

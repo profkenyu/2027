@@ -29467,7 +29467,7 @@ let exposureUniforms = new Set();
         const proximity = 1 - smooth(85, 220, camera2.position.distanceTo(ship.position));
         const brightHull = proximity * (1 - smooth(52, 62, t2));
         return {
-          stars: 0.9 * (1 - 0.82 * brightHull),
+          stars: 0.9 * (1 - 0.40 * brightHull),
           exposure: 1.05 - 0.12 * brightHull,
         };
       }
@@ -29524,7 +29524,7 @@ function createVoid(scene2, tier2, passage2 = 1) {
             a = random() * Math.PI * 2,
             r = Math.sqrt(1 - y * y);
           p.push(r * Math.cos(a) * 18e3, y * 18e3, r * Math.sin(a) * 18e3);
-          let l = 0.12 + Math.pow(random(), 4) * 0.7;
+          let l = 0.16 + Math.pow(random(), 3.4) * 0.74;
           c.push(l * 0.9, l * 0.95, l);
         }
         let g = new BufferGeometry();
@@ -29534,7 +29534,7 @@ function createVoid(scene2, tier2, passage2 = 1) {
             new Points(
               g,
               new PointsMaterial({
-                size: 1.2,
+                size: 1.7,
                 sizeAttenuation: !1,
                 vertexColors: !0,
                 transparent: !0,
