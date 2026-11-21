@@ -34181,16 +34181,16 @@ var FramePacer = class {
 var SCENE_MODEL_ASSETS = Object.freeze({
   "opening": {
     "high": {
-      "file": "high-ae576180044b4a70.json",
-      "bytes": 1974051
+      "file": "high-215e803546374e48.json",
+      "bytes": 1779315
     },
     "mid": {
-      "file": "mid-9f083e2024e75bb7.json",
-      "bytes": 1974050
+      "file": "mid-4d5735227fcfc340.json",
+      "bytes": 1779314
     },
     "low": {
-      "file": "low-8599028612d9e719.json",
-      "bytes": 1328454
+      "file": "low-01fac71641db2778.json",
+      "bytes": 1200790
     }
   },
   "transit": {
@@ -64139,6 +64139,13 @@ function persist() {
   if (!saved) console.warn("Basin checkpoint storage unavailable");
   return saved;
 }
+function phaseURL(phaseName) {
+  const url = new URL(targetPath(POST_PHASES[phaseName].file), location.href);
+  for (const key of ["quality", "full", "terminal", "test"]) {
+    if (params.has(key)) url.searchParams.set(key, params.get(key));
+  }
+  return url.href;
+}
 async function next() {
   if (leaving || performance.now() < transferRetryAt) return;
   if (phase === "arrival" && seconds < endTime) return;
@@ -64175,13 +64182,7 @@ async function next() {
   leaving = true;
   audio.pause();
   await Promise.all([vehicleRecorder.flush(), placeRecorder?.flush()]);
-  const url = new URL(
-    targetPath(POST_PHASES[segment.next].file),
-    location.href
-  );
-  for (const key2 of ["quality", "full", "terminal", "test"])
-    if (params.has(key2)) url.searchParams.set(key2, params.get(key2));
-  location.assign(url.href);
+  location.assign(phaseURL(segment.next));
 }
 function resize() {
   camera.aspect = innerWidth / innerHeight;
@@ -64444,9 +64445,7 @@ function resume() {
   if (leaving) {
     const saved = readPostMission();
     if (saved)
-      location.replace(
-        new URL(targetPath(POST_PHASES[saved.phase].file), location.href)
-      );
+      location.replace(phaseURL(saved.phase));
     return;
   }
   if (recovery?.lost) return;

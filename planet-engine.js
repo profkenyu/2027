@@ -50368,6 +50368,7 @@ var<${access}> ${name} : ${structName};`;
   function deviceTier() {
     return performanceTier();
   }
+  var ROVER_AXLES = Object.freeze([0.98, 0, -0.98]);
   function defaults(tier = deviceTier()) {
     let pick = (o) => o[tier];
     return {
@@ -50397,11 +50398,12 @@ var<${access}> ${name} : ${structName};`;
         boost: 15,
         lookSpeed: 0.0028,
         chassis: {
-          axles: [0.98, 0.33, -0.33, -0.98],
+          axles: ROVER_AXLES,
           wheelBase: 0.98,
-          track: 0.62,
+          bodyHalfWidth: 0.62,
+          track: 0.69,
           wheelR: 0.29,
-          wheelW: 0.19,
+          wheelW: 0.285,
           clearance: 0.28,
           travel: 0.24,
           camY: 0.92,
@@ -50553,7 +50555,10 @@ var<${access}> ${name} : ${structName};`;
     contactWeight = (gap) => 1 - smooth(Math.max(0, gap), 0.025, 0.32);
   var ContactOcclusion = class {
     constructor() {
-      ((this.points = Array.from({ length: 14 }, () => new Vector4())),
+      let roverCount = ROVER_AXLES.length * 2,
+        contactCount = roverCount + 6;
+      ((this.roverCount = roverCount),
+        (this.points = Array.from({ length: contactCount }, () => new Vector4())),
         (this.contacts = uniformArray2(this.points, "vec4")),
         (this.roverBound = uniform2(new Vector4())),
         (this.landerBound = uniform2(new Vector4())),
@@ -50576,8 +50581,8 @@ var<${access}> ${name} : ${structName};`;
               });
             };
           return (
-            apply(0, 8, 0.43, this.roverBound),
-            apply(8, 14, 1.15, this.landerBound),
+            apply(0, roverCount, 0.43, this.roverBound),
+            apply(roverCount, contactCount, 1.15, this.landerBound),
             float2(1).sub(darkness)
           );
         })));
@@ -50590,7 +50595,7 @@ var<${access}> ${name} : ${structName};`;
           !rover.stowedIn &&
           camera.position.distanceToSquared(rover.group.position) < 25600;
       rb.set(rover.pos.x, 0, rover.pos.z, nearRover ? 12 : 0);
-      for (let i = 0; i < 8; i++) {
+      for (let i = 0; i < this.roverCount; i++) {
         let target = this.points[i],
           support = probe.wheelContacts?.[i];
         if (((target.w = 0), !nearRover || !support)) continue;
@@ -50616,8 +50621,8 @@ var<${access}> ${name} : ${structName};`;
       }
       if (now2 >= this.nextLanderUpdate || now2 < this.nextLanderUpdate - 100) {
         this.nextLanderUpdate = now2 + 1e3 / 15;
-        for (let i = 0; i < 6; i++) {
-          let target = this.points[i + 8],
+        for (let i = 0; i < this.points.length - this.roverCount; i++) {
+          let target = this.points[i + this.roverCount],
             pad = lander.legs[i]?.pad;
           if (((target.w = 0), !pad?.visible)) continue;
           pad.getWorldPosition(this.point);
@@ -50726,7 +50731,7 @@ var<${access}> ${name} : ${structName};`;
         )
           return t;
         for (let side = 0; side < 2; side++) {
-          let index = 6 + side,
+          let index = rover.wheels.length - 2 + side,
             c = probe.wheelContacts?.[index];
           if (
             !c ||
@@ -50793,10 +50798,9 @@ var<${access}> ${name} : ${structName};`;
         let a = 1 - Math.exp(-dt / 0.22),
           rough = 0,
           c = v.wheelContacts;
-        if (c?.length === 8)
-          for (let side = 0; side < 2; side++)
-            ((rough += Math.abs(c[side].y - 2 * c[side + 2].y + c[side + 4].y)),
-              (rough += Math.abs(c[side + 2].y - 2 * c[side + 4].y + c[side + 6].y)));
+        if (c)
+          for (let i = 0; i + 4 < c.length; i++)
+            rough += Math.abs(c[i].y - 2 * c[i + 2].y + c[i + 4].y);
         ((rough = clamp4(rough * 2.5 + Math.max(0, v.slam ?? 0) * 0.2)),
           (this.rough += (rough - this.rough) * a),
           (this.speed += (Math.abs(v.speed) - this.speed) * a));
@@ -52228,7 +52232,7 @@ var<${access}> ${name} : ${structName};`;
       let count = Math.min(D3.maxEmitPerFrame, Math.floor(this.carry));
       if (((this.carry -= count), count && probe.wheelContacts?.length))
         for (let n = 0; n < count; n++) {
-          let source = probe.wheelContacts[(this.cursor + n * 3) % probe.wheelContacts.length];
+          let source = probe.wheelContacts[this.cursor % probe.wheelContacts.length];
           this.emit(source, probe.heading, probe.speed, probe.slam);
         }
       let changed = !1;
@@ -59600,9 +59604,10 @@ body.tx-active #fh-keys {
               Math.abs(local2.x) < 0.06 &&
               Math.abs(wrap(this.rover.heading - this.lander.group.rotation.y - Math.PI)) < 0.04,
             contained = this.rover.contacts().every(({ x, z }) => {
-              let point = this.lander.dockingLocal(x, z);
+              let point = this.lander.dockingLocal(x, z),
+                sideClearance = cfg().vehicle.chassis.wheelW * 0.69 + 0.015;
               return (
-                Math.abs(point.x) < this.lander.dock.halfWidth - 0.15 &&
+                Math.abs(point.x) < this.lander.dock.halfWidth - sideClearance &&
                 point.z > this.lander.dock.hatchZ + 0.3 &&
                 point.z < this.lander.dock.backZ - 0.15
               );
@@ -61281,9 +61286,8 @@ body.ti-voyage #ti-transfer-trigger {
       if (!rover?.pos || !body || Math.abs(finite2(rover.speed)) < Math.max(0, finite2(minSpeed)))
         return null;
       for (let source of stations) {
-        let station = cleanStation(
-          this.data.stations.find((entry) => entry.id === source?.id) ?? source,
-        );
+        const registered = this.data.stations.find((entry) => entry.id === source?.id);
+        let station = registered ?? cleanStation(source);
         if (
           station.body !== body ||
           station.archiveRole === "potential" ||
@@ -61293,6 +61297,8 @@ body.ti-voyage #ti-transfer-trigger {
           continue;
         let previous = this.data.records.find((r) => r.id === station.id);
         if (!previous && this.data.records.length >= 32) continue;
+        // Capture callbacks receive their own station even when its definition is already registered.
+        if (registered) station = cleanStation(registered);
         let capture = archiveCaptureProfile(station),
           record = cleanRecord({
             ...station,
@@ -61962,6 +61968,7 @@ body.ti-voyage #ti-transfer-trigger {
     },
     CAMERA_SHOTS = Object.freeze({
       WIDE: "01 · ULTRAWIDE / ROVER + WIRE LANDER",
+      GROUND: "OPENING · FRONT WHEEL / LANDING SITE",
       REAR: "OP · REAR / ROVER FOLLOW",
       MAST: "OP · ROVER POV / 8MM WIDE",
       MACRO: "02 · MACRO / WHEEL + SPECIMEN",
@@ -62177,12 +62184,13 @@ body.ti-voyage #ti-transfer-trigger {
       setIntro(active) {
         ((this.introActive = !!active), active && (this.manualShot = null));
       }
-      setOpening(active) {
+      setOpening(active, groundArrival = null) {
+        this.groundArrival = groundArrival;
         ((this.openingActive = !!active), active && (this.manualShot = null));
       }
       desiredShot() {
         if (this.introActive) return "rear";
-        if (this.openingActive) return "wide";
+        if (this.openingActive) return this.groundArrival ? "ground" : "wide";
         if (this.voyage.active)
           return ["lift", "transit", "descent"].includes(this.voyage.phase) ? "ascent" : "return";
         if (this.docking.started) return "return";
@@ -62208,7 +62216,7 @@ body.ti-voyage #ti-transfer-trigger {
             : "rear";
       }
       transitionKind(from, to) {
-        return to === "rear" ||
+        return from === "ground" || to === "ground" || to === "rear" ||
           to === "mast" ||
           to === "macro" ||
           to === "tele" ||
@@ -62274,6 +62282,7 @@ body.ti-voyage #ti-transfer-trigger {
           shot === "rear")
         )
           this.rear(now2);
+        else if (shot === "ground") this.groundLevelOpening(now2);
         else if (shot === "macro") this.macro(now2);
         else if (shot === "tele") this.telephoto(now2);
         else if (shot === "return")
@@ -62291,7 +62300,7 @@ body.ti-voyage #ti-transfer-trigger {
               (this.camera.fov = MathUtils.lerp(rearFov, this.camera.fov, blend)));
           } else this.lowSide(now2);
         else shot === "ascent" ? this.underside(now2) : this.ultrawide(now2);
-        (this.applyPortraitSafeFrame(shot),
+        (shot !== "ground" && this.applyPortraitSafeFrame(shot),
           this.camera.position.copy(this._camera),
           this.camera.up.set(0, 1, 0),
           this.camera.lookAt(this._aim),
@@ -62323,6 +62332,109 @@ body.ti-voyage #ti-transfer-trigger {
             .add(this.camera.position),
           this.focus.copy(this._aim),
           (this.rover.group.visible = !1));
+      }
+      frameLandingSite(aspect) {
+        const close = Math.max(3.5, 2.38 / aspect);
+        let frame = this.landingAngle(aspect, close, 1.4);
+        // Keep the close shot whenever possible. A crest between the two
+        // vehicles occasionally needs a longer sightline from higher ground.
+        for (const [scale, lift] of [[1.6, 1.4], [2.5, 4.0], [3.2, 4.0]]) {
+          if (frame.framingError === 0) break;
+          const candidate = this.landingAngle(aspect, close * scale, lift);
+          if (candidate.framingError < frame.framingError) frame = candidate;
+        }
+        return frame;
+      }
+      landingAngle(aspect, distance, maxLift) {
+        const { track, wheelBase } = cfg().vehicle.chassis;
+        const rover = this.rover.pos;
+        const lander = this.lander.group.position;
+        const heading = this.rover.heading;
+        const forward = new Vector3(-Math.sin(heading), 0, -Math.cos(heading));
+        const roverRight = new Vector3(-forward.z, 0, forward.x);
+        const bearing = new Vector3(lander.x - rover.x, 0, lander.z - rover.z).normalize();
+        const fov = 62;
+        const tanV = Math.tan(MathUtils.degToRad(fov / 2));
+        const tanH = tanV * aspect;
+        // Plan the sightlines to the wheel and lander at 25% and 70% of frame width.
+        const landerAngle = Math.atan(0.40 * tanH);
+        const separation = landerAngle + Math.atan(0.50 * tanH);
+        const wheelSight = bearing.clone().applyAxisAngle(arrivalUp, separation);
+        const nearSide = wheelSight.dot(roverRight) > 0 ? -1 : 1;
+        const wheel = new Vector3(rover.x, 0, rover.z)
+          .addScaledVector(forward, wheelBase).addScaledVector(roverRight, nearSide * track);
+        bearing.set(lander.x - wheel.x, 0, lander.z - wheel.z);
+        const correction = Math.asin(Math.min(0.95, distance * Math.sin(separation) / bearing.length()));
+        wheelSight.copy(bearing).normalize().applyAxisAngle(arrivalUp, separation + correction);
+        const eye = wheel.clone().addScaledVector(wheelSight, -distance);
+        const gaze = new Vector3(lander.x - eye.x, 0, lander.z - eye.z)
+          .normalize().applyAxisAngle(arrivalUp, landerAngle);
+        const rail = new Vector3(gaze.z, 0, -gaze.x).multiplyScalar(Math.min(0.42, distance * tanH * 0.18));
+        eye.y = 0.62 + Math.max(
+          this.heightAt(eye.x, eye.z),
+          this.heightAt(eye.x + rail.x / 2, eye.z + rail.z / 2),
+          this.heightAt(eye.x + rail.x, eye.z + rail.z),
+        );
+        // If the site is in a hollow, lift only enough to see the upper hull.
+        const maxEyeY = eye.y + maxLift;
+        const hullY = lander.y + 4.5;
+        let roofClearanceY = -Infinity;
+        const samples = maxLift > 1.4 ? 48 : 24;
+        for (let i = 1; i < samples; i++) {
+          const t = i / samples;
+          const x = MathUtils.lerp(eye.x, lander.x, t);
+          const z = MathUtils.lerp(eye.z, lander.z, t);
+          const ground = this.heightAt(x, z) + 0.12;
+          const requiredY = (ground - t * hullY) / (1 - t);
+          roofClearanceY = Math.max(roofClearanceY, (ground - t * (lander.y + 5.45)) / (1 - t));
+          eye.y = Math.min(maxEyeY, Math.max(eye.y, requiredY));
+        }
+
+        // Sample the generated ground once per framing, along the index warp's
+        // final screen ray (0.535, 0.466). Its highest slope is the visible ridge.
+        const ridgeAngle = Math.atan(0.070 * tanH);
+        const ridgeRay = gaze.clone().applyAxisAngle(arrivalUp, -ridgeAngle);
+        const halfSpan = cfg().clipmap.span * 0.48;
+        const edgeDistance = (offset, dir) => Math.abs(dir) < 1e-6
+          ? Infinity : (halfSpan - Math.sign(dir) * offset) / Math.abs(dir);
+        const far = Math.min(edgeDistance(eye.x - rover.x, ridgeRay.x), edgeDistance(eye.z - rover.z, ridgeRay.z));
+        const ridge = [];
+        for (let d = 1; d <= far; d += Math.max(0.55, d * 0.035)) {
+          const y = this.heightAt(eye.x + ridgeRay.x * d, eye.z + ridgeRay.z * d);
+          ridge.push({ d, y });
+        }
+        const pitchAt = (height) => {
+          let slope = -Infinity;
+          for (const { d, y } of ridge) slope = Math.max(slope, (y - height) / d);
+          return Math.atan2(slope, Math.cos(ridgeAngle)) - Math.atan(0.068 * tanV);
+        };
+        // On downhill ground the skyline can fall below the wheel. Adjust the
+        // rail height against both bearings, keeping the hub in the foreground.
+        const hubY = this.heightAt(wheel.x, wheel.z) + cfg().vehicle.chassis.wheelR;
+        const depth = (wheel.x - eye.x) * gaze.x + (wheel.z - eye.z) * gaze.z;
+        const hubAngle = Math.atan(-0.24 * tanV); // at least 62% down the frame
+        let pitch = pitchAt(eye.y);
+        for (let i = 0; i < 3; i++) {
+          const requiredY = Math.min(maxEyeY + 0.4, hubY - depth * Math.tan(pitch + hubAngle));
+          if (requiredY <= eye.y + 0.005) break;
+          eye.y = requiredY;
+          pitch = pitchAt(eye.y);
+        }
+        gaze.y = Math.tan(pitch);
+        const hubScreenY = 0.5 - Math.tan(Math.atan2(hubY - eye.y, depth) - pitch) / (2 * tanV);
+        const framingError = Math.max(0, hubScreenY - 0.86, 0.55 - hubScreenY)
+          + Math.max(0, roofClearanceY - eye.y) / distance;
+        return { aspect, eye, gaze, rail, fov, framingError };
+      }
+      groundLevelOpening(now2) {
+        const shot = this.groundArrival;
+        const aspect = this.camera.aspect;
+        if (shot.frame?.aspect !== aspect) shot.frame = this.frameLandingSite(aspect);
+        const { eye, gaze, rail, fov } = shot.frame;
+        const glide = this.reducedMotion ? 0 : MathUtils.smootherstep(now2 - shot.t0, 1000, 5500);
+        this._camera.copy(eye).addScaledVector(rail, glide);
+        this._aim.copy(this._camera).addScaledVector(gaze, 3.5);
+        this.camera.fov = fov;
       }
       ultrawide(now2) {
         let l = this.lander.group.position,
@@ -62400,8 +62512,9 @@ body.ti-voyage #ti-transfer-trigger {
                   y: this.heightAt(this.rover.pos.x + fx * 1.35, this.rover.pos.z + fz * 1.35),
                   z: this.rover.pos.z + fz * 1.35,
                 },
-          wheelX = this.rover.pos.x + fx * 0.66 + sx * 0.62,
-          wheelZ = this.rover.pos.z + fz * 0.66 + sz * 0.62,
+          { wheelBase, track } = cfg().vehicle.chassis,
+          wheelX = this.rover.pos.x + fx * wheelBase + sx * track,
+          wheelZ = this.rover.pos.z + fz * wheelBase + sz * track,
           targetX = (wheelX + specimen.x) * 0.5,
           targetZ = (wheelZ + specimen.z) * 0.5,
           side = this.reducedMotion ? 0 : Math.sin(now2 * 17e-5) * 0.08,
@@ -63577,7 +63690,7 @@ body.ti-voyage #ti-transfer-trigger {
         (this.pitch = 0),
         (this.roll = 0),
         (this.deckY = 0),
-        (this.sus = new Float64Array(8)),
+        (this.sus = new Float64Array(D.axles.length * 2)),
         (this.slam = 0),
         (this.stops = 0),
         (this.speed = 0),
@@ -63697,19 +63810,28 @@ body.ti-voyage #ti-transfer-trigger {
         sx = -fz,
         sz = fx,
         foot = D.wheelR * 0.85,
+        shoulder = D.wheelW * 0.42,
+        rollSin = Math.sin(this.roll),
+        rollCos = Math.cos(this.roll),
+        sideAlong = shoulder * rollSin * Math.sin(this.pitch),
+        sideX = shoulder * sx * rollCos - fx * sideAlong,
+        sideZ = shoulder * sz * rollCos - fz * sideAlong,
+        sideY = shoulder * rollSin * Math.cos(this.pitch),
+        sample = (x, z) => {
+          let terrain = this.h(x, z);
+          return this.surfaceOverride ? this.surfaceOverride(x, z, terrain) : terrain;
+        },
         out = [];
       for (let dz of D.axles)
         for (let dx of [-D.track, D.track]) {
           let x = this.pos.x + fx * dz + sx * dx,
             z = this.pos.z + fz * dz + sz * dx,
-            sample3 = (px2, pz2) => {
-              let terrain = this.h(px2, pz2);
-              return this.surfaceOverride ? this.surfaceOverride(px2, pz2, terrain) : terrain;
-            },
             y = Math.max(
-              sample3(x - fx * foot, z - fz * foot),
-              sample3(x, z),
-              sample3(x + fx * foot, z + fz * foot),
+              sample(x - fx * foot, z - fz * foot),
+              sample(x, z),
+              sample(x + fx * foot, z + fz * foot),
+              sample(x - sideX, z - sideZ) + sideY,
+              sample(x + sideX, z + sideZ) - sideY,
             );
           out.push({ x, z, y });
         }
@@ -63762,15 +63884,20 @@ body.ti-voyage #ti-transfer-trigger {
       if ((this.lid && (this.lid.rotation.x = -this.lidTilt), this.wings))
         for (let wing of this.wings) wing.rotation.z = wing.userData.side * this.lidTilt * 0.78;
       let c = this.contacts(),
+        wheelCount = c.length,
+        axleCount = D.axles.length,
         rest = D.wheelR + D.clearance,
-        mean = (a) => a.reduce((t, i) => t + c[i].y, 0) / a.length,
-        front = mean([0, 1]),
-        rear = mean([6, 7]),
-        left = mean([0, 2, 4, 6]),
-        right = mean([1, 3, 5, 7]),
-        tDeck = mean([0, 1, 2, 3, 4, 5, 6, 7]) + rest,
+        front = (c[0].y + c[1].y) * 0.5,
+        rear = (c[wheelCount - 2].y + c[wheelCount - 1].y) * 0.5,
+        left = 0,
+        right = 0;
+      for (let i = 0; i < wheelCount; i += 2) {
+        left += c[i].y;
+        right += c[i + 1].y;
+      }
+      let tDeck = (left + right) / wheelCount + rest,
         tPitch = Math.atan2(front - rear, D.wheelBase * 2),
-        tRoll = Math.atan2(right - left, D.track * 2);
+        tRoll = Math.atan2((right - left) / axleCount, D.track * 2);
       if (!this.settled)
         ((this.deckY = tDeck),
           (this.pitch = tPitch),
@@ -63798,23 +63925,23 @@ body.ti-voyage #ti-transfer-trigger {
         exR = 0,
         exL = 0,
         exRt = 0;
-      for (let i = 0; i < 8; i++) {
+      for (let i = 0; i < wheelCount; i++) {
         let dz = D.axles[i >> 1],
           dx = i & 1 ? D.track : -D.track,
           mount = this.deckY - rest + dz * Math.sin(this.pitch) + dx * Math.sin(this.roll),
           raw = c[i].y - mount;
         this.sus[i] = clamp10(raw, -D.travel, D.travel);
         let ex = raw - this.sus[i];
-        ((exDeck += ex / 8),
-          dz > 0.7 ? (exF += ex / 2) : dz < -0.7 && (exR += ex / 2),
-          dx < 0 ? (exL += ex / 4) : (exRt += ex / 4));
+        ((exDeck += ex / wheelCount),
+          i < 2 ? (exF += ex / 2) : i >= wheelCount - 2 && (exR += ex / 2),
+          dx < 0 ? (exL += ex / axleCount) : (exRt += ex / axleCount));
       }
       if (exDeck || exF || exR || exL || exRt) {
         ((this.deckY += exDeck),
           (this.pitch += Math.atan2(exF - exR, D.wheelBase * 2)),
           (this.roll += Math.atan2(exRt - exL, D.track * 2)),
           (this.deckV += (exDeck / Math.max(dt, 0.001)) * 0.25));
-        for (let i = 0; i < 8; i++) {
+        for (let i = 0; i < wheelCount; i++) {
           let dz = D.axles[i >> 1],
             dx = i & 1 ? D.track : -D.track,
             mount = this.deckY - rest + dz * Math.sin(this.pitch) + dx * Math.sin(this.roll);
@@ -63823,8 +63950,8 @@ body.ti-voyage #ti-transfer-trigger {
       }
       this.artic = Math.max(...Array.from(this.sus, Math.abs));
       let onStop = 0;
-      for (let i = 0; i < 8; i++) Math.abs(this.sus[i]) >= D.travel - 1e-6 && onStop++;
-      ((this.stops = onStop / 8),
+      for (let i = 0; i < wheelCount; i++) Math.abs(this.sus[i]) >= D.travel - 1e-6 && onStop++;
+      ((this.stops = onStop / wheelCount),
         (this.slam = this.stops * Math.min(1, Math.abs(this.speed) / cfg().vehicle.cruise)),
         (this.grade = this.pitch));
       let climb = Math.abs(this.pitch),
@@ -64097,19 +64224,34 @@ body.ti-voyage #ti-transfer-trigger {
     );
   function buildWheel() {
     let R = D.wheelR,
-      W = D.wheelW,
+      W = 0.19,
       grid = cfg().clipmap.grid,
       cleats = grid >= 600 ? 48 : grid >= 450 ? 36 : 24,
       tyre = Merged(),
-      rim = Merged(),
-      drum = new CylinderGeometry(R * 0.88, R * 0.88, W, 40, 1, !0);
-    tyre.add(drum, xf([0, 0, 0], [0, 0, Math.PI / 2]));
-    let sidewall = new TorusGeometry(R * 0.76, R * 0.035, 8, 40);
-    (tyre.add(sidewall, xf([-W * 0.49, 0, 0], [0, Math.PI / 2, 0])),
-      tyre.add(sidewall, xf([W * 0.49, 0, 0], [0, Math.PI / 2, 0])));
-    let hoop = new TorusGeometry(R * 0.98, R * 0.05, 7, 40);
-    (rim.add(hoop, xf([-W / 2, 0, 0], [0, Math.PI / 2, 0])),
-      rim.add(hoop, xf([W / 2, 0, 0], [0, Math.PI / 2, 0])));
+      rim = Merged();
+    // Close the tire from bead to bead without changing the rolling envelope.
+    let profile = [
+      [0.7, -0.46],
+      [0.75, -0.52],
+      [0.82, -0.56],
+      [0.9, -0.53],
+      [0.955, -0.42],
+      [0.955, 0.42],
+      [0.9, 0.53],
+      [0.82, 0.56],
+      [0.75, 0.52],
+      [0.7, 0.46],
+      [0.7, -0.46],
+    ];
+    let casing = new LatheGeometry(
+      profile.map(([radius, width]) => new Vector2(R * radius, W * width)),
+      40,
+    );
+    tyre.add(casing, xf([0, 0, 0], [0, 0, Math.PI / 2]));
+    let hoop = new TorusGeometry(R * 0.71, R * 0.03, 7, 40);
+    for (let side of [-1, 1]) {
+      rim.add(hoop, xf([side * W * 0.49, 0, 0], [0, Math.PI / 2, 0]));
+    }
     let g = new BoxGeometry(W * 0.96, R * 0.075, R * 0.18);
     for (let i = 0; i < cleats; i++) {
       let a = (i / cleats) * Math.PI * 2;
@@ -64126,13 +64268,13 @@ body.ti-voyage #ti-transfer-trigger {
         new CylinderGeometry(R * 0.11, R * 0.11, W * 1.27, 20),
         xf([0, 0, 0], [0, 0, Math.PI / 2]),
       ));
-    let spoke = new BoxGeometry(W * 0.1, R * 0.66, R * 0.055);
+    let spoke = new BoxGeometry(W * 0.1, R * 0.52, R * 0.055);
     for (let side of [-1, 1])
       for (let i = 0; i < 8; i++) {
         let a = (i / 8) * Math.PI * 2;
         rim.add(
           spoke,
-          xf([side * W * 0.54, Math.sin(a) * R * 0.55, Math.cos(a) * R * 0.55], [-a, 0, 0]),
+          xf([side * W * 0.51, Math.sin(a) * R * 0.46, Math.cos(a) * R * 0.46], [-a, 0, 0]),
         );
       }
     let bead = new TorusGeometry(R * 0.43, R * 0.018, 5, 32),
@@ -64150,7 +64292,13 @@ body.ti-voyage #ti-transfer-trigger {
         );
       }
     }
-    return { tyre: tyre.build(), rim: rim.build() };
+    // Widen along the axle after orienting the tread blocks so their radius
+    // and the suspended rolling envelope do not change.
+    let widthScale = D.wheelW / W;
+    return {
+      tyre: tyre.build().scale(widthScale, 1, 1),
+      rim: rim.build().scale(widthScale, 1, 1),
+    };
   }
   function wedgeGeometry(width, height, length3, frontScale = 0.72) {
     let wb = width * 0.5,
@@ -64340,7 +64488,7 @@ body.ti-voyage #ti-transfer-trigger {
     );
     chassis.userData.transferChassis = !0;
     let deck = 0,
-      W = D.track * 2,
+      W = D.bodyHalfWidth * 2,
       LEN = D.wheelBase * 2,
       tub = Merged();
     (tub.add(formedBox(W * 0.84, 0.34, LEN * 0.58, 0.018), xf([0, deck + 0.03, LEN * 0.09])),
@@ -64353,7 +64501,7 @@ body.ti-voyage #ti-transfer-trigger {
       ),
         tub.add(
           new BoxGeometry(0.055, 0.09, LEN * 1.1),
-          xf([side * D.track * 0.8, deck - 0.19, 0]),
+          xf([side * D.bodyHalfWidth * 0.8, deck - 0.19, 0]),
         ));
     (tub.add(new BoxGeometry(W * 0.78, 0.1, 0.1), xf([0, deck - 0.1, -LEN * 0.57])),
       tub.add(new BoxGeometry(W * 0.7, 0.1, 0.08), xf([0, deck - 0.1, LEN * 0.51])));
@@ -65951,7 +66099,10 @@ body.ti-voyage #ti-transfer-trigger {
         this.core.add(lintel),
         bayFrames.push(lintel));
       for (let side of [-1, 1]) {
-        let lane = new Mesh(new BoxGeometry(0.3, 0.006, bayDepth - 0.12), metal);
+        let lane = new Mesh(
+          new BoxGeometry(C.vehicle.chassis.wheelW * 1.55, 0.006, bayDepth - 0.12),
+          metal,
+        );
         (lane.position.set(
           side * C.vehicle.chassis.track,
           this.dock.floorY + 0.003,
@@ -66613,8 +66764,11 @@ body.ti-voyage #ti-transfer-trigger {
     }
     setHoldDown(progress = 0, localZ = -0.58) {
       this.holdProgress = Math.max(0, Math.min(1, progress));
+      let { track, wheelW } = cfg().vehicle.chassis,
+        closedX = track + wheelW * 0.69 + 0.04,
+        jawX = closedX + (1 - this.holdProgress) * 0.225;
       for (let clamp12 of this.holdDowns)
-        ((clamp12.position.x = clamp12.userData.side * (0.96 - this.holdProgress * 0.225)),
+        ((clamp12.position.x = clamp12.userData.side * jawX),
           (clamp12.position.z = localZ + clamp12.userData.axle));
     }
     dockingPoint(localZ, localX = 0, localY = null, target = new Vector3()) {
@@ -69123,7 +69277,8 @@ body.ti-voyage #ti-transfer-trigger {
       Object.entries(planetPages).find(([, path]) => location.pathname.endsWith("/" + path))?.[0] ??
       "terra",
     key2 = "terra-incognita:last-planet";
-  if (new URLSearchParams(location.search).get("fresh") === "1") {
+  const freshPlanetStart = new URLSearchParams(location.search).get("fresh") === "1";
+  if (freshPlanetStart) {
     try {
       sessionStorage.removeItem(VEHICLE_HISTORY_KEY);
     } catch {}
@@ -69204,7 +69359,7 @@ body.ti-voyage #ti-transfer-trigger {
           fadeBand: 3.5,
           clumpCell: 2.35,
           minPixels: 1.3,
-          length: 0.29,
+          length: 0.145,
           width: 0.019,
           bend: 0.62,
           breath: 0.17,
@@ -69358,8 +69513,8 @@ body.ti-voyage #ti-transfer-trigger {
         ramp: { r: 0, ko: "착륙선 적재 경사로 전개", en: "LANDER · STOWAGE RAMP DEPLOYING" },
         approach: {
           r: 0,
-          ko: "착륙선 최종 접근 · 8륜 구동 유지",
-          en: "FINAL APPROACH · EIGHT CONTACTS LIVE",
+          ko: "착륙선 최종 접근 · 6륜 구동 유지",
+          en: "FINAL APPROACH · SIX CONTACTS LIVE",
         },
         secure: {
           r: 0,
@@ -70227,6 +70382,11 @@ body.ti-voyage #ti-transfer-trigger {
     }
     function enterExplorer(now2 = performance.now(), { rear = !0 } = {}) {
       if (!released || authoredExperienceLock()) return !1;
+      if (driveReleaseAt) {
+        driveReleaseAt = 0;
+        rover.scriptedDrive = null;
+        rover.missionHold = !1;
+      }
       let changed = experienceMode !== "explorer";
       return (
         (experienceMode = "explorer"),
@@ -70291,36 +70451,43 @@ body.ti-voyage #ti-transfer-trigger {
         ? !1
         : ((openingShot = null), (kiosk.last = now2), syncRoverUtilityControls(), !0);
     }
+    function setControlAttribute(control, name, value) {
+      if (control.getAttribute(name) !== value) control.setAttribute(name, value);
+    }
     function syncDriveModeControl() {
-      let manual = experienceMode === "explorer",
+      if (!driveModeControl) return;
+      const manual = experienceMode === "explorer",
         locked = !released || authoredExperienceLock();
-      driveModeControl &&
-        ((driveModeControl.dataset.driveState = manual ? "manual" : "auto"),
-        driveModeControl.setAttribute("aria-pressed", String(manual)),
-        (driveModeControl.disabled = locked),
-        driveModeControl.setAttribute("aria-disabled", String(locked)),
-        driveModeControl.setAttribute(
-          "aria-hidden",
-          String(!released && !location.search.includes("embed")),
-        ),
-        driveModeControl.setAttribute(
-          "aria-label",
-          manual ? "수동 주행 중 · 자동 주행으로 전환" : "자동 주행 중 · 수동 주행으로 전환",
-        ));
+      setControlAttribute(driveModeControl, "data-drive-state", manual ? "manual" : "auto");
+      setControlAttribute(driveModeControl, "aria-pressed", String(manual));
+      if (driveModeControl.disabled !== locked) driveModeControl.disabled = locked;
+      setControlAttribute(driveModeControl, "aria-disabled", String(locked));
+      setControlAttribute(
+        driveModeControl, "aria-hidden", String(!released && !location.search.includes("embed")),
+      );
+      setControlAttribute(
+        driveModeControl,
+        "aria-label",
+        manual ? "수동 주행 중 · 자동 주행으로 전환" : "자동 주행 중 · 수동 주행으로 전환",
+      );
     }
     function syncRoverUtilityControls() {
       let locked = !released || authoredExperienceLock();
       if (lightControl) {
         let on = !!rover.lamps;
-        ((lightControl.dataset.lightState = on ? "on" : "off"),
-          lightControl.setAttribute("aria-pressed", String(on)),
-          lightControl.setAttribute("aria-label", on ? "헤드라이트 끄기" : "헤드라이트 켜기"),
-          (lightControl.disabled = locked || rover.disabled || rover.transmitting));
+        setControlAttribute(lightControl, "data-light-state", on ? "on" : "off");
+        setControlAttribute(lightControl, "aria-pressed", String(on));
+        setControlAttribute(lightControl, "aria-label", on ? "헤드라이트 끄기" : "헤드라이트 켜기");
+        const disabled = !!(locked || rover.disabled || rover.transmitting);
+        if (lightControl.disabled !== disabled) lightControl.disabled = disabled;
       }
-      cameraControl &&
-        ((cameraControl.dataset.cameraState = shotDirector.manualShot ? "manual" : "auto"),
-        cameraControl.setAttribute("aria-label", `카메라 시점 이동 · 현재 ${shotDirector.label}`),
-        (cameraControl.disabled = locked));
+      if (cameraControl) {
+        setControlAttribute(
+          cameraControl, "data-camera-state", shotDirector.manualShot ? "manual" : "auto",
+        );
+        setControlAttribute(cameraControl, "aria-label", `카메라 시점 이동 · 현재 ${shotDirector.label}`);
+        if (cameraControl.disabled !== locked) cameraControl.disabled = locked;
+      }
     }
     let a = GPU_PROFILE;
     (hud.set("backend", "WebGPU"),
@@ -70527,7 +70694,8 @@ body.ti-voyage #ti-transfer-trigger {
       controlsReady: document.body.classList.contains("ti-prologue-released"),
       soundDisabled: soundControl.disabled,
     });
-    function beginPlanetExperience() {
+    function beginPlanetExperience(groundArrival = false) {
+      document.body.classList.toggle("ti-ground-arrival", groundArrival);
       ((entryRevealRequested = !0),
         window.TI_REVEAL_PLANET?.(),
         (prologuePhase = "released"),
@@ -70540,12 +70708,12 @@ body.ti-voyage #ti-transfer-trigger {
         rover.setViewMode("rear"));
       let now2 = performance.now();
       ((openingShot = { t0: now2 }),
-        shotDirector.setOpening(!0),
+        shotDirector.setOpening(!0, groundArrival ? openingShot : null),
         entryRevealRequested &&
           (document.body.classList.remove("ti-entry-blackout"),
           document.body.classList.add("ti-entry-revealing"),
           animeRituals.beginManualReceiverLock()),
-        (driveReleaseAt = now2 + BLUEPRINT_BREATH_MS),
+        (driveReleaseAt = now2 + (groundArrival ? OPENING_CAMERA_MS : BLUEPRINT_BREATH_MS)),
         lander.purge?.reset(now2),
         (nextAutoPauseAt = driveReleaseAt + 32e3),
         (kiosk.last = now2),
@@ -70643,13 +70811,13 @@ body.ti-voyage #ti-transfer-trigger {
       let incoming = readTransfer();
       incoming?.target === entryPlanet && (power.charge = incoming.environment.energy);
     } else
-      location.search.includes("embed")
+      location.search.includes("embed") && !freshPlanetStart
         ? ((released = !0),
           (prologuePhase = "released"),
           setExperienceControlsReady(!0),
           (rover.auto = !0),
           window.TI_REVEAL_PLANET?.())
-        : beginPlanetExperience();
+        : beginPlanetExperience(freshPlanetStart);
     ((window.TI_CHECKPOINT = () => ({ restored: checkpointRestored, saved: readCheckpoint() })),
       queueLoop());
     function saveMissionCheckpoint(now2, force = !1) {
@@ -71296,7 +71464,7 @@ body.ti-voyage #ti-transfer-trigger {
           hud.set(
             "susp",
             v.stops > 0
-              ? `${(v.artic * 100).toFixed(0)} / ${(v.travel * 100).toFixed(0)} cm · ${(v.stops * 8).toFixed(0)} on stops`
+              ? `${(v.artic * 100).toFixed(0)} / ${(v.travel * 100).toFixed(0)} cm · ${(v.stops * v.wheelContacts.length).toFixed(0)} on stops`
               : `${(v.artic * 100).toFixed(0)} / ${(v.travel * 100).toFixed(0)} cm`,
             v.slam > 0.05,
           ),
@@ -71610,24 +71778,31 @@ body.ti-voyage #ti-transfer-trigger {
         return null;
       }
     }
-    let archiveMissionSignature = "";
+    let archivedMission = null;
     function syncArchiveMissionData(now2) {
-      let memory = missionMemory.snapshot(),
-        signature = `${world}/${restoration.count}/${memory.samples.length}/${!!memory.water?.confirmed}/${geologicalMemory.current}`;
+      const { samples, water } = missionMemory.data;
+      const { model, current } = geologicalMemory;
       if (
-        signature !== archiveMissionSignature &&
-        ((archiveMissionSignature = signature),
-        memory.samples.length && fieldArchive.setMission("terra", { samples: memory.samples }),
-        memory.water?.confirmed &&
-          (fieldArchive.setMission("desert", { water: memory.water }),
-          fieldArchive.recordData(FIELD_ARCHIVE_STATIONS.desert.at(-1), memory.water, now2)),
-        world === "granite" && geologicalMemory.model)
-      ) {
-        let sites = geologicalMemory.model.sites.slice(0, geologicalMemory.current);
+        archivedMission &&
+        archivedMission.world === world &&
+        archivedMission.count === restoration.count &&
+        archivedMission.samples === samples &&
+        archivedMission.water === water &&
+        archivedMission.model === model &&
+        archivedMission.current === current
+      ) return;
+      archivedMission = { world, count: restoration.count, samples, water, model, current };
+      if (samples.length) fieldArchive.setMission("terra", { samples });
+      if (water?.confirmed) {
+        fieldArchive.setMission("desert", { water });
+        fieldArchive.recordData(FIELD_ARCHIVE_STATIONS.desert.at(-1), water, now2);
+      }
+      if (world === "granite" && model) {
+        let sites = model.sites.slice(0, current);
         fieldArchive.setMission("granite", {
           sites,
           complete: geologicalMemory.complete,
-          sources: geologicalMemory.model.source,
+          sources: model.source,
         });
         let stations = fieldArchiveStationsFor("granite");
         sites.forEach((site, i) =>

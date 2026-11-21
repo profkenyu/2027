@@ -1205,6 +1205,17 @@
         will-change: transform, filter;
         animation: ti-entry-receiver-lock 3s steps(1, end) both;
       }
+      body.ti-ground-arrival {
+        --ti-arrival-fade: 0.55s;
+      }
+      body.ti-ground-arrival #gl,
+      body.ti-ground-arrival #ti-entry-veil::before {
+        animation: none;
+        will-change: auto;
+      }
+      body.ti-ground-arrival #ti-entry-veil::before {
+        opacity: 0;
+      }
       @keyframes ti-entry-static {
         0% {
           transform: translateY(-1px);
@@ -2569,7 +2580,7 @@
         var a = document.getElementById("arrive"),
           d = document.getElementById("depart");
         window.TI_REVEAL_PLANET = function () {
-          a.style.transition = "opacity 1.2s ease";
+          a.style.transition = "opacity var(--ti-arrival-fade, 1.2s) ease";
           a.style.opacity = "0";
         };
         addEventListener("pageshow", function (e) {
@@ -2641,7 +2652,7 @@
         window.TI_BOOT.beat("module");
       })();
     </script>
-    <script defer src="./planet-engine.js"></script>
+    <script defer src="./planet-engine.js?v=20261121-field-runtime"></script>
     <nav id="journey-links" aria-label="소리와 외장 보기"
       ><button id="ti-sound" type="button" aria-pressed="false" data-audio-state="start">
         <svg class="ti-utility-icon" viewBox="0 0 24 24" aria-hidden="true">

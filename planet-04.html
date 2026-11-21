@@ -29332,8 +29332,9 @@ function createRoverContact(rover2, heightAt) {
   const rotation = new Quaternion();
   let initialized = false;
   let maxError = 0;
+  const reach = rover2.wheelRadius * 0.85;
+  const halfTread = rover2.wheelWidth * 0.42;
   function sample(x, z, fx, fz) {
-    const reach = rover2.wheelRadius * 0.85;
     return Math.max(
       heightAt(x, z),
       heightAt(x + fx * reach, z + fz * reach),
@@ -29391,10 +29392,18 @@ function createRoverContact(rover2, heightAt) {
     up.set(0, 1, 0).applyQuaternion(rover2.group.quaternion);
     axle.set(1, 0, 0).applyQuaternion(rover2.group.quaternion);
     const verticalRadius = rover2.wheelRadius * Math.sqrt(Math.max(0, 1 - axle.y * axle.y));
+    const treadX = axle.x * halfTread;
+    const treadY = axle.y * halfTread;
+    const treadZ = axle.z * halfTread;
     let minimum = -Infinity, maximum = Infinity;
     for (let i = 0; i < rest.length; i++) {
       center.copy(rest[i]).applyQuaternion(rover2.group.quaternion).add(rover2.group.position);
-      heights[i] = sample(center.x, center.z, forward2.x, forward2.z) + verticalRadius;
+      // Evaluate both shoulders against the wheel's rolled axle.
+      heights[i] = Math.max(
+        sample(center.x, center.z, forward2.x, forward2.z),
+        heightAt(center.x + treadX, center.z + treadZ) - treadY,
+        heightAt(center.x - treadX, center.z - treadZ) + treadY
+      ) + verticalRadius;
       const required = heights[i] - center.y + rover2.group.position.y;
       minimum = Math.max(minimum, required - rover2.wheelTravel * up.y);
       maximum = Math.min(maximum, required + rover2.wheelTravel * up.y);
@@ -31838,16 +31847,16 @@ function createPlaceRecorder(renderer2, scene2, surface2, habitat2, tier2, state
 // works/candidate/model-manifest.js
 var CANDIDATE_MODEL_ASSETS = Object.freeze({
   "high": {
-    "file": "high-643c7f52414a7e47.json",
-    "bytes": 3296756
+    "file": "high-20d02e0b3a643224.json",
+    "bytes": 2798007
   },
   "mid": {
-    "file": "mid-60dd6c3480cd58f8.json",
-    "bytes": 3083326
+    "file": "mid-83daf76bcd4513ba.json",
+    "bytes": 2604161
   },
   "low": {
-    "file": "low-46e23dfae1997bd1.json",
-    "bytes": 2405536
+    "file": "low-b742f767f410bfac.json",
+    "bytes": 1945955
   }
 });
 
@@ -32590,6 +32599,7 @@ function decodeVehicle(models, kind, tier2) {
   const group = new Group(), wheels = /* @__PURE__ */ new Map(), jointParts = /* @__PURE__ */ new Map(), jointBatches = /* @__PURE__ */ new Map(), meshes = [];
   const rigSpec = kind === "rover" ? models[tier2].roverRig : null;
   const wheelRadius = rigSpec?.wheelRadius ?? 0.29;
+  const wheelWidth = rigSpec?.wheelWidth ?? 0.19;
   const wheelRest = [];
   let lastDistance = 0, lastHeading = null;
   for (const b of models[tier2][kind]) {
@@ -32742,6 +32752,7 @@ function decodeVehicle(models, kind, tier2) {
     group,
     site,
     wheelRadius,
+    wheelWidth,
     cloneLandingRig({ x, z, ground, heightAt }) {
       const copy = group.clone(true);
       const parts = new Map(
@@ -52253,7 +52264,7 @@ try {
   });
   addEventListener("keyup", (e) => keys.delete(e.code));
   renderer.domElement.addEventListener("pointerdown", (e) => {
-    if (e.pointerType === "touch") {
+    if (e.pointerType === "touch" && !touch) {
       touch = {
         id: e.pointerId,
         x: e.clientX,
@@ -52272,8 +52283,11 @@ try {
       touch.drive = MathUtils.clamp(-dy / 90, -1, 1);
     }
   });
-  for (const event of ["pointerup", "pointercancel"])
-    addEventListener(event, () => touch = null);
+  for (const event of ["pointerup", "pointercancel"]) {
+    addEventListener(event, (e) => {
+      if (touch?.id === e.pointerId) touch = null;
+    });
+  }
   bindMissionTripleTap({
     target: document,
     enabled: () => ["landing", "deploy", "egress", "survey"].includes(state.phase),
