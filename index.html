@@ -19455,6 +19455,36 @@ function skipIntro() {
 skip.addEventListener("click", skipIntro);
 skip.hidden = false;
 /* Draw in CSS pixels. The caller owns timing, visibility and navigation. */
+const WARP_SECONDS = 10;
+// [seconds, star-field depths per second]. The short coast separates the two surges.
+const WARP_SPEED_KEYS = [
+  [0, 0.05],
+  [2.4, 0.18],
+  [4.4, 1.4],
+  [5.6, 0.62],
+  [6.2, 0.62],
+  [8.9, 4.85],
+  [9.2, 4.85],
+  [WARP_SECONDS, 0.18],
+];
+
+function warpTravelAt(seconds) {
+  let distance = 0;
+  for (let i = 1; i < WARP_SPEED_KEYS.length; i++) {
+    const [start, fromSpeed] = WARP_SPEED_KEYS[i - 1];
+    const [end, toSpeed] = WARP_SPEED_KEYS[i];
+    const span = end - start;
+    if (seconds < end) {
+      const elapsed = Math.max(0, seconds - start);
+      const u = elapsed / span;
+      // Integral of a smoothstep speed ramp. Position and acceleration join continuously.
+      return distance + elapsed * (fromSpeed + (toSpeed - fromSpeed) * u * u * (1 - 0.5 * u));
+    }
+    distance += span * (fromSpeed + toSpeed) * 0.5;
+  }
+  return distance;
+}
+
 const WARP_QUALITY = [
   { dpr: 1, pixels: 1920 * 1080, stars: 620 },
   { dpr: 1.35, pixels: 3000000, stars: 810 },
@@ -19515,10 +19545,10 @@ class WarpTransition {
     this.haze.addColorStop(1,'rgba(2,5,8,0)');
   }
 
-  draw(elapsedSeconds, durationSeconds = 7.4) {
-    if (!this.ctx || durationSeconds <= 0) return;
-    const t = Math.max(0,Math.min(elapsedSeconds,durationSeconds));
-    const s = t/durationSeconds;
+  draw(elapsedSeconds) {
+    if (!this.ctx) return;
+    const t = Math.max(0, Math.min(elapsedSeconds, WARP_SECONDS));
+    const s = t / WARP_SECONDS;
     const step = this.lastElapsed === null ? 0 : t-this.lastElapsed;
     this.lastElapsed = t;
     if (step > .041 && step < .25) this.slowFrames++;
@@ -19529,7 +19559,7 @@ class WarpTransition {
     this.resize();
     const ctx=this.ctx, w=this.width, h=this.height;
     const reveal = Math.min(1,t/.32);
-    const end = Math.min(1,(durationSeconds-t)/.18);
+    const end = Math.min(1,(WARP_SECONDS-t)/.18);
     const starOpacity = reveal*end;
     ctx.clearRect(0,0,w,h);
     if (t === 0) return;
@@ -19540,13 +19570,11 @@ class WarpTransition {
     ctx.fillStyle = this.haze;
     ctx.fillRect(0,0,w,h);
 
-    // Travel is the integral of a strictly increasing speed. Sampling old
-    // camera positions gives each star its own perspective-correct exposure.
-    const travelAt = p => durationSeconds*(.048*p+.078*p*p+.26*p*p*p+.80*p**5);
     const motionScale = this.reducedMotion ? 0.025 : 1;
-    const travel = travelAt(s) * motionScale;
+    const travel = warpTravelAt(t) * motionScale;
+    // Both ends of a streak follow the same camera, including during deceleration.
     const exposureTime = .028 + .058*s*s;
-    const trailDepth = travel - travelAt(Math.max(0,(t-exposureTime)/durationSeconds))*motionScale;
+    const trailDepth = travel - warpTravelAt(t - exposureTime) * motionScale;
     const focal = this.focal;
     const cx = this.ridgeX, cy = this.ridgeY;
     const lineWeight = this.lineWeight;
@@ -19581,7 +19609,6 @@ class WarpTransition {
   }
 }
 
-const WARP_SECONDS = 7.4;
 let flight = null;
 let departureTimer = 0;
 
@@ -19603,10 +19630,10 @@ function pauseWarp() {
 function drawWarp(now) {
   const state = flight;
   if (!state || document.hidden) return;
-  if (state.lastFrame !== null) state.elapsed += (now - state.lastFrame) / 1000;
+  if (state.lastFrame !== null) state.elapsedMs += now - state.lastFrame;
   state.lastFrame = now;
-  state.renderer.draw(state.elapsed, WARP_SECONDS);
-  if (state.elapsed >= WARP_SECONDS) {
+  state.renderer.draw(state.elapsedMs / 1000);
+  if (state.elapsedMs >= WARP_SECONDS * 1000) {
     state.navigating = true;
     location.assign(state.target.href);
     return;
@@ -19631,7 +19658,7 @@ function beginWarp(target) {
   dialog.showModal();
   blueprints?.suspend();
   rituals.suspend();
-  flight = { dialog, renderer: new WarpTransition(canvas, tier), target, elapsed: 0,
+  flight = { dialog, renderer: new WarpTransition(canvas, tier), target, elapsedMs: 0,
              lastFrame: null, frame: 0, navigating: false };
   resumeWarp();
 }
